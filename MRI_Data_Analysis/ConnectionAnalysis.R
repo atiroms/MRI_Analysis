@@ -7,31 +7,35 @@
 
 #### Parameters ####
 
-working_dir<-"G:/MRI/Statistics/Connection"
-#working_dir<-"D:/MRI/Statistics/Connection"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
-#structural_inputfile <- "182_FS_DK_Thickness_SCA.csv"
+script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
+input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
+output_dir <- file.path(input_dir,"Connection_data")
 
-#connection_file <- "HO_FC_r_TSexist_male.csv"
-#connection_file <- "HO_FC_r_TSexist_female.csv"
-#connection_file <- "Power_FC_r_TSexist_male.csv"
-connection_file <- "Power_FC_r_TSexist_female.csv"
+connection_file <- "W1_HO_FC.csv"
+#connection_file <- "W1_HO_Power.csv"
+#connection_file <- "W1_HO_DK.csv"
 
-data_subdir<-"Connection_data"
+roi_subset<- ""
+#roi_subset<- "cortex"
+#roi_subset<- "subcortex"
+#roi_subset<- "cerebellum"
+#roi_subset<- "global"
+#roi_subset<- "misc"
 
-commondata_dir<-"G:/MRI/Statistics/CommonData"
-#commondata_dir<-"D:/MRI/Statistics/CommonData"
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
-roiid_file<-"ROI_All.csv"
-input_roiid_type<-"ID_long"
-graph_roiid_type<-"label_proper"
-clinical_file <- "CSUB_Clinical_Data.csv"
 
 p_uncorrected<-0.001
 
-#n_components<-10
+n_components<-10
 #n_components<-30
-n_components<-5
+#n_components<-5
 tsne_dims<-2
 tsne_perplexity<-30
 tsne_max_itr<-1000
@@ -40,224 +44,136 @@ cost<-seq(0.04,0.25,0.01)
 
 
 #### Libraries ####
+
 library(multcomp)
 library(FactoMineR)
 library(ica)
 library(Rtsne)
-library(ggpubr)
-library(RColorBrewer)
+library(tidyverse)
+#library(ggpubr)
 library(igraph)
 library(qgraph)
 
 
+#### Functionalities ####
+
+source(file.path(script_dir,"Functionalities/Functions.R"))
+source(file.path(script_dir,"Functionalities/Figures.R"))
+
+
 #### Data Loading ####
-#structural_data<-read.csv(file.path(working_dir, structural_inputfile))
-connection_data<-read.csv(file.path(working_dir, connection_file))
-connections<-colnames(connection_data)[-1]
-n_connections<-length(connections)
-subject_id<-unique(connection_data$ID_pnTTC)
-n_subject<-length(subject_id)
+source(file.path(script_dir,"Functionalities/LoadClinicalData.R"))
+HeatmapPlot(clinical_data,"Clinical Data","Clinical Measure",
+            colnames(clinical_data)[-1],scale_data = T)
 
-connections_matrix<-data.frame(matrix(nrow=n_connections,ncol=2))
-for (i in 1:n_connections){
-  split<-strsplit(connections[i], "_")
-  connections_matrix[i,1]<-split[[1]][[1]]
-  connections_matrix[i,2]<-split[[1]][[2]]
+connection_data <-read.csv(file.path(input_dir,connection_file))
+connection_data$flag<-F
+for (i in subject_id){
+  connection_data[which(connection_data$ID_pnTTC==i),"flag"]<-T
 }
-regions<-data.frame(label=c(connections_matrix[,1],connections_matrix[,2]))
-regions<-as.character(unique(regions[,1]))
-regions<-regions[order(regions)]
-
-clinical_data <-read.csv(file.path(commondata_dir,clinical_file))
-clinical_row<-NULL
-for (i in 1:n_subject){
-  clinical_row<-c(clinical_row,which(clinical_data$ID_pnTTC==subject_id[i]))
-}
-clinical_data<-clinical_data[clinical_row,]
-rownames(clinical_data)<-NULL
-
-
-#### Directory Organization ####
-
-if (!file.exists(file.path(working_dir,data_subdir))){
-  dir.create(file.path(working_dir, data_subdir))
+connection_data<-connection_data[which(connection_data$flag),-ncol(connection_data)]
+if (roi_subset!=""){
+  connection_data<-connection_data[which(ConvertID(connection_data$from,roi_data,"ID_long","group")==roi_subset),]
+  connection_data<-connection_data[which(ConvertID(connection_data$to,roi_data,"ID_long","group")==roi_subset),]
 }
 
-ExpDir<-function(exptype){
-  timestamp <- strftime(Sys.time(),"%Y%m%d_%H%M%S")
-  data_dir<-file.path(working_dir, data_subdir, paste(timestamp,exptype,sep="_"))
-  dir.create(data_dir)
-  return(data_dir)
-}
-
-
-#### ID Converter ####
-
-roiid_data<-read.csv(file.path(commondata_dir,roiid_file))
-roiid_data$ID_long<-as.character(roiid_data$ID_long)
-roiid_data$label<-as.character(roiid_data$label)
-roiid_data$label_proper<-as.character(roiid_data$label_proper)
-roiid_data$label_long<-as.character(roiid_data$label_long)
-roiid_data$label_conn<-as.character(roiid_data$label_conn)
-roiid_data$label_fs<-as.character(roiid_data$label_fs)
-
-ConvertID<-function(input,iddata,inputcolumn,outputcolumn){
-  idcolname<-data.frame(label=colnames(iddata))
-  input_col<-iddata[,which(idcolname$label==inputcolumn)]
-  output_col<-iddata[,which(idcolname$label==outputcolumn)]
-  output<-data.frame(matrix(nrow=length(input),ncol=1))
-  for (i in 1:length(input)){
-    input_value<-input[[i]]
-    output_row<-which(input_col==input_value)
-    output[i,1]<-output_col[output_row]
-  }
-  output<-output[,1]
-  return(output)
-}
-
-
-#### Component-Clinical Plotting ####
-
-ComponentPlot<-function(input, title){
-  graph<-NULL
-  for (i in 2:ncol(clinical_data)){
-    gg<-NULL
-    for (j in 1:ncol(input)){
-      g<-ggscatter(cbind(clinical_data,input), x = sprintf("Dim_%02d",j), y = colnames(clinical_data)[i],
-                   add = "reg.line", conf.int = TRUE, size=0.5,
-                   cor.coef = TRUE, cor.method = "pearson",
-                   xlab = paste("Dimension",j,sep=" "), ylab = colnames(clinical_data)[i])
-      #      g<-ggplot(cbind(clinical_data,input),aes(x=sprintf("Dim_%02d",j), y=colnames(clinical_data)[i])) +
-      #        geom_point() +
-      #        geom_smooth(method = "lm") +
-      #        geom_rug() +
-      #        ggtitle(paste(colnames(clinical_data)[i],title,"Dim",j,sep=" ")) +
-      #        xlab(paste("Dimension",j,sep=" ")) +
-      #        ylab(colnames(clinical_data)[i]) +
-      #        theme_classic()
-      gg<-c(gg,list(g))
-    }
-    graph<-c(graph,list(gg))
-  }
-  return(graph)
-}
-
-
-#### Two Component-Clinical Color Plotting ####
-
-TwoComponentPlot<-function(input, title){
-  for (j in 1:(ncol(input)-1)){
-    dims<-c(j,j+1)
-    plot(input[,dims],pch=20,main=title,xlab=paste("Dim",j,sep=" "), ylab=paste("Dim",(j+1),sep=" "))
-    text(as.numeric(input[,dims[1]]), as.numeric(input[,dims[2]]),labels=subject_id, cex= 0.7, pos=3, offset=0.2)
-  }
-  for (i in 2:ncol(clinical_data)){
-    colors <- brewer.pal(10, "Spectral")[as.integer(cut(as.vector(clinical_data[[i]]), 10))]
-    for (j in 1:(ncol(input)-1)){
-      dims<-c(j,j+1)
-      plot(input[,dims], pch=20, main=paste(title,colnames(clinical_data)[i],sep=" "), col=colors,xlab=paste("Dim",j,sep=" "), ylab=paste("Dim",(j+1),sep=" "))
-    }
-  }
-}
-
-
-#### Component - Clinical data Correlation ####
-
-ComponentClinicalCorr<-function(input, dirname){
-  n_clinical_data<-ncol(clinical_data)-1
-  output<-data.frame(matrix(ncol=2*n_clinical_data, nrow=n_components))
-  colnames(output)[2*(1:n_clinical_data)-1]<-paste(colnames(clinical_data)[-1],"r",sep="_")
-  colnames(output)[2*(1:n_clinical_data)]<-paste(colnames(clinical_data)[-1],"p",sep="_")
-  rownames(output)<-sprintf("Dim_%02d",1:n_components)
-  for (i in 1:n_components){
-    for (j in 1:n_clinical_data){
-      cortest<-cor.test(as.numeric(input[,i]), clinical_data[,j+1], method="pearson")
-      output[i,2*j-1]<-cortest$estimate
-      output[i,2*j]<-cortest$p.value
-    }
-  }
-  write.csv(output, file.path(dirname,"ComponentClinical.csv"))
-  return(output)
-}
+connections<-connection_data[which(connection_data$ID_pnTTC==connection_data[1,ID_pnTTC]),2:5]
+connections$edge<-paste(connections$from,connections$to,sep="_")
+colnames(connections)<-c("from","from_label","to","to_label","edge")
+n_connections<-nrow(connections)
+roi<-data.frame(label=c(connections$from,connections$to))
+roi<-as.character(unique(roi$label))
+roi<-roi[order(roi)]
 
 
 #### GLM Analysis  ####
 
-DoGLM_FC<-function(){
-  dirname<-ExpDir("GLMClinical")
-  output<-data.frame(matrix(ncol=3, nrow=n_connections))
-  output[,1]<-connections
-  output[,2]<-ConvertID(connections_matrix[,1],roiid_data,input_roiid_type,"label_proper")
-  output[,3]<-ConvertID(connections_matrix[,2],roiid_data,input_roiid_type,"label_proper")
-  colnames(output)<-c("Connection_ID","row","column")
-  
-  TS<-clinical_data$Tanner_Stage
-  age<-clinical_data$Age_at_MRI
-  centered_TS<-TS-mean(TS)
-  centered_age<-age-mean(age)
+GLMroutine<-function(input_mri_data,input_covar,id_covar,n_expvar){
+  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_connections))
+  collabel<-colnames(input_covar)[id_covar+1]
+  input_covar<-data.frame(input_covar[,id_covar+1])
+  colnames(input_covar)<-collabel
+  for (i in 1:n_connections){
+    edge_data<-input_mri_data[which(input_mri_data$from==connections[i,"from"]),]
+    edge_data<-input_mri_data[which(input_mri_data$to==connections[i,"to"]),"r"]
+    if (length(id_covar)==1){
+      glmfit<-lm(edge_data~input_covar[,1])
+    }else if (length(id_covar)==2){
+      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2])
+    }else if (length(id_covar)==3){
+      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2]+input_covar[,3])
+    }else if (length(id_covar)==4){
+      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2]+input_covar[,3]+input_covar[,4])
+    }
+    if (length(id_covar)>=2){
+      vifactor<-vif(glmfit)
+    }else{
+      vifactor<-NA
+    }
+    stats<-c(AIC(glmfit),BIC(glmfit))
+    for (j in 1:n_expvar){
+      contrast<-matrix(0L,nrow=1, ncol=length(id_covar)+1)
+      contrast[1,j+1]<-1
+      ttest <- summary(glht(glmfit, linfct = contrast))$test
+      stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
+    }
+    output[i,]<-stats
+  }
+  collabel<-NULL
+  for (j in 1:n_expvar){
+    collabel<-c(collabel,paste(colnames(input_covar)[j],c("beta","sigma","t","p","VIF"),sep="_"))
+  }
+  collabel<-c("AIC","BIC",collabel)
+  model_name<-paste(colnames(input_covar),collapse="_")
+  collabel<-paste(collabel,"of",model_name,"model",sep="_")
+  colnames(output)<-collabel
+  return(output)
+}
 
-  output_add<-data.frame(matrix(ncol=6,nrow=n_connections))
-  
-  for (i in 1:n_connections){
-    ObjV<-connection_data[,i+1]
-    glmfit <- lm(ObjV ~ centered_TS + centered_age)
-    contrast <- matrix(c(0, 1, 0), 1)
-    ttest <- summary(glht(glmfit, linfct = contrast))$test
-    stats <-c(ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],AIC(glmfit),BIC(glmfit))
-    output_add[i,]<-stats
-    collabel<-paste("TS",c("beta","sigma","t","p"),sep="_")
-    collabel<-c(collabel,"AIC","BIC")
-    collabel<-paste("TS_Age_model",collabel,sep="_")
-    colnames(output_add)<-collabel
+DoGLM_FC<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI")){
+  dirname<-ExpDir("GLM_FC")
+  n_covariates<-length(covariates_label)
+  output<-connections
+  clinical_data_subset<-clinical_data
+  for (i in 1:n_covariates){
+    clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,covariates_label[i]])),]
   }
-  output<-cbind(output,output_add)
+  subject_id_subset<-clinical_data_subset$ID_pnTTC
   
-  for (i in 1:n_connections){
-    ObjV<-connection_data[,i+1]
-    glmfit <- lm(ObjV ~ centered_TS)
-    contrast <- matrix(c(0, 1), 1)
-    ttest <- summary(glht(glmfit, linfct = contrast))$test
-    stats <-c(ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],AIC(glmfit),BIC(glmfit))
-    output_add[i,]<-stats
-    collabel<-paste("TS",c("beta","sigma","t","p"),sep="_")
-    collabel<-c(collabel,"AIC","BIC")
-    collabel<-paste("TS_model",collabel,sep="_")
-    colnames(output_add)<-collabel
+  covariates_data_subset<-data.frame(ID_pnTTC=clinical_data_subset$ID_pnTTC)
+  for (i in 1:n_covariates){
+    covariates_data_subset<-cbind(covariates_data_subset,clinical_data_subset[,covariates_label[i]])
   }
-  output<-cbind(output,output_add)
-  
-  for (i in 1:n_connections){
-    ObjV<-connection_data[,i+1]
-    glmfit <- lm(ObjV ~ centered_age)
-    contrast <- matrix(c(0, 1), 1)
-    ttest <- summary(glht(glmfit, linfct = contrast))$test
-    stats <-c(ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],AIC(glmfit),BIC(glmfit))
-    output_add[i,]<-stats
-    collabel<-paste("Age",c("beta","sigma","t","p"),sep="_")
-    collabel<-c(collabel,"AIC","BIC")
-    collabel<-paste("Age_model",collabel,sep="_")
-    colnames(output_add)<-collabel
+  for (i in 2:ncol(covariates_data_subset)){
+    ave<-mean(covariates_data_subset[,i])
+    covariates_data_subset[,i]<-covariates_data_subset[,i]-ave
   }
-  output<-cbind(output,output_add)
+  colnames(covariates_data_subset)[-1]<-covariates_label
   
+  connection_data_subset<-data.frame(matrix(ncol=ncol(connection_data),nrow=0))
+  for (i in subject_id_subset){
+    connection_data_subset<-rbind(connection_data_subset,connection_data[which(connection_data$ID_pnTTC==i),])
+  }
+  colnames(connection_data_subset)<-colnames(connection_data)
   
-  best_model<-data.frame(matrix(ncol=1, nrow=n_connections))
+  for (i in n_covariates:1){
+    n_expvar<-i
+    for (j in 1:dim(combn(n_covariates,i))[2]){
+      id_covar<-combn(n_covariates,i)[,j]
+      output<-cbind(output,GLMroutine(connection_data_subset, covariates_data_subset,id_covar,n_expvar))
+    }
+  }
+  
+  best_model<-data.frame(matrix(ncol=1, nrow=(ncol(connection_data_subset)-1)))
   for (i in c('AIC', 'BIC')){
     xic<-output[, grep(i, names(output))]
-    for (k in 1:n_connections){
-      best_id<-which.min(xic[k,])
-      if (best_id==1){
-        best_model[k,1]<-"TS_Age"
-      }else if (best_id==2){
-        best_model[k,1]<-"TS"
-      }else if (best_id==3){
-        best_model[k,1]<-"Age"
-      }
+    for (j in 1:(ncol(connection_data_subset)-1)){
+      best_model[j,1]<-which.min(xic[j,])
     }
     colnames(best_model)<-paste(i,"best_model",sep="_")
     output<-cbind(output,best_model)
   }
-  write.csv(output, file.path(dirname,"GLMresult.csv"),row.names=F)
+  write.csv(output, file.path(dirname,"GLM.csv"),row.names=F)
   return(output)
 }
 
@@ -442,36 +358,3 @@ DoGTA<-function(){
   write.csv(output, file.path(dirname,"GTA.csv"),row.names=F)
   return(output)
 }
-
-
-#### Circular Plotting ####
-
-CircularPlot<-function(input){
-  nodes<-input[[1]]
-  nodes$angle <- 90 - 360 * nodes$id / nrow(nodes)
-  nodes$hjust<-ifelse(nodes$angle < -90, 1, 0)
-  nodes$angle<-ifelse(nodes$angle < -90, nodes$angle+180, nodes$angle)
-  nodes$label_proper<-ConvertID(as.character(nodes$label),roiid,input_roiid_type,graph_roiid_type)
-  graph_data <- graph_from_data_frame(d = input[[2]], vertices = nodes, directed = TRUE)
-  output<-ggraph(graph_data, layout = "linear",circular = TRUE) + 
-    geom_edge_arc(aes(color=r, alpha=r),width=2) +
-    geom_node_text(aes(x = x*1.03, y=y*1.03, label=label_proper, angle = angle, hjust=hjust), size=3, alpha=1) +
-    geom_node_point(aes(x=x, y=y),size=2, alpha=1) +
-    scale_edge_color_continuous(low = "green", high = "red")+
-    scale_edge_alpha_continuous(range = c(0.1, 1))+
-    expand_limits(x = c(-1.6, 1.6), y = c(-1.6, 1.6))+
-    theme_void()
-  return(output)
-  #    theme_graph(background=NA)
-  #    geom_edge_arc(aes(color=cor, width=2),alpha = 0.2) + 
-  #    scale_edge_width(range = c(0.2, 2)) +
-  #    geom_node_text(aes(label = label)) +
-  #    labs(edge_width = "Letters") +
-  #    scale_colour_manual(values= rep(brewer.pal(9,"Paired") , 30)) +
-  #    scale_size_continuous(range = c(0.1,10) ) +
-  #    scale_colour_manual(values= rep( brewer.pal(9,"Paired") , 30)) +
-  #    theme(legend.position="none", plot.margin=unit(c(0,0,0,0),"cm")) +
-  #    theme_graph(background=NA, caption_size = NA)
-  #    theme_void()
-}
-

@@ -54,7 +54,7 @@ library(tidyverse)
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
-source(file.path(script_dir,"Functionalities/Graphs.R"))
+source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
 #### Data Loading ####

@@ -60,7 +60,7 @@ library(car)
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
-source(file.path(script_dir,"Functionalities/Graphs.R"))
+source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
 #### Data Loading ####
@@ -75,6 +75,7 @@ for (i in subject_id){
 }
 structural_data<-structural_data[which(structural_data$flag),-(ncol(structural_data))]
 colnames(structural_data)[-1]<-ConvertID(colnames(structural_data)[-1],roi_data,input_roi_type,"ID_long")
+n_rois<-ncol(structural_data)-1
 HeatmapPlot(structural_data,
             "Scaled ROI Measures",
             "ROI",
@@ -85,13 +86,11 @@ HeatmapPlot(structural_data,
 #### General Linear Model Analysis ####
 
 GLMroutine<-function(input_structural_data,input_covar,id_covar,n_expvar){
-  n_structures<-ncol(input_structural_data)-1
-  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_structures))
-  n_structures<-ncol(input_structural_data)-1
+  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_rois))
   collabel<-colnames(input_covar)[id_covar+1]
   input_covar<-data.frame(input_covar[,id_covar+1])
   colnames(input_covar)<-collabel
-  for (i in 1:n_structures){
+  for (i in 1:n_rois){
     if (length(id_covar)==1){
       glmfit<-lm(input_structural_data[,i+1]~input_covar[,1])
     }else if (length(id_covar)==2){
@@ -130,7 +129,7 @@ DoGLM<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI"),global_cov
   dirname<-ExpDir("GLM")
   n_covariates<-length(covariates_label)
   global_covariate_data<-read.csv(file.path(input_dir,global_covariate_file))
-  output<-data.frame(matrix(ncol=2, nrow=(ncol(structural_data)-1)))
+  output<-data.frame(matrix(ncol=2, nrow=n_rois))
   output[,1]<-colnames(structural_data)[-1]
   output[,2]<-ConvertID(colnames(structural_data)[-1],roi_data,"ID_long","label_proper")
   colnames(output)<-c("ROI_ID","ROI_name")
