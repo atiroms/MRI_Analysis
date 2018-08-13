@@ -84,6 +84,7 @@ n_connections<-nrow(connections)
 roi<-data.frame(label=c(connections$from,connections$to))
 roi<-as.character(unique(roi$label))
 roi<-roi[order(roi)]
+n_rois<-length(roi)
 
 
 #### GLM Analysis  ####
@@ -255,23 +256,16 @@ DoTSNE_FC<-function(){
 #### Graph object creation ####
 
 Edges2Graph<-function(input){
-  edgename<-colnames(input)[-1]
-  n_inputedges<-length(edgename)
-  edges<-data.frame(matrix(ncol=3, nrow=n_inputedges))
-  for (i in 1:n_inputedges){
-    split<-strsplit(edgename[[i]], "_")
-    edges[i,1]<-split[[1]][[1]]
-    edges[i,2]<-split[[1]][[2]]
+  edges<-data.frame(matrix(ncol=3,nrow=n_connections))
+  edges[,1:2]<-connections[,c("from","to")]
+  for (i in 1:n_connections){
+    edges[,3]<-as.numeric(input[intersect(which(input$from==connections[i,"from"]),
+                               which(input$to==connections[i,"to"])),"r"])
   }
-  edges[,3]<-as.numeric(input[1,-1])
   colnames(edges)<-c("from","to","weight")
-  nodes<-c(edges[,1],edges[,2])
-  nodes<-data.frame(id=unique(nodes))
-  nodes$id<-nodes$id[order(nodes$id)]
-  nodes$label_proper<-ConvertID(nodes$id,roiid_data,"ID_long","label_proper")
-  
+  nodes<-data.frame(id=roi)
+  nodes$label_proper<-ConvertID(nodes$id,roi_data,"ID_long","label_proper")
   output <- graph.data.frame(d = edges, vertices = nodes, directed = F)
-  
   return(output)
 }
 
@@ -344,17 +338,28 @@ ItrCost<-function(input_graph, input_cost=cost){
 }
 
 
+#### Weighted Graph Theory Metric Calculation ####
+WeightedMetric<-function(){
+  
+}
+
+
 #### Graph Theoretical Analysis, subject-wise ####
 
 DoGTA<-function(){
   dirname<-ExpDir("GTA")
-  output<-data.frame()
+  output_unweighted<-data.frame()
+  output_weighted<-data.frame()
   for (i in 1:n_subject){
-    subject_graph<-Edges2Graph(connection_data[i,])
-    subject_metric<-ItrCost(subject_graph)
-    output<-rbind(output,subject_metric[1,-1])
+    subject_graph<-Edges2Graph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
+    subject_metric_unweighted<-ItrCost(subject_graph)
+    output_unweighted<-rbind(output_unweighted,subject_metric_unweighted[1,-1])
+    subject_metric_weighted<-WeightedMetric(subject_graph)
+    output_weighted<-rbind(output_weighted,wubject_metric_weighted[1,-1])
   }
-  output<-data.frame(ID_pnTTC=subject_id,output)
-  write.csv(output, file.path(dirname,"GTA.csv"),row.names=F)
+  output_unweighted<-data.frame(ID_pnTTC=subject_id,output_unweighted)
+  output_weighted<-data.frame(ID_pnTTC=subject_id,output_weighted)
+  write.csv(output_unweighted, file.path(dirname,"GTA_unweighted.csv"),row.names=F)
+  write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
   return(output)
 }
