@@ -22,8 +22,9 @@ functional_file <- "W1_CONN_BOLD_DK.csv"
 #roi_subset<- ""
 #roi_subset<- "cortex"
 roi_subset<- "subcortex"
-roi_subset<- "cerebellum"
-roi_subset<- "misc"
+#roi_subset<- "cerebellum"
+#roi_subset<- "global"
+#roi_subset<- "misc"
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
@@ -65,7 +66,11 @@ functional_data$flag<-F
 for (i in subject_id){
   functional_data[which(functional_data$ID_pnTTC==i),"flag"]<-T
 }
-functional_data<-functional_data[which(functional_data$flag),-(ncol(functional_data))]
+functional_data<-functional_data[which(functional_data$flag),-ncol(functional_data)]
+if (roi_subset!=""){
+  functional_data<-cbind(functional_data[,c(1,2)],
+                         functional_data[,which(ConvertID(colnames(functional_data)[c(-1,-2)],roi_data,"ID_long","group")==roi_subset)+2])
+}
 n_ROI<-ncol(functional_data)-2
 
 
