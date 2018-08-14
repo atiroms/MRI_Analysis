@@ -4,12 +4,11 @@
 
 
 #### Libraries ####
-library(tidyverse)
 
 
 #### Functions ####
 
-WeightedCharPathLength<-function(input){
+WeightedDistance<-function(input){
   edges<-data.frame(get.edgelist(input),as.numeric(E(input)$weight))
   colnames(edges)<-c("from","to","weight")
   edges$length<-1/edges$weight
@@ -59,4 +58,53 @@ WeightedCharPathLength<-function(input){
     }
   }
   return(list(distance,path))
+}
+
+
+WeightedCharPath<-function(input){
+  distance<-WeightedDistance(input)[[1]]
+  for (i in 1:nrow(distance)){
+    distance[i,i]<-NA
+  }
+  output<-mean(distance,na.rm=T)
+  return(output)
+}
+
+
+WeightedGlobalEfficiency<-function(input){
+  distance<-WeightedDistance(input)[[1]]
+  for (i in 1:nrow(distance)){
+    distance[i,i]<-NA
+  }
+  output<-mean(1/distance,na.rm=T)
+  return(output)
+}
+
+
+WeightedEccentricity<-function(input){
+  distance<-WeightedDistance(input)[[1]]
+  for (i in 1:nrow(distance)){
+    distance[i,i]<-NA
+  }
+  output<-data.frame(matrix(ncol=2,nrow=0))
+  for (i in 1:nrow(distance)){
+    output<-rbind(output,cbind(ID_long=colnames(distance)[i],value=max(distance[,i],na.rm=T)))
+  }
+  return(output)
+}
+
+
+WeightedRadius<-function(input){
+  eccentricity<-WeightedEccentricity(input)
+  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
+  output<-min(as.numeric(eccentricity$value))
+  return(output)
+}
+
+
+WeightedDiameter<-function(input){
+  eccentricity<-WeightedEccentricity(input)
+  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
+  output<-max(as.numeric(eccentricity$value))
+  return(output)
 }
