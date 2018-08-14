@@ -280,7 +280,7 @@ DoJK<-function(){
   dirname<-ExpDir("JK")
   overall_corr<-CalcCorr(structural_data[-1],plot=F,save=F)[[2]]
   jkstats<-data.frame(matrix(nrow=0,ncol=6))
-  jkstats<-rbind(jkstats,cbind(statistics=rep("overall_corr",nrow(overall_corr)),overall_corr[,-6]))
+  jkstats<-rbind(jkstats,cbind(metric=rep("overall_corr",nrow(overall_corr)),overall_corr[,-6]))
   jkpe<-jkpv<-jkz<-data.frame(matrix(ncol=6,nrow=0))
   for (i in 1:n_subject){
     jk<-CalcCorr(structural_data[-i,-1],plot=F,save=F)[[2]]
@@ -293,8 +293,8 @@ DoJK<-function(){
                                               which(jkpe$to==overall_corr[j,"to"])),"r"]))
     sd_jkpe<-sd(as.numeric(jkpe[intersect(which(jkpe$from==overall_corr[j,"from"]),
                                           which(jkpe$to==overall_corr[j,"to"])),"r"]))
-    jkstats<-rbind(jkstats,cbind(statistics="mean_jkpe",overall_corr[j,1:4],r=mean_jkpe))
-    jkstats<-rbind(jkstats,cbind(statistics="sd_jkpe",overall_corr[j,1:4],r=sd_jkpe))
+    jkstats<-rbind(jkstats,cbind(metric="mean_jkpe",overall_corr[j,1:4],r=mean_jkpe))
+    jkstats<-rbind(jkstats,cbind(metric="sd_jkpe",overall_corr[j,1:4],r=sd_jkpe))
     for (i in 1:n_subject){
       jkz<-rbind(jkz,
                  cbind(ID_pnTTC=subject_id[i], overall_corr[j,1:4],
@@ -304,10 +304,10 @@ DoJK<-function(){
     }
   }
   jkz<-jkz[order(jkz$ID_pnTTC),]
-  jkstats<-jkstats[c(which(jkstats$statistics=="overall_corr"),
-                     which(jkstats$statistics=="mean_jkpe"),
-                     which(jkstats$statistics=="sd_jkpe")),]
-  colnames(jkstats)<-c("statistics","from","from_label","to","to_label","value")
+  jkstats<-jkstats[c(which(jkstats$metric=="overall_corr"),
+                     which(jkstats$metric=="mean_jkpe"),
+                     which(jkstats$metric=="sd_jkpe")),]
+  colnames(jkstats)<-c("metric","from","from_label","to","to_label","value")
   colnames(jkpe)<-colnames(jkpv)<-colnames(jkz)<-c("ID_pnTTC","from","from_label","to","to_label","r")
   write.csv(jkstats, file.path(dirname,"JKStats.csv"),row.names=F)
   write.csv(jkpe, file.path(dirname,"JKPE.csv"),row.names=F)

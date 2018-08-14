@@ -10,26 +10,26 @@
 parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
-input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
+#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
 #input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_Power")
-#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
+input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
 output_dir <- file.path(input_dir,"Functional_data")
 
-functional_file <- "W1_CONN_BOLD_HO.csv"
+#functional_file <- "W1_CONN_BOLD_HO.csv"
 #functional_file <- "W1_CONN_BOLD_Power.csv"
-#functional_file <- "W1_CONN_BOLD_DK.csv"
+functional_file <- "W1_CONN_BOLD_DK.csv"
 
-#roi_subset<- ""
+roi_subset<- ""
 #roi_subset<- "cortex"
-roi_subset<- "subcortex"
+#roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
 
 input_roi_type <- "label_conn"
