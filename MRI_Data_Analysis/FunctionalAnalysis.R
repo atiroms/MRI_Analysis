@@ -6,18 +6,18 @@
 
 #### Parameters ####
 
-parent_dir <- "D:/atiroms"
-#parent_dir <- "C:/Users/atiro"
+#parent_dir <- "D:/atiroms"
+parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
-input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
+#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
 #input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_Power")
-#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
+input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
 output_dir <- file.path(input_dir,"Functional_data")
 
-functional_file <- "W1_CONN_BOLD_HO.csv"
+#functional_file <- "W1_CONN_BOLD_HO.csv"
 #functional_file <- "W1_CONN_BOLD_Power.csv"
-#functional_file <- "W1_CONN_BOLD_DK.csv"
+functional_file <- "W1_CONN_BOLD_DK.csv"
 
 roi_subset<- ""
 #roi_subset<- "cortex"
@@ -54,7 +54,7 @@ library(tidyverse)
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
-source(file.path(script_dir,"Functionalities/Graphs.R"))
+source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
 #### Data Loading ####
@@ -153,6 +153,7 @@ DoICA_All<-function(){
 
 #### Jackknife Estimate One subject at a time ####
 
+# not yet checked after update
 DoJK<-function(jktype="JKPE"){
   dirname<-ExpDir(paste(jktype,sep=""))
   for (i in subject_id){
