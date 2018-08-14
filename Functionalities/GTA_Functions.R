@@ -37,12 +37,12 @@ WeightedDistance<-function(input){
       unreached_id[closest_remaining]<-F
       length_unreached[,closest_remaining]<-0
       for (j in closest_remaining){
-        unreached_existing_id<-which(length_unreached[i,]>0)
+        unreached_existing_id<-which(length_unreached[j,]>0)
         for (k in unreached_existing_id){
-          old_distance<-distance[j,k]
+          old_distance<-distance[i,k]
           new_distance<-distance[i,j]+length_unreached[j,k]
           if (new_distance<old_distance){
-            distance[j,k]<-new_distance
+            distance[i,k]<-new_distance
             path[i,k]<-path[i,j]+1
           }
         }
