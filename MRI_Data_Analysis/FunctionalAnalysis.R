@@ -153,6 +153,7 @@ DoICA_All<-function(){
 
 #### Jackknife Estimate One subject at a time ####
 
+# not yet checked after update
 DoJK<-function(jktype="JKPE"){
   dirname<-ExpDir(paste(jktype,sep=""))
   for (i in subject_id){

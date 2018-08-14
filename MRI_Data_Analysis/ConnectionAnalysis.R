@@ -89,6 +89,7 @@ n_rois<-length(roi)
 
 #### GLM Analysis  ####
 
+#not yet checked after update
 GLMroutine<-function(input_mri_data,input_covar,id_covar,n_expvar){
   output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_connections))
   collabel<-colnames(input_covar)[id_covar+1]
@@ -181,6 +182,7 @@ DoGLM_FC<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI")){
 
 #### Principal Component Analysis ####
 
+# not yet updated
 DoPCA_FC<-function(){
   dirname<-ExpDir("PCA_FC")
   data<-connection_data[-1]
@@ -208,6 +210,7 @@ DoPCA_FC<-function(){
 
 #### Independent Component Analysis ####
 
+# not yet updated
 DoICA_FC<-function(){
   dirname<-ExpDir("ICA_FC")
   data<-connection_data[-1]
@@ -236,6 +239,7 @@ DoICA_FC<-function(){
 
 #### t-SNE Analysis ####
 
+# not yet updated
 DoTSNE_FC<-function(){
   dirname<-ExpDir("tSNE_FC")
   indexcolumn<-connection_data[1]
