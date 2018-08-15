@@ -59,6 +59,7 @@ library(qgraph)
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
+source(file.path(script_dir,"Functionalities/GTA_Functions.R"))
 source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
