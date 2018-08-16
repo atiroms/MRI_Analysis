@@ -216,7 +216,7 @@ WeightedModularity<-function(input,gamma_v=1){
   n_nodes<-ncol(weight)
   K<-colSums(weight)
   m<-sum(K)
-  B<-weight-gamma_v*(K%*%t(K))/m
+  B<-as.matrix(weight-gamma_v*(K%*%t(K))/m)
   Ci<-rep(1,n_nodes)
   cn<-1
   U<-c(1,0)
@@ -229,6 +229,7 @@ WeightedModularity<-function(input,gamma_v=1){
     V<-eig$vectors
     i1<-which.max(D)
     v1<-V[,i1]
+#    v1<--V[,i1]
     S<-rep(1,Ng)
     S[v1<0]<--1
     q<-t(S) %*% Bg %*% S
@@ -237,12 +238,12 @@ WeightedModularity<-function(input,gamma_v=1){
       diag(Bg)<-0
       indg<-rep(T,Ng)
       Sit<-S
-      while (any(indg)){
+      while (sum(indg,na.rm=T)!=0){
         Qit<-rep(qmax,length(Sit))-4*Sit*(Bg %*% Sit)
         imax<-which.max(Qit*indg)
-        qmax<-max(Qit*indg)
+        qmax<-max(Qit*indg,na.rm=T)
         Sit[imax]<--Sit[imax]
-        indg[imax]<-F
+        indg[imax]<-NaN
         if (qmax>q){
           q<-qmax
           S<-Sit
@@ -269,7 +270,7 @@ WeightedModularity<-function(input,gamma_v=1){
   s<-replicate(n_nodes,Ci)
   Q<-(!(s-t(s)))*B/m
   Q<-sum(Q)
-  return(Q)
+  return(list(Q,Ci))
 }
 
 
