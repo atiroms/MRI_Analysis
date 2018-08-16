@@ -55,12 +55,8 @@ iGraph2LengthMat<-function(input){
 }
 
 
-WeightedDistance<-function(input_igraph=NULL,input_length=NULL){
-  if (is.null(input_length)){
-    length<-iGraph2LengthMat(input_igraph)
-  }else{
-    length<-input_length
-  }
+WeightedDistance<-function(input){
+  length<-iGraph2LengthMat(input)
   n_nodes<-ncol(length)  
   distance<-matrix(Inf,ncol=n_nodes,nrow=n_nodes)
   diag(distance)<-0
@@ -215,8 +211,65 @@ WeightedLocalEfficiency<-function(input){
 }
 
 
-WeightedModularity<-function(input){
-  
+WeightedModularity<-function(input,gamma_v=1){
+  weight<-iGraph2WeightMat(input)
+  n_nodes<-ncol(weight)
+  K<-colSums(weight)
+  m<-sum(K)
+  B<-weight-gamma_v*(K%*%t(K))/m
+  Ci<-rep(1,n_nodes)
+  cn<-1
+  U<-c(1,0)
+  ind<-1:n_nodes
+  Bg<-B
+  Ng<-n_nodes
+  while (U[1]){
+    eig<-eigen(Bg)
+    D<-eig$values
+    V<-eig$vectors
+    i1<-which.max(D)
+    v1<-V[,i1]
+    S<-rep(1,Ng)
+    S[v1<0]<--1
+    q<-t(S) %*% Bg %*% S
+    if (q>1e-10){
+      qmax<-q
+      diag(Bg)<-0
+      indg<-rep(T,Ng)
+      Sit<-S
+      while (any(indg)){
+        Qit<-rep(qmax,length(Sit))-4*Sit*(Bg %*% Sit)
+        imax<-which.max(Qit*indg)
+        qmax<-max(Qit*indg)
+        Sit[imax]<--Sit[imax]
+        indg[imax]<-F
+        if (qmax>q){
+          q<-qmax
+          S<-Sit
+        }
+      }
+      
+      if (abs(sum(S))==Ng){
+        U<-U[-1]
+      }else{
+        cn<-cn+1
+        Ci[ind[S==1]]<-U[1]
+        Ci[ind[S==-1]]<-cn
+        U<-c(cn,U)
+      }
+    }else{
+      U<-U[-1]
+    }
+    
+    ind<-which(Ci==U[1])
+    bg<-B[ind,ind]
+    Bg<-bg-diag(rowSums(bg))
+    Ng<-length(ind)
+  }
+  s<-replicate(n_nodes,Ci)
+  Q<-(!(s-t(s)))*B/m
+  Q<-sum(Q)
+  return(Q)
 }
 
 
