@@ -212,6 +212,7 @@ WeightedLocalEfficiency<-function(input){
 
 
 WeightedModularity<-function(input,gamma_v=1){
+  # Newman 2006 algorithm
   weight<-iGraph2WeightMat(input)
   n_nodes<-ncol(weight)
   K<-colSums(weight)
@@ -280,7 +281,14 @@ WeightedDegreeDist<-function(input){
 
 
 WeightedAssortabilityCoef<-function(input){
-  
+  weight<-iGraph2WeightMat(input)
+  strength<-rowSums(weight)
+  id<-which(upper.tri(weight)*weight>0,arr.ind = T)
+  K<-nrow(id)
+  stri<-strength[id[,1]]
+  strj<-strength[id[,2]]
+  r<-(sum(stri*strj)/K-(sum(0.5*(stri+strj))/K)^2)/(sum(0.5*(stri^2+strj^2))/K-(sum(0.5*(stri+strj))/K)^2)
+  return(r)
 }
 
 
@@ -290,7 +298,9 @@ WeightedSmallWorldness<-function(input){
 
 
 WeightedStrength<-function(input){
-  
+  weight<-iGraph2WeightMat(input)
+  strength<-rowSums(weight)
+  return(strength)
 }
 
 
