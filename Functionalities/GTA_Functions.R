@@ -64,8 +64,12 @@ WeightedStrength<-function(input){
 }
 
 # Distance / Shortest Path Length
-WeightedDistance<-function(input){
-  length<-iGraph2LengthMat(input)
+WeightedDistance<-function(input_igraph=NULL,input_length=NULL){
+  if (is.null(input_length)){
+    length<-iGraph2LengthMat(input_igraph)
+  }else{
+    length<-input_length
+  }
   n_nodes<-ncol(length)  
   distance<-matrix(Inf,ncol=n_nodes,nrow=n_nodes)
   diag(distance)<-0
@@ -120,19 +124,7 @@ WeightedCharPath<-function(input_igraph=NULL,input_distancemat=NULL){
   return(output)
 }
 
-
-WeightedGlobalEfficiency<-function(input_igraph=NULL,input_distancemat=NULL){
-  if (is.null(input_distancemat)){
-    distance<-WeightedDistance(input_igraph)[[1]]
-  }else{
-    distance<-input_distancemat
-  }
-  diag(distance)<-NA
-  output<-mean(1/distance,na.rm=T)
-  return(output)
-}
-
-
+# (not in Rubinov NeuroImage 2010)
 WeightedEccentricity<-function(input_igraph=NULL,input_distancemat=NULL){
   if (is.null(input_distancemat)){
     distance<-WeightedDistance(input_igraph)[[1]]
@@ -147,7 +139,7 @@ WeightedEccentricity<-function(input_igraph=NULL,input_distancemat=NULL){
   return(output)
 }
 
-
+# (not in Rubinov NeuroImage 2010)
 WeightedRadius<-function(input_igraph=NULL,input_distancemat=NULL){
   if (is.null(input_distancemat)){
     distance<-WeightedDistance(input_igraph)[[1]]
@@ -155,12 +147,12 @@ WeightedRadius<-function(input_igraph=NULL,input_distancemat=NULL){
     distance<-input_distancemat
   }
   eccentricity<-WeightedEccentricity(input_distancemat=distance)
-#  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
+  #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
   output<-min(as.numeric.factor(eccentricity$value))
   return(output)
 }
 
-
+# (not in Rubinov NeuroImage 2010)
 WeightedDiameter<-function(input_igraph=NULL,input_distancemat=NULL){
   if (is.null(input_distancemat)){
     distance<-WeightedDistance(input_igraph)[[1]]
@@ -168,12 +160,39 @@ WeightedDiameter<-function(input_igraph=NULL,input_distancemat=NULL){
     distance<-input_distancemat
   }
   eccentricity<-WeightedEccentricity(input_distancemat=distance)
-#  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
+  #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
   output<-max(as.numeric.factor(eccentricity$value))
   return(output)
 }
 
+# Efficiency (of nodes)
+WeightedEfficiency<-function(input_igraph=NULL,input_distancemat=NULL){
+  if (is.null(input_distancemat)){
+    distance<-WeightedDistance(input_igraph)[[1]]
+  }else{
+    distance<-input_distancemat
+  }
+  diag(distance)<-NA
+  output<-rowMeans(1/distance,na.rm=T)
+  return(output)
+}
 
+# Global Efficiency
+WeightedGlobalEfficiency<-function(input_igraph=NULL,input_distancemat=NULL){
+  if (is.null(input_distancemat)){
+    distance<-WeightedDistance(input_igraph)[[1]]
+  }else{
+    distance<-input_distancemat
+  }
+  efficiency<-WeightedGlobalEfficiency(input_distance<-distance)
+  output<-mean(efficiency)
+  return(output)
+}
+
+
+#### Measures of Segregation ####
+
+# Weighted clustering coefficient (of nodes)
 WeightedClustCoef<-function(input){
   weight<-iGraph2WeightMat(input)
   k<-rowSums(weight!=0)
@@ -184,7 +203,14 @@ WeightedClustCoef<-function(input){
   return(c)
 }
 
+# Average Weighted clustering coefficient (of graph)
+AverageWeightedClustCoef<-function(input){
+  clustcoef<-WeightedClustCoef(input)
+  ave<-mean(clustcoef)
+  return(ave)
+}
 
+# Weighted Transitivity
 WeightedTransitivity<-function(input){
   weight<-iGraph2WeightMat(input)
   k<-rowSums(weight!=0)
@@ -195,7 +221,7 @@ WeightedTransitivity<-function(input){
   return(t)
 }
 
-
+# Weighted local efficiency (of nodes)
 WeightedLocalEfficiency<-function(input){
   #algorithm of Wang 2016
   weight<-iGraph2WeightMat(input)
@@ -224,7 +250,14 @@ WeightedLocalEfficiency<-function(input){
   return(e)
 }
 
+# Average weighted local efficiency (of graph)
+AverageWeightedLocalEfficiency<-function(input){
+  localefficiency<-WeightedLocalEfficiency(input)
+  ave<-mean(localefficiency)
+  return(ave)
+}
 
+# Weighted modularity
 WeightedModularity<-function(input,gamma_v=1){
   # Newman 2006 algorithm
   weight<-iGraph2WeightMat(input)
@@ -244,7 +277,7 @@ WeightedModularity<-function(input,gamma_v=1){
     V<-eig$vectors
     i1<-which.max(D)
     v1<-V[,i1]
-#    v1<--V[,i1]
+    #    v1<--V[,i1]
     S<-rep(1,Ng)
     S[v1<0]<--1
     q<-t(S) %*% Bg %*% S
@@ -287,13 +320,56 @@ WeightedModularity<-function(input,gamma_v=1){
   return(list(Q,Ci))
 }
 
+# Community Structure using Louvain algorithm (not in Rubinov NeuroImage 2010)
 
-WeightedDegreeDist<-function(input){
+# Community structure using link-based algorithm (not in Rubinov NeuroImage 2010)
+
+# Community structure using clique-percolation (not in Rubinov NeuroImage 2010)
+
+
+#### Means of centrality ####
+
+# Weighted Closeness Centrality
+WeightedClosenessCentrality<-function(input){
   
 }
 
+# Weighted Betweenness Centrality
+WeightedBetweennessCentrality<-function(input){
+  
+}
 
-WeightedAssortabilityCoef<-function(input){
+# Weighted Eigenvector Centrality (not in Rubinov NeuroImage 2010)
+WeightedEigenvectorCentrality<-function(input){
+  
+}
+
+# Weighted Within-module degree z-score
+
+# Weighted Participation coefficient
+
+
+#### Network Motifs ####
+# Anatomical and functional motifs
+
+# Motif z-score
+
+# motif fingerprint
+
+#### Measures of resilience ####
+
+# Cumulative weighted degree distribution
+CumWeightedDegreeDist<-function(input){
+  
+}
+
+# Average Weighted Neighbor Degree
+AverageWeightedNeighborDegree<-function(input){
+  
+}
+
+# Weighted Assortativity Coefficient
+WeightedAssortativityCoef<-function(input){
   weight<-iGraph2WeightMat(input)
   strength<-rowSums(weight)
   id<-which(upper.tri(weight)*weight>0,arr.ind = T)
@@ -304,17 +380,9 @@ WeightedAssortabilityCoef<-function(input){
   return(r)
 }
 
+#### Other Concepts ####
 
-WeightedSmallWorldness<-function(input){
+# Weighted network Small-worldness
+WeightedNetworkSmallWorldness<-function(input){
   
-}
-
-
-
-
-
-WeightedClosenessCentrality<-function(input){
-  
-}
-
-#### Binary Graph Functions ####
+}}
