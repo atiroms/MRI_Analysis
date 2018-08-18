@@ -9,18 +9,18 @@ library(igraph)
 
 #### Weighted Graph Functions ####
 
+
+#### Basic functions ####
 iGraph2Nodes<-function(input){
   nodes<-data.frame(ID_long=V(input)$name,label_proper=V(input)$label_proper)
   return(nodes)
 }
-
 
 iGraph2Edges<-function(input){
   edges<-data.frame(get.edgelist(input),as.numeric(E(input)$weight))
   colnames(edges)<-c("from","to","weight")
   return(edges)
 }
-
 
 iGraph2WeightMat<-function(input){
   nodes<-iGraph2Nodes(input)
@@ -36,7 +36,6 @@ iGraph2WeightMat<-function(input){
   colnames(weight)<-rownames(weight)<-nodes$ID_long
   return(weight)
 }
-
 
 iGraph2LengthMat<-function(input){
   nodes<-iGraph2Nodes(input)
@@ -55,6 +54,16 @@ iGraph2LengthMat<-function(input){
 }
 
 
+#### Basic Measures ####
+
+# Strength / Weighted Degree
+WeightedStrength<-function(input){
+  weight<-iGraph2WeightMat(input)
+  strength<-rowSums(weight)
+  return(strength)
+}
+
+# Distance / Shortest Path Length
 WeightedDistance<-function(input){
   length<-iGraph2LengthMat(input)
   n_nodes<-ncol(length)  
@@ -94,7 +103,12 @@ WeightedDistance<-function(input){
   return(list(distance,path))
 }
 
+# Weighted Geometric Means of Triangles
 
+
+#### Measures of Integration ####
+
+# Characteristic Path Length / Average Path Length
 WeightedCharPath<-function(input_igraph=NULL,input_distancemat=NULL){
   if (is.null(input_distancemat)){
     distance<-WeightedDistance(input_igraph)[[1]]
@@ -297,11 +311,7 @@ WeightedSmallWorldness<-function(input){
 }
 
 
-WeightedStrength<-function(input){
-  weight<-iGraph2WeightMat(input)
-  strength<-rowSums(weight)
-  return(strength)
-}
+
 
 
 WeightedClosenessCentrality<-function(input){
