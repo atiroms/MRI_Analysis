@@ -12,6 +12,12 @@ roi_file <- "ROI.csv"
 #### Libraries ####
 
 
+#### Factor to Numeric Converter ####
+as.numeric.factor <- function(x) {
+  as.numeric(levels(x))[x]
+}
+
+
 #### ID Converter ####
 
 roi_data<-read.csv(file.path(common_dir,roi_file))
