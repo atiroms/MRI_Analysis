@@ -276,7 +276,6 @@ WeightedModularity<-function(input,gamma_v=1){
     }else{
       U<-U[-1]
     }
-    
     ind<-which(Ci==U[1])
     bg<-B[ind,ind]
     Bg<-bg-diag(rowSums(bg))
