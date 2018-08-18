@@ -12,7 +12,7 @@ library(igraph)
 
 #### Basic functions ####
 iGraph2Nodes<-function(input){
-  nodes<-data.frame(ID_long=V(input)$name,label_proper=V(input)$label_proper)
+  nodes<-data.frame(node=V(input)$name,label_proper=V(input)$label_proper)
   return(nodes)
 }
 
@@ -28,12 +28,12 @@ iGraph2WeightMat<-function(input){
   n_nodes<-nrow(nodes)
   weight<-matrix(0,nrow=n_nodes,ncol=n_nodes)
   for (i in 1:nrow(edges)){
-    weight[which(as.character(nodes$ID_long)==edges[i,"from"]),
-           which(as.character(nodes$ID_long)==edges[i,"to"])]<-edges[i,"weight"]
-    weight[which(as.character(nodes$ID_long)==edges[i,"to"]),
-           which(as.character(nodes$ID_long)==edges[i,"from"])]<-edges[i,"weight"]
+    weight[which(as.character(nodes$node)==edges[i,"from"]),
+           which(as.character(nodes$node)==edges[i,"to"])]<-edges[i,"weight"]
+    weight[which(as.character(nodes$node)==edges[i,"to"]),
+           which(as.character(nodes$node)==edges[i,"from"])]<-edges[i,"weight"]
   }
-  colnames(weight)<-rownames(weight)<-nodes$ID_long
+  colnames(weight)<-rownames(weight)<-nodes$node
   return(weight)
 }
 
@@ -44,12 +44,12 @@ iGraph2LengthMat<-function(input){
   n_nodes<-nrow(nodes)
   length<-matrix(Inf,nrow=n_nodes,ncol=n_nodes)
   for (i in 1:nrow(edges)){
-    length[which(as.character(nodes$ID_long)==edges[i,"from"]),
-           which(as.character(nodes$ID_long)==edges[i,"to"])]<-edges[i,"length"]
-    length[which(as.character(nodes$ID_long)==edges[i,"to"]),
-           which(as.character(nodes$ID_long)==edges[i,"from"])]<-edges[i,"length"]
+    length[which(as.character(nodes$node)==edges[i,"from"]),
+           which(as.character(nodes$node)==edges[i,"to"])]<-edges[i,"length"]
+    length[which(as.character(nodes$node)==edges[i,"to"]),
+           which(as.character(nodes$node)==edges[i,"from"])]<-edges[i,"length"]
   }
-  colnames(length)<-rownames(length)<-nodes$ID_long
+  colnames(length)<-rownames(length)<-nodes$node
   return(length)
 }
 
@@ -60,7 +60,9 @@ iGraph2LengthMat<-function(input){
 WeightedStrength<-function(input){
   weight<-iGraph2WeightMat(input)
   strength<-rowSums(weight)
-  return(strength)
+  output<-list(NULL,strength)
+  names(output)<-c("graph","node")
+  return(output)
 }
 
 # Distance / Shortest Path Length
@@ -104,7 +106,9 @@ WeightedDistance<-function(input_igraph=NULL,input_length=NULL){
       closest_remaining<-which(distance[i,]==min_distance)
     }
   }
-  return(list(distance,path))
+  output<-list(distance,path)
+  names(output)<-c("distance","binary_shortest_path_length")
+  return(output)
 }
 
 # Weighted Geometric Means of Triangles
@@ -120,7 +124,9 @@ WeightedCharPath<-function(input_igraph=NULL,input_distancemat=NULL){
     distance<-input_distancemat
   }
   diag(distance)<-NA
-  output<-mean(distance,na.rm=T)
+  charpath<-mean(distance,na.rm=T)
+  output<-list(charpath,NULL)
+  names(output)<-c("graph","node")
   return(output)
 }
 
@@ -132,10 +138,13 @@ WeightedEccentricity<-function(input_igraph=NULL,input_distancemat=NULL){
     distance<-input_distancemat
   }
   diag(distance)<-NA
-  output<-data.frame(matrix(ncol=2,nrow=0))
+  eccentricity<-NULL
   for (i in 1:nrow(distance)){
-    output<-rbind(output,cbind(ID_long=colnames(distance)[i],value=max(distance[,i],na.rm=T)))
+    eccentricity<-c(eccentricity,max(distance[i,],na.rm=T))
   }
+  names(eccentricity)<-rownames(distance)
+  output<-list(NULL,eccentricity)
+  names(output)<-c("graph","node")
   return(output)
 }
 
@@ -146,9 +155,11 @@ WeightedRadius<-function(input_igraph=NULL,input_distancemat=NULL){
   }else{
     distance<-input_distancemat
   }
-  eccentricity<-WeightedEccentricity(input_distancemat=distance)
+  eccentricity<-WeightedEccentricity(input_distancemat=distance)[[2]]
   #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
-  output<-min(as.numeric.factor(eccentricity$value))
+  radius<-min(eccentricity)
+  output<-list(radius,NULL)
+  names(output)<-c("graph","node")
   return(output)
 }
 
@@ -159,21 +170,11 @@ WeightedDiameter<-function(input_igraph=NULL,input_distancemat=NULL){
   }else{
     distance<-input_distancemat
   }
-  eccentricity<-WeightedEccentricity(input_distancemat=distance)
+  eccentricity<-WeightedEccentricity(input_distancemat=distance)[[2]]
   #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
-  output<-max(as.numeric.factor(eccentricity$value))
-  return(output)
-}
-
-# Efficiency (of nodes)
-WeightedEfficiency<-function(input_igraph=NULL,input_distancemat=NULL){
-  if (is.null(input_distancemat)){
-    distance<-WeightedDistance(input_igraph)[[1]]
-  }else{
-    distance<-input_distancemat
-  }
-  diag(distance)<-NA
-  output<-rowMeans(1/distance,na.rm=T)
+  dianeter<-max(eccentricity)
+  output<-list(diameter,NULL)
+  names(output)<-c("graph","node")
   return(output)
 }
 
@@ -184,15 +185,18 @@ WeightedGlobalEfficiency<-function(input_igraph=NULL,input_distancemat=NULL){
   }else{
     distance<-input_distancemat
   }
-  efficiency<-WeightedGlobalEfficiency(input_distance<-distance)
-  output<-mean(efficiency)
+  diag(distance)<-NA
+  efficiency<-rowMeans(1/distance,na.rm=T)
+  ave<-mean(efficiency)
+  output<-list(ave,efficiency)
+  names(output)<-c("graph","node")
   return(output)
 }
 
 
 #### Measures of Segregation ####
 
-# Weighted clustering coefficient (of nodes)
+# Weighted clustering coefficient
 WeightedClustCoef<-function(input){
   weight<-iGraph2WeightMat(input)
   k<-rowSums(weight!=0)
@@ -200,15 +204,12 @@ WeightedClustCoef<-function(input){
   cyc3<-diag(cyc %*% cyc %*% cyc)
   k[cyc3==0]<-Inf
   c<-cyc3/(k*(k-1))
-  return(c)
+  ave<-mean(c)
+  output<-list(ave,c)
+  names(output)<-c("graph","node")
+  return(output)
 }
 
-# Average Weighted clustering coefficient (of graph)
-AverageWeightedClustCoef<-function(input){
-  clustcoef<-WeightedClustCoef(input)
-  ave<-mean(clustcoef)
-  return(ave)
-}
 
 # Weighted Transitivity
 WeightedTransitivity<-function(input){
@@ -218,10 +219,12 @@ WeightedTransitivity<-function(input){
   cyc3<-diag(cyc %*% cyc %*% cyc)
   k[cyc3==0]<-Inf
   t<-sum(cyc3)/sum((k*(k-1)))
-  return(t)
+  output<-list(t,NULL)
+  names(output)<-c("graph","node")
+  return(output)
 }
 
-# Weighted local efficiency (of nodes)
+# Weighted local efficiency
 WeightedLocalEfficiency<-function(input){
   #algorithm of Wang 2016
   weight<-iGraph2WeightMat(input)
@@ -247,15 +250,13 @@ WeightedLocalEfficiency<-function(input){
       e[u]<-numer/denom
     }
   }
-  return(e)
+  names(e)<-rownames(weight)
+  ave<-mean(e)
+  output<-list(ave,e)
+  names(output)<-c("graph","node")
+  return(output)
 }
 
-# Average weighted local efficiency (of graph)
-AverageWeightedLocalEfficiency<-function(input){
-  localefficiency<-WeightedLocalEfficiency(input)
-  ave<-mean(localefficiency)
-  return(ave)
-}
 
 # Weighted modularity
 WeightedModularity<-function(input,gamma_v=1){
@@ -314,10 +315,13 @@ WeightedModularity<-function(input,gamma_v=1){
     Bg<-bg-diag(rowSums(bg))
     Ng<-length(ind)
   }
+  names(Ci)<-rownames(weight)
   s<-replicate(n_nodes,Ci)
   Q<-(!(s-t(s)))*B/m
   Q<-sum(Q)
-  return(list(Q,Ci))
+  output<-list(Q,Ci)
+  names(output)<-c("graph","community_of_node")
+  return(output)
 }
 
 # Community Structure using Louvain algorithm (not in Rubinov NeuroImage 2010)
@@ -377,7 +381,9 @@ WeightedAssortativityCoef<-function(input){
   stri<-strength[id[,1]]
   strj<-strength[id[,2]]
   r<-(sum(stri*strj)/K-(sum(0.5*(stri+strj))/K)^2)/(sum(0.5*(stri^2+strj^2))/K-(sum(0.5*(stri+strj))/K)^2)
-  return(r)
+  output<-list(r,NULL)
+  names(output)<-c("graph","node")
+  return(output)
 }
 
 #### Other Concepts ####
@@ -385,4 +391,4 @@ WeightedAssortativityCoef<-function(input){
 # Weighted network Small-worldness
 WeightedNetworkSmallWorldness<-function(input){
   
-}}
+}
