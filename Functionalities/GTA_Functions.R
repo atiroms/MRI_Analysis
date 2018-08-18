@@ -439,13 +439,28 @@ WeightedEigenvectorCentrality<-function(input){
 
 # Cumulative weighted degree distribution
 CumWeightedDegreeDist<-function(input){
-  strength<-WeightedStrength(input)
-  
+  strength<-WeightedStrength(input)$node
+  n_nodes<-length(strength)
+  i_ordered<-order(strength)
+  degreedist<-data.frame(matrix(nrow=0,ncol=3))
+  degreedist<-rbind(degreedist,cbind(degree=0,p=1,node=NA))
+  for (i in 1:n_nodes){
+    degreedist<-rbind(degreedist,cbind(degree=strength[i_ordered[i]],p=(1-i/n_nodes),node=names(strength[i_ordered[i]])))
+  }
+  colnames(degreedist)<-c("degree","p","node")
+  rownames(degreedist)<-NULL
+  return(degreedist)
 }
 
 # Average Weighted Neighbor Degree
-AverageWeightedNeighborDegree<-function(input){
-  
+WeightedNeighborDegree<-function(input){
+  weight<-iGraph2Weight(input)
+  weight[which(weight==0)]<-NA
+  neighbordegree<-rowMeans(weight,na.rm=T)
+  names(neighbordegree)<-rownames(weight)
+  output<-list(NULL,neighbordegree)
+  names(output)<-c("graph","node")
+  return(output)
 }
 
 # Weighted Assortativity Coefficient
