@@ -293,23 +293,23 @@ BinaryMetrics<-function(input_graph){
   colnames(metrics)<-c("node","metric","value")
   ## graph-level metrics
   # characteristic path length
-  metrics<-rbind(metrics,cbind(node="global",metric="characteristic path length",
+  metrics<-rbind(metrics,cbind(node="graph",metric="characteristic path length",
                                value=average.path.length(input_graph)))
   # global efficiency
   eff<-1/(shortest.paths(input_graph))
   eff[!is.finite(eff)]<-0
-  metrics<-rbind(metrics,cbind(node="global",metric="global efficiency",
+  metrics<-rbind(metrics,cbind(node="graph",metric="global efficiency",
                                value=mean(eff,na.rm=TRUE)))
   # global clustering coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="global clustering coefficient",
+  metrics<-rbind(metrics,cbind(node="graph",metric="global clustering coefficient",
                                value=transitivity(input_graph)))
   # average clustering coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="average clustering coefficient",
+  metrics<-rbind(metrics,cbind(node="graph",metric="average clustering coefficient",
                                value=transitivity(input_graph,type="average")))
   # local efficiency
   # modularity
   # small-worldness
-  suppressWarnings(metrics<-rbind(metrics,cbind(node="global",metric="small-world index",
+  suppressWarnings(metrics<-rbind(metrics,cbind(node="graph",metric="small-world index",
                                                 value=smallworldIndex(input_graph)$index)))
   
   ## node-level metrics
@@ -354,52 +354,22 @@ ItrCost<-function(input_graph){
 }
 
 
+AddMetric<-function(input){
+  if (!is.null(input$graph)){
+    output<-cbind(node="graph",metric=input$name[[1]],value=input$graph)
+  }
+  if (!is.null(input$node)){
+    input<-rbind(input,cbind(node=))
+  }
+}
+
+
 #### Weighted Graph Theory Metric Calculation ####
 WeightedMetric<-function(input_graph){
   metrics<-data.frame(matrix(nrow=0,ncol=3))
   colnames(metrics)<-c("node","metric","value")
   ## graph-level metrics
   # weighted characteristic path length
-  metrics<-rbind(metrics,cbind(node="global",metric="characteristic path length",
-                               value=))
-  # weighted global efficiency
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted clustering coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted transitivity
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted local efficiency
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted modularity
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted degree distribution
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted assortability coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted network small-worldness
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  
-  ## node-level metrics
-  # weighted degree (strength)
-  metrics<-rbind(metrics,cbind(node=rois,metric="strength",
-                               value=strength(input_graph)))
-  # weighted closeness centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="",
-                               value=))
-  # betweenness centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="",
-                               value=))
-  # average weighted neighbor digree
-  metrics<-rbind(metrics,cbind(node=rois,metric="",
-                               value=))
   rownames(metrics)<-NULL
   return(metrics)
 }
