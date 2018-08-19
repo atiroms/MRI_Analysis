@@ -355,21 +355,42 @@ ItrCost<-function(input_graph){
 
 
 AddMetric<-function(input){
+  output<-data.frame(matrix(nrow=0,ncol=3))
   if (!is.null(input$graph)){
-    output<-cbind(node="graph",metric=input$name[[1]],value=input$graph)
+    output_add<-cbind(node="graph",metric=input$name[[1]],value=input$graph)
+    output<-rbind(output,output_add)
   }
   if (!is.null(input$node)){
-    input<-rbind(input,cbind(node=))
+    output_add<-cbind(node=names(input$node),metric=input$name[[1]],value=input$node)
+    output<-rbind(output,output_add)
   }
+  colnames(output)<-c("node","metric","value")
+  return(output)
 }
 
 
 #### Weighted Graph Theory Metric Calculation ####
-WeightedMetric<-function(input_graph){
+WeightedMetric<-function(input_igraph){
   metrics<-data.frame(matrix(nrow=0,ncol=3))
+  distance<-WeightedDistance(input_igraph)$distance
+  
+  metrics<-rbind(metrics,AddMetric(WeightedCharPath(input_distance=distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedEccentricity(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedRadius(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedDiameter(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedGlobalEfficiency(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedClustCoef(input = input_igraph)))
+  metrics<-rbind(metrics,Addmetric(WeightedTransitivity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedModularity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedClosenessCentrality(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedBetweennessCentrality(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedEigenvectorCentrality(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedAssortativityCoef(input = input_igraph)))
+  
   colnames(metrics)<-c("node","metric","value")
-  ## graph-level metrics
-  # weighted characteristic path length
   rownames(metrics)<-NULL
   return(metrics)
 }
