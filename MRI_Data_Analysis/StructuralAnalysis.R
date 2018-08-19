@@ -6,15 +6,15 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Structural_FS")
 output_dir <- file.path(input_dir,"Structural_data")
 
-structural_file <- "W1_FS_Volume_Cortex.csv"
-#structural_file <- "W1_FS_Volume_Subcortex.csv"
+#structural_file <- "W1_FS_Volume_Cortex.csv"
+structural_file <- "W1_FS_Volume_Subcortex.csv"
 #structural_file <- "W1_FS_Volume_WM.csv"
 #structural_file <- "W1_FS_Volume_Cerebellum.csv"
 #structural_file <- "W1_FS_Volume_Hippocampus.csv"
@@ -27,9 +27,10 @@ structural_file <- "W1_FS_Volume_Cortex.csv"
 global_covariate_file<-"W1_FS_Global.csv"
 global_covariate_label<-"BrainSegVolNotVent"
 
-subject_subset <- data.frame("W1_T1QC"=1)
-#subject_subset <- data.frame("W1_T1QC"=1, "Sex"=1)
-#subject_subset <- data.frame("W1_T1QC"=1, "Sex"=2)
+#subject_subset <- data.frame(W1_T1QC=1)
+subject_subset <- data.frame(W1_T1QC=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC=1, Sex=2)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
 input_roi_type <- "label_fs"
 

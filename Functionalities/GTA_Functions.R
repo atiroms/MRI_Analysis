@@ -1,13 +1,10 @@
 #### Description ####
 
-# R script for calculation of metrics of graph theoretical analysis
+# R script for calculation of metrics of weighted graph theoretical analysis
 
 
 #### Libraries ####
 library(igraph)
-
-
-#### Weighted Graph Functions ####
 
 
 #### Basic Measures ####
