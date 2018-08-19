@@ -114,7 +114,7 @@ WeightedCharPath<-function(input_igraph=NULL,input_distance=NULL){
   }
   closeness_centrality<-WeightedClosenessCentrality(input_distance=distance)$node
   charpath<-mean(1/closeness_centrality)
-  name<-c("Weighted characteristic Path Length","Average Weighted Path Length","Average Distane")
+  name<-c("Weighted Characteristic Path Length","Average Weighted Path Length","Average Distane")
   output<-list(name,charpath,NULL)
   names(output)<-c("name","graph","node")
   return(output)
@@ -164,7 +164,7 @@ WeightedDiameter<-function(input_igraph=NULL,input_distance=NULL){
   }
   eccentricity<-WeightedEccentricity(input_distance=distance)$node
   #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
-  dianeter<-max(eccentricity)
+  diameter<-max(eccentricity)
   name<-"Weighted Diameter"
   output<-list(name,diameter,NULL)
   names(output)<-c("name","graph","node")

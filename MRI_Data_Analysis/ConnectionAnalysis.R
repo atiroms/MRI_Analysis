@@ -276,8 +276,9 @@ Edges2Graph<-function(input){
 }
 
 
-#### Subset edges according to desired cost ####
+#### Binary Graph Calculation ####
 
+# Subset edges according to desired cost
 SubsetEdges<-function(input_graph, input_cost){
   n_edges4cost<-as.integer(n_rois*(n_rois-1)/2*input_cost)
   edges2delete<-head(order(E(input_graph)$weight),(n_connections-n_edges4cost))
@@ -286,8 +287,7 @@ SubsetEdges<-function(input_graph, input_cost){
 }
 
 
-#### Calculate binary graph metrics ####
-
+# Calculate binary graph metrics
 BinaryMetrics<-function(input_graph){
   metrics<-data.frame(matrix(nrow=0,ncol=3))
   colnames(metrics)<-c("node","metric","value")
@@ -327,9 +327,7 @@ BinaryMetrics<-function(input_graph){
   return(metrics)
 }
 
-
-#### Iterate over costs ####
-
+# Iterate over costs
 ItrCost<-function(input_graph){
   output<-data.frame()
   for (i in cost){
@@ -354,24 +352,24 @@ ItrCost<-function(input_graph){
 }
 
 
+#### Weighted Graph Calculations ####
+
 AddMetric<-function(input){
-  output<-data.frame(matrix(nrow=0,ncol=3))
+  output<-data.frame(matrix(nrow=0,ncol=4))
   if (!is.null(input$graph)){
-    output_add<-cbind(node="graph",metric=input$name[[1]],value=input$graph)
+    output_add<-cbind(node="graph",node_label=NA,metric=input$name[[1]],value=input$graph)
     output<-rbind(output,output_add)
   }
   if (!is.null(input$node)){
-    output_add<-cbind(node=names(input$node),metric=input$name[[1]],value=input$node)
+    output_add<-cbind(node=names(input$node),node_label=ConvertID(names(input$node),roi_data,"ID_long","label_proper"),metric=input$name[[1]],value=input$node)
     output<-rbind(output,output_add)
   }
-  colnames(output)<-c("node","metric","value")
+  colnames(output)<-c("node","node_label","metric","value")
   return(output)
 }
 
-
-#### Weighted Graph Theory Metric Calculation ####
 WeightedMetric<-function(input_igraph){
-  metrics<-data.frame(matrix(nrow=0,ncol=3))
+  metrics<-data.frame(matrix(nrow=0,ncol=4))
   distance<-WeightedDistance(input_igraph)$distance
   
   metrics<-rbind(metrics,AddMetric(WeightedCharPath(input_distance=distance)))
@@ -380,7 +378,7 @@ WeightedMetric<-function(input_igraph){
   metrics<-rbind(metrics,AddMetric(WeightedDiameter(input_distance = distance)))
   metrics<-rbind(metrics,AddMetric(WeightedGlobalEfficiency(input_distance = distance)))
   metrics<-rbind(metrics,AddMetric(WeightedClustCoef(input = input_igraph)))
-  metrics<-rbind(metrics,Addmetric(WeightedTransitivity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedTransitivity(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedModularity(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
@@ -390,30 +388,34 @@ WeightedMetric<-function(input_igraph){
   metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedAssortativityCoef(input = input_igraph)))
   
-  colnames(metrics)<-c("node","metric","value")
+  colnames(metrics)<-c("node","node_label","metric","value")
   rownames(metrics)<-NULL
   return(metrics)
 }
 
 
-#### Graph Theoretical Analysis, subject-wise ####
+#### Graph Theoretical Analysis ####
 
 DoGTA<-function(){
   dirname<-ExpDir("GTA")
-  output_binary<-data.frame()
+#  output_binary<-data.frame()
   output_weighted<-data.frame()
   for (i in 1:n_subject){
     subject_graph<-Edges2Graph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
-    subject_metric_binary<-ItrCost(subject_graph)
-    output_binary<-rbind(output_binary,
-                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
-                               subject_metric_binary))
+#    subject_metric_binary<-ItrCost(subject_graph)
+#    output_binary<-rbind(output_binary,
+#                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
+#                               subject_metric_binary))
+    E(subject_graph)$weight<-abs(E(subject_graph)$weight)
     subject_metric_weighted<-WeightedMetric(subject_graph)
     output_weighted<-rbind(output_weighted,
                            cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
                                  subject_metric_weighted))
   }
-  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
+#  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
   write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
-  return(list(output_binary,output_weighted))
+#  output<-list(output_binary,output_weighted)
+#  names(output)<-c("Binary","Weighted")
+  output<-output_weighted
+  return(output)
 }
