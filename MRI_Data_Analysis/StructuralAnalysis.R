@@ -247,5 +247,17 @@ DoLI<-function(){
   }
   write.csv(output, file.path(dirname,"LateralityIndex.csv"),row.names=F)
   clincorr<-MeasClinicalCorr(output[c(-1,-2),],dirname)
-  return(list(output,clincorr))
+  output_tidy<-output[c(-1,-2),]
+  output_tidy<-gather(output_tidy,key=ROI_label,value=value,-ID_pnTTC)
+  output_tidy$L_ROI_ID<-NA
+  output_tidy$R_ROI_ID<-NA
+  for (i in 1:nrow(output_tidy)){
+    output_tidy[i,"L_ROI_ID"]<-roi_id_left[which(roi_label_bilateral==output_tidy[i,"ROI_label"])]
+    output_tidy[i,"R_ROI_ID"]<-roi_id_right[which(roi_label_bilateral==output_tidy[i,"ROI_label"])]
+  }
+  output_tidy<-output_tidy[,c("ID_pnTTC","ROI_label","L_ROI_ID","R_ROI_ID","value")]
+  glm<-CommonGLM(output_tidy,covariate_label,F,dirname)
+  output<-list(output,clincorr,glm)
+  names(output)<-c("Laterality_Index","LI-Clinical_Correlation","GLM_of_LI")
+  return(list(output,clincorr,glm))
 }
