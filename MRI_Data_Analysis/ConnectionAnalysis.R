@@ -17,15 +17,16 @@ output_dir <- file.path(input_dir,"Connection_data")
 #connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
 #connection_file <- "W1_DK_FC.csv"
-#connection_file <- "W1_DK_Male_TS1_FC.csv"
-connection_file <- "W1_DK_Male_Subcortex_FC.csv"
+connection_file <- "W1_DK_Male_TS1_FC.csv"
+#connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
-#roi_subset<- ""
+#roi_subset<- NULL
 #roi_subset<- "cortex"
-roi_subset<- "subcortex"
+#roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
+roi_subset <- c("cortex","subcortex")
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
 subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
@@ -76,11 +77,27 @@ connection_data$flag<-F
 for (i in subject_id){
   connection_data[which(connection_data$ID_pnTTC==i),"flag"]<-T
 }
-connection_data<-connection_data[which(connection_data$flag),-ncol(connection_data)]
-if (roi_subset!=""){
-  connection_data<-connection_data[which(ConvertID(connection_data$from,roi_data,"ID_long","group")==roi_subset),]
-  connection_data<-connection_data[which(ConvertID(connection_data$to,roi_data,"ID_long","group")==roi_subset),]
+connection_data<-connection_data[which(connection_data$flag),
+                                 -which(colnames(connection_data)=="flag")]
+
+
+if (!is.null(roi_subset)){
+  connection_data$from_group<-ConvertID(connection_data$from,roi_data,"ID_long","group")
+  connection_data$to_group<-ConvertID(connection_data$to,roi_data,"ID_long","group")
+  connection_data$from_flag<-F
+  connection_data$to_flag<-F
+  for (i in roi_subset){
+    connection_data[which(connection_data[,"from_group"]==i),"from_flag"]<-T
+    connection_data[which(connection_data[,"to_group"]==i),"to_flag"]<-T
+  }
+  connection_data<-connection_data[intersect(which(connection_data$from_flag),
+                                             which(connection_data$to_flag)),]
+  connection_data<-connection_data[,-c(which(colnames(connection_data)=="from_group"),
+                                       which(colnames(connection_data)=="to_group"),
+                                       which(colnames(connection_data)=="from_flag"),
+                                       which(colnames(connection_data)=="to_flag"))]
 }
+
 
 connections<-connection_data[which(connection_data$ID_pnTTC==connection_data[1,"ID_pnTTC"]),2:5]
 connections$edge<-paste(connections$from,connections$to,sep="_")

@@ -19,17 +19,21 @@ output_dir <- file.path(input_dir,"Functional_data")
 #functional_file <- "W1_CONN_BOLD_Power.csv"
 functional_file <- "W1_CONN_BOLD_DK.csv"
 
-roi_subset<- ""
-#roi_subset<- "cortex"
-#roi_subset<- "subcortex"
-#roi_subset<- "cerebellum"
-#roi_subset<- "global"
-#roi_subset<- "misc"
+#roi_subset <- NULL
+#roi_subset <- "cortex"
+#roi_subset <- "subcortex"
+#roi_subset <- "cerebellum"
+#roi_subset <- "global"
+#roi_subset <- "misc"
+roi_subset <- c("cortex","subcortex")
 
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
+
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
 
 
 input_roi_type <- "label_conn"
@@ -66,10 +70,15 @@ functional_data$flag<-F
 for (i in subject_id){
   functional_data[which(functional_data$ID_pnTTC==i),"flag"]<-T
 }
-functional_data<-functional_data[which(functional_data$flag),-ncol(functional_data)]
-if (roi_subset!=""){
-  functional_data<-cbind(functional_data[,c(1,2)],
-                         functional_data[,which(ConvertID(colnames(functional_data)[c(-1,-2)],roi_data,"ID_long","group")==roi_subset)+2])
+functional_data<-functional_data[which(functional_data$flag),-which(colnames(functional_data)=="flag")]
+
+if (!is.null(roi_subset)){
+  roi_group<-ConvertID(colnames(functional_data)[c(-1,-2)],roi_data,"ID_long","group")
+  roi_selected<-NULL
+  for (i in roi_subset){
+    roi_selected<-c(roi_selected,which(roi_group==i))
+  }
+  functional_data<-functional_data[,c(1,2,roi_selected+2)]
 }
 n_ROI<-ncol(functional_data)-2
 
