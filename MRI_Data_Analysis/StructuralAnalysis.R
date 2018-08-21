@@ -23,6 +23,7 @@ structural_file <- "W1_FS_Volume_Subcortex.csv"
 #structural_file <- "W1_FS_Curv.csv"
 #structural_file <- "W1_FS_Global.csv"
 
+covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 global_covariate_file<-"W1_FS_Global.csv"
 global_covariate_label<-"BrainSegVolNotVent"
@@ -126,9 +127,9 @@ GLMroutine<-function(input_structural_data,input_covar,id_covar,n_expvar){
   return(output)
 }
 
-DoGLM<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI"),global_covariate=F){
+DoGLM<-function(input_covariate_label=covariate_label,global_covariate=F){
   dirname<-ExpDir("GLM")
-  n_covariates<-length(covariates_label)
+  n_covariates<-length(input_covariate_label)
   global_covariate_data<-read.csv(file.path(input_dir,global_covariate_file))
   output<-data.frame(matrix(ncol=2, nrow=n_rois))
   output[,1]<-colnames(structural_data)[-1]
@@ -136,19 +137,19 @@ DoGLM<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI"),global_cov
   colnames(output)<-c("ROI_ID","ROI_name")
   clinical_data_subset<-clinical_data
   for (i in 1:n_covariates){
-    clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,covariates_label[i]])),]
+    clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,input_covariate_label[i]])),]
   }
   subject_id_subset<-clinical_data_subset$ID_pnTTC
   
   covariates_data_subset<-data.frame(ID_pnTTC=clinical_data_subset$ID_pnTTC)
   for (i in 1:n_covariates){
-    covariates_data_subset<-cbind(covariates_data_subset,clinical_data_subset[,covariates_label[i]])
+    covariates_data_subset<-cbind(covariates_data_subset,clinical_data_subset[,input_covariate_label[i]])
   }
   for (i in 2:ncol(covariates_data_subset)){
     ave<-mean(covariates_data_subset[,i])
     covariates_data_subset[,i]<-covariates_data_subset[,i]-ave
   }
-  colnames(covariates_data_subset)[-1]<-covariates_label
+  colnames(covariates_data_subset)[-1]<-input_covariate_label
   
   structural_data_subset<-data.frame(matrix(ncol=ncol(structural_data),nrow=0))
   for (i in subject_id_subset){

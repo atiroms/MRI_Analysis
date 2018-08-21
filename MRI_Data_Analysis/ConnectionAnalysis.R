@@ -17,20 +17,22 @@ output_dir <- file.path(input_dir,"Connection_data")
 #connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
 #connection_file <- "W1_DK_FC.csv"
-connection_file <- "W1_DK_Male_TS1_FC.csv"
+#connection_file <- "W1_DK_Male_TS1_FC.csv"
+connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
-roi_subset<- ""
+#roi_subset<- ""
 #roi_subset<- "cortex"
-#roi_subset<- "subcortex"
+roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
+covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 p_uncorrected<-0.001
 
@@ -59,6 +61,7 @@ library(qgraph)
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
+source(file.path(script_dir,"Functionalities/GLM_Functions.R"))
 source(file.path(script_dir,"Functionalities/GTA_Functions.R"))
 source(file.path(script_dir,"Functionalities/Figures.R"))
 
@@ -92,7 +95,7 @@ n_rois<-length(rois)
 #### GLM Analysis  ####
 
 #not yet checked after update
-GLMroutine<-function(input_mri_data,input_covar,id_covar,n_expvar){
+GLMroutine_old<-function(input_mri_data,input_covar,id_covar,n_expvar){
   output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_connections))
   collabel<-colnames(input_covar)[id_covar+1]
   input_covar<-data.frame(input_covar[,id_covar+1])
@@ -416,6 +419,8 @@ DoGTA<-function(){
   write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
 #  output<-list(output_binary,output_weighted)
 #  names(output)<-c("Binary","Weighted")
-  output<-output_weighted
+  glm<-DoGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname)
+  output<-list(output_weighted,glm)
+  names(output)<-c("Weighted_GTA","GLM_of_GTA")
   return(output)
 }
