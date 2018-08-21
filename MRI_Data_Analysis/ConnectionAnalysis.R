@@ -48,7 +48,7 @@ cost<-seq(0.04,0.25,0.01)
 
 #### Libraries ####
 
-library(multcomp)
+#library(multcomp)
 library(FactoMineR)
 library(ica)
 library(Rtsne)
@@ -94,6 +94,10 @@ n_rois<-length(rois)
 
 #### GLM Analysis  ####
 
+DoGLM_FC<-function(){
+  
+}
+
 #not yet checked after update
 GLMroutine_old<-function(input_mri_data,input_covar,id_covar,n_expvar){
   output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_connections))
@@ -137,7 +141,7 @@ GLMroutine_old<-function(input_mri_data,input_covar,id_covar,n_expvar){
   return(output)
 }
 
-DoGLM_FC<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI")){
+DoGLM_FC_old<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI")){
   dirname<-ExpDir("GLM_FC")
   n_covariates<-length(covariates_label)
   output<-connections
@@ -419,7 +423,7 @@ DoGTA<-function(){
   write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
 #  output<-list(output_binary,output_weighted)
 #  names(output)<-c("Binary","Weighted")
-  glm<-DoGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname)
+  glm<-CommonGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname)
   output<-list(output_weighted,glm)
   names(output)<-c("Weighted_GTA","GLM_of_GTA")
   return(output)

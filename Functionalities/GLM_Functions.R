@@ -14,6 +14,9 @@ library(car)
 GLMroutine<-function(input_MRI_data,input_covar,id_covar,n_expvar){
   measures<-input_MRI_data[which(input_MRI_data$ID_pnTTC==input_MRI_data[1,"ID_pnTTC"]),
                            -c(which(colnames(input_MRI_data)=="ID_pnTTC"),which(colnames(input_MRI_data)=="value"))]
+  measures<-data.frame(measures)
+  colnames(measures)<-colnames(input_MRI_data)[-c(which(colnames(input_MRI_data)=="ID_pnTTC"),
+                                                  which(colnames(input_MRI_data)=="value"))]
   n_measures<-nrow(measures)
   output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_measures))
   collabel<-colnames(input_covar)[id_covar+1]
@@ -63,11 +66,13 @@ GLMroutine<-function(input_MRI_data,input_covar,id_covar,n_expvar){
   return(output)
 }
 
-DoGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname){
+CommonGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname){
   n_covariates<-length(input_covariate_label)
   output<-MRI_data[which(MRI_data$ID_pnTTC==MRI_data[1,"ID_pnTTC"]),
                    -c(which(colnames(MRI_data)=="ID_pnTTC"),which(colnames(MRI_data)=="value"))]
-
+  output<-data.frame(output)
+  colnames(output)<-colnames(MRI_data)[-c(which(colnames(MRI_data)=="ID_pnTTC"),
+                                                  which(colnames(MRI_data)=="value"))]
   clinical_data_subset<-clinical_data
   for (i in 1:n_covariates){
     clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,input_covariate_label[i]])),]
