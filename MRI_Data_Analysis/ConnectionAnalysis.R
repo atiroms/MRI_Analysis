@@ -95,97 +95,11 @@ n_rois<-length(rois)
 #### GLM Analysis  ####
 
 DoGLM_FC<-function(){
-  
-}
-
-#not yet checked after update
-GLMroutine_old<-function(input_mri_data,input_covar,id_covar,n_expvar){
-  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_connections))
-  collabel<-colnames(input_covar)[id_covar+1]
-  input_covar<-data.frame(input_covar[,id_covar+1])
-  colnames(input_covar)<-collabel
-  for (i in 1:n_connections){
-    edge_data<-input_mri_data[which(input_mri_data$from==connections[i,"from"]),]
-    edge_data<-input_mri_data[which(input_mri_data$to==connections[i,"to"]),"r"]
-    if (length(id_covar)==1){
-      glmfit<-lm(edge_data~input_covar[,1])
-    }else if (length(id_covar)==2){
-      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2])
-    }else if (length(id_covar)==3){
-      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2]+input_covar[,3])
-    }else if (length(id_covar)==4){
-      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2]+input_covar[,3]+input_covar[,4])
-    }
-    if (length(id_covar)>=2){
-      vifactor<-vif(glmfit)
-    }else{
-      vifactor<-NA
-    }
-    stats<-c(AIC(glmfit),BIC(glmfit))
-    for (j in 1:n_expvar){
-      contrast<-matrix(0L,nrow=1, ncol=length(id_covar)+1)
-      contrast[1,j+1]<-1
-      ttest <- summary(glht(glmfit, linfct = contrast))$test
-      stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
-    }
-    output[i,]<-stats
-  }
-  collabel<-NULL
-  for (j in 1:n_expvar){
-    collabel<-c(collabel,paste(colnames(input_covar)[j],c("beta","sigma","t","p","VIF"),sep="_"))
-  }
-  collabel<-c("AIC","BIC",collabel)
-  model_name<-paste(colnames(input_covar),collapse="_")
-  collabel<-paste(collabel,"of",model_name,"model",sep="_")
-  colnames(output)<-collabel
-  return(output)
-}
-
-DoGLM_FC_old<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI")){
   dirname<-ExpDir("GLM_FC")
-  n_covariates<-length(covariates_label)
-  output<-connections
-  clinical_data_subset<-clinical_data
-  for (i in 1:n_covariates){
-    clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,covariates_label[i]])),]
-  }
-  subject_id_subset<-clinical_data_subset$ID_pnTTC
-  
-  covariates_data_subset<-data.frame(ID_pnTTC=clinical_data_subset$ID_pnTTC)
-  for (i in 1:n_covariates){
-    covariates_data_subset<-cbind(covariates_data_subset,clinical_data_subset[,covariates_label[i]])
-  }
-  for (i in 2:ncol(covariates_data_subset)){
-    ave<-mean(covariates_data_subset[,i])
-    covariates_data_subset[,i]<-covariates_data_subset[,i]-ave
-  }
-  colnames(covariates_data_subset)[-1]<-covariates_label
-  
-  connection_data_subset<-data.frame(matrix(ncol=ncol(connection_data),nrow=0))
-  for (i in subject_id_subset){
-    connection_data_subset<-rbind(connection_data_subset,connection_data[which(connection_data$ID_pnTTC==i),])
-  }
-  colnames(connection_data_subset)<-colnames(connection_data)
-  
-  for (i in n_covariates:1){
-    n_expvar<-i
-    for (j in 1:dim(combn(n_covariates,i))[2]){
-      id_covar<-combn(n_covariates,i)[,j]
-      output<-cbind(output,GLMroutine(connection_data_subset, covariates_data_subset,id_covar,n_expvar))
-    }
-  }
-  
-  best_model<-data.frame(matrix(ncol=1, nrow=(ncol(connection_data_subset)-1)))
-  for (i in c('AIC', 'BIC')){
-    xic<-output[, grep(i, names(output))]
-    for (j in 1:(ncol(connection_data_subset)-1)){
-      best_model[j,1]<-which.min(xic[j,])
-    }
-    colnames(best_model)<-paste(i,"best_model",sep="_")
-    output<-cbind(output,best_model)
-  }
-  write.csv(output, file.path(dirname,"GLM.csv"),row.names=F)
-  return(output)
+  connection_data_tidy<-connection_data[,-which(colnames(connection_data)=="p")]
+  connection_data_tidy<-rename(connection_data_tidy,value=r)
+  glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname)
+  return(glm)
 }
 
 
