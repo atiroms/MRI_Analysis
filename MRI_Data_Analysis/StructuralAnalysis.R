@@ -13,8 +13,8 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Structural_FS")
 output_dir <- file.path(input_dir,"Structural_data")
 
-structural_file <- "W1_FS_Volume_Cortex.csv"
-#structural_file <- "W1_FS_Volume_Subcortex.csv"
+#structural_file <- "W1_FS_Volume_Cortex.csv"
+structural_file <- "W1_FS_Volume_Subcortex.csv"
 #structural_file <- "W1_FS_Volume_WM.csv"
 #structural_file <- "W1_FS_Volume_Cerebellum.csv"
 #structural_file <- "W1_FS_Volume_Hippocampus.csv"
@@ -23,13 +23,15 @@ structural_file <- "W1_FS_Volume_Cortex.csv"
 #structural_file <- "W1_FS_Curv.csv"
 #structural_file <- "W1_FS_Global.csv"
 
+covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 global_covariate_file<-"W1_FS_Global.csv"
 global_covariate_label<-"BrainSegVolNotVent"
 
-subject_subset <- data.frame("W1_T1QC"=1)
-#subject_subset <- data.frame("W1_T1QC"=1, "Sex"=1)
-#subject_subset <- data.frame("W1_T1QC"=1, "Sex"=2)
+#subject_subset <- data.frame(W1_T1QC=1)
+subject_subset <- data.frame(W1_T1QC=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC=1, Sex=2)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
 input_roi_type <- "label_fs"
 
@@ -52,14 +54,15 @@ library(ica)
 library(tidyverse)
 library(Rtsne)
 #library(ggpubr)
-library(multcomp)
-library(car)
+#library(multcomp)
+#library(car)
 #library(fastICA)
 
 
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
+source(file.path(script_dir,"Functionalities/GLM_Functions.R"))
 source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
@@ -85,112 +88,12 @@ HeatmapPlot(structural_data,
 
 #### General Linear Model Analysis ####
 
-GLMroutine<-function(input_structural_data,input_covar,id_covar,n_expvar){
-  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_rois))
-  collabel<-colnames(input_covar)[id_covar+1]
-  input_covar<-data.frame(input_covar[,id_covar+1])
-  colnames(input_covar)<-collabel
-  for (i in 1:n_rois){
-    if (length(id_covar)==1){
-      glmfit<-lm(input_structural_data[,i+1]~input_covar[,1])
-    }else if (length(id_covar)==2){
-      glmfit<-lm(input_structural_data[,i+1]~input_covar[,1]+input_covar[,2])
-    }else if (length(id_covar)==3){
-      glmfit<-lm(input_structural_data[,i+1]~input_covar[,1]+input_covar[,2]+input_covar[,3])
-    }else if (length(id_covar)==4){
-      glmfit<-lm(input_structural_data[,i+1]~input_covar[,1]+input_covar[,2]+input_covar[,3]+input_covar[,4])
-    }
-    if (length(id_covar)>=2){
-      vifactor<-vif(glmfit)
-    }else{
-      vifactor<-NA
-    }
-    stats<-c(AIC(glmfit),BIC(glmfit))
-    for (j in 1:n_expvar){
-      contrast<-matrix(0L,nrow=1, ncol=length(id_covar)+1)
-      contrast[1,j+1]<-1
-      ttest <- summary(glht(glmfit, linfct = contrast))$test
-      stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
-    }
-    output[i,]<-stats
-  }
-  collabel<-NULL
-  for (j in 1:n_expvar){
-    collabel<-c(collabel,paste(colnames(input_covar)[j],c("beta","sigma","t","p","VIF"),sep="_"))
-  }
-  collabel<-c("AIC","BIC",collabel)
-  model_name<-paste(colnames(input_covar),collapse="_")
-  collabel<-paste(collabel,"of",model_name,"model",sep="_")
-  colnames(output)<-collabel
-  return(output)
-}
-
-DoGLM<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI"),global_covariate=F){
+DoGLM<-function(){
   dirname<-ExpDir("GLM")
-  n_covariates<-length(covariates_label)
-  global_covariate_data<-read.csv(file.path(input_dir,global_covariate_file))
-  output<-data.frame(matrix(ncol=2, nrow=n_rois))
-  output[,1]<-colnames(structural_data)[-1]
-  output[,2]<-ConvertID(colnames(structural_data)[-1],roi_data,"ID_long","label_proper")
-  colnames(output)<-c("ROI_ID","ROI_name")
-  clinical_data_subset<-clinical_data
-  for (i in 1:n_covariates){
-    clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,covariates_label[i]])),]
-  }
-  subject_id_subset<-clinical_data_subset$ID_pnTTC
-  
-  covariates_data_subset<-data.frame(ID_pnTTC=clinical_data_subset$ID_pnTTC)
-  for (i in 1:n_covariates){
-    covariates_data_subset<-cbind(covariates_data_subset,clinical_data_subset[,covariates_label[i]])
-  }
-  for (i in 2:ncol(covariates_data_subset)){
-    ave<-mean(covariates_data_subset[,i])
-    covariates_data_subset[,i]<-covariates_data_subset[,i]-ave
-  }
-  colnames(covariates_data_subset)[-1]<-covariates_label
-  
-  structural_data_subset<-data.frame(matrix(ncol=ncol(structural_data),nrow=0))
-  for (i in subject_id_subset){
-    structural_data_subset<-rbind(structural_data_subset,structural_data[which(structural_data$ID_pnTTC==i),])
-  }
-  colnames(structural_data_subset)<-colnames(structural_data)
-  
-  if (global_covariate){
-    global_covariate_data_subset<-data.frame(matrix(ncol=ncol(global_covariate_data),nrow=0))
-    for (i in subject_id_subset){
-      global_covariate_data_subset<-rbind(global_covariate_data_subset,global_covariate_data[which(global_covariate_data$ID_pnTTC==i),])
-    }
-    global_covariate_data_subset<-cbind(global_covariate_data_subset$ID_pnTTC,global_covariate_data_subset[,global_covariate_label])
-    ave<-mean(global_covariate_data_subset[,2])
-    global_covariate_data_subset[,2]<-global_covariate_data_subset[,2]-ave
-    all_covariates_data<-cbind(covariates_data_subset,global_covariate_data_subset[,-1])
-    colnames(all_covariates_data)[ncol(all_covariates_data)]<-global_covariate_label
-  }else{
-    all_covariates_data<-covariates_data_subset
-  }
-  
-  for (i in n_covariates:1){
-    n_expvar<-i
-    for (j in 1:dim(combn(n_covariates,i))[2]){
-      id_covar<-combn(n_covariates,i)[,j]
-      if (global_covariate){
-        id_covar<-c(id_covar,n_covariates+1)
-      }
-      output<-cbind(output,GLMroutine(structural_data_subset, all_covariates_data,id_covar,n_expvar))
-    }
-  }
-  
-  best_model<-data.frame(matrix(ncol=1, nrow=(ncol(structural_data_subset)-1)))
-  for (i in c('AIC', 'BIC')){
-    xic<-output[, grep(i, names(output))]
-    for (j in 1:(ncol(structural_data_subset)-1)){
-      best_model[j,1]<-which.min(xic[j,])
-    }
-    colnames(best_model)<-paste(i,"best_model",sep="_")
-    output<-cbind(output,best_model)
-  }
-  write.csv(output, file.path(dirname,"GLM.csv"),row.names=F)
-  return(output)
+  structural_data_tidy<-gather(structural_data,key=ROI,value=value,-ID_pnTTC)
+  structural_data_tidy$ROI_label<-ConvertID(structural_data_tidy$ROI,roi_data,"ID_long","label_proper")
+  glm<-CommonGLM(structural_data_tidy,covariate_label,F,dirname)
+  return(glm)
 }
 
 

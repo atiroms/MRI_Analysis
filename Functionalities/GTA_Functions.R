@@ -1,16 +1,13 @@
 #### Description ####
 
-# R script for calculation of metrics of graph theoretical analysis
+# R script for calculation of metrics of weighted graph theoretical analysis
 
 
 #### Libraries ####
 library(igraph)
 
 
-#### Weighted Graph Functions ####
-
-
-#### Basic functions ####
+#### Basic Measures ####
 iGraph2Nodes<-function(input){
   nodes<-data.frame(node=V(input)$name,label_proper=V(input)$label_proper)
   return(nodes)
@@ -53,8 +50,6 @@ iGraph2Length<-function(input){
   return(length)
 }
 
-
-#### Basic Measures ####
 
 # Distance / Shortest Path Length
 WeightedDistance<-function(input_igraph=NULL,input_length=NULL){
@@ -107,24 +102,25 @@ WeightedDistance<-function(input_igraph=NULL,input_length=NULL){
 
 #### Measures of Integration ####
 
-# Weighted Characteristic Path Length / Weighted Average Path Length / Average Distance
+# Weighted Characteristic Path Length / Average Weighted Path Length / Average Distance
 WeightedCharPath<-function(input_igraph=NULL,input_distance=NULL){
   if (is.null(input_distance)){
-    distance<-WeightedDistance(input_igraph)[[1]]
+    distance<-WeightedDistance(input_igraph)$distance
   }else{
     distance<-input_distance
   }
-  closeness_centrality<-WeightedClosenessCentrality(input_distance=distance)
+  closeness_centrality<-WeightedClosenessCentrality(input_distance=distance)$node
   charpath<-mean(1/closeness_centrality)
-  output<-list(charpath,NULL)
-  names(output)<-c("graph","node")
+  name<-c("Weighted Characteristic Path Length","Average Weighted Path Length","Average Distane")
+  output<-list(name,charpath,NULL)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
 # Weighted Eccentricity (not in Rubinov NeuroImage 2010)
 WeightedEccentricity<-function(input_igraph=NULL,input_distance=NULL){
   if (is.null(input_distance)){
-    distance<-WeightedDistance(input_igraph)[[1]]
+    distance<-WeightedDistance(input_igraph)$distance
   }else{
     distance<-input_distance
   }
@@ -134,53 +130,57 @@ WeightedEccentricity<-function(input_igraph=NULL,input_distance=NULL){
     eccentricity<-c(eccentricity,max(distance[i,],na.rm=T))
   }
   names(eccentricity)<-rownames(distance)
-  output<-list(NULL,eccentricity)
-  names(output)<-c("graph","node")
+  name<-"Weighted Eccentricity"
+  output<-list(name,NULL,eccentricity)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
 # Weighted Radius (not in Rubinov NeuroImage 2010)
 WeightedRadius<-function(input_igraph=NULL,input_distance=NULL){
   if (is.null(input_distance)){
-    distance<-WeightedDistance(input_igraph)[[1]]
+    distance<-WeightedDistance(input_igraph)$distance
   }else{
     distance<-input_distance
   }
-  eccentricity<-WeightedEccentricity(input_distance=distance)[[2]]
+  eccentricity<-WeightedEccentricity(input_distance=distance)$node
   #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
   radius<-min(eccentricity)
-  output<-list(radius,NULL)
-  names(output)<-c("graph","node")
+  name<-"Weighted Radius"
+  output<-list(name,radius,NULL)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
 # Weighted Radius (not in Rubinov NeuroImage 2010)
 WeightedDiameter<-function(input_igraph=NULL,input_distance=NULL){
   if (is.null(input_distance)){
-    distance<-WeightedDistance(input_igraph)[[1]]
+    distance<-WeightedDistance(input_igraph)$distance
   }else{
     distance<-input_distance
   }
-  eccentricity<-WeightedEccentricity(input_distance=distance)[[2]]
+  eccentricity<-WeightedEccentricity(input_distance=distance)$node
   #  eccentricity$value<-as.numeric(levels(eccentricity$value))[eccentricity$value]
-  dianeter<-max(eccentricity)
-  output<-list(diameter,NULL)
-  names(output)<-c("graph","node")
+  diameter<-max(eccentricity)
+  name<-"Weighted Diameter"
+  output<-list(name,diameter,NULL)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
 # Global Efficiency
 WeightedGlobalEfficiency<-function(input_igraph=NULL,input_distance=NULL){
   if (is.null(input_distance)){
-    distance<-WeightedDistance(input_igraph)[[1]]
+    distance<-WeightedDistance(input_igraph)$distance
   }else{
     distance<-input_distance
   }
   diag(distance)<-NA
   efficiency<-rowMeans(1/distance,na.rm=T)
   ave<-mean(efficiency)
-  output<-list(ave,efficiency)
-  names(output)<-c("graph","node")
+  name<-"Weighted Global Efficiency"
+  output<-list(name,ave,efficiency)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -196,8 +196,9 @@ WeightedClustCoef<-function(input){
   k[cyc3==0]<-Inf
   c<-cyc3/(k*(k-1))
   ave<-mean(c)
-  output<-list(ave,c)
-  names(output)<-c("graph","node")
+  name<-"Weighted Clustering Coefficient"
+  output<-list(name,ave,c)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -210,8 +211,9 @@ WeightedTransitivity<-function(input){
   cyc3<-diag(cyc %*% cyc %*% cyc)
   k[cyc3==0]<-Inf
   t<-sum(cyc3)/sum((k*(k-1)))
-  output<-list(t,NULL)
-  names(output)<-c("graph","node")
+  name<-"Weighted Transitivity"
+  output<-list(name,t,NULL)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -230,7 +232,7 @@ WeightedLocalEfficiency<-function(input){
   for (u in 1:n_nodes){
     V<-intersect(which(adjacency[u,]),which(adjacency[,u]))
     sw<-cbrt_weight[u,V]+t(cbrt_weight[V,u])
-    di<-WeightedDistance(input_length=cbrt_length[V,V])[[1]]
+    di<-WeightedDistance(input_length=cbrt_length[V,V])$distance
     di<-1/di
     diag(di)<-0
     se<-di+t(di)
@@ -243,8 +245,9 @@ WeightedLocalEfficiency<-function(input){
   }
   names(e)<-rownames(weight)
   ave<-mean(e)
-  output<-list(ave,e)
-  names(output)<-c("graph","node")
+  name<-"Weighted Local Efficiency"
+  output<-list(name,ave,e)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -310,8 +313,9 @@ WeightedModularity<-function(input,gamma_v=1){
   s<-replicate(n_nodes,Ci)
   Q<-(!(s-t(s)))*B/m
   Q<-sum(Q)
-  output<-list(Q,Ci)
-  names(output)<-c("graph","node_community")
+  name<-"Weighted Modularity"
+  output<-list(name,Q,Ci)
+  names(output)<-c("name","graph","node_community")
   return(output)
 }
 
@@ -328,22 +332,24 @@ WeightedModularity<-function(input,gamma_v=1){
 WeightedStrength<-function(input){
   weight<-iGraph2Weight(input)
   strength<-rowSums(weight)
-  output<-list(NULL,strength)
-  names(output)<-c("graph","node")
+  name<-c("Weighted Degree Centrality","Strength","Weighted Degree")
+  output<-list(name,NULL,strength)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
 # Weighted Closeness Centrality
 WeightedClosenessCentrality<-function(input_igraph=NULL, input_distance=NULL){
   if (is.null(input_distance)){
-    distance<-WeightedDistance(input_igraph)[[1]]
+    distance<-WeightedDistance(input_igraph)$distance
   }else{
     distance<-input_distance
   }
   diag(distance)<-NA
   centrality<-1/rowMeans(distance,na.rm=T)
-  output<-list(NULL,centrality)
-  names(output)<-c("graph","node")
+  name<-"Weighted Closeness Centrality"
+  output<-list(name,NULL,centrality)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -404,8 +410,9 @@ WeightedBetweennessCentrality<-function(input){
     }
   }
   names(BC)<-rownames(weight)
-  output<-list(NULL,BC)
-  names(output)<-c("graph","node")
+  name<-"Weighted Betweenness Centrality"
+  output<-list(name,NULL,BC)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -418,8 +425,9 @@ WeightedEigenvectorCentrality<-function(input){
   idx<-which.max(D)
   ec<-abs(V[,idx])
   names(ec)<-rownames(weight)
-  output<-list(NULL,ec)
-  names(output)<-c("graph","node")
+  name<-"Weighted Eigenvector Centrality"
+  output<-list(name,NULL,ec)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -458,8 +466,9 @@ WeightedNeighborDegree<-function(input){
   weight[which(weight==0)]<-NA
   neighbordegree<-rowMeans(weight,na.rm=T)
   names(neighbordegree)<-rownames(weight)
-  output<-list(NULL,neighbordegree)
-  names(output)<-c("graph","node")
+  name<-"Average Weighted Neighbor Degree"
+  output<-list(name,NULL,neighbordegree)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 
@@ -472,8 +481,9 @@ WeightedAssortativityCoef<-function(input){
   stri<-strength[id[,1]]
   strj<-strength[id[,2]]
   r<-(sum(stri*strj)/K-(sum(0.5*(stri+strj))/K)^2)/(sum(0.5*(stri^2+strj^2))/K-(sum(0.5*(stri+strj))/K)^2)
-  output<-list(r,NULL)
-  names(output)<-c("graph","node")
+  name<-"Weighted Assortativity Coefficient"
+  output<-list(name,r,NULL)
+  names(output)<-c("name","graph","node")
   return(output)
 }
 

@@ -14,7 +14,11 @@ roi_file <- "ROI.csv"
 
 #### Factor to Numeric Converter ####
 as.numeric.factor <- function(x) {
-  as.numeric(levels(x))[x]
+  if (class(x)=="factor"){
+    return(as.numeric(levels(x))[x])
+  }else{
+    return(x)
+  }
 }
 
 

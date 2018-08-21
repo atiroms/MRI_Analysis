@@ -17,20 +17,22 @@ output_dir <- file.path(input_dir,"Connection_data")
 #connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
 #connection_file <- "W1_DK_FC.csv"
-connection_file <- "W1_DK_Male_TS1_FC.csv"
+#connection_file <- "W1_DK_Male_TS1_FC.csv"
+connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
-roi_subset<- ""
+#roi_subset<- ""
 #roi_subset<- "cortex"
-#roi_subset<- "subcortex"
+roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
+covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 p_uncorrected<-0.001
 
@@ -46,7 +48,7 @@ cost<-seq(0.04,0.25,0.01)
 
 #### Libraries ####
 
-library(multcomp)
+#library(multcomp)
 library(FactoMineR)
 library(ica)
 library(Rtsne)
@@ -59,6 +61,7 @@ library(qgraph)
 #### Functionalities ####
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
+source(file.path(script_dir,"Functionalities/GLM_Functions.R"))
 source(file.path(script_dir,"Functionalities/GTA_Functions.R"))
 source(file.path(script_dir,"Functionalities/Figures.R"))
 
@@ -91,94 +94,12 @@ n_rois<-length(rois)
 
 #### GLM Analysis  ####
 
-#not yet checked after update
-GLMroutine<-function(input_mri_data,input_covar,id_covar,n_expvar){
-  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_connections))
-  collabel<-colnames(input_covar)[id_covar+1]
-  input_covar<-data.frame(input_covar[,id_covar+1])
-  colnames(input_covar)<-collabel
-  for (i in 1:n_connections){
-    edge_data<-input_mri_data[which(input_mri_data$from==connections[i,"from"]),]
-    edge_data<-input_mri_data[which(input_mri_data$to==connections[i,"to"]),"r"]
-    if (length(id_covar)==1){
-      glmfit<-lm(edge_data~input_covar[,1])
-    }else if (length(id_covar)==2){
-      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2])
-    }else if (length(id_covar)==3){
-      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2]+input_covar[,3])
-    }else if (length(id_covar)==4){
-      glmfit<-lm(edge_data~input_covar[,1]+input_covar[,2]+input_covar[,3]+input_covar[,4])
-    }
-    if (length(id_covar)>=2){
-      vifactor<-vif(glmfit)
-    }else{
-      vifactor<-NA
-    }
-    stats<-c(AIC(glmfit),BIC(glmfit))
-    for (j in 1:n_expvar){
-      contrast<-matrix(0L,nrow=1, ncol=length(id_covar)+1)
-      contrast[1,j+1]<-1
-      ttest <- summary(glht(glmfit, linfct = contrast))$test
-      stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
-    }
-    output[i,]<-stats
-  }
-  collabel<-NULL
-  for (j in 1:n_expvar){
-    collabel<-c(collabel,paste(colnames(input_covar)[j],c("beta","sigma","t","p","VIF"),sep="_"))
-  }
-  collabel<-c("AIC","BIC",collabel)
-  model_name<-paste(colnames(input_covar),collapse="_")
-  collabel<-paste(collabel,"of",model_name,"model",sep="_")
-  colnames(output)<-collabel
-  return(output)
-}
-
-DoGLM_FC<-function(covariates_label=c("W1_Tanner_Stage","W1_Age_at_MRI")){
+DoGLM_FC<-function(){
   dirname<-ExpDir("GLM_FC")
-  n_covariates<-length(covariates_label)
-  output<-connections
-  clinical_data_subset<-clinical_data
-  for (i in 1:n_covariates){
-    clinical_data_subset<-clinical_data_subset[which(!is.na(clinical_data_subset[,covariates_label[i]])),]
-  }
-  subject_id_subset<-clinical_data_subset$ID_pnTTC
-  
-  covariates_data_subset<-data.frame(ID_pnTTC=clinical_data_subset$ID_pnTTC)
-  for (i in 1:n_covariates){
-    covariates_data_subset<-cbind(covariates_data_subset,clinical_data_subset[,covariates_label[i]])
-  }
-  for (i in 2:ncol(covariates_data_subset)){
-    ave<-mean(covariates_data_subset[,i])
-    covariates_data_subset[,i]<-covariates_data_subset[,i]-ave
-  }
-  colnames(covariates_data_subset)[-1]<-covariates_label
-  
-  connection_data_subset<-data.frame(matrix(ncol=ncol(connection_data),nrow=0))
-  for (i in subject_id_subset){
-    connection_data_subset<-rbind(connection_data_subset,connection_data[which(connection_data$ID_pnTTC==i),])
-  }
-  colnames(connection_data_subset)<-colnames(connection_data)
-  
-  for (i in n_covariates:1){
-    n_expvar<-i
-    for (j in 1:dim(combn(n_covariates,i))[2]){
-      id_covar<-combn(n_covariates,i)[,j]
-      output<-cbind(output,GLMroutine(connection_data_subset, covariates_data_subset,id_covar,n_expvar))
-    }
-  }
-  
-  best_model<-data.frame(matrix(ncol=1, nrow=(ncol(connection_data_subset)-1)))
-  for (i in c('AIC', 'BIC')){
-    xic<-output[, grep(i, names(output))]
-    for (j in 1:(ncol(connection_data_subset)-1)){
-      best_model[j,1]<-which.min(xic[j,])
-    }
-    colnames(best_model)<-paste(i,"best_model",sep="_")
-    output<-cbind(output,best_model)
-  }
-  write.csv(output, file.path(dirname,"GLM.csv"),row.names=F)
-  return(output)
+  connection_data_tidy<-connection_data[,-which(colnames(connection_data)=="p")]
+  connection_data_tidy<-rename(connection_data_tidy,value=r)
+  glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname)
+  return(glm)
 }
 
 
@@ -276,8 +197,9 @@ Edges2Graph<-function(input){
 }
 
 
-#### Subset edges according to desired cost ####
+#### Binary Graph Calculation ####
 
+# Subset edges according to desired cost
 SubsetEdges<-function(input_graph, input_cost){
   n_edges4cost<-as.integer(n_rois*(n_rois-1)/2*input_cost)
   edges2delete<-head(order(E(input_graph)$weight),(n_connections-n_edges4cost))
@@ -286,30 +208,29 @@ SubsetEdges<-function(input_graph, input_cost){
 }
 
 
-#### Calculate binary graph metrics ####
-
+# Calculate binary graph metrics
 BinaryMetrics<-function(input_graph){
   metrics<-data.frame(matrix(nrow=0,ncol=3))
   colnames(metrics)<-c("node","metric","value")
   ## graph-level metrics
   # characteristic path length
-  metrics<-rbind(metrics,cbind(node="global",metric="characteristic path length",
+  metrics<-rbind(metrics,cbind(node="graph",metric="characteristic path length",
                                value=average.path.length(input_graph)))
   # global efficiency
   eff<-1/(shortest.paths(input_graph))
   eff[!is.finite(eff)]<-0
-  metrics<-rbind(metrics,cbind(node="global",metric="global efficiency",
+  metrics<-rbind(metrics,cbind(node="graph",metric="global efficiency",
                                value=mean(eff,na.rm=TRUE)))
   # global clustering coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="global clustering coefficient",
+  metrics<-rbind(metrics,cbind(node="graph",metric="global clustering coefficient",
                                value=transitivity(input_graph)))
   # average clustering coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="average clustering coefficient",
+  metrics<-rbind(metrics,cbind(node="graph",metric="average clustering coefficient",
                                value=transitivity(input_graph,type="average")))
   # local efficiency
   # modularity
   # small-worldness
-  suppressWarnings(metrics<-rbind(metrics,cbind(node="global",metric="small-world index",
+  suppressWarnings(metrics<-rbind(metrics,cbind(node="graph",metric="small-world index",
                                                 value=smallworldIndex(input_graph)$index)))
   
   ## node-level metrics
@@ -327,9 +248,7 @@ BinaryMetrics<-function(input_graph){
   return(metrics)
 }
 
-
-#### Iterate over costs ####
-
+# Iterate over costs
 ItrCost<-function(input_graph){
   output<-data.frame()
   for (i in cost){
@@ -354,75 +273,72 @@ ItrCost<-function(input_graph){
 }
 
 
-#### Weighted Graph Theory Metric Calculation ####
-WeightedMetric<-function(input_graph){
-  metrics<-data.frame(matrix(nrow=0,ncol=3))
-  colnames(metrics)<-c("node","metric","value")
-  ## graph-level metrics
-  # weighted characteristic path length
-  metrics<-rbind(metrics,cbind(node="global",metric="characteristic path length",
-                               value=))
-  # weighted global efficiency
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted clustering coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted transitivity
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted local efficiency
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted modularity
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted degree distribution
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted assortability coefficient
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
-  # weighted network small-worldness
-  metrics<-rbind(metrics,cbind(node="global",metric="",
-                               value=))
+#### Weighted Graph Calculations ####
+
+AddMetric<-function(input){
+  output<-data.frame(matrix(nrow=0,ncol=4))
+  if (!is.null(input$graph)){
+    output_add<-cbind(node="graph",node_label=NA,metric=input$name[[1]],value=input$graph)
+    output<-rbind(output,output_add)
+  }
+  if (!is.null(input$node)){
+    output_add<-cbind(node=names(input$node),node_label=ConvertID(names(input$node),roi_data,"ID_long","label_proper"),metric=input$name[[1]],value=input$node)
+    output<-rbind(output,output_add)
+  }
+  colnames(output)<-c("node","node_label","metric","value")
+  return(output)
+}
+
+WeightedMetric<-function(input_igraph){
+  metrics<-data.frame(matrix(nrow=0,ncol=4))
+  distance<-WeightedDistance(input_igraph)$distance
   
-  ## node-level metrics
-  # weighted degree (strength)
-  metrics<-rbind(metrics,cbind(node=rois,metric="strength",
-                               value=strength(input_graph)))
-  # weighted closeness centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="",
-                               value=))
-  # betweenness centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="",
-                               value=))
-  # average weighted neighbor digree
-  metrics<-rbind(metrics,cbind(node=rois,metric="",
-                               value=))
+  metrics<-rbind(metrics,AddMetric(WeightedCharPath(input_distance=distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedEccentricity(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedRadius(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedDiameter(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedGlobalEfficiency(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedClustCoef(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedTransitivity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedModularity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedClosenessCentrality(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedBetweennessCentrality(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedEigenvectorCentrality(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedAssortativityCoef(input = input_igraph)))
+  
+  colnames(metrics)<-c("node","node_label","metric","value")
   rownames(metrics)<-NULL
   return(metrics)
 }
 
 
-#### Graph Theoretical Analysis, subject-wise ####
+#### Graph Theoretical Analysis ####
 
 DoGTA<-function(){
   dirname<-ExpDir("GTA")
-  output_binary<-data.frame()
+#  output_binary<-data.frame()
   output_weighted<-data.frame()
   for (i in 1:n_subject){
     subject_graph<-Edges2Graph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
-    subject_metric_binary<-ItrCost(subject_graph)
-    output_binary<-rbind(output_binary,
-                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
-                               subject_metric_binary))
+#    subject_metric_binary<-ItrCost(subject_graph)
+#    output_binary<-rbind(output_binary,
+#                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
+#                               subject_metric_binary))
+    E(subject_graph)$weight<-abs(E(subject_graph)$weight)
     subject_metric_weighted<-WeightedMetric(subject_graph)
     output_weighted<-rbind(output_weighted,
                            cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
                                  subject_metric_weighted))
   }
-  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
+#  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
   write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
-  return(list(output_binary,output_weighted))
+#  output<-list(output_binary,output_weighted)
+#  names(output)<-c("Binary","Weighted")
+  glm<-CommonGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname)
+  output<-list(output_weighted,glm)
+  names(output)<-c("Weighted_GTA","GLM_of_GTA")
+  return(output)
 }
