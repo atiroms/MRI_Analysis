@@ -63,6 +63,7 @@ library(Rtsne)
 
 source(file.path(script_dir,"Functionalities/Functions.R"))
 source(file.path(script_dir,"Functionalities/GLM_Functions.R"))
+source(file.path(script_dir,"Functionalities/LI_Functions.R"))
 source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
@@ -224,6 +225,11 @@ DoJK<-function(){
 
 DoLI<-function(){
   dirname<-ExpDir("LI")
+  structural_data_tidy<-gather(structural_data,key=ROI,value=value,-ID_pnTTC)
+  li<-commonLI(structural_data_tidy,"ROI",dirname)
+  
+  
+  
   roi_id<-colnames(structural_data)[-1]
   roi_label<-ConvertID(roi_id,roi_data,"ID_long","label_proper")
   roi_id_left<-roi_id[grep("^L",roi_label)]
