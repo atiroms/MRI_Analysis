@@ -20,12 +20,13 @@ output_dir <- file.path(input_dir,"Connection_data")
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
 connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
-#roi_subset<- ""
+#roi_subset<- NULL
 #roi_subset<- "cortex"
-roi_subset<- "subcortex"
+#roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
+roi_subset <- c("cortex","subcortex")
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
 subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
@@ -63,6 +64,7 @@ library(qgraph)
 source(file.path(script_dir,"Functionalities/Functions.R"))
 source(file.path(script_dir,"Functionalities/GLM_Functions.R"))
 source(file.path(script_dir,"Functionalities/GTA_Functions.R"))
+source(file.path(script_dir,"Functionalities/LI_Functions.R"))
 source(file.path(script_dir,"Functionalities/Figures.R"))
 
 
@@ -76,10 +78,25 @@ connection_data$flag<-F
 for (i in subject_id){
   connection_data[which(connection_data$ID_pnTTC==i),"flag"]<-T
 }
-connection_data<-connection_data[which(connection_data$flag),-ncol(connection_data)]
-if (roi_subset!=""){
-  connection_data<-connection_data[which(ConvertID(connection_data$from,roi_data,"ID_long","group")==roi_subset),]
-  connection_data<-connection_data[which(ConvertID(connection_data$to,roi_data,"ID_long","group")==roi_subset),]
+connection_data<-connection_data[which(connection_data$flag),
+                                 -which(colnames(connection_data)=="flag")]
+
+
+if (!is.null(roi_subset)){
+  connection_data$from_group<-ConvertID(connection_data$from,roi_data,"ID_long","group")
+  connection_data$to_group<-ConvertID(connection_data$to,roi_data,"ID_long","group")
+  connection_data$from_flag<-F
+  connection_data$to_flag<-F
+  for (i in roi_subset){
+    connection_data[which(connection_data[,"from_group"]==i),"from_flag"]<-T
+    connection_data[which(connection_data[,"to_group"]==i),"to_flag"]<-T
+  }
+  connection_data<-connection_data[intersect(which(connection_data$from_flag),
+                                             which(connection_data$to_flag)),]
+  connection_data<-connection_data[,-c(which(colnames(connection_data)=="from_group"),
+                                       which(colnames(connection_data)=="to_group"),
+                                       which(colnames(connection_data)=="from_flag"),
+                                       which(colnames(connection_data)=="to_flag"))]
 }
 
 connections<-connection_data[which(connection_data$ID_pnTTC==connection_data[1,"ID_pnTTC"]),2:5]
@@ -98,7 +115,7 @@ DoGLM_FC<-function(){
   dirname<-ExpDir("GLM_FC")
   connection_data_tidy<-connection_data[,-which(colnames(connection_data)=="p")]
   connection_data_tidy<-rename(connection_data_tidy,value=r)
-  glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname)
+  glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname,"GLM_FC.csv")
   return(glm)
 }
 
@@ -263,7 +280,8 @@ ItrCost<-function(input_graph){
   average<-data.frame()
   for (i in 1:nrow(metric_list)){
     average<-rbind(average,
-                   cbind(cost="average",node=as.character(metric_list[i,"node"]),metric=as.character(metric_list[i,"metric"]),
+                   cbind(cost="average",node=as.character(metric_list[i,"node"]),
+                         metric=as.character(metric_list[i,"metric"]),
                          value=mean(output[intersect(which(output$node==metric_list[i,"node"]),
                                                      which(output$metric==metric_list[i,"metric"])),"value"])))
   }
@@ -282,7 +300,9 @@ AddMetric<-function(input){
     output<-rbind(output,output_add)
   }
   if (!is.null(input$node)){
-    output_add<-cbind(node=names(input$node),node_label=ConvertID(names(input$node),roi_data,"ID_long","label_proper"),metric=input$name[[1]],value=input$node)
+    output_add<-cbind(node=names(input$node),
+                      node_label=ConvertID(names(input$node),roi_data,"ID_long","label_proper"),
+                      metric=input$name[[1]],value=input$node)
     output<-rbind(output,output_add)
   }
   colnames(output)<-c("node","node_label","metric","value")
@@ -337,8 +357,13 @@ DoGTA<-function(){
   write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
 #  output<-list(output_binary,output_weighted)
 #  names(output)<-c("Binary","Weighted")
-  glm<-CommonGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname)
-  output<-list(output_weighted,glm)
-  names(output)<-c("Weighted_GTA","GLM_of_GTA")
+  glm<-CommonGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname,"GLM_GTA.csv")
+  output_weighted_tidy<-output_weighted[,c("ID_pnTTC","node","metric","value")]
+  li<-CommonLI(output_weighted_tidy,"node",dirname,"LI_GTA.csv")
+  li_tidy<-li[,c("ID_pnTTC","node","metric","L_ROI_ID","R_ROI_ID","Laterality_Index")]
+  colnames(li_tidy)[6]<-"value"
+  glm_li<-CommonGLM(li_tidy,covariate_label,global_covariate=F,dirname=dirname,"GLM_LI_GTA.csv")
+  output<-list(output_weighted,glm,li,glm_li)
+  names(output)<-c("Weighted_GTA","GLM_of_GTA","LI_of_GTA","GLM_of_LI_of_GTA")
   return(output)
 }

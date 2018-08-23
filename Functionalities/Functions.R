@@ -31,7 +31,14 @@ ConvertID<-function(input,dict,from_type,to_type){
   to_vec<-as.character(dict[,which(names(dict)==to_type)])
   output<-NULL
   for (i in 1:length(input)){
-    output<-c(output,to_vec[which(from_vec==input[i])])
+    if(is.na(input[i])){
+      output_add<-NA
+    }else if(is.na(which(from_vec==input[i])[1])){
+      output_add<-NA
+    }else{
+      output_add<-to_vec[which(from_vec==input[i])]
+    }
+    output<-c(output,output_add)
   }
   return(output)
 }
