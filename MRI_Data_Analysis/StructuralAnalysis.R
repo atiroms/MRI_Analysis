@@ -93,7 +93,7 @@ DoGLM<-function(){
   dirname<-ExpDir("GLM")
   structural_data_tidy<-gather(structural_data,key=ROI,value=value,-ID_pnTTC)
   structural_data_tidy$ROI_label<-ConvertID(structural_data_tidy$ROI,roi_data,"ID_long","label_proper")
-  glm<-CommonGLM(structural_data_tidy,covariate_label,F,dirname)
+  glm<-CommonGLM(structural_data_tidy,covariate_label,F,dirname,"GLM_Structure.csv")
   return(glm)
 }
 
@@ -226,44 +226,12 @@ DoJK<-function(){
 DoLI<-function(){
   dirname<-ExpDir("LI")
   structural_data_tidy<-gather(structural_data,key=ROI,value=value,-ID_pnTTC)
-  li<-commonLI(structural_data_tidy,"ROI",dirname)
-  
-  
-  
-  roi_id<-colnames(structural_data)[-1]
-  roi_label<-ConvertID(roi_id,roi_data,"ID_long","label_proper")
-  roi_id_left<-roi_id[grep("^L",roi_label)]
-  roi_label_left<-roi_label[grep("^L",roi_label)]
-  roi_label_bilateral<-substr(roi_label_left,3,1000)
-  n_roi_bilateral<-length(roi_label_bilateral)
-  roi_label_right<-paste("R",roi_label_bilateral,sep=" ")
-  roi_id_right<-NULL
-  for (i in 1:n_roi_bilateral){
-    roi_id_right<-c(roi_id_right,roi_id[which(roi_label==roi_label_right[i])])
-  }
-  output<-data.frame(matrix(ncol=n_roi_bilateral+1,nrow=n_subject+2))
-  colnames(output)<-c("ID_pnTTC",roi_label_bilateral)
-  output[1,]<-c("left_ROI_ID",roi_id_left)
-  output[2,]<-c("right_ROI_ID",roi_id_right)
-  for (i in 1:n_subject){
-    left_measure<-structural_data[which(structural_data$ID_pnTTC==subject_id[i]),roi_id_left]
-    right_measure<-structural_data[which(structural_data$ID_pnTTC==subject_id[i]),roi_id_right]
-    li<-(left_measure-right_measure)/(left_measure+right_measure)
-    output[i+2,]<-c(subject_id[i],li)
-  }
-  write.csv(output, file.path(dirname,"LateralityIndex.csv"),row.names=F)
-  clincorr<-MeasClinicalCorr(output[c(-1,-2),],dirname)
-  output_tidy<-output[c(-1,-2),]
-  output_tidy<-gather(output_tidy,key=ROI_label,value=value,-ID_pnTTC)
-  output_tidy$L_ROI_ID<-NA
-  output_tidy$R_ROI_ID<-NA
-  for (i in 1:nrow(output_tidy)){
-    output_tidy[i,"L_ROI_ID"]<-roi_id_left[which(roi_label_bilateral==output_tidy[i,"ROI_label"])]
-    output_tidy[i,"R_ROI_ID"]<-roi_id_right[which(roi_label_bilateral==output_tidy[i,"ROI_label"])]
-  }
-  output_tidy<-output_tidy[,c("ID_pnTTC","ROI_label","L_ROI_ID","R_ROI_ID","value")]
-  glm<-CommonGLM(output_tidy,covariate_label,F,dirname)
-  output<-list(output,clincorr,glm)
-  names(output)<-c("Laterality_Index","LI-Clinical_Correlation","GLM_of_LI")
-  return(list(output,clincorr,glm))
+  li<-CommonLI(structural_data_tidy,"ROI",dirname,"LI_Structure.csv")
+#  clincorr<-MeasClinicalCorr(output[c(-1,-2),],dirname)
+  li_tidy<-li[,c("ID_pnTTC","ROI","L_ROI_ID","R_ROI_ID","Laterality_Index")]
+  colnames(li_tidy)[5]<-"value"
+  glm<-CommonGLM(li_tidy,covariate_label,F,dirname,"GLM_LI_Structure.csv")
+  output<-list(li,glm)
+  names(output)<-c("Laterality_Index","GLM_of_LI")
+  return(output)
 }

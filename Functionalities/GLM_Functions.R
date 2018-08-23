@@ -42,16 +42,23 @@ GLMroutine<-function(input_MRI_data,input_covar,id_covar,n_expvar){
       glmfit<-lm(MRI_measure~input_covar[,1]+input_covar[,2]+input_covar[,3]+input_covar[,4])
     }
     if (length(id_covar)>=2){
-      vifactor<-vif(glmfit)
+      suppressWarnings(vifactor<-vif(glmfit))
     }else{
-      vifactor<-NA
+      vifactor<-NaN
     }
     stats<-c(AIC(glmfit),BIC(glmfit))
     for (j in 1:n_expvar){
       contrast<-matrix(0L,nrow=1, ncol=length(id_covar)+1)
       contrast[1,j+1]<-1
-      ttest <- summary(glht(glmfit, linfct = contrast))$test
-      stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
+      ttest<-tryCatch(summary(glht(glmfit, linfct = contrast))$test,
+               error=function(e){return(NaN)},
+               warning=function(e){return(NaN)},
+               silent=T)
+      if (length(ttest)==1){
+        stats <-c(stats, rep(NaN,4),vifactor[j])
+      }else{
+        stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
+      }
     }
     output[i,]<-stats
   }
@@ -66,7 +73,7 @@ GLMroutine<-function(input_MRI_data,input_covar,id_covar,n_expvar){
   return(output)
 }
 
-CommonGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname){
+CommonGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname,filename){
   n_covariates<-length(input_covariate_label)
   output<-MRI_data[which(MRI_data$ID_pnTTC==MRI_data[1,"ID_pnTTC"]),
                    -c(which(colnames(MRI_data)=="ID_pnTTC"),which(colnames(MRI_data)=="value"))]
@@ -130,6 +137,6 @@ CommonGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covari
     colnames(best_model)<-paste(i,"best_model",sep="_")
     output<-cbind(output,best_model)
   }
-  write.csv(output, file.path(dirname,"GLM.csv"),row.names=F)
+  write.csv(output, file.path(dirname,filename),row.names=F)
   return(output)
 }
