@@ -17,8 +17,8 @@ CircularPlot<-function(input){
   subset_edges<-input[[2]][which(input[[2]]$plot==T),]
   ordered_nodes<-input[[1]]
   nodes_label<-ConvertID(ordered_nodes$label,roi_data,"ID_long","label_proper")
-  r_nodes<-grep("^R",nodes_label)
-  l_nodes<-rev(grep("^L",nodes_label))
+  r_nodes<-grep("^R ",nodes_label)
+  l_nodes<-rev(grep("^L ",nodes_label))
   ordered_nodes<-rbind(ordered_nodes[r_nodes,],ordered_nodes[c(-r_nodes,-l_nodes),],ordered_nodes[l_nodes,])
   ordered_nodes$angle <- 90 - 360 * ((1:nrow(ordered_nodes))-0.5) / nrow(ordered_nodes)
   ordered_nodes$hjust<-ifelse(ordered_nodes$angle < -90, 1, 0)

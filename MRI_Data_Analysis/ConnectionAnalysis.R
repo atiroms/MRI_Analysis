@@ -14,11 +14,11 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
 output_dir <- file.path(input_dir,"Connection_data")
 
-#connection_file <- "W1_HO_FC.csv"
+connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
 #connection_file <- "W1_DK_FC.csv"
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
-connection_file <- "W1_DK_Male_Subcortex_FC.csv"
+#connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
 #roi_subset<- NULL
 #roi_subset<- "cortex"
@@ -116,6 +116,8 @@ DoGLM_FC<-function(){
   connection_data_tidy<-connection_data[,-which(colnames(connection_data)=="p")]
   connection_data_tidy<-rename(connection_data_tidy,value=r)
   glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname,"GLM_FC.csv")
+  
+  
   return(glm)
 }
 

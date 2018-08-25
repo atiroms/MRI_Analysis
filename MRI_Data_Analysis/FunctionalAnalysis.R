@@ -111,15 +111,15 @@ DoFC_All<-function(){
 
 DoFC<-function(){
   dirname<-ExpDir("FC")
-  output<-data.frame(matrix(ncol=7,nrow=0))
+  fc_stack<-data.frame(matrix(ncol=7,nrow=0))
   for (i in 1:n_subject){
     fc<-CalcCorr(functional_data[which(functional_data$ID_pnTTC==subject_id[i]),c(-1,-2)],
-                 dirname,sprintf("%05d", subject_id[i]),plot=F)[[2]]
-    output<-rbind(output,cbind(ID_pnTTC=rep(subject_id[i],nrow(fc)),fc))
+                 dirname,sprintf("%05d", subject_id[i]),plot=F,save=F)[[2]]
+    fc_stack<-rbind(fc_stack,cbind(ID_pnTTC=rep(subject_id[i],nrow(fc)),fc))
   }
-  colnames(output)<-c("ID_pnTTC","from","from_label","to","to_label","r","p")
-  write.csv(output, file.path(dirname,"FC.csv"),row.names = F)
-  return(output)
+  colnames(fc_stack)<-c("ID_pnTTC","from","from_label","to","to_label","r","p")
+  write.csv(fc_stack, file.path(dirname,"FC.csv"),row.names = F)
+  return(fc_stack)
 }
 
 
