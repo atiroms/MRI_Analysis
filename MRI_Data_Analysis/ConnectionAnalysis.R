@@ -149,6 +149,7 @@ DoGLM_FC<-function(){
 #    fig<-c(fig,list(CircularPlot(nodes_edges,pvalue_type="p","GLM Beta Values")))
     glm_ordered<-rbind(glm_ordered,glm_subset)
   }
+  write.csv(glm_ordered, file.path(dirname,"GLM_FC_ordered.csv"),row.names=F)
   output<-list(glm_ordered,fig)
   names(output)<-c("GLM","Figures")
   return(output)
