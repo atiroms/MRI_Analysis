@@ -86,22 +86,30 @@ for (i in subject_id){
 connection_data<-connection_data[which(connection_data$flag),
                                  -which(colnames(connection_data)=="flag")]
 
+nodes<-c(as.character(unique(connection_data$from)),
+         as.character(unique(connection_data$to)))
+nodes<-unique(nodes)
+nodes<-nodes[order(nodes)]
+nodes<-data.frame(node=nodes,
+                  node_label=ConvertID(nodes,roi_data,"ID_long","label_proper"),
+                  node_group=ConvertID(nodes,roi_data,"ID_long","group"))
 
 if (!is.null(roi_subset)){
-  connection_data$from_group<-ConvertID(connection_data$from,roi_data,"ID_long","group")
-  connection_data$to_group<-ConvertID(connection_data$to,roi_data,"ID_long","group")
+  nodes$include<-F
+  for (i in roi_subset){
+    nodes[which(nodes$node_group==i),"include"]<-T
+  }
+  included_nodes<-as.character(nodes[which(nodes$include),"node"])
   connection_data$from_flag<-F
   connection_data$to_flag<-F
-  for (i in roi_subset){
-    connection_data[which(connection_data[,"from_group"]==i),"from_flag"]<-T
-    connection_data[which(connection_data[,"to_group"]==i),"to_flag"]<-T
+  for (i in included_nodes){
+    connection_data[which(connection_data$from==i),"from_flag"]<-T
+    connection_data[which(connection_data$to==i),"to_flag"]<-T
   }
   connection_data<-connection_data[intersect(which(connection_data$from_flag),
-                                             which(connection_data$to_flag)),]
-  connection_data<-connection_data[,-c(which(colnames(connection_data)=="from_group"),
-                                       which(colnames(connection_data)=="to_group"),
-                                       which(colnames(connection_data)=="from_flag"),
-                                       which(colnames(connection_data)=="to_flag"))]
+                                             which(connection_data$to_flag)),
+                                   -c(which(colnames(connection_data)=="from_flag"),
+                                      which(colnames(connection_data)=="to_flag"))]
 }
 
 connections<-connection_data[which(connection_data$ID_pnTTC==connection_data[1,"ID_pnTTC"]),2:5]
