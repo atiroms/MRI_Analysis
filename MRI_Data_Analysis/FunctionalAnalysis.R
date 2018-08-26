@@ -11,32 +11,33 @@ parent_dir <- "D:/atiroms"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 #input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
-input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_Power")
-#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
+#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_Power")
+input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
 output_dir <- file.path(input_dir,"Functional_data")
 
 #functional_file <- "W1_CONN_BOLD_HO.csv"
-functional_file <- "W1_CONN_BOLD_Power.csv"
-#functional_file <- "W1_CONN_BOLD_DK.csv"
+#functional_file <- "W1_CONN_BOLD_Power.csv"
+functional_file <- "W1_CONN_BOLD_DK.csv"
 
 #for CONN Harvard-Oxford+AAL atlas and FreeSurfer Desikan-Killiany atlas
 #roi_subset <- NULL
 #roi_subset <- "cortex"
 #roi_subset <- "subcortex"
 #roi_subset <- "cerebellum"
+#roi_subset <- "white matter"
 #roi_subset <- "global"
 #roi_subset <- "misc"
 #roi_subset <- c("cortex","subcortex")
-#roi_subset <- c("cortex","subcortex","celebellum")
+roi_subset <- c("cortex","subcortex","celebellum")
 #for Power Atlas
-#roi_subset<-c("Uncertain","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
-#              "Cingulo-opercular Task Control","Auditory","Default mode","Visual",
-#              "Memory retrieval?","Ventral attention","Fronto-parietal Task Control",
-#              "Salience","Cerebellar","Subcortical","Dorsal attention")
-roi_subset<-c("Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
-              "Cingulo-opercular Task Control","Auditory","Default mode","Visual",
-              "Memory retrieval?","Ventral attention","Fronto-parietal Task Control",
-              "Salience","Cerebellar","Subcortical","Dorsal attention")
+#roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
+#roi_subset<-c("Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
 
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)

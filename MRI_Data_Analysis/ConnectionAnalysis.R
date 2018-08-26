@@ -14,9 +14,9 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
 output_dir <- file.path(input_dir,"Connection_data")
 
-connection_file <- "W1_HO_FC.csv"
+#connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
-#connection_file <- "W1_DK_FC.csv"
+connection_file <- "W1_DK_FC.csv"
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
 #connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
