@@ -40,6 +40,7 @@ subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 p_uncorrected<-0.001
+p_corrected<-0.05
 
 n_components<-10
 #n_components<-30
@@ -121,8 +122,28 @@ DoGLM_FC<-function(){
   connection_data_tidy<-rename(connection_data_tidy,value=r)
   glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname,"GLM_FC.csv")
   
-  
-  return(glm)
+  models_expvars<-glm[intersect(which(glm[,"from"]==glm[1,"from"]),
+                                which(glm[,"to"]==glm[1,"to"])),
+                      c("model","exp_var")]
+  fig<-NULL
+  glm_ordered<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    glm_subset<-MultCompCorr(glm_subset)
+    nodes_edges<-GLM_FC2Graph(glm_subset,rois)
+    fig_title<-paste("Model:",models_expvars[i,"model"],
+                     "Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+    fig<-c(fig,list(CircularPlot(nodes_edges,
+                                 pvalue_type="p_Benjamini_Hochberg",
+                                 input_title="GLM Beta Values")))
+#    fig<-c(fig,list(CircularPlot(nodes_edges,pvalue_type="p","GLM Beta Values")))
+    glm_ordered<-rbind(glm_ordered,glm_subset)
+  }
+  output<-list(glm_ordered,fig)
+  names(output)<-c("GLM","Figures")
+  return(output)
 }
 
 
@@ -205,7 +226,7 @@ DoTSNE_FC<-function(){
 
 #### Graph object construction ####
 
-Edges2Graph<-function(input){
+Edges2iGraph<-function(input){
   edges<-data.frame(matrix(ncol=3,nrow=n_connections))
   edges[,1:2]<-connections[,c("from","to")]
   for (i in 1:n_connections){
@@ -348,7 +369,7 @@ DoGTA<-function(){
 #  output_binary<-data.frame()
   output_weighted<-data.frame()
   for (i in 1:n_subject){
-    subject_graph<-Edges2Graph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
+    subject_graph<-Edges2iGraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
 #    subject_metric_binary<-ItrCost(subject_graph)
 #    output_binary<-rbind(output_binary,
 #                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),

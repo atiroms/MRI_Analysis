@@ -49,9 +49,9 @@ GLMroutine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar
       contrast<-matrix(0L,nrow=1, ncol=length(id_covar)+1)
       contrast[1,j+1]<-1
       ttest<-tryCatch(summary(glht(glmfit, linfct = contrast))$test,
-               error=function(e){return(NaN)},
-               warning=function(e){return(NaN)},
-               silent=T)
+                      error=function(e){return(NaN)},
+                      warning=function(e){return(NaN)},
+                      silent=T)
       if (length(ttest)==1){
 #        stats <-c(stats, rep(NaN,4),vifactor[j])
         output_add<-cbind(input_measures[i,],model_name,colnames(input_covar)[j],
@@ -130,9 +130,9 @@ CommonGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covari
       output<-rbind(output,GLMroutine(MRI_data_subset,measures,all_covariates_data,id_covar,n_expvar))
     }
   }
+  
   output$AIC_best<-F
   output$BIC_best<-F
-  
   for (i in 1:n_measures){
     obs_id<-1:nrow(output)
     for (j in colnames(measures)){

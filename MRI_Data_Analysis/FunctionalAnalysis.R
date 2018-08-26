@@ -103,7 +103,9 @@ DoFC_All<-function(){
   corr<-CalcCorr(functional_data[,c(-1,-2)], dirname,"FC")
   fig1<-corr[[3]]
   graph<-Corr2Graph(corr)
-  fig2<-CircularPlot(graph)
+  fig2<-CircularPlot(graph,
+                     pvalue_type="p_Benjamini_Hochberg",
+                     input_title = "Functional Correlation for All Subjects")
   return(list(corr,fig1,fig2))
 }
 

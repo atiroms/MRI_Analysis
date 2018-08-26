@@ -105,7 +105,9 @@ DoSCA<-function(){
   corr<-CalcCorr(structural_data[-1], dirname,"SCA")
   graph<-Corr2Graph(corr)
   fig1<-corr[[3]]
-  fig2<-CircularPlot(graph)
+  fig2<-CircularPlot(graph,
+                     pvalue_type="p_Benjamini_Hochberg",
+                     input_title="Structural Covariance for All Subjects")
   return(list(corr,fig1,fig2))
 }
 
