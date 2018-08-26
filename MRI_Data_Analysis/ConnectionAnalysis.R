@@ -7,8 +7,8 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
@@ -29,9 +29,13 @@ connection_file <- "W1_DK_FC.csv"
 roi_subset <- c("cortex","subcortex")
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
+
+
 
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
