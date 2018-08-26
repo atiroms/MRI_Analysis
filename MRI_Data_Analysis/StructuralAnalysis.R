@@ -6,8 +6,8 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Structural_FS")
@@ -36,6 +36,8 @@ subject_subset <- data.frame(W1_T1QC=1, Sex=1)
 input_roi_type <- "label_fs"
 
 p_uncorrected<-0.001
+p_corrected<-0.05
+
 n_components<-10
 #n_components<-30
 #n_components<-5

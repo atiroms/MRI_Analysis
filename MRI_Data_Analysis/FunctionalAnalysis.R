@@ -52,6 +52,8 @@ subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1)
 input_roi_type <- "label_conn"
 
 p_uncorrected<-0.001
+p_corrected<-0.05
+
 n_components<-10
 #n_components<-4
 
