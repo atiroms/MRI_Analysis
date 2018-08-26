@@ -32,10 +32,16 @@ ConvertID<-function(input,dict,from_type,to_type){
   output<-NULL
   for (i in 1:length(input)){
     if(is.na(input[i])){
+      # when input=NA, output=NA
       output_add<-NA
     }else if(is.na(which(from_vec==input[i])[1])){
-      output_add<-NA
+      # when input is not NA but does not exist in the dictionary, output=input
+      output_add<-input[i]
+    }else if(is.na(to_vec[which(from_vec==input[i])])){
+      # when input is not NA and exist in dictionary but corresponding output is NA, output=input
+      output_add<-input[i]
     }else{
+      # when input is not NA and existin dictionary and corresponding output in not NA, output=corresponeing output
       output_add<-to_vec[which(from_vec==input[i])]
     }
     output<-c(output,output_add)

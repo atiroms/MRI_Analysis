@@ -6,8 +6,8 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 #input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
@@ -19,13 +19,25 @@ output_dir <- file.path(input_dir,"Functional_data")
 #functional_file <- "W1_CONN_BOLD_Power.csv"
 functional_file <- "W1_CONN_BOLD_DK.csv"
 
+#for CONN Harvard-Oxford+AAL atlas and FreeSurfer Desikan-Killiany atlas
 #roi_subset <- NULL
 #roi_subset <- "cortex"
 #roi_subset <- "subcortex"
 #roi_subset <- "cerebellum"
+#roi_subset <- "white matter"
 #roi_subset <- "global"
 #roi_subset <- "misc"
-roi_subset <- c("cortex","subcortex")
+#roi_subset <- c("cortex","subcortex")
+roi_subset <- c("cortex","subcortex","celebellum")
+#for Power Atlas
+#roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
+#roi_subset<-c("Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
 
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
@@ -33,7 +45,8 @@ roi_subset <- c("cortex","subcortex")
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1)
 
 
 input_roi_type <- "label_conn"
@@ -99,15 +112,15 @@ DoFC_All<-function(){
 
 DoFC<-function(){
   dirname<-ExpDir("FC")
-  output<-data.frame(matrix(ncol=7,nrow=0))
+  fc_stack<-data.frame(matrix(ncol=7,nrow=0))
   for (i in 1:n_subject){
     fc<-CalcCorr(functional_data[which(functional_data$ID_pnTTC==subject_id[i]),c(-1,-2)],
-                 dirname,sprintf("%05d", subject_id[i]),plot=F)[[2]]
-    output<-rbind(output,cbind(ID_pnTTC=rep(subject_id[i],nrow(fc)),fc))
+                 dirname,sprintf("%05d", subject_id[i]),plot=F,save=F)[[2]]
+    fc_stack<-rbind(fc_stack,cbind(ID_pnTTC=rep(subject_id[i],nrow(fc)),fc))
   }
-  colnames(output)<-c("ID_pnTTC","from","from_label","to","to_label","r","p")
-  write.csv(output, file.path(dirname,"FC.csv"),row.names = F)
-  return(output)
+  colnames(fc_stack)<-c("ID_pnTTC","from","from_label","to","to_label","r","p")
+  write.csv(fc_stack, file.path(dirname,"FC.csv"),row.names = F)
+  return(fc_stack)
 }
 
 
