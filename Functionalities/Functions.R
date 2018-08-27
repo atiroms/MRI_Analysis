@@ -10,6 +10,7 @@ roi_file <- "ROI.csv"
 
 
 #### Libraries ####
+library(tidyverse)
 
 
 #### Factor to Numeric Converter ####
@@ -129,17 +130,60 @@ MeasClinicalCorr<-function(input, dirname){
 Corr2Graph<-function(input){
   nodes<-data.frame(label=as.character(colnames(input[[1]]$r)))
   nodes$label<-as.character(nodes$label)
-  #  nodes<-rbind(data.frame(label=nodes[(nrow(nodes)/2+1):nrow(nodes),]),data.frame(label=nodes[(nrow(nodes)/2):1,]))
   nodes<-rowid_to_column(nodes, "id")
+  input$from<-as.character(input$from)
+  input$to<-as.character(input$to)
   edges<-left_join(input[[2]], nodes, by = c("from" = "label")) 
-  edges<-rename(edges, from2 = id)
+  edges<-edges[,-which(colnames(edges)=="from")]
+  edges<-rename(edges, from = id)
   edges<-left_join(edges, nodes, by = c("to" = "label"))
-  edges<-rename(edges, to2 = id)
-  #  edges<-rename(edges, r=cor)
-  bonferroni<-p_uncorrected/nrow(edges)
-  edges$plot<- edges$p<bonferroni
-  #  edges<-edges[which(edges$sign==TRUE),]
-  edges<-edges[,c("from2","to2","r","p","plot")]
-  colnames(edges)<-c("from","to","r","p","plot")
-  return(list(nodes,edges))
+  edges<-edges[,-which(colnames(edges)=="to")]
+  edges<-rename(edges, to = id)
+  edges<-rename(edges, weight=r)
+  edges<-cbind(edges,MultCompCorr(edges))
+  collabel<-colnames(edges)
+  collabel<-collabel[-c(which(collabel=="from"),which(collabel=="to"))]
+  collabel<-c("from","to",collabel)
+  edges<-edges[,collabel]
+  output<-list(nodes,edges)
+  names(output)<-c("nodes","edges")
+  return(output)
+}
+
+
+#### Transform GLM of FC results into Nodes and Edges ####
+
+GLM_FC2Graph<-function(input_glm,input_nodes){
+  nodes<-data.frame(label=as.character(input_nodes))
+  nodes$label<-as.character(nodes$label)
+  nodes<-rowid_to_column(nodes, "id")
+  input_glm$from<-as.character(input_glm$from)
+  input_glm$to<-as.character(input_glm$to)
+  edges<-left_join(input_glm, nodes, by = c("from" = "label")) 
+  edges<-edges[,-which(colnames(edges)=="from")]
+  edges<-rename(edges, from = id)
+  edges<-left_join(edges, nodes, by = c("to" = "label"))
+  edges<-edges[,-which(colnames(edges)=="to")]
+  edges<-rename(edges, to = id)
+  edges<-rename(edges, weight=beta)
+  collabel<-colnames(edges)
+  collabel<-collabel[-c(which(collabel=="from"),which(collabel=="to"))]
+  collabel<-c("from","to",collabel)
+  edges<-edges[,collabel]
+  output<-list(nodes,edges)
+  names(output)<-c("nodes","edges")
+  return(output)
+}
+
+
+#### Add columns with multiple comparison corrected p values from column named "p" ####
+
+MultCompCorr<-function(input){
+  output<-data.frame(p_Bonferroni=p.adjust(input$p,method = "bonferroni"))
+  output$p_Holm_Bonferroni<-p.adjust(input$p,method = "holm")
+  output$p_Hochberg<-p.adjust(input$p,method = "hochberg")
+  output$p_Hommel<-p.adjust(input$p,method = "hommel")
+  output$p_Benjamini_Hochberg<-p.adjust(input$p,method="BH")
+  output$p_Benjamini_Yekutieli<-p.adjust(input$p,method="BY")
+  return(output)
 }

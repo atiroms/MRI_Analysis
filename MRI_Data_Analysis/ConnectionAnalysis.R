@@ -7,8 +7,8 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
@@ -27,15 +27,32 @@ connection_file <- "W1_DK_FC.csv"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 roi_subset <- c("cortex","subcortex")
+#roi_subset <- c("cortex","subcortex","cerebellum")
+
+#for Power Atlas
+#roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
+#roi_subset<-c("Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
+
+
 
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 p_uncorrected<-0.001
+p_corrected<-0.05
 
 n_components<-10
 #n_components<-30
@@ -81,22 +98,30 @@ for (i in subject_id){
 connection_data<-connection_data[which(connection_data$flag),
                                  -which(colnames(connection_data)=="flag")]
 
+nodes<-c(as.character(unique(connection_data$from)),
+         as.character(unique(connection_data$to)))
+nodes<-unique(nodes)
+nodes<-nodes[order(nodes)]
+nodes<-data.frame(node=nodes,
+                  node_label=ConvertID(nodes,roi_data,"ID_long","label_proper"),
+                  node_group=ConvertID(nodes,roi_data,"ID_long","group"))
 
 if (!is.null(roi_subset)){
-  connection_data$from_group<-ConvertID(connection_data$from,roi_data,"ID_long","group")
-  connection_data$to_group<-ConvertID(connection_data$to,roi_data,"ID_long","group")
+  nodes$include<-F
+  for (i in roi_subset){
+    nodes[which(nodes$node_group==i),"include"]<-T
+  }
+  included_nodes<-as.character(nodes[which(nodes$include),"node"])
   connection_data$from_flag<-F
   connection_data$to_flag<-F
-  for (i in roi_subset){
-    connection_data[which(connection_data[,"from_group"]==i),"from_flag"]<-T
-    connection_data[which(connection_data[,"to_group"]==i),"to_flag"]<-T
+  for (i in included_nodes){
+    connection_data[which(connection_data$from==i),"from_flag"]<-T
+    connection_data[which(connection_data$to==i),"to_flag"]<-T
   }
   connection_data<-connection_data[intersect(which(connection_data$from_flag),
-                                             which(connection_data$to_flag)),]
-  connection_data<-connection_data[,-c(which(colnames(connection_data)=="from_group"),
-                                       which(colnames(connection_data)=="to_group"),
-                                       which(colnames(connection_data)=="from_flag"),
-                                       which(colnames(connection_data)=="to_flag"))]
+                                             which(connection_data$to_flag)),
+                                   -c(which(colnames(connection_data)=="from_flag"),
+                                      which(colnames(connection_data)=="to_flag"))]
 }
 
 connections<-connection_data[which(connection_data$ID_pnTTC==connection_data[1,"ID_pnTTC"]),2:5]
@@ -117,8 +142,47 @@ DoGLM_FC<-function(){
   connection_data_tidy<-rename(connection_data_tidy,value=r)
   glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname,"GLM_FC.csv")
   
-  
-  return(glm)
+  models_expvars<-glm[intersect(which(glm[,"from"]==glm[1,"from"]),
+                                which(glm[,"to"]==glm[1,"to"])),
+                      c("model","exp_var")]
+  fig<-NULL
+  glm_ordered<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    glm_subset<-cbind(glm_subset,MultCompCorr(glm_subset))
+    for (j in rois){
+      id_obs<-union(which(glm_subset$from==j),which(glm_subset$to==j))
+      id_obs<-id_obs[order(id_obs)]
+      glm_subsubset<-glm_subset[id_obs,]
+      pvalues<-MultCompCorr(glm_subsubset)
+      for (k in 1:length(id_obs)){
+        for (l in colnames(pvalues)){
+          if (is.null(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          }else if (is.na(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          }else{
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(glm_subset[id_obs[k],paste("seed",l,sep="_")],
+                                                               pvalues[k,l])
+          }
+        }
+      }
+    }
+    nodes_edges<-GLM_FC2Graph(glm_subset,rois)
+    fig_title<-paste("GLM Beta of Model:",models_expvars[i,"model"],
+                     ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+    fig<-c(fig,list(CircularPlot(nodes_edges,
+                                 pvalue_type="seed_p_Benjamini_Hochberg",
+                                 input_title=fig_title)))
+#    fig<-c(fig,list(CircularPlot(nodes_edges,pvalue_type="p","GLM Beta Values")))
+    glm_ordered<-rbind(glm_ordered,glm_subset)
+  }
+  write.csv(glm_ordered, file.path(dirname,"GLM_FC_ordered.csv"),row.names=F)
+  output<-list(glm_ordered,fig)
+  names(output)<-c("GLM","Figures")
+  return(output)
 }
 
 
@@ -201,7 +265,7 @@ DoTSNE_FC<-function(){
 
 #### Graph object construction ####
 
-Edges2Graph<-function(input){
+Edges2iGraph<-function(input){
   edges<-data.frame(matrix(ncol=3,nrow=n_connections))
   edges[,1:2]<-connections[,c("from","to")]
   for (i in 1:n_connections){
@@ -344,7 +408,7 @@ DoGTA<-function(){
 #  output_binary<-data.frame()
   output_weighted<-data.frame()
   for (i in 1:n_subject){
-    subject_graph<-Edges2Graph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
+    subject_graph<-Edges2iGraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
 #    subject_metric_binary<-ItrCost(subject_graph)
 #    output_binary<-rbind(output_binary,
 #                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),

@@ -14,28 +14,31 @@ input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Structural_FS")
 output_dir <- file.path(input_dir,"Structural_data")
 
 #structural_file <- "W1_FS_Volume_Cortex.csv"
-structural_file <- "W1_FS_Volume_Subcortex.csv"
+#structural_file <- "W1_FS_Volume_Subcortex.csv"
 #structural_file <- "W1_FS_Volume_WM.csv"
 #structural_file <- "W1_FS_Volume_Cerebellum.csv"
 #structural_file <- "W1_FS_Volume_Hippocampus.csv"
 #structural_file <- "W1_FS_Thickness.csv"
-#structural_file <- "W1_FS_Area.csv"
+structural_file <- "W1_FS_Area.csv"
 #structural_file <- "W1_FS_Curv.csv"
 #structural_file <- "W1_FS_Global.csv"
 
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 global_covariate_file<-"W1_FS_Global.csv"
-global_covariate_label<-"BrainSegVolNotVent"
+#global_covariate_label<-"BrainSegVolNotVent"
+global_covariate_label<-"eTIV"
 
 #subject_subset <- data.frame(W1_T1QC=1)
-subject_subset <- data.frame(W1_T1QC=1, Sex=1)
-#subject_subset <- data.frame(W1_T1QC=1, Sex=2)
+#subject_subset <- data.frame(W1_T1QC=1, Sex=1)
+subject_subset <- data.frame(W1_T1QC=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
 
 input_roi_type <- "label_fs"
 
 p_uncorrected<-0.001
+p_corrected<-0.05
+
 n_components<-10
 #n_components<-30
 #n_components<-5
@@ -93,8 +96,21 @@ DoGLM<-function(){
   dirname<-ExpDir("GLM")
   structural_data_tidy<-gather(structural_data,key=ROI,value=value,-ID_pnTTC)
   structural_data_tidy$ROI_label<-ConvertID(structural_data_tidy$ROI,roi_data,"ID_long","label_proper")
-  glm<-CommonGLM(structural_data_tidy,covariate_label,F,dirname,"GLM_Structure.csv")
-  return(glm)
+  glm<-CommonGLM(structural_data_tidy,covariate_label,global_covariate=F,dirname,"GLM_Structure.csv")
+  models_expvars<-glm[which(glm[,"ROI"]==glm[1,"ROI"]),
+                      c("model","exp_var")]
+  glm_ordered<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    glm_subset<-MultCompCorr(glm_subset)
+    glm_ordered<-rbind(glm_ordered,glm_subset)
+  }
+  write.csv(glm_ordered, file.path(dirname,"GLM_ordered.csv"),row.names=F)
+  output<-list(glm,glm_ordered)
+  names(output)<-c("GLM","GLM_ordered")
+  return(output)
 }
 
 
@@ -105,7 +121,9 @@ DoSCA<-function(){
   corr<-CalcCorr(structural_data[-1], dirname,"SCA")
   graph<-Corr2Graph(corr)
   fig1<-corr[[3]]
-  fig2<-CircularPlot(graph)
+  fig2<-CircularPlot(graph,
+                     pvalue_type="p_Benjamini_Hochberg",
+                     input_title="Structural Covariance for All Subjects")
   return(list(corr,fig1,fig2))
 }
 
@@ -231,7 +249,18 @@ DoLI<-function(){
   li_tidy<-li[,c("ID_pnTTC","ROI","L_ROI_ID","R_ROI_ID","Laterality_Index")]
   colnames(li_tidy)[5]<-"value"
   glm<-CommonGLM(li_tidy,covariate_label,F,dirname,"GLM_LI_Structure.csv")
-  output<-list(li,glm)
-  names(output)<-c("Laterality_Index","GLM_of_LI")
+  models_expvars<-glm[which(glm[,"ROI"]==glm[1,"ROI"]),
+                      c("model","exp_var")]
+  glm_ordered<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    glm_subset<-MultCompCorr(glm_subset)
+    glm_ordered<-rbind(glm_ordered,glm_subset)
+  }
+  write.csv(glm_ordered, file.path(dirname,"GLM_LI_Structure_ordered.csv"),row.names=F)
+  output<-list(li,glm,glm_ordered)
+  names(output)<-c("Laterality_Index","GLM_of_LI","GLM_of_LI_ordered")
   return(output)
 }

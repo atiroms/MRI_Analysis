@@ -13,9 +13,10 @@ library(colorRamps)
 
 #### Circular Plotting ####
 
-CircularPlot<-function(input){
-  subset_edges<-input[[2]][which(input[[2]]$plot==T),]
-  ordered_nodes<-input[[1]]
+CircularPlot<-function(input,pvalue_type,input_title){
+  subset_edges<-input$edges
+  subset_edges<-subset_edges[which(subset_edges[,pvalue_type]<p_corrected),]
+  ordered_nodes<-input$nodes
   nodes_label<-ConvertID(ordered_nodes$label,roi_data,"ID_long","label_proper")
   r_nodes<-grep("^R ",nodes_label)
   l_nodes<-rev(grep("^L ",nodes_label))
@@ -23,9 +24,9 @@ CircularPlot<-function(input){
   ordered_nodes$angle <- 90 - 360 * ((1:nrow(ordered_nodes))-0.5) / nrow(ordered_nodes)
   ordered_nodes$hjust<-ifelse(ordered_nodes$angle < -90, 1, 0)
   ordered_nodes$angle<-ifelse(ordered_nodes$angle < -90, ordered_nodes$angle+180, ordered_nodes$angle)
-  graph_data <- graph_from_data_frame(d = subset_edges, vertices = ordered_nodes, directed = TRUE)
-  fig<-ggraph(graph_data, layout = "linear",circular = TRUE) + 
-    geom_edge_arc(aes(color=r),width=0.2,alpha=0.5) +
+  graph_data <- graph_from_data_frame(d = subset_edges, vertices = ordered_nodes, directed = F)
+  fig<-ggraph(graph_data, layout = "linear",circular = T) +
+
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=ConvertID(label,roi_data,"ID_long","label_proper"),
                        angle = angle, hjust=hjust,vjust=0.2),
@@ -33,9 +34,13 @@ CircularPlot<-function(input){
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
     scale_edge_color_gradientn(colors=matlab.like2(100),na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+
-    ggtitle("Correlation Plot") +
+    ggtitle(input_title) +
     theme_void() +
     theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
+  if (nrow(subset_edges)>0){
+    fig<-fig+
+      geom_edge_arc(aes(color=weight),width=0.5,alpha=0.5)
+  }
   return(fig)
 }
 

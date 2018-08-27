@@ -52,6 +52,8 @@ subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1)
 input_roi_type <- "label_conn"
 
 p_uncorrected<-0.001
+p_corrected<-0.05
+
 n_components<-10
 #n_components<-4
 
@@ -103,7 +105,9 @@ DoFC_All<-function(){
   corr<-CalcCorr(functional_data[,c(-1,-2)], dirname,"FC")
   fig1<-corr[[3]]
   graph<-Corr2Graph(corr)
-  fig2<-CircularPlot(graph)
+  fig2<-CircularPlot(graph,
+                     pvalue_type="p_Benjamini_Hochberg",
+                     input_title = "Functional Correlation for All Subjects")
   return(list(corr,fig1,fig2))
 }
 
