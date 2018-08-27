@@ -27,12 +27,24 @@ connection_file <- "W1_DK_FC.csv"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 roi_subset <- c("cortex","subcortex")
+#roi_subset <- c("cortex","subcortex","cerebellum")
+
+#for Power Atlas
+#roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
+#roi_subset<-c("Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+#              "Memory retrieval?","Cerebellar")
 
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
 
 
