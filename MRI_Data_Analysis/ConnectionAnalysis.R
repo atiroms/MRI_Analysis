@@ -7,8 +7,8 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
@@ -22,12 +22,12 @@ connection_file <- "W1_HO_FC.csv"
 
 #roi_subset<- NULL
 #roi_subset<- "cortex"
-roi_subset<- "subcortex"
+#roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 #roi_subset <- c("cortex","subcortex")
-#roi_subset <- c("cortex","subcortex","cerebellum")
+roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
 #roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
@@ -43,8 +43,8 @@ roi_subset<- "subcortex"
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
 
 
@@ -407,7 +407,9 @@ DoGTA<-function(){
 #  output_binary<-data.frame()
   output_weighted<-data.frame()
   for (i in 1:n_subject){
-    paste("calculating ID_pnTTC:",subject_id[i])
+    print(paste("Calculating subject No.",i,", ID_pnTTC:",subject_id[i]))
+    Sys.sleep(0.01)
+    flush.console()
     subject_graph<-Edges2iGraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
 #    subject_metric_binary<-ItrCost(subject_graph)
 #    output_binary<-rbind(output_binary,
