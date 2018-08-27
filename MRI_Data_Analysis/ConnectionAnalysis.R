@@ -14,19 +14,19 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
 output_dir <- file.path(input_dir,"Connection_data")
 
-#connection_file <- "W1_HO_FC.csv"
+connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
-connection_file <- "W1_DK_FC.csv"
+#connection_file <- "W1_DK_FC.csv"
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
 #connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
 #roi_subset<- NULL
 #roi_subset<- "cortex"
-#roi_subset<- "subcortex"
+roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
-roi_subset <- c("cortex","subcortex")
+#roi_subset <- c("cortex","subcortex")
 #roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
@@ -43,10 +43,9 @@ roi_subset <- c("cortex","subcortex")
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
-
 
 
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
@@ -408,6 +407,7 @@ DoGTA<-function(){
 #  output_binary<-data.frame()
   output_weighted<-data.frame()
   for (i in 1:n_subject){
+    paste("calculating ID_pnTTC:",subject_id[i])
     subject_graph<-Edges2iGraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
 #    subject_metric_binary<-ItrCost(subject_graph)
 #    output_binary<-rbind(output_binary,
