@@ -306,7 +306,11 @@ WeightedModularity<-function(input,gamma_v=1){
     }
     ind<-which(Ci==U[1])
     bg<-B[ind,ind]
-    Bg<-bg-diag(rowSums(bg))
+    if(length(bg)==1){
+      Bg<-as.matrix(0,nros=1,ncol=1)
+    }else{
+      Bg<-bg-diag(rowSums(bg))
+    }
     Ng<-length(ind)
   }
   names(Ci)<-rownames(weight)

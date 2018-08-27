@@ -55,7 +55,7 @@ GLMroutine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar
       if (length(ttest)==1){
 #        stats <-c(stats, rep(NaN,4),vifactor[j])
         output_add<-cbind(input_measures[i,],model_name,colnames(input_covar)[j],
-                          rep(NaN,4),
+                          NaN,NaN,NaN,NaN,
                           vifactor[j],xic[1],xic[2])
       }else{
 #        stats <-c(stats, ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],vifactor[j])
