@@ -140,7 +140,7 @@ Corr2Graph<-function(input){
   edges<-edges[,-which(colnames(edges)=="to")]
   edges<-rename(edges, to = id)
   edges<-rename(edges, weight=r)
-  edges<-MultCompCorr(edges)
+  edges<-cbind(edges,MultCompCorr(edges))
   collabel<-colnames(edges)
   collabel<-collabel[-c(which(collabel=="from"),which(collabel=="to"))]
   collabel<-c("from","to",collabel)
@@ -165,7 +165,7 @@ GLM_FC2Graph<-function(input_glm,input_nodes){
   edges<-left_join(edges, nodes, by = c("to" = "label"))
   edges<-edges[,-which(colnames(edges)=="to")]
   edges<-rename(edges, to = id)
-  edges<-rename(edges, weight=t)
+  edges<-rename(edges, weight=beta)
   collabel<-colnames(edges)
   collabel<-collabel[-c(which(collabel=="from"),which(collabel=="to"))]
   collabel<-c("from","to",collabel)
@@ -178,38 +178,12 @@ GLM_FC2Graph<-function(input_glm,input_nodes){
 
 #### Add columns with multiple comparison corrected p values from column named "p" ####
 
-MultCompCorr<-function(input,n=NULL){
-  output<-input
-  output$p_Bonferroni<-p.adjust(output$p,method = "bonferroni")
-  output$p_Holm_Bonferroni<-p.adjust(output$p,method = "holm")
-  output$p_Hochberg<-p.adjust(output$p,method = "hochberg")
-  output$p_Hommel<-p.adjust(output$p,method = "hommel")
-  output$p_Benjamini_Hochberg<-p.adjust(output$p,method="BH")
-  output$p_Benjamini_Yekutieli<-p.adjust(output$p,method="BY")
-  if(!is.null(n)){
-    output$p_Benjamini_Hochberg_n<-p_BH.adjust(output$p,n)
-  }
-  return(output)
-}
-
-
-#### BH multiple comparison correcton with n smaller than length(p) ####
-p_BH.adjust<-function(p,n=NULL){
-  calc<-data.frame(p_input=p)
-  calc<-rowid_to_column(calc,"id")
-  calc<-calc[order(calc$p_input),]
-  calc$rank<-1:nrow(calc)
-  if (is.null(n)){
-    n_comparisons<-nrow(calc)
-  }else{
-    n_comparisons<-n
-  }
-  calc$p_adjusted<-calc$p_input*n_comparisons/calc$rank
-  calc[nrow(calc),"p_BH"]<-calc[nrow(calc),"p_adjusted"]
-  for (i in (nrow(calc)-1):1){
-    calc[i,"p_BH"]<-min(calc[i+1,"p_BH"],calc[i,"p_adjusted"])
-  }
-  calc<-calc[order(calc$id),]
-  output<-calc$p_BH
+MultCompCorr<-function(input){
+  output<-data.frame(p_Bonferroni=p.adjust(input$p,method = "bonferroni"))
+  output$p_Holm_Bonferroni<-p.adjust(input$p,method = "holm")
+  output$p_Hochberg<-p.adjust(input$p,method = "hochberg")
+  output$p_Hommel<-p.adjust(input$p,method = "hommel")
+  output$p_Benjamini_Hochberg<-p.adjust(input$p,method="BH")
+  output$p_Benjamini_Yekutieli<-p.adjust(input$p,method="BY")
   return(output)
 }

@@ -151,12 +151,30 @@ DoGLM_FC<-function(){
     id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
     id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
     glm_subset<-glm[id_obs,]
-    glm_subset<-MultCompCorr(glm_subset,n_rois)
+    glm_subset<-cbind(glm_subset,MultCompCorr(glm_subset))
+    for (j in rois){
+      id_obs<-union(which(glm_subset$from==j),which(glm_subset$to==j))
+      id_obs<-id_obs[order(id_obs)]
+      glm_subsubset<-glm_subset[id_obs,]
+      pvalues<-MultCompCorr(glm_subsubset)
+      for (k in 1:length(id_obs)){
+        for (l in colnames(pvalues)){
+          if (is.null(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          }else if (is.na(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          }else{
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(glm_subset[id_obs[k],paste("seed",l,sep="_")],
+                                                               pvalues[k,l])
+          }
+        }
+      }
+    }
     nodes_edges<-GLM_FC2Graph(glm_subset,rois)
-    fig_title<-paste("GLM t statistic of Model:",models_expvars[i,"model"],
+    fig_title<-paste("GLM Beta of Model:",models_expvars[i,"model"],
                      ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
     fig<-c(fig,list(CircularPlot(nodes_edges,
-                                 pvalue_type="p_Benjamini_Hochberg_n",
+                                 pvalue_type="seed_p_Benjamini_Hochberg",
                                  input_title=fig_title)))
 #    fig<-c(fig,list(CircularPlot(nodes_edges,pvalue_type="p","GLM Beta Values")))
     glm_ordered<-rbind(glm_ordered,glm_subset)
