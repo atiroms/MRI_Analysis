@@ -25,21 +25,22 @@ CircularPlot<-function(input,pvalue_type,input_title){
   ordered_nodes$hjust<-ifelse(ordered_nodes$angle < -90, 1, 0)
   ordered_nodes$angle<-ifelse(ordered_nodes$angle < -90, ordered_nodes$angle+180, ordered_nodes$angle)
   graph_data <- graph_from_data_frame(d = subset_edges, vertices = ordered_nodes, directed = F)
+  color_limits <- max(abs(max(subset_edges$weight)),abs(min(subset_edges$weight)))
+  color_limits <- c(-color_limits,color_limits)
   fig<-ggraph(graph_data, layout = "linear",circular = T) +
-
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=ConvertID(label,roi_data,"ID_long","label_proper"),
                        angle = angle, hjust=hjust,vjust=0.2),
                    size=2.5, alpha=1) +
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
-    scale_edge_color_gradientn(colors=matlab.like2(100),na.value="grey50")+
+    scale_edge_color_gradientn(colors=matlab.like2(100),limits=color_limits,na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+
     ggtitle(input_title) +
     theme_void() +
     theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
   if (nrow(subset_edges)>0){
     fig<-fig+
-      geom_edge_arc(aes(color=weight),width=0.5,alpha=0.5)
+      geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
   }
   return(fig)
 }

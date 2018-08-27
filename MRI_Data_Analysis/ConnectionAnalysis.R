@@ -7,8 +7,8 @@
 
 #### Parameters ####
 
-parent_dir <- "D:/atiroms"
-#parent_dir <- "C:/Users/atiro"
+#parent_dir <- "D:/atiroms"
+parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
@@ -184,6 +184,29 @@ DoGLM_FC<-function(){
   return(output)
 }
 
+
+GLM_FC_Replot<-function(file_path,pvalue_type="seed_p_Benjamini_Hochberg"){
+  glm<-read.csv(file_path)
+  models_expvars<-glm[intersect(which(glm[,"from"]==glm[1,"from"]),
+                                which(glm[,"to"]==glm[1,"to"])),
+                      c("model","exp_var")]
+  rois<-c(as.character(unique(glm$from)),as.character(unique(glm$to)))
+  rois<-unique(rois)
+  rois<-rois[order(rois)]
+  fig<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    nodes_edges<-GLM_FC2Graph(glm_subset,rois)
+    fig_title<-paste("GLM Beta of Model:",models_expvars[i,"model"],
+                     ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+    fig<-c(fig,list(CircularPlot(nodes_edges,
+                                 pvalue_type=pvalue_type,
+                                 input_title=fig_title)))
+  }
+  return(fig)
+}
 
 #### Principal Component Analysis ####
 
