@@ -7,8 +7,8 @@
 
 #### Parameters ####
 
-parent_dir <- "D:/atiroms"
-#parent_dir <- "C:/Users/atiro"
+#parent_dir <- "D:/atiroms"
+parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
