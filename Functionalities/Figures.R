@@ -39,7 +39,7 @@ CircularPlot<-function(input,pvalue_type,input_title){
     theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
   if (nrow(subset_edges)>0){
     fig<-fig+
-      geom_edge_arc(aes(color=weight),width=0.2,alpha=0.5)
+      geom_edge_arc(aes(color=weight),width=0.5,alpha=0.5)
   }
   return(fig)
 }

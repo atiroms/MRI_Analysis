@@ -14,19 +14,19 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
 output_dir <- file.path(input_dir,"Connection_data")
 
-#connection_file <- "W1_HO_FC.csv"
+connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
-connection_file <- "W1_DK_FC.csv"
+#connection_file <- "W1_DK_FC.csv"
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
 #connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
 #roi_subset<- NULL
 #roi_subset<- "cortex"
-#roi_subset<- "subcortex"
+roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
-roi_subset <- c("cortex","subcortex")
+#roi_subset <- c("cortex","subcortex")
 #roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
@@ -43,8 +43,8 @@ roi_subset <- c("cortex","subcortex")
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
 
 
@@ -154,7 +154,7 @@ DoGLM_FC<-function(){
     glm_subset<-MultCompCorr(glm_subset,n_rois)
     nodes_edges<-GLM_FC2Graph(glm_subset,rois)
     fig_title<-paste("GLM t statistic of Model:",models_expvars[i,"model"],
-                     "Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+                     ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
     fig<-c(fig,list(CircularPlot(nodes_edges,
                                  pvalue_type="p_Benjamini_Hochberg_n",
                                  input_title=fig_title)))
