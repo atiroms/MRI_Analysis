@@ -22,12 +22,12 @@ connection_file <- "W1_HO_FC.csv"
 
 #roi_subset<- NULL
 #roi_subset<- "cortex"
-roi_subset<- "subcortex"
+#roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 #roi_subset <- c("cortex","subcortex")
-#roi_subset <- c("cortex","subcortex","cerebellum")
+roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
 #roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
