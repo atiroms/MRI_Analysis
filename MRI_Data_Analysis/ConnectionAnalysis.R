@@ -139,13 +139,13 @@ DoGLM_FC<-function(){
     id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
     id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
     glm_subset<-glm[id_obs,]
-    glm_subset<-MultCompCorr(glm_subset)
+    glm_subset<-MultCompCorr(glm_subset,n_rois)
     nodes_edges<-GLM_FC2Graph(glm_subset,rois)
-    fig_title<-paste("Model:",models_expvars[i,"model"],
+    fig_title<-paste("GLM t statistic of Model:",models_expvars[i,"model"],
                      "Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
     fig<-c(fig,list(CircularPlot(nodes_edges,
-                                 pvalue_type="p_Benjamini_Hochberg",
-                                 input_title="GLM Beta Values")))
+                                 pvalue_type="p_Benjamini_Hochberg_n",
+                                 input_title=fig_title)))
 #    fig<-c(fig,list(CircularPlot(nodes_edges,pvalue_type="p","GLM Beta Values")))
     glm_ordered<-rbind(glm_ordered,glm_subset)
   }

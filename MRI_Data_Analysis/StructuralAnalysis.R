@@ -13,8 +13,8 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Structural_FS")
 output_dir <- file.path(input_dir,"Structural_data")
 
-#structural_file <- "W1_FS_Volume_Cortex.csv"
-structural_file <- "W1_FS_Volume_Subcortex.csv"
+structural_file <- "W1_FS_Volume_Cortex.csv"
+#structural_file <- "W1_FS_Volume_Subcortex.csv"
 #structural_file <- "W1_FS_Volume_WM.csv"
 #structural_file <- "W1_FS_Volume_Cerebellum.csv"
 #structural_file <- "W1_FS_Volume_Hippocampus.csv"
@@ -26,7 +26,8 @@ structural_file <- "W1_FS_Volume_Subcortex.csv"
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
 
 global_covariate_file<-"W1_FS_Global.csv"
-global_covariate_label<-"BrainSegVolNotVent"
+#global_covariate_label<-"BrainSegVolNotVent"
+global_covariate_label<-"eTIV"
 
 #subject_subset <- data.frame(W1_T1QC=1)
 subject_subset <- data.frame(W1_T1QC=1, Sex=1)
