@@ -7,8 +7,8 @@
 
 #### Parameters ####
 
-#parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+parent_dir <- "D:/atiroms"
+#parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
@@ -22,11 +22,11 @@ connection_file <- "W1_DK_FC.csv"
 
 #roi_subset<- NULL
 #roi_subset<- "cortex"
-roi_subset<- "subcortex"
+#roi_subset<- "subcortex"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
-#roi_subset <- c("cortex","subcortex")
+roi_subset <- c("cortex","subcortex")
 #roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
