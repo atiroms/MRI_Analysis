@@ -14,8 +14,8 @@ script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
 output_dir <- file.path(input_dir,"Connection_data")
 
-connection_file <- "W1_HO_FC.csv"
-#connection_file <- "W1_Power_FC.csv"
+#connection_file <- "W1_HO_FC.csv"
+connection_file <- "W1_Power_FC.csv"
 #connection_file <- "W1_DK_FC.csv"
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
 #connection_file <- "W1_DK_Male_Subcortex_FC.csv"
@@ -27,13 +27,13 @@ connection_file <- "W1_HO_FC.csv"
 #roi_subset<- "global"
 #roi_subset<- "misc"
 #roi_subset <- c("cortex","subcortex")
-roi_subset <- c("cortex","subcortex","cerebellum")
+#roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
-#roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
-#              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
-#              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
-#              "Memory retrieval?","Cerebellar")
+roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
+              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
+              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+              "Memory retrieval?","Cerebellar")
 #roi_subset<-c("Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
 #              "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
 #              "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
