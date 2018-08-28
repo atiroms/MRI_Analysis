@@ -425,7 +425,7 @@ WeightedMetric<-function(input_igraph){
 
 #### Graph Theoretical Analysis ####
 
-DoGTA<-function(){
+DoGTA<-function(absolute=T,threshold=NA){
   dirname<-ExpDir("GTA")
 #  output_binary<-data.frame()
   for (i in 1:n_subject){
@@ -437,7 +437,9 @@ DoGTA<-function(){
 #    output_binary<-rbind(output_binary,
 #                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
 #                               subject_metric_binary))
-    E(subject_graph)$weight<-abs(E(subject_graph)$weight)
+    if (absolute){
+      E(subject_graph)$weight<-abs(E(subject_graph)$weight)
+    }
     subject_metric_weighted<-WeightedMetric(subject_graph)
     output_weighted_add<-cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
                                subject_metric_weighted)
