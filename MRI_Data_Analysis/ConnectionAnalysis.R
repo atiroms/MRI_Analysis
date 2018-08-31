@@ -7,16 +7,16 @@
 
 #### Parameters ####
 
-parent_dir <- "D:/atiroms"
-#parent_dir <- "C:/Users/atiro"
+#parent_dir <- "D:/atiroms"
+parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
 input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
 output_dir <- file.path(input_dir,"Connection_data")
 
-#connection_file <- "W1_HO_FC.csv"
+connection_file <- "W1_HO_FC.csv"
 #connection_file <- "W1_Power_FC.csv"
-connection_file <- "W1_DK_FC.csv"
+#connection_file <- "W1_DK_FC.csv"
 #connection_file <- "W1_DK_Male_TS1_FC.csv"
 #connection_file <- "W1_DK_Male_Subcortex_FC.csv"
 
@@ -26,8 +26,8 @@ connection_file <- "W1_DK_FC.csv"
 #roi_subset<- "cerebellum"
 #roi_subset<- "global"
 #roi_subset<- "misc"
-roi_subset <- c("cortex","subcortex")
-#roi_subset <- c("cortex","subcortex","cerebellum")
+#roi_subset <- c("cortex","subcortex")
+roi_subset <- c("cortex","subcortex","cerebellum")
 
 #for Power Atlas
 #roi_subset<-c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
@@ -43,10 +43,9 @@ roi_subset <- c("cortex","subcortex")
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist=1, Sex=1,W1_Tanner_Stage=1)
-#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
-subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
+subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=1)
+#subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1, Sex=2)
 #subject_subset <- data.frame(W1_T1QC_rsfMRIexist_CONNvoxelQC20=1,Sex=1,W1_Tanner_Stage=1)
-
 
 
 covariate_label<-c("W1_Tanner_Stage","W1_Age_at_MRI")
@@ -185,6 +184,29 @@ DoGLM_FC<-function(){
   return(output)
 }
 
+
+GLM_FC_Replot<-function(file_path,pvalue_type="seed_p_Benjamini_Hochberg"){
+  glm<-read.csv(file_path)
+  models_expvars<-glm[intersect(which(glm[,"from"]==glm[1,"from"]),
+                                which(glm[,"to"]==glm[1,"to"])),
+                      c("model","exp_var")]
+  rois<-c(as.character(unique(glm$from)),as.character(unique(glm$to)))
+  rois<-unique(rois)
+  rois<-rois[order(rois)]
+  fig<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    nodes_edges<-GLM_FC2Graph(glm_subset,rois)
+    fig_title<-paste("GLM Beta of Model:",models_expvars[i,"model"],
+                     ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+    fig<-c(fig,list(CircularPlot(nodes_edges,
+                                 pvalue_type=pvalue_type,
+                                 input_title=fig_title)))
+  }
+  return(fig)
+}
 
 #### Principal Component Analysis ####
 
@@ -403,22 +425,32 @@ WeightedMetric<-function(input_igraph){
 
 #### Graph Theoretical Analysis ####
 
-DoGTA<-function(){
+DoGTA<-function(absolute=T,threshold=NA){
   dirname<-ExpDir("GTA")
 #  output_binary<-data.frame()
-  output_weighted<-data.frame()
   for (i in 1:n_subject){
+    print(paste("Calculating subject No.",i,", ID_pnTTC:",subject_id[i]))
+    Sys.sleep(0.01)
+    flush.console()
     subject_graph<-Edges2iGraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
 #    subject_metric_binary<-ItrCost(subject_graph)
 #    output_binary<-rbind(output_binary,
 #                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
 #                               subject_metric_binary))
-    E(subject_graph)$weight<-abs(E(subject_graph)$weight)
+    if (absolute){
+      E(subject_graph)$weight<-abs(E(subject_graph)$weight)
+    }
     subject_metric_weighted<-WeightedMetric(subject_graph)
-    output_weighted<-rbind(output_weighted,
-                           cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
-                                 subject_metric_weighted))
+    output_weighted_add<-cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
+                               subject_metric_weighted)
+    write.csv(output_weighted_add, file.path(dirname,sprintf("GTA_weighted_%05d.csv",i)),row.names=F)
   }
+  output_weighted<-data.frame()
+  for (i in 1:n_subject){
+    output_weighted_add<-read.csv(file.path(dirname,sprintf("GTA_weighted_%05d.csv",i)))
+    output_weighted<-rbind(output_weighted,output_weighted_add)
+  }
+  
 #  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
   write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
 #  output<-list(output_binary,output_weighted)
