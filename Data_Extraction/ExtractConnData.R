@@ -11,8 +11,8 @@ parent_dir <- "D:/atiroms"
 #parent_dir <- "C:/Users/atiro"
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
-#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
-input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
+input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_HO")
+#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Functional_CONN_DK")
 output_dir <- file.path(input_dir,"Functional_data")
 
 input_fileprefix<-"ROI_Subject"
@@ -32,8 +32,8 @@ subject_id_conn<-1:195
 #subject_id_conn<-1
 #subject_id_conn<-1:5
 #ROI_id<-168:177
-ROI_id<-4:112   #for surface-based data from freesurfer (DK atlas)
-#ROI_id<-168:431    #for Power Atlas in CONN
+#ROI_id<-4:112   #for surface-based data from freesurfer (DK atlas)
+ROI_id<-168:431    #for Power Atlas in CONN
 #ROI_id<-4:135     #for HO and AAL atlas of CONN
 #ROI_id<-4:13
 n_timepoint<-246
