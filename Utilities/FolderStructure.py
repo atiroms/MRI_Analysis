@@ -1,6 +1,8 @@
 
 
 path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/Analysis/FunImg'
+#path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
+
 suffix = '.nii.gz'
 
 import os
