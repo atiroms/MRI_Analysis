@@ -1,8 +1,8 @@
 
 
-#path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/Analysis/FunImg'
+path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/Analysis/FunImg'
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
-path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
+#path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
 
 rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
 prefix = 'ROI'
@@ -36,8 +36,8 @@ class PickupFile():
         self.path=path
         self.prefix=prefix
         for roi in rois:
-            list_file=glob.glob(self.path + '/ROI' + str(roi) + 'FC*.nii')
-            path_tofolder = self.path + '/ROI' + str(roi)
+            list_file=glob.glob(self.path + '/zROI' + str(roi) + 'FC*.nii')
+            path_tofolder = self.path + '/zROI' + str(roi)
             if not os.path.exists(path_tofolder):
                 os.makedirs(path_tofolder)
             for f in list_file:
