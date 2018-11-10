@@ -1,6 +1,6 @@
 
 
-path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/Analysis/3/FunImg'
+path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/03_analysis2/FunImg'
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
 #path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
 
