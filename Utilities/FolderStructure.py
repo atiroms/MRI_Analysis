@@ -1,8 +1,9 @@
 
 
-path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/03_analysis2/FunImg'
+#path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/03_analysis2/FunImg'
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
 #path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
+path = '/media/veracrypt1/MRI/COCORO/01_analysis/FunImg'
 
 rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
 prefix = 'ROI'
