@@ -5,10 +5,18 @@
 #path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
 path = '/media/veracrypt1/MRI/COCORO/01_analysis/FunImg'
 
-rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
-prefix = 'ROI'
+path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
+path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
 
-suffix = '.nii.gz'
+
+rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
+#prefix = 'ROI'
+prefix = 'CSUB-'
+
+#suffix = '.nii.gz'
+suffix = 'C-02.nii.gz'
+
+file_id = 'pnTTC2_T1_QC.txt'
 
 import os
 import shutil
@@ -32,7 +40,8 @@ class FileIntoFolder():
                 print('Moved ' + f + '.')
 
 
-class PickupFile():
+# used for sorting DPARSF-analyzed data into folder
+class PickupROIFile():
     def __init__(self,path=path,prefix=prefix,rois=rois):
         self.path=path
         self.prefix=prefix
@@ -43,5 +52,21 @@ class PickupFile():
                 os.makedirs(path_tofolder)
             for f in list_file:
                 shutil.copy(f,path_tofolder)
-            print('Picked ROI ' + str(roi) + ' files.')                
+            print('Picked ROI ' + str(roi) + ' files.')
+
+
+
+# for general use
+class Pickup_File():
+    def __init__(self,path_from=path_from,path_to=path_to,file_id=file_id,prefix=prefix,suffix=suffix):
+        file=open(path_from + '/' + file_id, 'r')
+        file=file.readlines()
+        self.id_list=[int(x.strip('\n')) for x in file]
+        for id in self.id_list:
+            name_file=prefix + str(id).zfill(5) + suffix
+            file_from=path_from + '/' + name_file
+            file_to=path_to + '/' + name_file
+            shutil.copy(file_from, file_to)
+            print('Copied file: ' + file_from)
+        print('Finished file pick-up.')
 

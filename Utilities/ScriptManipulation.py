@@ -9,15 +9,23 @@
 #path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/10_tar.gz_new'
 #path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/10_tar.gz_new'
 #path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/11_dcm'
-path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/12_nii.gz'
+#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/12_nii.gz'
+path_exp = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
 
 file_id='id.txt'
 
 
-head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
-text=['recon-all -i /media/veracrypt1/MRI/pnTTC1_T1_C/FS/06_qc/CSUB-',
-      'C-01.nii -subject ',
+#head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
+head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n'
+
+#text=['recon-all -i /media/veracrypt1/MRI/pnTTC1_T1_C/FS/06_qc/CSUB-',
+#      'C-01.nii -subject ',
+#      ' -all -qcache']
+
+text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
+      'C-02.nii.gz -subject ',
       ' -all -qcache']
+
 connector=' ; '
 
 n_scripts=30
