@@ -3,7 +3,13 @@
 # PARAMETERS #
 ##############
 
-path_exp='D:/MRI/pnTTC2_T1_C/FS/10_recon'
+#path_exp='D:/MRI/pnTTC2_T1_C/FS/10_recon'
+#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/12_nii.gz'
+#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/11_dcm'
+#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/10_tar.gz_new'
+#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/10_tar.gz_new'
+#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/11_dcm'
+path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/12_nii.gz'
 
 file_id='id.txt'
 
@@ -36,7 +42,20 @@ class Extract_FolderID():
     def __init__(self,path_exp=path_exp):
         self.path_exp=path_exp
         self.list_dir = os.listdir(self.path_exp)
-        self.output = [int(i) for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
+        #self.output = [int(i) for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
+        self.output = [i for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
+
+class Save_List_ID():
+    def __init__(self,list_id,path_exp=path_exp):
+        self.path_exp=path_exp
+        self.list_id=list_id
+        self.output=''
+        for item in self.list_id:
+            self.output=self.output + item + '\n'
+        file=open(path_exp + '/list_id.txt','w')
+        file.write(self.output)
+        file.close()
+
 
 class Get_Diff():
     def __init__(self):
