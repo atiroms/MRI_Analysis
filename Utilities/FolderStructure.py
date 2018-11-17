@@ -13,8 +13,8 @@ rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
 #prefix = 'ROI'
 prefix = 'CSUB-'
 
-#suffix = '.nii.gz'
-suffix = 'C-02.nii.gz'
+suffix = '.nii.gz'
+#suffix = 'C-02.nii.gz'
 
 file_id = 'pnTTC2_T1_QC.txt'
 
