@@ -1,3 +1,32 @@
+
+##
+
+working_dir <- "D:/atiroms/Dropbox/MRI/Statistics/CommonData"
+input_filename<-"CSUB2_02.csv"
+output_filename<-"CSUB2_03.csv"
+
+input<-read.csv(file.path(working_dir,input_filename))
+
+input$X<-as.character(input$X)
+input$pn.TTC.01<-as.character(input$pn.TTC.01)
+input$T1<-as.character(input$T1)
+input$rsfMRI<-as.character(input$rsfMRI)
+input$MRS<-as.character(input$MRS)
+input$QC_T1.RAW_1<-as.numeric(as.character(input$QC_T1.RAW_1))
+input$QC_ANOMALY_1<-as.numeric(as.character(input$QC_ANOMALY_1))
+input$QC備考<-as.character(input$QC備考)
+
+input$ID<-substr(input$X,6,10)
+input$ID<-as.numeric(input$ID)
+
+output<-data.frame(matrix(ncol=15,nrow=351))
+colnames(output)<-colnames(input)
+for (i in 1:nrow(input)){
+  output[input[i,"ID"],]<-input[i,]
+}
+write.csv(output, file.path(working_dir,output_filename),row.names=T)
+
+
 #
 
 working_dir <- "G:/MRI/Info"
