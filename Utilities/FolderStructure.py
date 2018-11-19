@@ -17,13 +17,13 @@
 
 #file_id = 'pnTTC2_T1_QC.txt'
 
-path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
-path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
+#path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
+#path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
 
-#path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/14_qc'
-#path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/T1'
-path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/13_nii.gz_unite'
-path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/rsfMRI'
+#path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/T1_14_qc'
+#path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/T1'
+path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/rsfMRI_13_nii.gz_unite'
+path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/rsfMRI'
 prefix = 'CSUB-'
 suffix = 'C-02.nii.gz'
 file_id = 'ID_W2_T1QC_rsfMRIexist.txt'
