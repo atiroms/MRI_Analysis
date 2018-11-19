@@ -3,20 +3,30 @@
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/03_analysis2/FunImg'
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
 #path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
-path = '/media/veracrypt1/MRI/COCORO/01_analysis/FunImg'
+#path = '/media/veracrypt1/MRI/COCORO/01_analysis/FunImg'
+
+#path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
+#path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
+
+#rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
+#prefix = 'ROI'
+#prefix = 'CSUB-'
+
+#suffix = '.nii.gz'
+#suffix = 'C-02.nii.gz'
+
+#file_id = 'pnTTC2_T1_QC.txt'
 
 path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
 path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
 
-
-rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
-#prefix = 'ROI'
+#path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/14_qc'
+#path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/T1'
+path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/13_nii.gz_unite'
+path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/rsfMRI'
 prefix = 'CSUB-'
-
-suffix = '.nii.gz'
-#suffix = 'C-02.nii.gz'
-
-file_id = 'pnTTC2_T1_QC.txt'
+suffix = 'C-02.nii.gz'
+file_id = 'ID_W2_T1QC_rsfMRIexist.txt'
 
 import os
 import shutil
