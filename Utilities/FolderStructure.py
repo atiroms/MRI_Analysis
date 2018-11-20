@@ -8,7 +8,7 @@
 #path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
 #path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
 
-#rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
+
 #prefix = 'ROI'
 #prefix = 'CSUB-'
 
@@ -20,13 +20,24 @@
 #path_from = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite'
 #path_to = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
 
+###
 #path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/T1_14_qc'
 #path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/T1'
-path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/rsfMRI_13_nii.gz_unite'
-path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/rsfMRI'
-prefix = 'CSUB-'
-suffix = 'C-02.nii.gz'
-file_id = 'ID_W2_T1QC_rsfMRIexist.txt'
+#path_from = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/rsfMRI_13_nii.gz_unite'
+#path_to = 'D:/atiroms/MRI/pnTTC/pnTTC2_rsfMRI_C/CONN/15_conn/rsfMRI'
+#prefix = 'CSUB-'
+#suffix = 'C-02.nii.gz'
+#file_id = 'ID_W2_T1QC_rsfMRIexist.txt'
+
+###
+path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSCF'
+#path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSglobalCF'
+path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSCF'
+#path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSglobalCF'
+path_list_id='/media/veracrypt1/MRI/COCORO'
+
+rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
+groups = [0,1,3]
 
 import os
 import shutil
@@ -51,7 +62,8 @@ class FileIntoFolder():
 
 
 # used for sorting DPARSF-analyzed data into folder
-class PickupROIFile():
+'''
+class PickupROIFile_Old():
     def __init__(self,path=path,prefix=prefix,rois=rois):
         self.path=path
         self.prefix=prefix
@@ -63,10 +75,29 @@ class PickupROIFile():
             for f in list_file:
                 shutil.copy(f,path_tofolder)
             print('Picked ROI ' + str(roi) + ' files.')
+'''
+
+class PickupROIFile():
+    def __init__(self,path_from=path_from,path_to=path_to,path_list_id=path_list_id,rois=rois,groups=groups):
+        for roi in rois:
+            for group in groups:
+                path_tofolder = path_to + '/zROI' + str(roi) + '_' + str(group)
+                if not os.path.exists(path_tofolder):
+                    os.makedirs(path_tofolder)
+                file=open(path_list_id+ '/ID_group' + str(group) + '.txt', 'r')
+                file=file.readlines()
+                list_id=[x.strip('\n') for x in file]
+                for i in list_id:
+                    path_file_from=path_from + '/zROI' + str(roi) + 'FCMap_F_' + i + '.nii'
+                    if os.path.exists(path_file_from):
+                        shutil.copy(path_file_from,path_tofolder)
+                print('Copied ROI ' + str(roi) + ', Group ' + str(group) + ' files.')
+        print('Done.')
 
 
 
 # for general use
+
 class Pickup_File():
     def __init__(self,path_from=path_from,path_to=path_to,file_id=file_id,prefix=prefix,suffix=suffix):
         file=open(path_from + '/' + file_id, 'r')
@@ -80,3 +111,4 @@ class Pickup_File():
             print('Copied file: ' + file_from)
         print('Finished file pick-up.')
 
+print('End of file')
