@@ -40,13 +40,16 @@
 #groups = [0,1,3]
 
 ###
-path_from = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/tar.gz'
-path_to = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/selected'
-prefix = ''
-suffix = '.tar.gz'
-file_id = 'ID.csv'
-file_id_convert = 'ID_convert.csv'
+#path_from = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/tar.gz'
+#path_to = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/selected'
+#prefix = ''
+#suffix = '.tar.gz'
+#file_id = 'ID.csv'
+#file_id_convert = 'ID_convert.csv'
 
+##
+path_from = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/nii'
+path_to = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/nii.gz'
 
 
 import os
@@ -143,5 +146,17 @@ class Convert_ID():
         df_convert=pd.read_csv(path_from + '/' + file_id_convert)
         df_name=pd.merge(df_id,df_convert, how='left', on='ID_exam')
         df_name.to_csv(path_from + '/ID_converted.csv')
-    
+
+
+class Folder2File():
+    def __init__(self,path_from=path_from,path_to=path_to):
+        list_file=glob.glob(path_from + '/*/output.nii')
+        for path in list_file:
+            name_subfolder=path.split('\\')[1]
+            file_from=path_from + '/' + name_subfolder + '/output.nii'
+            file_to=path_to + '/'+ name_subfolder + '.nii'
+            shutil.copy(file_from, file_to)
+            print('Converted file: '+ file_from + '.')
+        print('Done.')
+
 print('End of file')
