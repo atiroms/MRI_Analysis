@@ -30,18 +30,30 @@
 #file_id = 'ID_W2_T1QC_rsfMRIexist.txt'
 
 ###
-path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSCF'
+#path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSCF'
 #path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSglobalCF'
-path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSCF'
+#path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSCF'
 #path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSglobalCF'
-path_list_id='/media/veracrypt1/MRI/COCORO'
+#path_list_id='/media/veracrypt1/MRI/COCORO'
 
-rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
-groups = [0,1,3]
+#rois = [37, 38, 41, 42, 71, 72, 73, 74, 75, 76, 77, 78]
+#groups = [0,1,3]
+
+###
+path_from = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/tar.gz'
+path_to = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/selected'
+prefix = ''
+suffix = '.tar.gz'
+file_id = 'ID.csv'
+file_id_convert = 'ID_convert.csv'
+
+
 
 import os
 import shutil
 import glob
+import numpy as numpy
+import pandas as pd
 
 # copy file name to folder name and put file into folder
 # used for dparsf
@@ -95,7 +107,6 @@ class PickupROIFile():
         print('Done.')
 
 
-
 # for general use
 
 class Pickup_File():
@@ -111,4 +122,26 @@ class Pickup_File():
             print('Copied file: ' + file_from)
         print('Finished file pick-up.')
 
+
+class Convert_Pickup_File():
+    def __init__(self,path_from=path_from,path_to=path_to,file_id=file_id,file_id_convert=file_id_convert,prefix=prefix,suffix=suffix):
+        df_id = pd.read_csv(path_from + '/' + file_id)
+        df_convert=pd.read_csv(path_from + '/' + file_id_convert)
+        df_name=pd.merge(df_id,df_convert, how='left', on='ID_exam')
+        for name in df_name['ID_MRI']:
+            name_file=name + suffix
+            file_from=path_from + '/' + name_file
+            file_to=path_to + '/' + name_file
+            shutil.copy(file_from, file_to)
+            print('Copied file: ' + file_from)
+        print('Finished file pick-up.')
+
+
+class Convert_ID():
+    def __init__(self,path_from=path_from,file_id=file_id,file_id_convert=file_id_convert):
+        df_id = pd.read_csv(path_from + '/' + file_id)
+        df_convert=pd.read_csv(path_from + '/' + file_id_convert)
+        df_name=pd.merge(df_id,df_convert, how='left', on='ID_exam')
+        df_name.to_csv(path_from + '/ID_converted.csv')
+    
 print('End of file')
