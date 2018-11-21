@@ -30,9 +30,11 @@
 #file_id = 'ID_W2_T1QC_rsfMRIexist.txt'
 
 ###
-path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSCF'
+#path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSCF'
+path_from='/media/veracrypt1/MRI/COCORO/03_analysis_l/Results/FC_FunImgARWSCF'
 #path_from='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/FC_FunImgARWSglobalCF'
-path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSCF'
+#path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSCF'
+path_to='/media/veracrypt1/MRI/COCORO/03_analysis_l/Results/zROI_FC_FunImgARWSCF'
 #path_to='/media/veracrypt1/MRI/COCORO/02_analysis_f/Results/zROI_FC_FunImgARWSglobalCF'
 path_list_id='/media/veracrypt1/MRI/COCORO'
 
