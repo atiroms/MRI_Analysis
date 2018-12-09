@@ -56,6 +56,9 @@ ggplot(as.data.frame(with(TS_data, table(W1_Tanner_Stage = factor(W1_Tanner_Stag
   theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(0.9,0.9),panel.grid.major.x=element_blank())
 
 
+#### TS-Age longitudinal plot ####
+
+
 
 #### TS-Age Correlation ####
 
