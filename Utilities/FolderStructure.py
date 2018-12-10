@@ -60,6 +60,10 @@ import pandas as pd
 
 # copy file name to folder name and put file into folder
 # used for dparsf
+suffix = '.nii'
+#path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/FunImg'
+path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/T1Img'
+
 class FileIntoFolder():
     def __init__(self,path=path,suffix=suffix):
         self.path=path
@@ -111,6 +115,13 @@ class PickupROIFile():
 
 
 # for general use
+#path_from='G:/MRI/pnTTC/pnTTC1_rsfMRI_C/CONN/04_nii'
+path_from='G:/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii'
+#path_to='G:/MRI/pnTTC/pnTTC1_rsfMRI_C/CONN/FunRaw'
+path_to='G:/MRI/pnTTC/pnTTC1_T1_C/FS/T1Img'
+file_id='birthorder_QC.txt'
+prefix = 'CSUB-'
+suffix = 'C-01.nii'
 
 class Pickup_File():
     def __init__(self,path_from=path_from,path_to=path_to,file_id=file_id,prefix=prefix,suffix=suffix):
