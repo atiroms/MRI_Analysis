@@ -1,3 +1,20 @@
+##
+
+working_dir <- "D:/atiroms/Dropbox/MRI/Statistics/CommonData"
+input_filename<-"rsfMRI.csv"
+output_filename<-"rsfMRI2.csv"
+
+input<-read.csv(file.path(working_dir,input_filename))
+
+output<-data.frame(matrix(ncol=ncol(input),nrow=351))
+colnames(output)<-colnames(input)
+output$ID_pnTTC<-1:nrow(output)
+
+for (i in 1:nrow(input)){
+  output[input[i,"ID_pnTTC"],]<-input[i,]
+}
+
+write.csv(output, file.path(working_dir,output_filename),row.names=T)
 
 ##
 
