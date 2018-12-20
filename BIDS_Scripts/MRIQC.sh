@@ -1,1 +1,1 @@
-sudo docker run -it --rm -v /media/veracrypt1/MRI/pnTTC/BIDS/test_3sub/Nifti4_MRIQC:/data:ro -v /media/veracrypt1/MRI/pnTTC/BIDS/test_3sub/MRIQC_output:/out poldracklab/mriqc:latest /data /out participant
+sudo docker run -it --rm -v /media/veracrypt1/MRI/pnTTC/BIDS/test_3sub/Nifti4_MRIQC:/data:ro -v /media/veracrypt1/MRI/pnTTC/BIDS/test_3sub/MRIQC_output:/out poldracklab/mriqc:latest /data /out participant --no-sub
