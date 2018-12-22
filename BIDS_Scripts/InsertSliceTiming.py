@@ -6,7 +6,8 @@
 TR=2.5
 n_slices=40
 #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/Nifti'
-path_exp='C:/Users/atiro/Dropbox/BIDS/test_3sub/Nifti2_SliceTiming'
+#path_exp='C:/Users/atiro/Dropbox/BIDS/test_3sub/Nifti2_SliceTiming'
+path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_2sub/Nifti2_fmriprep'
 sessions=['ses-01','ses-02']
 
 
