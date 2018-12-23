@@ -5,8 +5,9 @@
 ##############
 
 subset_ses='ses-01'
-path_exp='C:/Users/atiro/Documents/MRI/pnTTC/BIDS/test_3sub/05_subset'
-
+subset_T1only=True
+#path_exp='C:/Users/atiro/Documents/MRI/pnTTC/BIDS/test_3sub/05_subset'
+path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/03_ses1'
 
 #############
 # LIBRARIES #
@@ -23,7 +24,7 @@ import csv
 #############
 
 class SubsetBIDS():
-    def __init__(self,path_exp=path_exp,subset_ses=subset_ses):
+    def __init__(self,path_exp=path_exp,subset_ses=subset_ses,subset_T1only=subset_T1only):
         self.path_exp=path_exp
         list_dir_all = os.listdir(self.path_exp)
         for dir_sub in list_dir_all:
@@ -31,9 +32,17 @@ class SubsetBIDS():
                 path_sub=self.path_exp +'/' + dir_sub
                 list_dir_ses = os.listdir(path_sub)
                 for dir_ses in list_dir_ses:
+                    path_ses=path_sub +'/' + dir_ses
+                    delete_sub=False
+                    if subset_T1only:
+                        list_dir_modality=os.listdir(path_ses)
+                        if not 'func' in list_dir_modality:
+                            delete_sub=True
                     if not dir_ses==subset_ses:
-                        path_ses=path_sub +'/' + dir_ses
+                        delete_sub=True
+                    if delete_sub:
                         shutil.rmtree(path_ses)
+                    
                 if len(os.listdir(path_sub))==0:
                     shutil.rmtree(path_sub)
                     print('Deleted ' + dir_sub + ' as no data exists for the subject.')

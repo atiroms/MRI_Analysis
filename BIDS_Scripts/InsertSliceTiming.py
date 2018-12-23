@@ -10,7 +10,8 @@ n_slices=40
 #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_2sub/Nifti2_fmriprep'
 #path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_1sub/Nifti2_SliceTiming'
 #path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_2sub/02_slicetiming'
-path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses'
+#path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses'
+path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming'
 sessions=['ses-01','ses-02']
 
 
