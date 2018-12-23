@@ -44,9 +44,11 @@ class SubsetBIDS():
             if directory.startswith('sub-'):
                 list_dir_sub.append(directory)
 
-        path_tsv_old=self.path_exp+ '/participants.tsv'
-        path_tsv_new=self.path_exp+ '/participants_new.tsv'
-        with open(path_tsv_old,'r') as tsvin, open(path_tsv_new,'w') as tsvout:
+        path_tsv_original=self.path_exp+ '/participants.tsv'
+        path_tsv_old=self.path_exp+ '/.participants_old.tsv'
+        os.rename(path_tsv_original,path_tsv_old)
+
+        with open(path_tsv_old,'r') as tsvin, open(path_tsv_original,'w') as tsvout:
             tsvin = csv.reader(tsvin, delimiter='\t')
             tsvout = csv.writer(tsvout, delimiter='\t')
             cnt_row=0
