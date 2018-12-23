@@ -33,14 +33,14 @@ class SubsetBIDS():
                 list_dir_ses = os.listdir(path_sub)
                 for dir_ses in list_dir_ses:
                     path_ses=path_sub +'/' + dir_ses
-                    delete_sub=False
+                    delete_ses=False
                     if subset_T1only:
                         list_dir_modality=os.listdir(path_ses)
                         if not 'func' in list_dir_modality:
-                            delete_sub=True
+                            delete_ses=True
                     if not dir_ses==subset_ses:
-                        delete_sub=True
-                    if delete_sub:
+                        delete_ses=True
+                    if delete_ses:
                         shutil.rmtree(path_ses)
                     
                 if len(os.listdir(path_sub))==0:
