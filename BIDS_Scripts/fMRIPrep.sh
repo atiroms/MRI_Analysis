@@ -26,3 +26,7 @@ fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --
 
 ## use SyN for susceptibility distortion correction when Fieldmap data is not available
 fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/07_fmriprep_syn_1ses
+
+
+## no surface analysis, use SyN for susceptibility distortion correction when Fieldmap data is not available
+fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --fs-no-reconall /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/08_fmriprep_syn_nosurf_1ses
