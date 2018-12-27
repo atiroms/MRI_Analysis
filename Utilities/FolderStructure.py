@@ -1,5 +1,5 @@
 
-
+'''
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/03_analysis2/FunImg'
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
 #path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
@@ -46,6 +46,7 @@
 #suffix = '.tar.gz'
 #file_id = 'ID.csv'
 #file_id_convert = 'ID_convert.csv'
+'''
 
 ##
 path_from = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/nii'
@@ -125,9 +126,9 @@ suffix = 'C-01.nii'
 
 class Pickup_File():
     def __init__(self,path_from=path_from,path_to=path_to,file_id=file_id,prefix=prefix,suffix=suffix):
-        file=open(path_from + '/' + file_id, 'r')
-        file=file.readlines()
-        self.id_list=[int(x.strip('\n')) for x in file]
+        file_id_open=open(path_from + '/' + file_id, 'r')
+        file_id_open=file_id_open.readlines()
+        self.id_list=[int(x.strip('\n')) for x in file_id_open]
         for id in self.id_list:
             name_file=prefix + str(id).zfill(5) + suffix
             file_from=path_from + '/' + name_file
