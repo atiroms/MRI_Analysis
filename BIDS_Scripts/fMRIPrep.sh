@@ -46,3 +46,13 @@ fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --
 
 ## do not use SyN for susceptibility distortion correction for comparison
 fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/02_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/04_fmriprep_nosyn
+
+
+## 
+fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --bold2t1w-dof=12 --use-syn-sdc /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/10_syn_12dof_1ses
+
+## 
+fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --force-no-bbr /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/11_syn_nobbr_1ses
+
+## 
+fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --force-no-bbr --bold2t1w-dof=12 /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/12_syn_nobbr_12dof_1ses
