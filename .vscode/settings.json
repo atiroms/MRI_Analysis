@@ -1,3 +1,7 @@
 {
+<<<<<<< Updated upstream
     "python.pythonPath": "C:\\Users\\atiro\\Anaconda3\\envs\\neuroimaging\\python.exe"
+=======
+    "python.pythonPath": "/home/atiroms/anaconda3/envs/neuroimaging/bin/python"
+>>>>>>> Stashed changes
 }
