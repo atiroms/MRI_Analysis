@@ -10,6 +10,8 @@ prefix_t1w=''
 suffix_t1w='_space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz'
 prefix_bold=''
 suffix_bold='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+prefix_conf=
+suffix_conf=
 
 
 #############
@@ -24,7 +26,7 @@ import gzip
 # MAIN CODE #
 #############
 
-class ExtractBIDS():
+class ExtractFMRIPrep():
     def __init__(self,path_from=path_from,path_to=path_to,
                 prefix_t1w=prefix_t1w,suffix_t1w=suffix_t1w,
                 prefix_bold=prefix_bold,suffix_bold=suffix_bold):
@@ -54,5 +56,5 @@ class ExtractBIDS():
                 with open(path_to_bold_nii, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
             os.remove(path_to_bold)
-            print('Copied T1W and BOLD file for ' + d + '.')
+            print('Copied and unzipped T1W and BOLD file for ' + d + '.')
         print('Done.')
