@@ -8,3 +8,9 @@ sudo docker run -it --rm -v /media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_2sub/
 
 ##
 sudo docker run -it --rm -v /media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses:/data:ro -v /media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_1sub/06_mriqc_1ses:/out poldracklab/mriqc:latest /data /out participant --no-sub
+
+
+##
+source activate neuroimaging
+
+sudo docker run -it --rm -v /media/veracrypt1/MRI/pnTTC/BIDS/03_ses1:/data:ro -v /media/veracrypt1/MRI/pnTTC/BIDS/05_mriqc:/out poldracklab/mriqc:latest /data /out participant --no-sub

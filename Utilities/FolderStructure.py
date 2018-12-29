@@ -1,5 +1,5 @@
 
-
+'''
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/03_analysis2/FunImg'
 #path = '/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/FunImg'
 #path='/media/atiroms/MORITA_HDD4/MRI/COCORO/test2/Results/FC_FunImgARWSCF'
@@ -46,6 +46,7 @@
 #suffix = '.tar.gz'
 #file_id = 'ID.csv'
 #file_id_convert = 'ID_convert.csv'
+'''
 
 ##
 path_from = 'F:/MRI/Original_Data/Closed_Data/MR7/QC/nii'
@@ -60,9 +61,9 @@ import pandas as pd
 
 # copy file name to folder name and put file into folder
 # used for dparsf
-suffix = '.nii'
+#suffix = '.nii'
 #path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/FunImg'
-path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/T1Img'
+#path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/T1Img'
 
 class FileIntoFolder():
     def __init__(self,path=path,suffix=suffix):
@@ -116,18 +117,18 @@ class PickupROIFile():
 
 # for general use
 #path_from='G:/MRI/pnTTC/pnTTC1_rsfMRI_C/CONN/04_nii'
-path_from='G:/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii'
+#path_from='G:/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii'
 #path_to='G:/MRI/pnTTC/pnTTC1_rsfMRI_C/CONN/FunRaw'
-path_to='G:/MRI/pnTTC/pnTTC1_T1_C/FS/T1Img'
-file_id='birthorder_QC.txt'
-prefix = 'CSUB-'
-suffix = 'C-01.nii'
+#path_to='G:/MRI/pnTTC/pnTTC1_T1_C/FS/T1Img'
+#file_id='birthorder_QC.txt'
+#prefix = 'CSUB-'
+#suffix = 'C-01.nii'
 
 class Pickup_File():
     def __init__(self,path_from=path_from,path_to=path_to,file_id=file_id,prefix=prefix,suffix=suffix):
-        file=open(path_from + '/' + file_id, 'r')
-        file=file.readlines()
-        self.id_list=[int(x.strip('\n')) for x in file]
+        file_id_open=open(path_from + '/' + file_id, 'r')
+        file_id_open=file_id_open.readlines()
+        self.id_list=[int(x.strip('\n')) for x in file_id_open]
         for id in self.id_list:
             name_file=prefix + str(id).zfill(5) + suffix
             file_from=path_from + '/' + name_file
