@@ -33,9 +33,12 @@ class FileIntoFolder():
 # used for sorting DPARSF-analyzed data into folder
 path_from='H:/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/FC_FunRawARCWSF'
 path_to='H:/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM'
-path_list_id='H:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Info'
-list_rois=[1,2,3,4,5,6,7,8]
-list_models=[1,2,3]
+path_list_id='H:/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/Script'
+
+#list_rois=[1,2,3,4,5,6,7,8]
+list_rois=[6]
+#list_models=[1,2,3]
+list_models=[2]
 
 class PickupROIFile():
     def __init__(self,path_from=path_from,path_to=path_to,path_list_id=path_list_id,
@@ -57,6 +60,26 @@ class PickupROIFile():
                 print('Copied Model ' + str(model) + ', ROI ' + str(roi) + ' files.')
         print('All done.')
 
+
+path_from='H:/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/Model2/ROI6/FC'
+path_to='H:/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/Model2/ROI6/FC'
+siblings=[1,2,3,4]
+roi=6
+class SortROIFile():
+    def __init__(self,path_from=path_from):
+        for sibling in siblings:
+            path_folder_to = path_to + '/Sibling' + str(sibling)
+            if not os.path.exists(path_folder_to):
+                os.makedirs(path_folder_to)
+            with open(path_from+ '/id_sibling' + str(sibling) + '.txt', 'r') as list_id:
+                list_id=list_id.readlines()
+                list_id=[x.strip('\n') for x in list_id]
+            for i in list_id:
+                path_file_from=path_from + '/zROI' + str(roi) + 'FCMap_CSUB-' + str(i).zfill(5) + 'C-01.nii'
+                if os.path.exists(path_file_from):
+                    shutil.copy(path_file_from,path_folder_to)
+                else:
+                    print('File ' + path_file_from + ' does not exist.')           
 
 # for general file selection
 
