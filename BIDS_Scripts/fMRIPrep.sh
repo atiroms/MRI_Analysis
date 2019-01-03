@@ -69,3 +69,6 @@ fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --
 
 ## use SyN and 12 dof coregistration
 fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --bold2t1w-dof=12 /media/veracrypt1/MRI/pnTTC/BIDS/03_ses1 /media/veracrypt1/MRI/pnTTC/BIDS/07_fmriprep_syn_12dof
+
+## use SyN and 12 dof coregistration, test with 5 sub initial-removed data
+fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --bold2t1w-dof=12 /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/10_remini_syn_12dof
