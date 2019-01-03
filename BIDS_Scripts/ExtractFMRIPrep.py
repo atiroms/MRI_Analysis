@@ -75,21 +75,28 @@ class ExtractFMRIPrep():
 ################################################
 # Subset and summarize confounding factor data #
 ################################################
-path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/conf'
-path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/conf_subset'
-columns=['']
+path_from='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf'
+path_to='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf_subset'
+columns=['csf','white_matter','framewise_displacement',
+         'trans_x','trans_y','trans_z','rot_x','rot_y','rot_z',
+         'a_comp_cor_00','a_comp_cor_01','a_comp_cor_02',
+         'a_comp_cor_03','a_comp_cor_04','a_comp_cor_05']
+prefix=''
+suffix='_ses-01_task-rest_desc-confounds_regressors.tsv'
 
 class SubsetConf():
-    def __init__(self, path_from=path_from, path_to=path_to, columns=columns):
+    def __init__(self, path_from=path_from, path_to=path_to,
+                 columns=columns, prefix=prefix, suffix=suffix):
         list_dir = os.listdir(path_from)
+        list_dir.sort()
+        n_sub=len(list_dir)
+        df_summary=pd.DataFrame()
         for d in list_dir:
             path_file_from=os.path.join(path_from,d)
             path_file_to,_=os.path.splitext(d)
             path_file_to=os.path.join(path_to,path_file_to + '.txt')
-            pd.read_table(path_file_from)
-
-
-
-path_file_from='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf/sub-00014_ses-01_task-rest_desc-confounds_regressors.tsv'
-table_in=pd.read_table(path_file_from)
-table_in[0,5]
+            df_in=pd.read_table(path_file_from)
+            df_out=df_in[columns]
+            df_out.to_csv(path_file_to, sep='\t', header=False, index=False)
+            
+            id_sub=d.replace(prefix,'').repalce(suffix,'')
