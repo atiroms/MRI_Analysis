@@ -74,8 +74,8 @@ class SubsetBIDS():
 ##############
 n_removevol=10
 #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/14_removeinitial'
-path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
-#path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'
+#path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
+path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'
 
 class SubsetVolume():
     def __init__(self, path_exp=path_exp,n_removevol=n_removevol):
