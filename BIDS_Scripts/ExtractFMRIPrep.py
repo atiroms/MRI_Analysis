@@ -75,9 +75,9 @@ class ExtractFMRIPrep():
 ################################################
 # Subset and summarize confounding factor data #
 ################################################
-#path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/conf'
-#path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/conf_subset'
-#columns=['']
+path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/conf'
+path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/conf_subset'
+columns=['']
 
 class SubsetConf():
     def __init__(self, path_from=path_from, path_to=path_to, columns=columns):
@@ -90,6 +90,6 @@ class SubsetConf():
 
 
 
-#path_file_from='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf/sub-00014_ses-01_task-rest_desc-confounds_regressors.txt'
-#pd.read_table(path_file_from)
-
+path_file_from='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf/sub-00014_ses-01_task-rest_desc-confounds_regressors.tsv'
+table_in=pd.read_table(path_file_from)
+table_in[0,5]
