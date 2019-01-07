@@ -1,12 +1,27 @@
 
-## used to extract fMRIPrep-processed data for use in CONN
 
-##############
-# PARAMETERS #
-##############
 
-path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/05_syn_12dof_1ses'
-path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn'
+
+
+#############
+# LIBRARIES #
+#############
+
+import os
+import shutil
+import gzip
+import csv
+import pandas as pd
+
+
+#####################################################
+# Extract fMRIPrep-preprocessed data to use in CONN #
+#####################################################
+'''
+#path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn/05_syn_12dof_1ses'
+#path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/08_conn'
+path_from='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/05_syn_12dof_1ses'
+path_to='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn'
 #path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/13_conn/10_syn_12dof_1ses'
 #path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/13_conn'
 prefices_nii=['anat/','anat/','anat/','anat/','ses-01/func/']
@@ -18,21 +33,7 @@ suffices_nii=['_space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz',
 paths_to_subdir=['anat/t1w','anat/gm','anat/wm','anat/csf','func']
 prefix_conf='ses-01/func/'
 suffix_conf='_ses-01_task-rest_desc-confounds_regressors.tsv'
-
-
-#############
-# LIBRARIES #
-#############
-
-import os
-import shutil
-import gzip
-import csv
-
-
-#############
-# MAIN CODE #
-#############
+'''
 
 class ExtractFMRIPrep():
     def __init__(self,path_from=path_from,path_to=path_to,
@@ -65,19 +66,37 @@ class ExtractFMRIPrep():
             path_from_conf=os.path.join(path_from,'fmriprep',d,(prefix_conf + d + suffix_conf))
             path_to_conf=os.path.join(path_to,'conf',(d + suffix_conf))
             shutil.copy(path_from_conf,path_to_conf)
-            path_to_conf_tsv,_ = os.path.splitext(path_to_conf)
-            path_to_conf_tsv=path_to_conf_tsv + '.txt'
-            with open(path_to_conf,'r') as tsvin, open(path_to_conf_tsv,'w') as tsvout:
-                tsvin = csv.reader(tsvin, delimiter='\t')
-                tsvout = csv.writer(tsvout, delimiter='\t')
-                cnt_row=0
-                for row in tsvin:
-                    if cnt_row>0:
-                        row_out=['NaN' if v=='n/a' else v for v in row]
-                        tsvout.writerows([row_out])
-                    cnt_row+=1
-            os.remove(path_to_conf)
 
             print('Done ' + d + '.')
 
         print('All done.')
+
+
+################################################
+# Subset and summarize confounding factor data #
+################################################
+path_from='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf'
+path_to='D:/atiroms/Dropbox/MRI/pnTTC/BIDS/test_5sub/08_conn/conf_subset'
+columns=['csf','white_matter','framewise_displacement',
+         'trans_x','trans_y','trans_z','rot_x','rot_y','rot_z',
+         'a_comp_cor_00','a_comp_cor_01','a_comp_cor_02',
+         'a_comp_cor_03','a_comp_cor_04','a_comp_cor_05']
+prefix=''
+suffix='_ses-01_task-rest_desc-confounds_regressors.tsv'
+
+class SubsetConf():
+    def __init__(self, path_from=path_from, path_to=path_to,
+                 columns=columns, prefix=prefix, suffix=suffix):
+        list_dir = os.listdir(path_from)
+        list_dir.sort()
+        n_sub=len(list_dir)
+        df_summary=pd.DataFrame()
+        for d in list_dir:
+            path_file_from=os.path.join(path_from,d)
+            path_file_to,_=os.path.splitext(d)
+            path_file_to=os.path.join(path_to,path_file_to + '.txt')
+            df_in=pd.read_table(path_file_from)
+            df_out=df_in[columns]
+            df_out.to_csv(path_file_to, sep='\t', header=False, index=False)
+            
+            id_sub=d.replace(prefix,'').repalce(suffix,'')
