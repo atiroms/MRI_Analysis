@@ -34,3 +34,4 @@ class CreateCohortfile():
                                            ignore_index=True)
         output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
         output_func.to_csv(os.path.join(path_out,'func_cohort.csv'),index=False)
+        print('All done.')
