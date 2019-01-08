@@ -22,7 +22,7 @@ class CreateCohortfile():
             list_id=[x.strip('\n') for x in list_id]
         output_anat=pd.DataFrame(columns=['id0','img'])
         output_func=pd.DataFrame(columns=['id0','antsct','img'])
-        for cnt,index in enumerate(list_id):
+        for index in list_id:
             output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
                                                       'fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
                                                      index=output_anat.columns),
