@@ -14,8 +14,8 @@ import pandas as pd
 ###############
 #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial'
 #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt'
-#path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp'
-#path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/id.txt'
+path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp'
+path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/id.txt'
 
 class CreateCohortfile():
     def __init__(self,path_out=path_out,path_file_id=path_file_id):
@@ -32,7 +32,7 @@ class CreateCohortfile():
                                            ignore_index=True)
             output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
                                                       #'xcp_output/sub-'+str(index).zfill(5)+'/struc',
-                                                      '10_remini_syn_12dof/fmriprep/sub-'+str(index).zfill(5)+'/func/sub-'+str(index).zfill(5)+'_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'],
+                                                      '10_remini_syn_12dof/fmriprep/sub-'+str(index).zfill(5)+'/ses-01/func/sub-'+str(index).zfill(5)+'_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'],
                                                      index=output_func.columns),
                                            ignore_index=True)
         #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
@@ -43,7 +43,7 @@ class CreateCohortfile():
 ####################
 # MOVE ANAT FOLDER #
 ####################
-path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/10_remini_syn_12dof/fmriprep'
+#path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/10_remini_syn_12dof/fmriprep'
 
 class MoveAnat():
     def __init__(self, path_exp=path_exp):
