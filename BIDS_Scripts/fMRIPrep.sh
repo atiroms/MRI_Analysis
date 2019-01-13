@@ -72,3 +72,12 @@ fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --
 
 ## use SyN and 12 dof coregistration, test with 5 sub initial-removed data
 fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --bold2t1w-dof=12 /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/10_remini_syn_12dof
+
+## use SyN and 12 dof coregistration, test with 1 sub initial-removed data, output including T1w native space
+fmriprep-docker --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --output-space T1w template --bold2t1w-dof=12 /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/15_syn_12dof_nativeout && echo -e "Subject: Automatic Notification\n\nfMRIPrep on 1 subject done." | sendmail atirom.umusus@gmail.com
+
+## use SyN and 12 dof coregistration, test with 1 sub data, output including T1w native space
+fmriprep-docker /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/04_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/15_syn_12dof_nativeout participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid '2mm' --write-graph --use-aroma --use-syn-sdc --output-space T1w template fsaverage5 --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nfMRIPrep on 1 subject done." | sendmail atirom.umusus@gmail.com
+
+## use SyN and 12 dof coregistration, test with 5 subs data, output including T1w native space
+fmriprep-docker /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/02_slicetiming_1ses /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/11_syn_12dof_nativeout participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid='2mm' --write-graph --use-aroma --use-syn-sdc --output-space T1w template fsaverage5 --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nfMRIPrep on 5 subjects done." | sendmail atirom.umusus@gmail.com
