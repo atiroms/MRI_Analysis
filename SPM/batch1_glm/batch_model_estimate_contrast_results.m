@@ -37,3 +37,5 @@ for model=models
     spm_jobman('run', jobs, inputs{:});
     
 end
+
+if 

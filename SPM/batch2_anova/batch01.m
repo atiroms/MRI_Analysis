@@ -1,0 +1,51 @@
+% List of open inputs
+% Factorial design specification: Directory - cfg_files
+% Factorial design specification: Scans - cfg_files
+% Factorial design specification: Scans - cfg_files
+% Factorial design specification: Scans - cfg_files
+% Factorial design specification: Scans - cfg_files
+%nrun = 8; % enter the number of runs here
+
+
+path_home='P:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM\SPM2';
+path_clinicaldata='P:\MRI\pnTTC\Prosociality_DC_Dr_Okada\Info\ClinicalData.csv';
+rois=[1,2,3,4,5,6,7,8];
+%models=[1,2,3];
+model=2;
+n_rois=length(rois);
+%sibling_groups=['1.Only', '2.First-born', '3.Middle-born', '4.Last-born'];
+sibling_groups={'1.Only', '2.First-born', '3.Middle-born', '4.Last-born'};
+n_sibling_groups=length(sibling_groups);
+
+jobfile = {'D:\atiroms\GitHub\MRI_Analysis\SPM\batch2_anova\batch01_job.m'};
+jobs = repmat(jobfile, 1, n_rois);
+inputs = cell(5, n_rois);
+
+clinical_data=readtable(path_clinicaldata);
+
+for cnt_roi = 1:n_rois
+    roi=rois(cnt_roi);
+
+    path_out=fullfile(path_home,join(['Model',num2str(model),'_ROI',num2str(roi)]));
+    if exist(path_out)~=7
+        mkdir(path_out);
+    end
+    inputs{1, cnt_roi} = {path_out}; % Factorial design specification: Directory - cfg_files
+    
+    for cnt_sibling_group=1:n_sibling_groups
+        scans={};
+        cnt_data=0;
+        for i=1:height(clinical_data)
+            if clinical_data{i,'Sibling_status'}{1}==string(sibling_groups(cnt_sibling_group))
+                cnt_data=cnt_data+1;
+                id_pnttc=num2str(clinical_data{i,'ID'},'%5.5u');
+                path_zroifc=fullfile(path_home,'FC_FunImgARglobalCWSF',join(['zROI',num2str(roi),'FCMap_CSUB-',id_pnttc,'C-01.nii,1']));
+                scans{cnt_data,1}={path_zroifc};
+            end
+        end
+        inputs{cnt_sibling_group+1,cnt_roi}=scans;
+    end
+end
+
+spm('defaults', 'PET');
+spm_jobman('run', jobs, inputs{:});
