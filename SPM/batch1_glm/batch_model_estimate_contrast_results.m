@@ -2,7 +2,9 @@
 % Factorial design specification: Directory - cfg_files
 % Factorial design specification: Scans - cfg_files
 
-path_home='H:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM';
+%path_home='H:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM';
+path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM1';
+
 rois=[1,2,3,4,5,6,7,8];
 models=[1,2,3];
 n_rois=length(rois);
@@ -37,5 +39,3 @@ for model=models
     spm_jobman('run', jobs, inputs{:});
     
 end
-
-if 
