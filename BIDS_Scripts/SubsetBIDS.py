@@ -14,12 +14,11 @@ import nilearn.image as nl_image
 ##############
 # Parameters #
 ##############
-'''
-subset_ses='ses-01'
+
+subset_ses={'ses-01','ses-02'}
 subset_T1only=True
-#path_exp='C:/Users/atiro/Documents/MRI/pnTTC/BIDS/test_3sub/05_subset'
-path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/03_ses1'
-'''
+path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/09_boldexist'
+
 class SubsetBIDS():
     def __init__(self,path_exp=path_exp,subset_ses=subset_ses,subset_T1only=subset_T1only):
         self.path_exp=path_exp
@@ -35,7 +34,7 @@ class SubsetBIDS():
                         list_dir_modality=os.listdir(path_ses)
                         if not 'func' in list_dir_modality:
                             delete_ses=True
-                    if not dir_ses==subset_ses:
+                    if not dir_ses in subset_ses:
                         delete_ses=True
                     if delete_ses:
                         shutil.rmtree(path_ses)
@@ -72,9 +71,9 @@ class SubsetBIDS():
 ##############
 # Parameters #
 ##############
-n_removevol=10
+#n_removevol=10
 #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/14_removeinitial'
-path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
+#path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
 #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'
 
 class SubsetVolume():
