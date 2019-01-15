@@ -3,15 +3,6 @@
 # PARAMETERS #
 ##############
 
-#path_exp='D:/MRI/pnTTC2_T1_C/FS/10_recon'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/12_nii.gz'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/11_dcm'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/10_tar.gz_new'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/10_tar.gz_new'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/11_dcm'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/12_nii.gz'
-#path_exp = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
-#path_exp = '/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS'
 path_exp = '/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
 
 file_id='id.txt'
@@ -30,8 +21,8 @@ text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
 
 connector=' ; '
 
+#n_scripts=30
 n_scripts=60
-
 
 #############
 # LIBRARIES #
@@ -40,6 +31,10 @@ n_scripts=60
 import os
 import math
 
+
+#############
+# MAIN CODE #
+#############
 
 class Read_ID():
     def __init__(self,path_exp=path_exp, file_id=file_id):
@@ -84,6 +79,7 @@ class Generate_Script():
             self.output=self.output + script
             if i != self.list_id[-1]:
                 self.output=self.output + connector
+
 
 class Generate_MultiScript():
     def __init__(self, list_id, n_scripts=n_scripts, path_exp=path_exp):
