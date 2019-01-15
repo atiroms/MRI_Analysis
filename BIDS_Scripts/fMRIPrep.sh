@@ -84,3 +84,6 @@ fmriprep-docker /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/02_slicetiming_1ses /
 
 ## test with 1 sub, use preprocessed 07_recon freesurfer data
 fmriprep-docker /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/14_removeinitial /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/21_fmriprep_oldfs participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsnative fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nfMRIPrep on 1 subject done." | sendmail atirom.umusus@gmail.com
+
+## test with 5 subs, use preprocessed 07_recon freesurfer data
+fmriprep-docker /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/13_fmriprep_oldfs participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsnative fsaverage --bold2t1w-dof=6 --nthreads=8 && echo -e "Subject: Automatic Notification\n\nfMRIPrep on 5 subjects done." | sendmail atirom.umusus@gmail.com
