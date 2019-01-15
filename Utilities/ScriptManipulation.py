@@ -17,10 +17,10 @@ path_exp = '/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
 file_id='id.txt'
 
 
-head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
+head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
 #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n'
 
-text=['recon-all -i /media/veracrypt1/MRI/pnTTC1_T1_C/FS/06_qc/CSUB-',
+text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
       'C-01.nii -subject ',
       ' -all -qcache']
 
