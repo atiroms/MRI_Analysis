@@ -9,16 +9,44 @@ import pandas as pd
 #import json
 
 
-###############
-# COHORT FILE #
-###############
-#path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial'
-#path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt'
-path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp'
-path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/id.txt'
+###################################
+# PICUP AND COPY FREESURFER FILES #
+###################################
+class Fs2Fmriprep():
+    def __init__(self):
+        ############
+        # Parameters
+        path_file_id=''
+        path_in=''
+        path_out=''
+        ############
+
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[x.strip('\n') for x in list_id]
+        for i in list_id:
+            path_folder_in=os.path.join(path_in,str(i).zfill(5))
+            path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
+            shutil.copytree(path_folder_in,path_folder_out)
+            print('Copied and renamed '+ path_folder_in + '.')
+        print('All done.')
+
+
+###################
+# XCP COHORT FILE #
+###################
+# Create cohort file required for xcp.
 
 class CreateCohortfile():
-    def __init__(self,path_out=path_out,path_file_id=path_file_id):
+    def __init__(self):
+        ############
+        # Parameters
+        #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial'
+        #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt'
+        path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp'
+        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/id.txt'
+        ############
+
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[x.strip('\n') for x in list_id]
@@ -40,13 +68,18 @@ class CreateCohortfile():
         print('All done.')
 
 
-####################
-# MOVE ANAT FOLDER #
-####################
-#path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/10_remini_syn_12dof/fmriprep'
+###############################
+# MOVE ANAT FOLDER BEFORE XCP #
+###############################
+# move anat files in freesurfer output as workaround of xcp file reading error.
 
 class MoveAnat():
-    def __init__(self, path_exp=path_exp):
+    def __init__(self):
+        ############
+        # Parameters
+        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/10_remini_syn_12dof/fmriprep'
+        ############
+
         list_dir_all = os.listdir(path_exp)
         list_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_exp,d)) and d.startswith('sub-')]
         list_sub.sort()
