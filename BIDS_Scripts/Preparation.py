@@ -19,9 +19,9 @@ class Fs2Fmriprep():
     def __init__(self):
         ############
         # Parameters
-        path_file_id=''
-        path_in=''
-        path_out=''
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/id_5sub.txt'
+        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/10_recon'
+        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/11_fs2fmriprep'
         ############
 
         with open(path_file_id, 'r') as list_id:
