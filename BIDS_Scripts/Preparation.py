@@ -221,4 +221,4 @@ class InsertSliceTiming():
                         with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
                             json.dump(data, file_json_output,indent=2, sort_keys=True)
                         print('Added SliceTiming data to ' + filename_json + '.')
-        Print('All done.')
+        print('All done.')
