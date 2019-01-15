@@ -11,7 +11,8 @@
 %path_clinicaldata='P:\MRI\pnTTC\Prosociality_DC_Dr_Okada\Info\ClinicalData.csv';
 %jobfile = {'D:\atiroms\GitHub\MRI_Analysis\SPM\batch2_anova\batch01_job.m'};
 
-path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM2';
+%path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM2';
+path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM3';
 path_clinicaldata='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/Info/ClinicalData.csv';
 clinical_data=readtable(path_clinicaldata);
 
