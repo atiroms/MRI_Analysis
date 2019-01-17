@@ -16,9 +16,9 @@ class ZeropadConcat():
     def __init__(self):
         ############
         # Parameters
-        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_W1_T1exist.txt'
+        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_W2_T1exist.txt'
         n_zfill=5
-        path_file_output='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_string_W1_T1exist.txt'
+        path_file_output='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_string_W2_T1exist.txt'
         ############
 
         with open(path_file_id, 'r') as list_id:

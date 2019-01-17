@@ -24,3 +24,6 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/19_xcp:${HOME}/dat
 
 ## functional-only analysis on 5 subjects and send email (original dataset) (/anat contents moved to session-specific directory using MoveAnat class)
 singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/fc-36p.dsn -c ${HOME}/data/func_cohort.csv -o ${HOME}/data/xcp_output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nFunc-only analysis on original dataset of 5 subs done." | sendmail atirom.umusus@gmail.com
+
+## func-only analysis, FC only output
+singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/15_xcp_fconly:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/fc-36p_fconly.dsn -c ${HOME}/data/func_cohort.csv -o ${HOME}/data/xcp_output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nXCP func-only analysis on original dataset of 5 subs (functional connectivity only) done." | sendmail atirom.umusus@gmail.com
