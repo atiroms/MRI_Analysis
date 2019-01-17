@@ -19,14 +19,14 @@ class Fs2Fmriprep():
     def __init__(self):
         ############
         # Parameters
-        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/id_5sub.txt'
-        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/10_recon'
-        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/11_fs2fmriprep'
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt'
+        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
+        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
         ############
 
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
-            list_id=[x.strip('\n') for x in list_id]
+            list_id=[int(x.strip('\n')) for x in list_id]
             list_id.sort()
         for i in list_id:
             path_folder_in=os.path.join(path_in,str(i).zfill(5))
@@ -53,7 +53,7 @@ class CreateCohortfile():
 
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
-            list_id=[x.strip('\n') for x in list_id]
+            list_id=[int(x.strip('\n')) for x in list_id]
             list_id.sort()
         output_anat=pd.DataFrame(columns=['id0','img'])
         #output_func=pd.DataFrame(columns=['id0','antsct','img'])

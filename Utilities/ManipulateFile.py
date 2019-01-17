@@ -167,7 +167,7 @@ class SortROIFile():
                 os.makedirs(path_folder_to)
             with open(path_from+ '/id_sibling' + str(sibling) + '.txt', 'r') as list_id:
                 list_id=list_id.readlines()
-                list_id=[x.strip('\n') for x in list_id]
+                list_id=[int(x.strip('\n')) for x in list_id]
             for i in list_id:
                 path_file_from=path_from + '/zROI' + str(roi) + 'FCMap_CSUB-' + str(i).zfill(5) + 'C-01.nii'
                 if os.path.exists(path_file_from):
