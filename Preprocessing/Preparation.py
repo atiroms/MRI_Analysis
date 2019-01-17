@@ -19,14 +19,15 @@ class Fs2Fmriprep():
     def __init__(self):
         ############
         # Parameters
-        path_file_id=''
-        path_in=''
-        path_out=''
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/id_5sub.txt'
+        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/10_recon'
+        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC_T1_C/FS/11_fs2fmriprep'
         ############
 
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[x.strip('\n') for x in list_id]
+            list_id.sort()
         for i in list_id:
             path_folder_in=os.path.join(path_in,str(i).zfill(5))
             path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
@@ -53,6 +54,7 @@ class CreateCohortfile():
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[x.strip('\n') for x in list_id]
+            list_id.sort()
         output_anat=pd.DataFrame(columns=['id0','img'])
         #output_func=pd.DataFrame(columns=['id0','antsct','img'])
         output_func=pd.DataFrame(columns=['id0','img'])
@@ -110,6 +112,7 @@ class SubsetBIDS():
         ############
 
         list_dir_all = os.listdir(path_exp)
+        list_dir_all.sort()
         for dir_sub in list_dir_all:
             if dir_sub.startswith('sub-'):
                 path_sub=path_exp +'/' + dir_sub
@@ -131,6 +134,7 @@ class SubsetBIDS():
                     print('Deleted ' + dir_sub + ' as no data exists for the subject.')
 
         list_dir_postremoval=os.listdir(path_exp)
+        list_dir_postremoval.sort()
         list_dir_sub=[]
         for directory in list_dir_postremoval:
             if directory.startswith('sub-'):
@@ -169,6 +173,7 @@ class SubsetVolume():
         ############
 
         list_dir_all = os.listdir(path_exp)
+        list_dir_all.sort()
         for dir_sub in list_dir_all:
             if dir_sub.startswith('sub-'):
                 path_sub=path_exp +'/' + dir_sub
@@ -202,6 +207,7 @@ class InsertSliceTiming():
         ############
 
         list_dir_all = os.listdir(path_exp)
+        list_dir_all.sort()
         list_dir_sub=[]
         list_dir_func=[]
         list_slicetiming=[]

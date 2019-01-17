@@ -3,33 +3,26 @@
 # PARAMETERS #
 ##############
 
-#path_exp='D:/MRI/pnTTC2_T1_C/FS/10_recon'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/12_nii.gz'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/11_dcm'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_T1_C/FS/10_tar.gz_new'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/10_tar.gz_new'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/11_dcm'
-#path_exp='/media/veracrypt1/MRI/pnTTC2_rsfMRI_C/12_nii.gz'
-path_exp = '/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc'
+path_exp = '/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
 
 file_id='id.txt'
 
 
-#head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
-head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n'
+head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
+#head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n'
 
-#text=['recon-all -i /media/veracrypt1/MRI/pnTTC1_T1_C/FS/06_qc/CSUB-',
-#      'C-01.nii -subject ',
-#      ' -all -qcache']
-
-text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
-      'C-02.nii.gz -subject ',
+text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
+      'C-01.nii -subject ',
       ' -all -qcache']
+
+#text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
+#      'C-02.nii.gz -subject ',
+#      ' -all -qcache']
 
 connector=' ; '
 
-n_scripts=30
-
+#n_scripts=30
+n_scripts=60
 
 #############
 # LIBRARIES #
@@ -38,6 +31,10 @@ n_scripts=30
 import os
 import math
 
+
+#############
+# MAIN CODE #
+#############
 
 class Read_ID():
     def __init__(self,path_exp=path_exp, file_id=file_id):
@@ -51,7 +48,7 @@ class Extract_FolderID():
         self.path_exp=path_exp
         self.list_dir = os.listdir(self.path_exp)
         #self.output = [int(i) for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
-        self.output = [i for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
+        self.output = [int(i) for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
 
 class Save_List_ID():
     def __init__(self,list_id,path_exp=path_exp):
@@ -82,6 +79,7 @@ class Generate_Script():
             self.output=self.output + script
             if i != self.list_id[-1]:
                 self.output=self.output + connector
+
 
 class Generate_MultiScript():
     def __init__(self, list_id, n_scripts=n_scripts, path_exp=path_exp):

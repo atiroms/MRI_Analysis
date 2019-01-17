@@ -67,6 +67,52 @@ class ExtractFMRIPrep():
         print('All done.')
 
 
+###############
+# EXTRACT XCP #
+###############
+# Extract XCP-processed data for use in other softwares
+
+class ExtractXCP():
+    def __init__(self):
+        ############
+        # Parameters
+        path_from='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp'
+        path_to='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/14_extract'
+        prefices=['norm/','norm/','fcon/power264/','fcon/aal116/']
+        suffices=['_std.nii.gz',
+                  '_img_sm6Std.nii.gz',
+                  '_power264.net',
+                  '_aal116.net']
+        paths_to_subdir=['func/smooth','func/standard','fcon/power264','fcon/aal116']
+
+        ############
+
+        list_dir_all = os.listdir(os.path.join(path_from,'xcp_output'))
+        list_dir_sub = [d for d in list_dir_all if (os.path.isdir(os.path.join(path_from,'xcp_output',d)) and d.startswith('sub-'))]
+        list_dir_sub.sort()
+        print('List of subjects:')
+        print(list_dir_sub)
+        for d in ['func','fcon']:
+            if not os.path.exists(os.path.join(path_to,d)):
+                os.makedirs(os.path.join(path_to,d))
+        for d in ['standard','smooth']:
+            if not os.path.exists(os.path.join(path_to,'func',d)):
+                os.makedirs(os.path.join(path_to,'func',d))
+        for d in ['power264','aal116']:
+            if not os.path.exists(os.path.join(path_to,'fcon',d)):
+                os.makedirs(os.path.join(path_to,'fcon',d))
+        print('Starting extraction...')
+
+        for d in list_dir_sub:
+            for (prefix,suffix,dir_to) in zip(prefices,suffices,paths_to_subdir):
+                path_file_from=os.path.join(path_from,'xcp_output',d,(prefix + d + suffix))
+                path_file_to=os.path.join(path_to,dir_to,(d + suffix))
+                shutil.copy(path_file_from,path_file_to)
+            print('Done ' + d + '.')
+
+        print('All done.')
+
+
 ####################
 # SUBSET CONFOUNDS #
 ####################
