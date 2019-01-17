@@ -46,9 +46,9 @@ class CheckFreesurfer():
     def __init__(self):
         ############
         # Parameters
-        path_exp=''
-        string_log_ok=''
-        file_output=''
+        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
+        string_log_ok='finished without error at'
+        file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/check_freesurfer.csv'
         ############
 
         list_dir_all = os.listdir(path_exp)
@@ -57,7 +57,7 @@ class CheckFreesurfer():
         df_out=pd.DataFrame(columns=['sub','log','size'])
         list_log_error=[]
         for sub in list_sub:
-            with open(os.path.join(path_exp,sub,''),'r') as file_log:
+            with open(os.path.join(path_exp,sub,'scripts/recon-all.log'),'r') as file_log:
                 text_log=file_log.read()
             if string_log_ok in text_log:
                 log_ok=1
