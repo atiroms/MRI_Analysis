@@ -37,6 +37,7 @@ class ExtractFMRIPrep():
 
         list_dir_all = os.listdir(os.path.join(path_from,'fmriprep'))
         list_dir_sub = [d for d in list_dir_all if (os.path.isdir(os.path.join(path_from,'fmriprep',d)) and d.startswith('sub-'))]
+        list_dir_sub.sort()
         print('List of subjects:')
         print(list_dir_sub)
         for d in ['anat','func','conf']:

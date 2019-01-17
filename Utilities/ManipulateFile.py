@@ -37,7 +37,50 @@ class PickupFile():
         print('Finished file pick-up.')
 
 
-# 
+####################
+# CHECK FREESURFER #
+####################
+# Check FreeSurfer folder for subject list, error log and folder size.
+
+class CheckFreesurfer():
+    def __init__(self):
+        ############
+        # Parameters
+        path_exp=''
+        string_log_ok=''
+        file_output=''
+        ############
+
+        list_dir_all = os.listdir(path_exp)
+        list_sub = [d for d in list_dir_all if (os.path.isdir(os.path.join(path_exp,d)) and not d.startswith('fsaverage'))]
+        list_sub.sort()
+        df_out=pd.DataFrame(columns=['sub','log','size'])
+        list_log_error=[]
+        for sub in list_sub:
+            with open(os.path.join(path_exp,sub,''),'r') as file_log:
+                text_log=file_log.read()
+            if string_log_ok in text_log:
+                log_ok=1
+            else:
+                log_ok=0
+                list_log_error=list_log_error.append(sub)
+            df_out=df_out.append(pd.Series([sub,log_ok,self.get_dir_size(path=os.path.join(path_exp,sub))],index=df_out.columns),ignore_index=True)
+        df_out.to_csv(file_output,index=False)
+        print('Total ' + str(len(list_sub)) + ' FreeSurfer subject folders.')
+        print('FreeSurfer Log Error in:')
+        print(list_log_error)
+        print('All done.')
+
+    def get_dir_size(self, path='.'):
+        total = 0
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_file():
+                    total += entry.stat().st_size
+                elif entry.is_dir():
+                    total += self.get_dir_size(entry.path)
+        return total
+
 
 ############################
 # COPY FILE NAME TO FOLDER #
@@ -146,7 +189,6 @@ class ConvertPickupFile():
         path_to=''
         file_id=''
         file_id_convert=''
-        prefix=''
         suffix=''
         ############
 
