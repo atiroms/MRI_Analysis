@@ -8,6 +8,34 @@ import glob
 import numpy as numpy
 import pandas as pd
 
+###############
+# PICKUP FILE #
+###############
+# for general file selection according to list of IDs
+
+class PickupFile():
+    def __init__(self):
+        ############
+        # Parameters
+        path_from=''
+        path_to=''
+        path_id=''
+        file_id=''
+        prefix=''
+        suffix=''
+        ############
+
+        file_id_open=open(path_id + '/' + file_id, 'r')
+        file_id_open=file_id_open.readlines()
+        id_list=[int(x.strip('\n')) for x in file_id_open]
+        for id in id_list:
+            name_file=prefix + str(id).zfill(5) + suffix
+            file_from=path_from + '/' + name_file
+            file_to=path_to + '/' + name_file
+            shutil.copy(file_from, file_to)
+            print('Copied file: ' + file_from)
+        print('Finished file pick-up.')
+
 
 ############################
 # COPY FILE NAME TO FOLDER #
@@ -23,8 +51,7 @@ class File2Folder():
         #path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/FunImg'
         path='J:/MRI/pnTTC/Prosociality_DC_Dr_Okada/Analysis/T1Img'
         ############
-        path=path
-        suffix=suffix
+
         list_dir = os.listdir(path)
         for f in list_dir:
             if f.endswith(suffix):
@@ -102,36 +129,6 @@ class SortROIFile():
                     shutil.copy(path_file_from,path_folder_to)
                 else:
                     print('File ' + path_file_from + ' does not exist.')           
-
-
-###############
-# PICKUP FILE #
-###############
-# for general file selection according to list of IDs
-
-class PickupFile():
-    def __init__(self):
-        ############
-        # Parameters
-        path_from=''
-        path_to=''
-        path_id=''
-        file_id=''
-        file_roi=''
-        prefix=''
-        suffix=''
-        ############
-
-        file_id_open=open(path_id + '/' + file_id, 'r')
-        file_id_open=file_id_open.readlines()
-        id_list=[int(x.strip('\n')) for x in file_id_open]
-        for id in id_list:
-            name_file=prefix + str(id).zfill(5) + suffix
-            file_from=path_from + '/' + name_file
-            file_to=path_to + '/' + name_file
-            shutil.copy(file_from, file_to)
-            print('Copied file: ' + file_from)
-        print('Finished file pick-up.')
 
 
 #######################
