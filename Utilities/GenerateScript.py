@@ -1,29 +1,3 @@
-
-##############
-# PARAMETERS #
-##############
-
-path_exp = '/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
-
-file_id='id.txt'
-
-
-head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
-#head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n'
-
-text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
-      'C-01.nii -subject ',
-      ' -all -qcache']
-
-#text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
-#      'C-02.nii.gz -subject ',
-#      ' -all -qcache']
-
-connector=' ; '
-
-#n_scripts=30
-n_scripts=60
-
 #############
 # LIBRARIES #
 #############
@@ -32,74 +6,146 @@ import os
 import math
 
 
-#############
-# MAIN CODE #
-#############
+############################
+# ZERO-PAD AND CONCATENATE #
+############################
+# read id file, zero-pad and concatenate into a string
+# for general use
 
-class Read_ID():
-    def __init__(self,path_exp=path_exp, file_id=file_id):
-        file=open(path_exp + '/' + file_id, 'r')
+class ZeropadConcat():
+    def __init__(self):
+        ############
+        # Parameters
+        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_W1_T1exist.txt'
+        n_zfill=5
+        path_file_output='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_string_W1_T1exist.txt'
+        ############
+
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+        text_id=''
+        for index in list_id:
+            text_id=text_id + ' ' + str(index).zfill(n_zfill)
+        
+        with open(path_file_output,'w') as file_output:
+            file_output.write(text_id)
+        print('All done.')
+
+
+##########################
+# READ ID FILE INTO LIST #
+##########################
+
+class ReadID():
+    def __init__(self):
+        ############
+        # Parameters
+        path_file_id=''
+        ############
+
+        file=open(path_file_id, 'r')
         file=file.readlines()
         self.output=[int(x.strip('\n')) for x in file]
 
 
-class Extract_FolderID():
-    def __init__(self,path_exp=path_exp):
-        self.path_exp=path_exp
-        self.list_dir = os.listdir(self.path_exp)
-        #self.output = [int(i) for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
-        self.output = [int(i) for i in self.list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
+#########################
+# SCAN FOLDER INTO LIST #
+#########################
 
-class Save_List_ID():
-    def __init__(self,list_id,path_exp=path_exp):
-        self.path_exp=path_exp
-        self.list_id=list_id
+class ExtractFolderID():
+    def __init__(self):
+        ############
+        # Parameters
+        path_exp=''
+        list_exceptions=['fsaverage', 'id.txt','script.txt']
+        ############
+
+        list_dir = os.listdir(path_exp)
+        #self.output = [int(i) for i in list_dir if i != 'fsaverage' and i != 'id.txt' and i != 'script.txt']
+        self.output = [int(i) for i in list_dir if i not in list_exceptions]
+
+
+###############################
+# SAVE LIST ID INTO TEXT FILE #
+###############################
+
+class SaveListID():
+    def __init__(self,list_id):
+        ############
+        # Parameters
+        path_file_output=''
+        ############
+
         self.output=''
-        for item in self.list_id:
+        for item in list_id:
             self.output=self.output + item + '\n'
-        file=open(path_exp + '/list_id.txt','w')
+        file=open(path_file_output,'w')
         file.write(self.output)
         file.close()
 
 
-class Get_Diff():
-    def __init__(self):
-        self.output=list(set(Read_ID().output)-set(Extract_FolderID().output))
+################################
+# GENERATE SCRIPT FROM ID FILE #
+################################
 
+class GenerateScript():
+    def __init__(self,list_id):
+        ############
+        # Parameters
+        head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n'
+        #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n'
+        text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
+              'C-01.nii -subject ',
+              ' -all -qcache']
+        #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
+        #      'C-02.nii.gz -subject ',
+        #      ' -all -qcache']
+        connector=' ; '
+        ############
 
-class Generate_Script():
-    def __init__(self, list_id,head=head,text=text,connector=connector):
-        self.list_id=list_id
-        self.head=head
-        self.text=text
-        self.connector=connector
         self.output=head
-        for i in self.list_id:
+        for i in list_id:
             script=text[0] + str(i).zfill(5) + text[1] + str(i).zfill(5) + text[2]
             self.output=self.output + script
-            if i != self.list_id[-1]:
+            if i != list_id[-1]:
                 self.output=self.output + connector
 
 
-class Generate_MultiScript():
-    def __init__(self, list_id, n_scripts=n_scripts, path_exp=path_exp):
-        self.list_id=list_id
-        len_list=len(self.list_id)
+###############################################
+# GENERATE SCRIPTS FOR MANUAL MULTIPROCESSING #
+###############################################
+
+class GenerateMultiScript():
+    def __init__(self, list_id):
+        ############
+        # Parameters
+        path_exp=''
+        #n_scripts=30
+        n_scripts=60
+        ############
+        
+        len_list=len(list_id)
         len_script=math.ceil(len_list/n_scripts)
         len_remaining=len_list
-        self.output=''
+        output=''
         for i in range(n_scripts):
-            list_script=self.list_id[(i*len_script):((i+1)*len_script)]
-            self.output=self.output + Generate_Script(list_id=list_script).output + '\n\n'
+            list_script=list_id[(i*len_script):((i+1)*len_script)]
+            output=output + GenerateScript(list_id=list_script).output + '\n\n'
             len_remaining=len_list-len_script
             if len_remaining<1:
                 break
         file=open(path_exp + '/script.txt','w')
-        file.write(self.output)
+        file.write(output)
         file.close()
 
 
-class Remaining_Script():
+####################################################
+# GENERATE MULTIPLE SCRIPTS FOR REMAINING SUBJECTS #
+####################################################
+
+class RemainingScript():
     def __init__(self):
-        list_id=Get_Diff().output
-        Generate_MultiScript(list_id)
+        list_diff=list(set(ReadID().output)-set(ExtractFolderID().output))
+        GenerateMultiScript(list_diff)

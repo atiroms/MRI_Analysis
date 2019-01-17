@@ -66,7 +66,7 @@ class CheckFreesurfer():
                 list_log_error=list_log_error.append(sub)
             df_out=df_out.append(pd.Series([sub,log_ok,self.get_dir_size(path=os.path.join(path_exp,sub))],index=df_out.columns),ignore_index=True)
         df_out.to_csv(file_output,index=False)
-        print('Total ' + str(len(list_sub)) + ' FreeSurfer subject folders.')
+        print('Total FreeSurfer subject folders: ' + str(len(list_sub)))
         print('FreeSurfer Log Error in:')
         print(list_log_error)
         print('All done.')
