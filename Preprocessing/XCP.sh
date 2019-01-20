@@ -27,3 +27,10 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp:${HOME}/dat
 
 ## func-only analysis, FC only output
 singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/15_xcp_fconly:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/fc-36p_fconly.dsn -c ${HOME}/data/func_cohort.csv -o ${HOME}/data/xcp_output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nXCP func-only analysis on original dataset of 5 subs (functional connectivity only) done." | sendmail atirom.umusus@gmail.com
+
+## comparison of template input and native input
+# template input
+singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/18_xcp_templatein/analysis:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/fc-36p_fconly.dsn -c ${HOME}/data/func_cohort.csv -o ${HOME}/data/xcp_output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nXCP analysis using template input done (for comparison with native input)." | sendmail atirom.umusus@gmail.com
+
+# native input
+singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/fc-36p_fconly.dsn -c ${HOME}/data/func_cohort.csv -o ${HOME}/data/xcp_output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nXCP analysis using native input done (for comparison with template input)." | sendmail atirom.umusus@gmail.com

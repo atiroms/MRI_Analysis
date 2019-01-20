@@ -16,13 +16,11 @@ import json
 # Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
 
 class Fs2Fmriprep():
-    def __init__(self):
-        ############
-        # Parameters
-        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt'
-        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
+    def __init__(self,
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
+        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
         path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
-        ############
+        ):
 
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
@@ -42,14 +40,16 @@ class Fs2Fmriprep():
 # Create cohort file required for xcp.
 
 class CreateCohortfile():
-    def __init__(self):
-        ############
-        # Parameters
-        #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial'
-        #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt'
-        path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp'
-        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/id.txt'
-        ############
+    def __init__(self,
+        #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
+        #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
+        path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis/id.txt',
+        #suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        #dir_input='10_remini_syn_12dof'
+        dir_input='16_fmriprep_newfs'
+        ):
 
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
@@ -65,7 +65,7 @@ class CreateCohortfile():
                                            ignore_index=True)
             output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
                                                       #'xcp_output/sub-'+str(index).zfill(5)+'/struc',
-                                                      '10_remini_syn_12dof/fmriprep/sub-'+str(index).zfill(5)+'/ses-01/func/sub-'+str(index).zfill(5)+'_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'],
+                                                      dir_input+'/fmriprep/sub-'+str(index).zfill(5)+'/ses-01/func/sub-'+str(index).zfill(5)+suffix_file],
                                                      index=output_func.columns),
                                            ignore_index=True)
         #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
@@ -79,11 +79,10 @@ class CreateCohortfile():
 # move anat files in freesurfer output as workaround of xcp file reading error.
 
 class MoveAnat():
-    def __init__(self):
-        ############
-        # Parameters
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/12_xcp/10_remini_syn_12dof/fmriprep'
-        ############
+    def __init__(self,
+        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/18_xcp_templatein/analysis/16_fmriprep_newfs/fmriprep'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis/16_fmriprep_newfs/fmriprep'
+        ):
 
         list_dir_all = os.listdir(path_exp)
         list_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_exp,d)) and d.startswith('sub-')]
@@ -103,13 +102,11 @@ class MoveAnat():
 # Subset BIDS subjects according to available sessions or scans
 
 class SubsetBIDS():
-    def __init__(self):
-        ############
-        # Parameters
-        subset_ses={'ses-01','ses-02'}
-        subset_T1only=True
+    def __init__(self,
+        subset_ses={'ses-01','ses-02'},
+        subset_T1only=True,
         path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/09_boldexist'
-        ############
+        ):
 
         list_dir_all = os.listdir(path_exp)
         list_dir_all.sort()
@@ -163,14 +160,12 @@ class SubsetBIDS():
 # Remove initial volumes from BIDS data
 
 class SubsetVolume():
-    def __init__(self):
-        ############
-        # Parameters
-        n_removevol=10
+    def __init__(self,
+        n_removevol=10,
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/14_removeinitial'
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'
-        ############
+        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'        
+        ):
 
         list_dir_all = os.listdir(path_exp)
         list_dir_all.sort()
@@ -197,14 +192,12 @@ class SubsetVolume():
 # Insert slice timing data to BIDS JSON file to use in fMRIPrep
 
 class InsertSliceTiming():
-    def __init__(self):
-        ############
-        # Parameters
-        TR=2.5
-        n_slices=40
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming'
+    def __init__(self,
+        TR=2.5,
+        n_slices=40,
+        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming',
         sessions=['ses-01','ses-02']
-        ############
+        ):
 
         list_dir_all = os.listdir(path_exp)
         list_dir_all.sort()
