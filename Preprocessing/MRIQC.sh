@@ -12,5 +12,13 @@ sudo docker run -it --rm -v /media/atiroms/MORITA_HDD4/MRI/pnTTC/BIDS/test_1sub/
 
 ##
 source activate neuroimaging
-
 sudo docker run -it --rm -v /media/veracrypt1/MRI/pnTTC/BIDS/03_ses1:/data:ro -v /media/veracrypt1/MRI/pnTTC/BIDS/05_mriqc:/out poldracklab/mriqc:latest /data /out participant --no-sub
+
+# MRIQC on all subjects with T1 existance, with verbose results
+# ses1
+source activate neuroimaging
+sudo docker run -it --rm -v /media/veracrypt1/MRI/pnTTC/BIDS/10_bids_ses1_t1exist:/data:ro -v /media/veracrypt1/MRI/pnTTC/BIDS/12_mriqc_ses1_t1exist:/out poldracklab/mriqc:latest /data /out participant --no-sub --verbose-reports && echo -e "Subject: Automatic Notification\n\nMRIQC on all ses1 subjects with T1 images done." | sendmail atirom.umusus@gmail.com
+
+# ses2
+source activate neuroimaging
+sudo docker run -it --rm -v /media/veracrypt1/MRI/pnTTC/BIDS/11_bids_ses2_t1exist:/data:ro -v /media/veracrypt1/MRI/pnTTC/BIDS/13_mriqc_ses2_t1exist:/out poldracklab/mriqc:latest /data /out participant --no-sub --verbose-reports && echo -e "Subject: Automatic Notification\n\nMRIQC on all ses2 subjects with T1 images done." | sendmail atirom.umusus@gmail.com
