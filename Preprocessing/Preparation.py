@@ -10,95 +10,48 @@ import nilearn.image as nl_image
 import json
 
 
-###################################
-# PICUP AND COPY FREESURFER FILES #
-###################################
-# Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
+#######################
+# INSERT SLICE TIMING #
+#######################
+# fMRIPrep preparation
+# Insert slice timing data to BIDS JSON file to use in fMRIPrep
 
-class Fs2Fmriprep():
+class InsertSliceTiming():
     def __init__(self,
-        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
-        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
-        ):
-
-        with open(path_file_id, 'r') as list_id:
-            list_id=list_id.readlines()
-            list_id=[int(x.strip('\n')) for x in list_id]
-            list_id.sort()
-        for i in list_id:
-            path_folder_in=os.path.join(path_in,str(i).zfill(5))
-            path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
-            shutil.copytree(path_folder_in,path_folder_out)
-            print('Copied and renamed '+ path_folder_in + '.')
-        print('All done.')
-
-
-###################
-# XCP COHORT FILE #
-###################
-# Create cohort file required for xcp.
-
-class CreateCohortfile():
-    def __init__(self,
-        #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
-        #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_out='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis/id.txt',
-        #suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
-        #dir_input='10_remini_syn_12dof'
-        dir_input='16_fmriprep_newfs'
-        ):
-
-        with open(path_file_id, 'r') as list_id:
-            list_id=list_id.readlines()
-            list_id=[int(x.strip('\n')) for x in list_id]
-            list_id.sort()
-        output_anat=pd.DataFrame(columns=['id0','img'])
-        #output_func=pd.DataFrame(columns=['id0','antsct','img'])
-        output_func=pd.DataFrame(columns=['id0','img'])
-        for index in list_id:
-            output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
-                                                      'fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
-                                                     index=output_anat.columns),
-                                           ignore_index=True)
-            output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
-                                                      #'xcp_output/sub-'+str(index).zfill(5)+'/struc',
-                                                      dir_input+'/fmriprep/sub-'+str(index).zfill(5)+'/ses-01/func/sub-'+str(index).zfill(5)+suffix_file],
-                                                     index=output_func.columns),
-                                           ignore_index=True)
-        #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
-        output_func.to_csv(os.path.join(path_out,'func_cohort.csv'),index=False)
-        print('All done.')
-
-
-###############################
-# MOVE ANAT FOLDER BEFORE XCP #
-###############################
-# move anat files in freesurfer output as workaround of xcp file reading error.
-
-class MoveAnat():
-    def __init__(self,
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/18_xcp_templatein/analysis/16_fmriprep_newfs/fmriprep'
-        #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis/16_fmriprep_newfs/fmriprep'
+        TR=2.5,
+        n_slices=40,
+        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming',
+        sessions=['ses-01','ses-02']
         ):
 
         list_dir_all = os.listdir(path_exp)
-        list_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_exp,d)) and d.startswith('sub-')]
-        list_sub.sort()
-        for sub in list_sub:
-            path_from=os.path.join(path_exp,sub,'anat')
-            path_to=os.path.join(path_exp,sub,'ses-01','anat')
-            for f in os.listdir(path_from):
-                shutil.move(os.path.join(path_from,f),path_to)
-            print('Moved ' + sub + '/anat contents.')
+        list_dir_all.sort()
+        list_dir_sub=[]
+        list_dir_func=[]
+        list_slicetiming=[]
+        for i in range(n_slices):
+            list_slicetiming.append(i*TR/n_slices)
+        for dir_sub in list_dir_all:
+            if dir_sub.startswith('sub-'):
+                list_dir_sub.append(dir_sub)
+                for session in sessions:
+                    dir_func=path_exp +'/' + dir_sub + '/' + session + '/func'
+                    if os.path.exists(dir_func):
+                        list_dir_func.append(dir_func)
+                        filename_json = dir_sub + '_' + session + '_task-rest_bold.json'
+                        with open(dir_func + '/' + filename_json) as file_json_input:  
+                            data = json.load(file_json_input)
+                        data['SliceTiming']=list_slicetiming
+                        with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
+                            json.dump(data, file_json_output,indent=2, sort_keys=True)
+                        print('Added SliceTiming data to ' + filename_json + '.')
         print('All done.')
 
 
 ########################
 # SUBSET BIDS SUBJECTS #
 ########################
+# fMRIPrep preparation
 # Subset BIDS subjects according to available sessions or scans
 
 class SubsetBIDS():
@@ -157,6 +110,7 @@ class SubsetBIDS():
 #######################
 # SUBSET BIDS VOLUMES #
 #######################
+# fMRIPrep preparation
 # Remove initial volumes from BIDS data
 
 class SubsetVolume():
@@ -186,38 +140,91 @@ class SubsetVolume():
         print('All done.')
 
 
-#######################
-# INSERT SLICE TIMING #
-#######################
-# Insert slice timing data to BIDS JSON file to use in fMRIPrep
+###################################
+# PICUP AND COPY FREESURFER FILES #
+###################################
+# fMRIPrep preparation
+# Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
 
-class InsertSliceTiming():
+class Fs2Fmriprep():
     def __init__(self,
-        TR=2.5,
-        n_slices=40,
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming',
-        sessions=['ses-01','ses-02']
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
+        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
+        ):
+
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+        for i in list_id:
+            path_folder_in=os.path.join(path_in,str(i).zfill(5))
+            path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
+            shutil.copytree(path_folder_in,path_folder_out)
+            print('Copied and renamed '+ path_folder_in + '.')
+        print('All done.')
+
+
+###################
+# XCP COHORT FILE #
+###################
+# XCP prepataion
+# Create cohort file required for xcp.
+
+class CreateCohortfile():
+    def __init__(self,
+        #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
+        #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/log',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/log/id.txt',
+        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+        #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        #dir_input='10_remini_syn_12dof'
+        #dir_input='16_fmriprep_newfs'
+        ):
+
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+        output_anat=pd.DataFrame(columns=['id0','img'])
+        #output_func=pd.DataFrame(columns=['id0','antsct','img'])
+        output_func=pd.DataFrame(columns=['id0','img'])
+        for index in list_id:
+            output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
+                                                      'fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
+                                                     index=output_anat.columns),
+                                           ignore_index=True)
+            output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
+                                                      #'xcp_output/sub-'+str(index).zfill(5)+'/struc',
+                                                      'input/fmriprep/sub-'+str(index).zfill(5)+'/ses-01/func/sub-'+str(index).zfill(5)+suffix_file],
+                                                     index=output_func.columns),
+                                           ignore_index=True)
+        #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
+        output_func.to_csv(os.path.join(path_out,'func_cohort.csv'),index=False)
+        print('All done.')
+
+
+###############################
+# MOVE ANAT FOLDER BEFORE XCP #
+###############################
+# XCP preparation
+# move anat files in freesurfer output as workaround of xcp file reading error.
+
+class MoveAnat():
+    def __init__(self,
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/analysis/fmriprep'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/analysis/fmriprep'
         ):
 
         list_dir_all = os.listdir(path_exp)
-        list_dir_all.sort()
-        list_dir_sub=[]
-        list_dir_func=[]
-        list_slicetiming=[]
-        for i in range(n_slices):
-            list_slicetiming.append(i*TR/n_slices)
-        for dir_sub in list_dir_all:
-            if dir_sub.startswith('sub-'):
-                list_dir_sub.append(dir_sub)
-                for session in sessions:
-                    dir_func=path_exp +'/' + dir_sub + '/' + session + '/func'
-                    if os.path.exists(dir_func):
-                        list_dir_func.append(dir_func)
-                        filename_json = dir_sub + '_' + session + '_task-rest_bold.json'
-                        with open(dir_func + '/' + filename_json) as file_json_input:  
-                            data = json.load(file_json_input)
-                        data['SliceTiming']=list_slicetiming
-                        with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
-                            json.dump(data, file_json_output,indent=2, sort_keys=True)
-                        print('Added SliceTiming data to ' + filename_json + '.')
+        list_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_exp,d)) and d.startswith('sub-')]
+        list_sub.sort()
+        for sub in list_sub:
+            path_from=os.path.join(path_exp,sub,'anat')
+            path_to=os.path.join(path_exp,sub,'ses-01','anat')
+            for f in os.listdir(path_from):
+                shutil.move(os.path.join(path_from,f),path_to)
+            print('Moved ' + sub + '/anat contents.')
         print('All done.')
+

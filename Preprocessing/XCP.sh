@@ -34,3 +34,6 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/18_xcp_templatein/
 
 # native input
 singularity run -B /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/19_xcp_nativein/analysis:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/fc-36p_fconly.dsn -c ${HOME}/data/func_cohort.csv -o ${HOME}/data/xcp_output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nXCP analysis using native input done (for comparison with template input)." | sendmail atirom.umusus@gmail.com
+
+# template input re-run
+singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nXCP analysis using template input done (for comparison with native input)." | sendmail atirom.umusus@gmail.com
