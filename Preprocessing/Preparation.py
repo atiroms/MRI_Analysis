@@ -175,10 +175,10 @@ class CreateCohortfile():
     def __init__(self,
         #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
         #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/log',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/log/id.txt',
-        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
-        #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input/id.txt',
+        #suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+        suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
         #dir_input='16_fmriprep_newfs'
         ):
