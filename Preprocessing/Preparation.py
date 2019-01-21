@@ -213,8 +213,8 @@ class CreateCohortfile():
 
 class MoveAnat():
     def __init__(self,
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/analysis/fmriprep'
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/analysis/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/input/fmriprep'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input/fmriprep'
         ):
 
         list_dir_all = os.listdir(path_exp)
