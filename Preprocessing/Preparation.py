@@ -178,8 +178,8 @@ class CreateCohortfile():
     def __init__(self,
         #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
         #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input/id.txt',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/id.txt',
         #suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
         suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
@@ -216,8 +216,7 @@ class CreateCohortfile():
 
 class MoveAnat():
     def __init__(self,
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/input/fmriprep'
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
         ):
 
         list_dir_all = os.listdir(path_exp)

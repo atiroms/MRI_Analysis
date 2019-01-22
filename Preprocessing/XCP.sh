@@ -40,3 +40,10 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_template
 
 # native input re-run
 singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/19_xcp_nativein\nStart time: 20190121_2224" | sendmail atirom.umusus@gmail.com
+
+## comparison of aroma output with and without fMRIPrep --use-aroma 
+# without fMRIPrep ICA-AROMA
+singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/21_xcp_aroma:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/input/fc-aroma_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/21_xcp_aroma\nStart time: 20190122_1750" | sendmail atirom.umusus@gmail.com
+
+# with fMRIPrep ICA-AROMA
+singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/input/fc-aroma_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/22_xcp_aroma_aromain\nStart time: 20190122_1750" | sendmail atirom.umusus@gmail.com
