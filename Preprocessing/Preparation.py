@@ -10,16 +10,17 @@ import nilearn.image as nl_image
 import json
 
 
-#######################
-# INSERT SLICE TIMING #
-#######################
+####################################################
+# INSERT SLICE TIMING AND PHASE ENCODING DIRECTION #
+####################################################
 # fMRIPrep preparation
-# Insert slice timing data to BIDS JSON file to use in fMRIPrep
+# Insert slice timing and phase encoding direction data to BIDS JSON file to use in fMRIPrep
 
-class InsertSliceTiming():
+class InsertST_PED():
     def __init__(self,
         TR=2.5,
         n_slices=40,
+        PED='j-',
         path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming',
         sessions=['ses-01','ses-02']
         ):
@@ -42,9 +43,10 @@ class InsertSliceTiming():
                         with open(dir_func + '/' + filename_json) as file_json_input:  
                             data = json.load(file_json_input)
                         data['SliceTiming']=list_slicetiming
+                        data['PhaseEncodingDirection']=PED
                         with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
                             json.dump(data, file_json_output,indent=2, sort_keys=True)
-                        print('Added SliceTiming data to ' + filename_json + '.')
+                        print('Added ST and PED data to ' + filename_json + '.')
         print('All done.')
 
 
