@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ###################################################################
-#  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  ☭  #
+#  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  ⊗  #
 ###################################################################
 
 
@@ -52,26 +52,24 @@ prestats_rerun[1]=0
 prestats_cleanup[1]=1
 prestats_process[1]=FMP
 
-
 ###################################################################
 # 2 CONFOUND2
 ###################################################################
 
-confound2_rps[2]=1
+confound2_rps[2]=0
 confound2_rms[2]=0
 confound2_wm[2]=1
 confound2_csf[2]=1
-confound2_gsr[2]=1
+confound2_gsr[2]=0
 confound2_acompcor[2]=0
 confound2_tcompcor[2]=0
-confound2_aroma[2]=0
+confound2_aroma[2]=1
 confound2_past[2]=0
-confound2_dx[2]=1
-confound2_sq[2]=2
+confound2_dx[2]=0
+confound2_sq[2]=1
 confound2_custom[2]=
 confound2_censor[2]=0
 confound2_censor_contig[2]=0
-confound2_framewise[2]=rmss:0.083,fds:0.167,dv:2
 confound2_rerun[2]=0
 confound2_cleanup[2]=1
 
@@ -143,7 +141,7 @@ fcon_cleanup[4]=1
 
 ###################################################################
 # 8 ROIQUANT
-###################################################################
+####################################################################
 
 #roiquant_atlas[8]=all
 #roiquant_globals[8]=1
@@ -157,9 +155,3 @@ fcon_cleanup[4]=1
 norm_primary[9]=1
 norm_rerun[9]=0
 norm_cleanup[9]=1
-
-
-
-
-
-
