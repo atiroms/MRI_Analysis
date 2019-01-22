@@ -21,7 +21,7 @@ class InsertST_PED():
         TR=2.5,
         n_slices=40,
         PED='j-',
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
         sessions=['ses-01','ses-02']
         ):
 
@@ -121,7 +121,7 @@ class SubsetVolume():
         n_removevol=10,
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/14_removeinitial'
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'        
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/15_bids_ses1_t1exist_boldexist_remini/output'        
         ):
 
         list_dir_all = os.listdir(path_exp)
