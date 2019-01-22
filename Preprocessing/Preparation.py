@@ -228,3 +228,28 @@ class MoveAnat():
             print('Moved ' + sub + '/anat contents.')
         print('All done.')
 
+
+############################
+# CHANGE FOLDER PERMISSION #
+############################
+
+class FolderPermission():
+    def __init__(self,
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/11_bids_ses2_t1exist',
+        #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test',
+        permission=0o775
+        ):
+        #oct(os.stat(path_input).st_mode)[-3:]
+        print('File: '+ path_input)
+        print('Permission: '+oct(os.stat(path_input).st_mode)[-3:])
+        #print('Read permission:    '+str(os.access(path_input, os.R_OK)))
+        #print('Write permission:   '+str(os.access(path_input, os.W_OK)))
+        #print('Execute permission: '+str(os.access(path_input, os.X_OK)))
+
+        for root, dirs, files in os.walk(path_input, topdown=False):
+            for dir in [os.path.join(root,d) for d in dirs]:
+                os.chmod(dir, permission)
+            for file in [os.path.join(root, f) for f in files]:
+                os.chmod(file, permission)
+        
+        print('All done.')
