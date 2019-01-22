@@ -40,7 +40,9 @@ class ZeropadConcat():
 
 class ReadID():
     def __init__(self,
-        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script/id_11_recon.txt'):
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script/id_11_recon.txt'
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/input/id.txt'
+        ):
 
         file=open(path_file_id, 'r')
         file=file.readlines()
@@ -89,14 +91,17 @@ class SaveListID():
 class GenerateScript():
     def __init__(self,
         list_id,
-        head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon\ncd $SUBJECTS_DIR\n',
+        head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output\ncd $SUBJECTS_DIR\n',
         #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n',
-        text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
-              'C-01.nii -subject ',
-              ' -all -qcache'],
+        #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
+        #      'C-01.nii -subject ',
+        #      ' -all -qcache'],
         #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
         #      'C-02.nii.gz -subject ',
         #      ' -all -qcache'],
+        text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii/CSUB-',
+              'C-01.nii -subject ',
+              ' -all -qcache'],
         connector=' ; '
         ):
 
@@ -115,9 +120,9 @@ class GenerateScript():
 class GenerateMultiScript():
     def __init__(self,
         list_id,
-        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script',
-        n_scripts=30
-        #n_scripts=60
+        #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_recon_t1qcout.sh',
+        n_scripts=32
         ):
 
         len_list=len(list_id)
@@ -130,7 +135,7 @@ class GenerateMultiScript():
             len_remaining=len_list-len_script
             if len_remaining<1:
                 break
-        file=open(path_out + '/script.txt','w')
+        file=open(path_file_out,'w')
         file.write(output)
         file.close()
 
