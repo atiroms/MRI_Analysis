@@ -58,9 +58,10 @@ class InsertST_PED():
 
 class SubsetBIDS():
     def __init__(self,
-        subset_ses={'ses-01','ses-02'},
-        subset_T1only=True,
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/09_boldexist'
+        ses_remain={'ses-01','ses-02'}, # sessions not deleted 
+        delete_T1only=True,
+        #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/09_boldexist'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output'
         ):
 
         list_dir_all = os.listdir(path_exp)
@@ -72,11 +73,11 @@ class SubsetBIDS():
                 for dir_ses in list_dir_ses:
                     path_ses=path_sub +'/' + dir_ses
                     delete_ses=False
-                    if subset_T1only:
+                    if delete_T1only:
                         list_dir_modality=os.listdir(path_ses)
                         if not 'func' in list_dir_modality:
                             delete_ses=True
-                    if not dir_ses in subset_ses:
+                    if not dir_ses in ses_remain:
                         delete_ses=True
                     if delete_ses:
                         shutil.rmtree(path_ses)
