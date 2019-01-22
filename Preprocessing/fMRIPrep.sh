@@ -96,3 +96,6 @@ fmriprep-docker /media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial /med
 
 ## test with 5 subs, simple procedure re-run
 fmriprep-docker /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/09_removeinitial /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/17_fmriprep_simple/output participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid='1mm' --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/17_fmriprep_simple\nStart time: 20190121_2040" | sendmail atirom.umusus@gmail.com
+
+## same as above except ICA-AROMA
+fmriprep-docker /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/09_removeinitial /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/20_fmriprep_simple_aroma/output participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/20_fmriprep_simple_aroma\nStart time: 20190122_1030" | sendmail atirom.umusus@gmail.com
