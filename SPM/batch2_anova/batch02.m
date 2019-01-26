@@ -13,9 +13,9 @@
 
 %path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM2';
 %path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM3';
-path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM5';
+path_home='F:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM\SPM5';
 %path_clinicaldata='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/Info/ClinicalData.csv';
-path_clinicaldata='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/Info/ClinicalData.csv';
+path_clinicaldata='F:\MRI\pnTTC\Prosociality_DC_Dr_Okada\Info\ClinicalData.csv';
 clinical_data=readtable(path_clinicaldata);
 
 rois=[1,2,3,4,5,6,7,8];
@@ -30,7 +30,8 @@ n_sibling_groups=length(sibling_groups);
 
 for model=models
     %jobfile = {'/home/atiroms/Documents/GitHub/MRI_Analysis/SPM/batch2_anova/batch02_model2_job.m'};
-    jobfile = {join(['/home/atiroms/Documents/GitHub/MRI_Analysis/SPM/batch2_anova/batch02_model',num2str(model),'_job.m'])};
+    %jobfile = {join(['/home/atiroms/Documents/GitHub/MRI_Analysis/SPM/batch2_anova/batch02_model',num2str(model),'_job.m'])};
+    jobfile = {join([' D:\atiroms\GitHub\MRI_Analysis\SPM\batch2_anova\batch02_model',num2str(model),'_job.m'])};
     jobs = repmat(jobfile, 1, n_rois);
     inputs = cell(5, n_rois);
     
