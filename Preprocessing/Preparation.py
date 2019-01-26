@@ -1,6 +1,6 @@
-#############
-# LIBRARIES #
-#############
+##################################################
+# Libraries
+##################################################
 
 import os
 import shutil
@@ -8,11 +8,11 @@ import pandas as pd
 import csv
 import nilearn.image as nl_image
 import json
+import numpy as np
 
-
-####################################################
-# INSERT SLICE TIMING AND PHASE ENCODING DIRECTION #
-####################################################
+##################################################
+# Insert slice timing and phase encoding direction
+##################################################
 # fMRIPrep preparation
 # Insert slice timing and phase encoding direction data to BIDS JSON file to use in fMRIPrep
 
@@ -50,9 +50,9 @@ class InsertST_PED():
         print('All done.')
 
 
-########################
-# SUBSET BIDS SUBJECTS #
-########################
+##################################################
+# Subset BIDS subjects
+##################################################
 # fMRIPrep preparation
 # Subset BIDS subjects according to available sessions or scans
 
@@ -110,9 +110,9 @@ class SubsetBIDS():
                 cnt_row+=1
 
 
-#######################
-# SUBSET BIDS VOLUMES #
-#######################
+##################################################
+# Subset BIDS volumes
+##################################################
 # fMRIPrep preparation
 # Remove initial volumes from BIDS data
 
@@ -143,9 +143,9 @@ class SubsetVolume():
         print('All done.')
 
 
-###################################
-# PICUP AND COPY FREESURFER FILES #
-###################################
+##################################################
+# Pickup and copy FreeSurfer files
+##################################################
 # fMRIPrep preparation
 # Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
 
@@ -168,9 +168,9 @@ class Fs2Fmriprep():
         print('All done.')
 
 
-###################
-# XCP COHORT FILE #
-###################
+##################################################
+# XCP cohort file
+##################################################
 # XCP prepataion
 # Create cohort file required for xcp.
 
@@ -208,9 +208,9 @@ class CreateCohortfile():
         print('All done.')
 
 
-###############################
-# MOVE ANAT FOLDER BEFORE XCP #
-###############################
+##################################################
+# Move anat folder
+##################################################
 # XCP preparation
 # move anat files in freesurfer output as workaround of xcp file reading error.
 
@@ -231,10 +231,47 @@ class MoveAnat():
         print('All done.')
 
 
-############################
-# CHANGE FOLDER PERMISSION #
-############################
-## DOES NOT WORK
+##################################################
+# Space ID file
+##################################################
+# MRIQC data merging with CSUB file
+# used to space skipped IDs.
+
+class SpaceIDFile():
+    def __init__(self,
+        #path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_T1w.tsv',
+        #path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_T1w_spaced.tsv',
+        path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_bold.tsv',
+        path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_bold_spaced.tsv',
+        colname_id_input='bids_name',
+        prefix_id_input='sub-',
+        #suffix_id_input='_ses-01_T1w'
+        suffix_id_input='_ses-01_task-rest_bold'
+        ):
+
+        df=pd.read_csv(path_file_input, delimiter='\t')
+        #col_id=df.loc[:,colname_id_input]
+        df['ID_pnTTC']=df.apply(lambda x: int(x.loc[colname_id_input].replace(prefix_id_input,'').replace(suffix_id_input,'')),axis=1)
+        list_id_input=list(df['ID_pnTTC'])
+        list_id_output=list(range(min(list_id_input),max(list_id_input)+1,1))
+        list_id_diff=list(set(list_id_output)-set(list_id_input))
+        list_id_diff.sort()
+        df_space=pd.DataFrame(np.nan,columns=df.columns,index=range(len(list_id_diff)))
+        df_space['ID_pnTTC']=list_id_diff
+        df=pd.concat([df,df_space])
+        df=df.sort_values(by='ID_pnTTC')
+        cols_df=df.columns.tolist()
+        cols_df.remove('ID_pnTTC')
+        cols_df=['ID_pnTTC'] +cols_df
+        df=df[cols_df]
+        df.to_csv(path_file_output,sep='\t',index=False)
+        print('All done.')
+
+
+##################################################
+# Change folder permission
+##################################################
+# !DOES NOT WORK!
 
 class FolderPermission():
     def __init__(self,
@@ -242,6 +279,7 @@ class FolderPermission():
         #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test',
         permission=0o775
         ):
+
         #oct(os.stat(path_input).st_mode)[-3:]
         print('File: '+ path_input)
         print('Permission: '+oct(os.stat(path_input).st_mode)[-3:])
