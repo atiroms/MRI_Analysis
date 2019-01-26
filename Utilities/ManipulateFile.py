@@ -46,9 +46,11 @@ class CheckFreesurfer():
     def __init__(self):
         ############
         # Parameters
-        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
+        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output'
         string_log_ok='finished without error at'
-        file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/check_freesurfer.csv'
+        #file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/check_freesurfer.csv'
+        file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_checkfreesurfer.csv'
         ############
 
         list_dir_all = os.listdir(path_exp)
@@ -63,7 +65,7 @@ class CheckFreesurfer():
                 log_ok=1
             else:
                 log_ok=0
-                list_log_error=list_log_error.append(sub)
+                list_log_error.append(sub)
             df_out=df_out.append(pd.Series([sub,log_ok,self.get_dir_size(path=os.path.join(path_exp,sub))],index=df_out.columns),ignore_index=True)
         df_out.to_csv(file_output,index=False)
         print('Total FreeSurfer subject folders: ' + str(len(list_sub)))
