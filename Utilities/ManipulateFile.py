@@ -37,21 +37,21 @@ class PickupFile():
         print('Finished file pick-up.')
 
 
-####################
-# CHECK FREESURFER #
-####################
+
+##################################################
+# Check FreeSurfer files
+##################################################
 # Check FreeSurfer folder for subject list, error log and folder size.
 
 class CheckFreesurfer():
-    def __init__(self):
-        ############
-        # Parameters
-        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon'
-        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output'
-        string_log_ok='finished without error at'
+    def __init__(self,
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output',
+        path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/output',
+        string_log_ok='finished without error at',
         #file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/check_freesurfer.csv'
-        file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_checkfreesurfer.csv'
-        ############
+        file_output='/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/log/12_checkfreesurfer.csv'
+        ):
 
         list_dir_all = os.listdir(path_exp)
         list_sub = [d for d in list_dir_all if (os.path.isdir(os.path.join(path_exp,d)) and not d.startswith('fsaverage'))]
@@ -59,6 +59,7 @@ class CheckFreesurfer():
         df_out=pd.DataFrame(columns=['sub','log','size'])
         list_log_error=[]
         for sub in list_sub:
+            print('Checking subject '+ str(sub)+ ' ...')
             with open(os.path.join(path_exp,sub,'scripts/recon-all.log'),'r') as file_log:
                 text_log=file_log.read()
             if string_log_ok in text_log:
