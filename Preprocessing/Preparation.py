@@ -21,7 +21,8 @@ class InsertST_PED():
         TR=2.5,
         n_slices=40,
         PED='j-',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output',
         sessions=['ses-01','ses-02']
         ):
 
@@ -151,9 +152,12 @@ class SubsetVolume():
 
 class Fs2Fmriprep():
     def __init__(self,
-        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
-        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/input/id_5sub.txt',
+        #path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
+        #path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output/freesurfer'
         ):
 
         with open(path_file_id, 'r') as list_id:
@@ -165,6 +169,10 @@ class Fs2Fmriprep():
             path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
             shutil.copytree(path_folder_in,path_folder_out)
             print('Copied and renamed '+ path_folder_in + '.')
+        path_folder_in=os.path.join(path_in,'fsaverage')
+        path_folder_out=os.path.join(path_out,'fsaverage')
+        shutil.copytree(path_folder_in,path_folder_out)
+        print('Copied '+ path_folder_in + '.')
         print('All done.')
 
 
