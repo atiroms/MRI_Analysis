@@ -13,9 +13,10 @@
 
 %path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM2';
 %path_home='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/SPM/SPM3';
-path_home='F:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM\SPM5';
+%path_home='F:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM\SPM5';
+path_home='P:\MRI\pnTTC\Prosociality_DC_Dr_Okada\SPM\SPM6';
 %path_clinicaldata='/media/veracrypt2/MRI/pnTTC/Prosociality_DC_Dr_Okada/Info/ClinicalData.csv';
-path_clinicaldata='F:\MRI\pnTTC\Prosociality_DC_Dr_Okada\Info\ClinicalData.csv';
+path_clinicaldata='P:\MRI\pnTTC\Prosociality_DC_Dr_Okada\Info\ClinicalData.csv';
 clinical_data=readtable(path_clinicaldata);
 
 rois=[1,2,3,4,5,6,7,8];
