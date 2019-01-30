@@ -107,19 +107,6 @@ fmriprep-docker /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output /
 # need to copy freesurfer license file to /log
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/26_fmriprep_latest\nStart time: 20190129_2108" | sendmail atirom.umusus@gmail.com
 
-
-# misc
- ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.simg \
-  /work/my_dataset/ /work/my_dataset/derivatives/fmriprep \
-  participant \
-  --participant-label 387 --nthreads 16 \
-  --omp-nthreads 16
-
-
-singularity run --cleanenv -B /work:/work ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.simg \
-  /work/my_dataset/ /work/my_dataset/derivatives/fmriprep \
-  participant \
-  --participant-label 387 --nthreads 16 \
-  --omp-nthreads 16
-
-singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/input/fc-aroma_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/22_xcp_aroma_aromain\nStart time: 20190122_1850" | sendmail atirom.umusus@gmail.com
+## same as above except using SyN
+# need to copy freesurfer license file to /log
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/29_fmriprep_latest_syn:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-syn-sdc --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/29_fmriprep_latest_syn\nStart time: 20190131_0841" | sendmail atirom.umusus@gmail.com
