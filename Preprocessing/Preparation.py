@@ -265,7 +265,7 @@ class SpaceIDFile():
         #col_id=df.loc[:,colname_id_input]
         df['ID_pnTTC']=df.apply(lambda x: int(x.loc[colname_id_input].replace(prefix_id_input,'').replace(suffix_id_input,'')),axis=1)
         list_id_input=list(df['ID_pnTTC'])
-        list_id_output=list(range(min(list_id_input),max(list_id_input)+1,1))
+        list_id_output=list(range(1,max(list_id_input)+1,1))
         list_id_diff=list(set(list_id_output)-set(list_id_input))
         list_id_diff.sort()
         df_space=pd.DataFrame(np.nan,columns=df.columns,index=range(len(list_id_diff)))
