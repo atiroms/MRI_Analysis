@@ -190,10 +190,10 @@ class CreateCohortfile():
     def __init__(self,
         #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
         #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/id.txt',
-        #suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
-        suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p/input/func_cohort.csv',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p/log/id_5sub.txt',
+        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+        #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
         #dir_input='16_fmriprep_newfs'
         ):
@@ -207,7 +207,7 @@ class CreateCohortfile():
         output_func=pd.DataFrame(columns=['id0','img'])
         for index in list_id:
             output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
-                                                      'fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
+                                                      'input/fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
                                                      index=output_anat.columns),
                                            ignore_index=True)
             output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
@@ -216,7 +216,7 @@ class CreateCohortfile():
                                                      index=output_func.columns),
                                            ignore_index=True)
         #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
-        output_func.to_csv(os.path.join(path_out,'func_cohort.csv'),index=False)
+        output_func.to_csv(path_file_out,index=False)
         print('All done.')
 
 
@@ -228,7 +228,8 @@ class CreateCohortfile():
 
 class MoveAnat():
     def __init__(self,
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p/input/fmriprep'
         ):
 
         list_dir_all = os.listdir(path_exp)

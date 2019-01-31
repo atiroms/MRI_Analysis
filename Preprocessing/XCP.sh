@@ -47,3 +47,6 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/21_xcp_aroma:${
 
 # with fMRIPrep ICA-AROMA
 singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain:${HOME}/data /data/applications/xcpEngine.simg -d ${HOME}/data/input/fc-aroma_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/22_xcp_aroma_aromain\nStart time: 20190122_1850" | sendmail atirom.umusus@gmail.com
+
+## re-run with new fmriprep data, latest singularity image
+singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/30_xcp_36p\nStart time: 20190131_1714" | sendmail atirom.umusus@gmail.com
