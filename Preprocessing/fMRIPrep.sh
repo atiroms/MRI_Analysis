@@ -110,3 +110,7 @@ singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_f
 ## same as above except using SyN
 # need to copy freesurfer license file to /log
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/29_fmriprep_latest_syn:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-syn-sdc --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/29_fmriprep_latest_syn\nStart time: 20190131_0841" | sendmail atirom.umusus@gmail.com
+
+## same as above except output without T1w space
+# need to copy freesurfer license file to /log
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/29_fmriprep_latest_syn:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-syn-sdc --use-aroma --output-space template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/29_fmriprep_latest_syn\nStart time: 20190131_0841" | sendmail atirom.umusus@gmail.com
