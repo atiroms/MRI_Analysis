@@ -50,3 +50,10 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_ar
 
 ## re-run with new fmriprep data, latest singularity image
 singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/30_xcp_36p\nStart time: 20190131_1714" | sendmail atirom.umusus@gmail.com
+
+## same as above, except using native space fmriprep data as input
+singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/32_xcp_36p_nativein:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/32_xcp_36p_nativein\nStart time: 20190202_1440" | sendmail atirom.umusus@gmail.com
+
+## same as above, except using template space fmriprep data, processed only for the space, and using --cleanenv 
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/33_xcp_36p_templatein\nStart time: 20190202_1450" | sendmail atirom.umusus@gmail.com
+

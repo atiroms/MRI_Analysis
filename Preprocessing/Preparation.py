@@ -190,14 +190,15 @@ class CreateCohortfile():
     def __init__(self,
         #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
         #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p/input/func_cohort.csv',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p/log/id_5sub.txt',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/func_cohort.csv',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/log/id_5sub.txt',
         suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
         #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
         #dir_input='16_fmriprep_newfs'
         ):
 
+        print('Starting to create XCP cohort file.')
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[int(x.strip('\n')) for x in list_id]
@@ -217,7 +218,7 @@ class CreateCohortfile():
                                            ignore_index=True)
         #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
         output_func.to_csv(path_file_out,index=False)
-        print('All done.')
+        print('Finished creating XCP cohort file.')
 
 
 ##################################################
@@ -229,9 +230,10 @@ class CreateCohortfile():
 class MoveAnat():
     def __init__(self,
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p/input/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/fmriprep'
         ):
 
+        print('Starting to move fMRIPrep anat folder contents.')
         list_dir_all = os.listdir(path_exp)
         list_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_exp,d)) and d.startswith('sub-')]
         list_sub.sort()
@@ -241,7 +243,71 @@ class MoveAnat():
             for f in os.listdir(path_from):
                 shutil.move(os.path.join(path_from,f),path_to)
             print('Moved ' + sub + '/anat contents.')
-        print('All done.')
+        
+        print('Finished moving fMRIPrep anat folder contents.')
+
+
+##################################################
+# XCP preparation
+##################################################
+# joining the above two classes and some more
+
+class XCPPrep():
+    def __init__(self,
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein',
+        file_id='id_5sub.txt',
+        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
+        #path_file_design='fc-36p_fconly.dsn'
+        path_file_design='fc-36p_fconly_old.dsn'
+        ):
+
+        print('Starting XCP preparation.')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_exp)
+        for d in ['input','output']:
+            list_paths_mkdir.append(os.path.join(path_exp,d))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy fmriprep log file
+        print('Starting to copy fMRIPrep log folder.')
+        path_log_in=os.path.join(path_fmriprep,'log')
+        path_log_out=os.path.join(path_exp,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying fMRIPrep log folder.')
+
+        # Create XCP cohor file
+        _=CreateCohortfile(path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
+                           path_file_id=os.path.join(path_exp,'log',file_id),
+                           suffix_file=suffix_img)
+
+        # Copy fMRIPrep preprocessed data to /input folder
+        # !extremely slow and disabled
+        #print('Starting to copy fMRIPrep folder.')
+        #path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
+        #path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
+        #shutil.copytree(path_fmriprep_in,path_fmriprep_out)
+        #print('Finished copying fmriprep folder.')
+
+        # Move fmriprep /anat folder contents (workaround of XCP bug)
+        _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
+
+        # Copy XCP design file from GitHub repsitory
+        print('Starting to copy XCP design file')
+        path_dsn_in=os.path.join(path_folder_design,path_file_design)
+        path_dsn_out=os.path.join(path_exp,'input',path_file_design)
+        shutil.copy(path_dsn_in,path_dsn_out)
+        print('Finished copying XCP design file')
+
+        print('Finished XCP preparation')
 
 
 ##################################################
