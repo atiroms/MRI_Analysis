@@ -1,6 +1,6 @@
-#############
-# LIBRARIES #
-#############
+##################################################
+# Libraries
+##################################################
 
 import os
 import shutil
@@ -8,11 +8,13 @@ import pandas as pd
 import csv
 import nilearn.image as nl_image
 import json
+import numpy as np
+import pydicom
 
 
-####################################################
-# INSERT SLICE TIMING AND PHASE ENCODING DIRECTION #
-####################################################
+##################################################
+# Insert slice timing and phase encoding direction
+##################################################
 # fMRIPrep preparation
 # Insert slice timing and phase encoding direction data to BIDS JSON file to use in fMRIPrep
 
@@ -21,7 +23,8 @@ class InsertST_PED():
         TR=2.5,
         n_slices=40,
         PED='j-',
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/02_slicetiming',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output',
         sessions=['ses-01','ses-02']
         ):
 
@@ -50,9 +53,9 @@ class InsertST_PED():
         print('All done.')
 
 
-########################
-# SUBSET BIDS SUBJECTS #
-########################
+##################################################
+# Subset BIDS subjects
+##################################################
 # fMRIPrep preparation
 # Subset BIDS subjects according to available sessions or scans
 
@@ -110,9 +113,9 @@ class SubsetBIDS():
                 cnt_row+=1
 
 
-#######################
-# SUBSET BIDS VOLUMES #
-#######################
+##################################################
+# Subset BIDS volumes
+##################################################
 # fMRIPrep preparation
 # Remove initial volumes from BIDS data
 
@@ -121,7 +124,7 @@ class SubsetVolume():
         n_removevol=10,
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_1sub/14_removeinitial'
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/test_5sub/09_removeinitial'
-        path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/07_removeinitial'        
+        path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output'        
         ):
 
         list_dir_all = os.listdir(path_exp)
@@ -143,17 +146,22 @@ class SubsetVolume():
         print('All done.')
 
 
-###################################
-# PICUP AND COPY FREESURFER FILES #
-###################################
+##################################################
+# Pickup and copy FreeSurfer files
+##################################################
 # fMRIPrep preparation
 # Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
 
 class Fs2Fmriprep():
     def __init__(self,
-        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
-        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/input/id_5sub.txt',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/input/id_5sub.txt',
+        #path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
+        #path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output/freesurfer'
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/output/freesurfer'
         ):
 
         with open(path_file_id, 'r') as list_id:
@@ -165,12 +173,16 @@ class Fs2Fmriprep():
             path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
             shutil.copytree(path_folder_in,path_folder_out)
             print('Copied and renamed '+ path_folder_in + '.')
+        path_folder_in=os.path.join(path_in,'fsaverage')
+        path_folder_out=os.path.join(path_out,'fsaverage')
+        shutil.copytree(path_folder_in,path_folder_out)
+        print('Copied '+ path_folder_in + '.')
         print('All done.')
 
 
-###################
-# XCP COHORT FILE #
-###################
+##################################################
+# XCP cohort file
+##################################################
 # XCP prepataion
 # Create cohort file required for xcp.
 
@@ -178,14 +190,15 @@ class CreateCohortfile():
     def __init__(self,
         #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
         #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input/id.txt',
-        #suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
-        suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/func_cohort.csv',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/log/id_5sub.txt',
+        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+        #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
         #dir_input='16_fmriprep_newfs'
         ):
 
+        print('Starting to create XCP cohort file.')
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[int(x.strip('\n')) for x in list_id]
@@ -195,7 +208,7 @@ class CreateCohortfile():
         output_func=pd.DataFrame(columns=['id0','img'])
         for index in list_id:
             output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
-                                                      'fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
+                                                      'input/fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
                                                      index=output_anat.columns),
                                            ignore_index=True)
             output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
@@ -204,22 +217,23 @@ class CreateCohortfile():
                                                      index=output_func.columns),
                                            ignore_index=True)
         #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
-        output_func.to_csv(os.path.join(path_out,'func_cohort.csv'),index=False)
-        print('All done.')
+        output_func.to_csv(path_file_out,index=False)
+        print('Finished creating XCP cohort file.')
 
 
-###############################
-# MOVE ANAT FOLDER BEFORE XCP #
-###############################
+##################################################
+# Move anat folder
+##################################################
 # XCP preparation
 # move anat files in freesurfer output as workaround of xcp file reading error.
 
 class MoveAnat():
     def __init__(self,
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/18_xcp_templatein/input/fmriprep'
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/19_xcp_nativein/input/fmriprep'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/fmriprep'
         ):
 
+        print('Starting to move fMRIPrep anat folder contents.')
         list_dir_all = os.listdir(path_exp)
         list_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_exp,d)) and d.startswith('sub-')]
         list_sub.sort()
@@ -229,12 +243,177 @@ class MoveAnat():
             for f in os.listdir(path_from):
                 shutil.move(os.path.join(path_from,f),path_to)
             print('Moved ' + sub + '/anat contents.')
+        
+        print('Finished moving fMRIPrep anat folder contents.')
+
+
+##################################################
+# XCP preparation
+##################################################
+# joining the above two classes and some more
+
+class XCPPrep():
+    def __init__(self,
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein',
+        file_id='id_5sub.txt',
+        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+        path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
+        #path_file_design='fc-36p_fconly.dsn'
+        path_file_design='fc-36p_fconly_old.dsn'
+        ):
+
+        print('Starting XCP preparation.')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_exp)
+        for d in ['input','output']:
+            list_paths_mkdir.append(os.path.join(path_exp,d))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy fmriprep log file
+        print('Starting to copy fMRIPrep log folder.')
+        path_log_in=os.path.join(path_fmriprep,'log')
+        path_log_out=os.path.join(path_exp,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying fMRIPrep log folder.')
+
+        # Create XCP cohor file
+        _=CreateCohortfile(path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
+                           path_file_id=os.path.join(path_exp,'log',file_id),
+                           suffix_file=suffix_img)
+
+        # Copy fMRIPrep preprocessed data to /input folder
+        # !extremely slow and disabled
+        #print('Starting to copy fMRIPrep folder.')
+        #path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
+        #path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
+        #shutil.copytree(path_fmriprep_in,path_fmriprep_out)
+        #print('Finished copying fmriprep folder.')
+
+        # Move fmriprep /anat folder contents (workaround of XCP bug)
+        _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
+
+        # Copy XCP design file from GitHub repsitory
+        print('Starting to copy XCP design file')
+        path_dsn_in=os.path.join(path_folder_design,path_file_design)
+        path_dsn_out=os.path.join(path_exp,'input',path_file_design)
+        shutil.copy(path_dsn_in,path_dsn_out)
+        print('Finished copying XCP design file')
+
+        print('Finished XCP preparation')
+
+
+##################################################
+# Space ID file
+##################################################
+# MRIQC data merging with CSUB file
+# used to space skipped IDs.
+
+class SpaceIDFile():
+    def __init__(self,
+        #path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_T1w.tsv',
+        #path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_T1w_spaced.tsv',
+        path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_bold.tsv',
+        path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_bold_spaced.tsv',
+        colname_id_input='bids_name',
+        prefix_id_input='sub-',
+        #suffix_id_input='_ses-01_T1w'
+        suffix_id_input='_ses-01_task-rest_bold'
+        ):
+
+        df=pd.read_csv(path_file_input, delimiter='\t')
+        #col_id=df.loc[:,colname_id_input]
+        df['ID_pnTTC']=df.apply(lambda x: int(x.loc[colname_id_input].replace(prefix_id_input,'').replace(suffix_id_input,'')),axis=1)
+        list_id_input=list(df['ID_pnTTC'])
+        list_id_output=list(range(1,max(list_id_input)+1,1))
+        list_id_diff=list(set(list_id_output)-set(list_id_input))
+        list_id_diff.sort()
+        df_space=pd.DataFrame(np.nan,columns=df.columns,index=range(len(list_id_diff)))
+        df_space['ID_pnTTC']=list_id_diff
+        df=pd.concat([df,df_space])
+        df=df.sort_values(by='ID_pnTTC')
+        cols_df=df.columns.tolist()
+        cols_df.remove('ID_pnTTC')
+        cols_df=['ID_pnTTC'] +cols_df
+        df=df[cols_df]
+        df.to_csv(path_file_output,sep='\t',index=False)
         print('All done.')
 
 
-############################
-# CHANGE FOLDER PERMISSION #
-############################
+##################################################
+# Extract DICOM header metadata
+##################################################
+# used to extract scan date information
+
+class ExtractDcmHeader():
+    def __init__(self,
+        path_file_in='P:/MRI/pnTTC/Preproc/00_dicom_ses12_exist/pnTTC2_T1/CSUB-00003C-02/IM-0001-0001-0001.dcm'
+        ):
+
+        img_in=pydicom.read_file(path_file_in)
+        df_header=pd.DataFrame(columns=['tag','name','value'])
+        for element in img_in:
+            df_header=df_header.append(pd.Series([str(element.tag),element.name,element.repval],index=df_header.columns),ignore_index=True)
+        self.output=df_header
+        #print('DICOM element count: '+ str(len(df_header)))
+        #print('All done.')
+
+class ExtractMltDcmHeader():
+    def __init__(self,
+        path_exp='P:/MRI/pnTTC/Preproc/test_5sub/27_dicom_ses2_t1w/output',
+        #path_exp='P:/MRI/pnTTC/Preproc/00_dicom_ses12_exist/pnTTC1_T1',
+        #path_exp='P:/MRI/pnTTC/Preproc/00_dicom_ses12_exist/pnTTC2_T1',
+        path_file_output='P:/MRI/pnTTC/Preproc/test_5sub/28_header_date_ses2_t1w/output/dcmheader.csv',
+        #path_file_output='P:/MRI/pnTTC/Preproc/18_acquisitiondate_t1w/output/dcmheader_ses1.csv',
+        #path_file_output='P:/MRI/pnTTC/Preproc/18_acquisitiondate_t1w/output/dcmheader_ses2.csv',
+        keys=['Acquisition Date'],
+        prefix_dir_sub='CSUB-',
+        #suffix_dir_sub='C-01'
+        suffix_dir_sub='C-02'
+        ):
+
+        list_dir_sub = os.listdir(path_exp)
+        list_dir_sub.sort()
+        df_header_mlt=pd.DataFrame(columns=['ID_pnTTC','dir_sub','key','value'])
+        for dir_sub in list_dir_sub:
+            ID_pnTTC=int(dir_sub.replace(prefix_dir_sub,'').replace(suffix_dir_sub,''))
+            list_img=os.listdir(os.path.join(path_exp,dir_sub))
+            list_img=[img for img in list_img if img.startswith('IM-')]
+            list_img.sort()
+            path_firstimg=os.path.join(path_exp,dir_sub,list_img[0])
+            df_header_firstimg=ExtractDcmHeader(path_firstimg).output
+            for key in keys:
+                value=df_header_firstimg.loc[df_header_firstimg['name']==key,'value'].values[0]
+                df_header_mlt=df_header_mlt.append(pd.Series([ID_pnTTC,dir_sub,key,value],index=df_header_mlt.columns),ignore_index=True)
+            print('Checked directory ' + dir_sub + '.')
+        
+        #df_header_mlt.to_csv(path_file_output,index=False)
+
+        list_id_input=list(df_header_mlt['ID_pnTTC'])
+        list_id_output=list(range(1,max(list_id_input)+1,1))
+        list_id_diff=list(set(list_id_output)-set(list_id_input))
+        list_id_diff.sort()
+        df_space=pd.DataFrame(np.nan,columns=df_header_mlt.columns,index=range(len(list_id_diff)))
+        df_space['ID_pnTTC']=list_id_diff
+        df_header_mlt=pd.concat([df_header_mlt,df_space])
+        df_header_mlt=df_header_mlt.sort_values(by='ID_pnTTC')
+
+        df_header_mlt.to_csv(path_file_output,index=False)
+
+        print('All done.')
+
+
+##################################################
+# Change folder permission
+##################################################
+# !DOES NOT WORK!
 
 class FolderPermission():
     def __init__(self,
@@ -242,6 +421,7 @@ class FolderPermission():
         #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test',
         permission=0o775
         ):
+
         #oct(os.stat(path_input).st_mode)[-3:]
         print('File: '+ path_input)
         print('Permission: '+oct(os.stat(path_input).st_mode)[-3:])

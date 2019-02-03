@@ -99,3 +99,18 @@ fmriprep-docker /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/09_removeinitial /
 
 ## same as above except ICA-AROMA
 fmriprep-docker /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/09_removeinitial /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/20_fmriprep_simple_aroma/output participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/20_fmriprep_simple_aroma\nStart time: 20190122_1030" | sendmail atirom.umusus@gmail.com
+
+## re-run from the beginning add --write-graph version 1.2.5
+fmriprep-docker /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output participant --fs-license-file /usr/local/freesurfer/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/25_fmriprep\nStart time: 20190129_1847" | sendmail atirom.umusus@gmail.com
+
+## same as above with singularity image ver 1.2.6-1
+# need to copy freesurfer license file to /log
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/26_fmriprep_latest\nStart time: 20190129_2108" | sendmail atirom.umusus@gmail.com
+
+## same as above except using SyN
+# need to copy freesurfer license file to /log
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/29_fmriprep_latest_syn:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-syn-sdc --use-aroma --output-space T1w template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/29_fmriprep_latest_syn\nStart time: 20190131_0841" | sendmail atirom.umusus@gmail.com
+
+## same as above except output without T1w space
+# need to copy freesurfer license file to /log
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='1mm' --use-syn-sdc --use-aroma --output-space template fsaverage --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/31_fmriprep_latest_syn_templateout\nStart time: 20190131_1806" | sendmail atirom.umusus@gmail.com
