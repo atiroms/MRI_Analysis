@@ -8,6 +8,15 @@ import glob
 import numpy as numpy
 import pandas as pd
 
+def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
+    """Patches shutil method to hugely improve copy speed"""
+    while 1:
+        buf = fsrc.read(length)
+        if not buf:
+            break
+        fdst.write(buf)
+shutil.copyfileobj = _copyfileobj_patched
+
 ###############
 # PICKUP FILE #
 ###############

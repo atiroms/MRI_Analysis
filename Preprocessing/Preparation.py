@@ -11,6 +11,15 @@ import json
 import numpy as np
 import pydicom
 
+def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
+    """Patches shutil method to hugely improve copy speed"""
+    while 1:
+        buf = fsrc.read(length)
+        if not buf:
+            break
+        fdst.write(buf)
+shutil.copyfileobj = _copyfileobj_patched
+
 
 ##################################################
 # Insert slice timing and phase encoding direction
@@ -290,12 +299,11 @@ class XCPPrep():
                            suffix_file=suffix_img)
 
         # Copy fMRIPrep preprocessed data to /input folder
-        # !extremely slow and disabled
-        #print('Starting to copy fMRIPrep folder.')
-        #path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
-        #path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
-        #shutil.copytree(path_fmriprep_in,path_fmriprep_out)
-        #print('Finished copying fmriprep folder.')
+        print('Starting to copy fMRIPrep folder.')
+        path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
+        path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
+        shutil.copytree(path_fmriprep_in,path_fmriprep_out)
+        print('Finished copying fmriprep folder.')
 
         # Move fmriprep /anat folder contents (workaround of XCP bug)
         _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
