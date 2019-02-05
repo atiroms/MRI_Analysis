@@ -5,7 +5,7 @@
 
 #### Parameters ####
 
-common_dir<-file.path(parent_dir,"DropBox/MRI/Statistics/CommonData")
+common_dir<-file.path(parent_dir,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
 clinical_file <- "CSUB.csv"
 
 

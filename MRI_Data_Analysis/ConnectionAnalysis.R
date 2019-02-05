@@ -8,10 +8,18 @@
 #### Parameters ####
 
 #parent_dir <- "D:/atiroms"
-parent_dir <- "C:/Users/atiro"
+#parent_dir <- "C:/Users/atiro"
+list_parent_dir <- c("D:/atiroms","C:/Users/atiro")
+for(dir in list_parent_dir){
+  if(file.exists(dir)){
+    parent_dir<-dir
+  }
+}
+
 
 script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
-input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
+#input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/Connection")
+input_dir <- file.path(parent_dir,"DropBox/MRI/pnTTC/Puberty/Statistics")
 output_dir <- file.path(input_dir,"Connection_data")
 
 connection_file <- "W1_HO_FC.csv"

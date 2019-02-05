@@ -5,7 +5,7 @@
 
 #### Parameters ####
 
-common_dir<-file.path(parent_dir,"DropBox/MRI/Statistics/CommonData")
+common_dir<-file.path(parent_dir,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
 roi_file <- "ROI.csv"
 
 
@@ -25,7 +25,7 @@ as.numeric.factor <- function(x) {
 
 #### ID Converter ####
 
-roi_data<-read.csv(file.path(common_dir,roi_file))
+roi_dict<-read.csv(file.path(common_dir,roi_file))
 
 ConvertID<-function(input,dict,from_type,to_type){
   from_vec<-as.character(dict[,which(names(dict)==from_type)])
@@ -53,9 +53,9 @@ ConvertID<-function(input,dict,from_type,to_type){
 
 ##### Directory Organization ####
 
-if (!file.exists(output_dir)){
-  dir.create(file.path(output_dir))
-}
+#if (!file.exists(output_dir)){
+#  dir.create(file.path(output_dir))
+#}
 
 ExpDir<-function(exptype){
   timestamp <- strftime(Sys.time(),"%Y%m%d_%H%M%S")
@@ -78,9 +78,9 @@ CalcCorr<-function(input, dirname, fileprefix, plot=T,save=T){
     for (j in (i+1):n_node){
       k<-k+1
       corr_flat[k,1:4]<-c(rownames(corr$r)[i],
-                       ConvertID(rownames(corr$r)[i],roi_data,"ID_long","label_proper"),
+                       ConvertID(rownames(corr$r)[i],roi_dict,"ID_long","label_proper"),
                        colnames(corr$r)[j],
-                       ConvertID(colnames(corr$r)[j],roi_data,"ID_long","label_proper"))
+                       ConvertID(colnames(corr$r)[j],roi_dict,"ID_long","label_proper"))
       corr_flat[k,5:6]<-c(corr$r[i,j],
                           corr$P[i,j])
     }
