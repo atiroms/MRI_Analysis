@@ -266,12 +266,12 @@ class XCPPrep():
     def __init__(self,
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein',
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/37_xcp_36p_spkreg_1mm',
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/37_xcp_36p_spkreg_1mm',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_xcp_36p_spkreg_2mm',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_xcp_36p_aroma_2mm',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_xcp_36p_acompcor_2mm',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/40_xcp_aroma_2mm',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/41_xcp_acompcor_2mm',
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/36_fmriprep_latest_syn_templateout_native',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/39_xcp_36p_spkreg_native',
         file_id='id_5sub.txt',
@@ -280,9 +280,9 @@ class XCPPrep():
         path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         #path_file_design='fc-36p_fconly.dsn'
         #path_file_design='fc-36p_fconly_old.dsn'
-        path_file_design='fc-36p_spkreg_fconly.dsn'
+        #path_file_design='fc-36p_spkreg_fconly.dsn'
         #path_file_design='fc-aroma_fconly.dsn'
-        #path_file_design='fc-acompcor_fconly.dsn'
+        path_file_design='fc-acompcor_fconly.dsn'
         ):
 
         print('Starting XCP preparation.')
