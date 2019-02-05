@@ -57,3 +57,13 @@ singularity run -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/32_xcp_36p_nati
 ## same as above, except using template space fmriprep data, processed only for the space, and using --cleanenv option. used to compare processing time with 30
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/33_xcp_36p_templatein\nStart time: 20190204_1212" | sendmail atirom.umusus@gmail.com
 
+
+## comparison of fmriprep output space
+## use fmriprep 1mm output space data for comparison, and try 36p spkreg design
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/37_xcp_36p_spkreg_1mm:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_spkreg_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/37_xcp_36p_spkreg_1mm\nStart time: 20190205_1330" | sendmail atirom.umusus@gmail.com
+
+## use fmriprep 2mm output space data for comparison, and try 36p spkreg design
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_xcp_36p_spkreg_2mm:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_spkreg_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/38_xcp_36p_spkreg_2mm\nStart time: 20190205_1330" | sendmail atirom.umusus@gmail.com
+
+## use fmriprep native output space data for comparison, and try 36p spkreg design
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/39_xcp_36p_spkreg_native:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_spkreg_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/39_xcp_36p_spkreg_native\nStart time: 20190205_1330" | sendmail atirom.umusus@gmail.com
