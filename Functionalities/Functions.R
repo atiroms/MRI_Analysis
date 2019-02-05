@@ -1,19 +1,18 @@
-#### Description ####
+#****************************************
+# Description ===========================
+#****************************************
 
-# R script for common MRI analysis functionalities
-
-
-#### Parameters ####
-
-common_dir<-file.path(parent_dir,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
-roi_file <- "ROI.csv"
+# R script for common MRI analysis functions
 
 
-#### Libraries ####
+#****************************************
+# Libraries =============================
+#****************************************
 library(tidyverse)
 
-
-#### Factor to Numeric Converter ####
+#****************************************
+# Factor to numeric function ============
+#****************************************
 as.numeric.factor <- function(x) {
   if (class(x)=="factor"){
     return(as.numeric(levels(x))[x])
@@ -23,10 +22,31 @@ as.numeric.factor <- function(x) {
 }
 
 
+#****************************************
+# Experiment folder preparation =========
+#****************************************
+func.createdirs<-function(paths){
+  list.createdirs<-c(paths$output,file.path(paths$output,"output"))
+  for(d in list.createdirs){
+    if (!file.exists(d)){
+      dir.create(d)
+    }
+  }
+  file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+}
+
+
+#****************************************
+# Returns ROI dictionary ================
+#****************************************
+func.dict.roi<-function(paths,
+                        file.roi="ROI.csv"){
+  output<-read.csv(file.path(paths$common,file.roi))
+  return(output)
+}
+
+
 #### ID Converter ####
-
-roi_dict<-read.csv(file.path(common_dir,roi_file))
-
 ConvertID<-function(input,dict,from_type,to_type){
   from_vec<-as.character(dict[,which(names(dict)==from_type)])
   to_vec<-as.character(dict[,which(names(dict)==to_type)])
@@ -52,10 +72,6 @@ ConvertID<-function(input,dict,from_type,to_type){
 
 
 ##### Directory Organization ####
-
-#if (!file.exists(output_dir)){
-#  dir.create(file.path(output_dir))
-#}
 
 ExpDir<-function(exptype){
   timestamp <- strftime(Sys.time(),"%Y%m%d_%H%M%S")
