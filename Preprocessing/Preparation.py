@@ -431,18 +431,21 @@ class ExtractMltDcmHeader():
 
 
 ##################################################
-# Extract XCP-processed FC data
+# Extract XCP-processed FC or TS data
 ##################################################
 
-class ExtractFC():
+class ExtractXCP():
     def __init__(self,
         path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p',
-        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/42_fc',
+        #path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/42_fc',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/43_ts',
         atlases=['aal116','glasser360','gordon333','power264','schaefer100','schaefer200','schaefer400'],
+        #suffix_result='.net',
+        suffix_result='_ts.1D',
         file_id='id_5sub.txt'
         ):
 
-        print('Starting FC extraction.')
+        print('Starting XCP result extraction.')
 
         # Create output folder
         print('Starting to create output folder.')
@@ -461,8 +464,8 @@ class ExtractFC():
         shutil.copytree(path_log_in,path_log_out)
         print('Finished copying log folder.')
 
-        # Copy fc files
-        print('Starting to copy FC files.')
+        # Copy result
+        print('Starting to copy result files.')
         path_file_id=os.path.join(path_output,'log',file_id)
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
@@ -471,14 +474,14 @@ class ExtractFC():
         for index in list_id:
             label_sub='sub-'+str(index).zfill(5)
             for atlas in atlases:
-                file_from=label_sub+'_'+atlas+'.net'
+                file_from=label_sub+'_'+atlas+suffix_result
                 path_file_from=os.path.join(path_input,'output',label_sub,'fcon',atlas,file_from)
                 path_file_to=os.path.join(path_output,'output',file_from)
                 shutil.copy(path_file_from,path_file_to)
-            print('Copied FCs for '+ label_sub)
-        print('Finished copying FC files')
+            print('Copied results for '+ label_sub)
+        print('Finished copying result files')
 
-        print('Finishd FC extraction.')
+        print('Finishd XCP result extraction.')
                 
 
 ##################################################
