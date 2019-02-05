@@ -11,6 +11,16 @@ import json
 import numpy as np
 import pydicom
 
+#def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
+def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
+    """Patches shutil method to hugely improve copy speed"""
+    while 1:
+        buf = fsrc.read(length)
+        if not buf:
+            break
+        fdst.write(buf)
+shutil.copyfileobj = _copyfileobj_patched
+
 
 ##################################################
 # Insert slice timing and phase encoding direction
@@ -254,14 +264,25 @@ class MoveAnat():
 
 class XCPPrep():
     def __init__(self,
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/37_xcp_36p_spkreg_1mm',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_xcp_36p_spkreg_2mm',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/40_xcp_aroma_2mm',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/41_xcp_acompcor_2mm',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/36_fmriprep_latest_syn_templateout_native',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/39_xcp_36p_spkreg_native',
         file_id='id_5sub.txt',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         #path_file_design='fc-36p_fconly.dsn'
-        path_file_design='fc-36p_fconly_old.dsn'
+        #path_file_design='fc-36p_fconly_old.dsn'
+        #path_file_design='fc-36p_spkreg_fconly.dsn'
+        #path_file_design='fc-aroma_fconly.dsn'
+        path_file_design='fc-acompcor_fconly.dsn'
         ):
 
         print('Starting XCP preparation.')
@@ -290,12 +311,11 @@ class XCPPrep():
                            suffix_file=suffix_img)
 
         # Copy fMRIPrep preprocessed data to /input folder
-        # !extremely slow and disabled
-        #print('Starting to copy fMRIPrep folder.')
-        #path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
-        #path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
-        #shutil.copytree(path_fmriprep_in,path_fmriprep_out)
-        #print('Finished copying fmriprep folder.')
+        print('Starting to copy fMRIPrep folder.')
+        path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
+        path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
+        shutil.copytree(path_fmriprep_in,path_fmriprep_out)
+        print('Finished copying fmriprep folder.')
 
         # Move fmriprep /anat folder contents (workaround of XCP bug)
         _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
