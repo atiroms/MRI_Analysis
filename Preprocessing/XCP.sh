@@ -67,3 +67,10 @@ singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_x
 
 ## use fmriprep native output space data for comparison, and try 36p spkreg design
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/39_xcp_36p_spkreg_native:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-36p_spkreg_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/39_xcp_36p_spkreg_native\nStart time: 20190205_1330" | sendmail atirom.umusus@gmail.com
+
+## compare different motion mitigation methods (comparison with 38)
+## ICA-AROMA
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/40_xcp_aroma_2mm:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-aroma_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/40_xcp_aroma_2mm\nStart time: 20190205_1340" | sendmail atirom.umusus@gmail.com
+
+## aCompCor
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/41_xcp_acompcor_2mm:${HOME}/data /data/applications/xcpEngine-070-20190130.simg -d ${HOME}/data/input/fc-acompcor_fconly.dsn -c ${HOME}/data/input/func_cohort.csv -o ${HOME}/data/output -t 1 -r ${HOME}/data && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/401xcp_acompcor_2mm\nStart time: 20190205_1340" | sendmail atirom.umusus@gmail.com
