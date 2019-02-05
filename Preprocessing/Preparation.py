@@ -431,6 +431,57 @@ class ExtractMltDcmHeader():
 
 
 ##################################################
+# Extract XCP-processed FC data
+##################################################
+
+class ExtractFC():
+    def __init__(self,
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/42_fc',
+        atlases=['aal116','glasser360','gordon333','power264','schaefer100','schaefer200','schaefer400'],
+        file_id='id_5sub.txt'
+        ):
+
+        print('Starting FC extraction.')
+
+        # Create output folder
+        print('Starting to create output folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating output folder.')
+
+        # Copy log folder
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        # Copy fc files
+        print('Starting to copy FC files.')
+        path_file_id=os.path.join(path_output,'log',file_id)
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+        for index in list_id:
+            label_sub='sub-'+str(index).zfill(5)
+            for atlas in atlases:
+                file_from=label_sub+'_'+atlas+'.net'
+                path_file_from=os.path.join(path_input,'output',label_sub,'fcon',atlas,file_from)
+                path_file_to=os.path.join(path_output,'output',file_from)
+                shutil.copy(path_file_from,path_file_to)
+            print('Copied FCs for '+ label_sub)
+        print('Finished copying FC files')
+
+        print('Finishd FC extraction.')
+                
+
+##################################################
 # Change folder permission
 ##################################################
 # !DOES NOT WORK!
