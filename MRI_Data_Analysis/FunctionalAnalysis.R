@@ -1,7 +1,64 @@
-#### Description ####
+#****************************************
+# Description ===========================
+#****************************************
 
 # R script to analyze ROI average BOLD signal.
 # Execute DoFC_All(), DoFC(), DoPCA_All(), DoICA_All(), DoJK()
+
+
+#****************************************
+# Parameters ============================
+#****************************************
+path.exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+dir.in   <- ""
+dir.out  <- ""
+
+
+#****************************************
+# Libraries =============================
+#****************************************
+library(Hmisc)
+library(FactoMineR)
+library(ica)
+library(tidyverse)
+
+
+#****************************************
+# Create path list ======================
+#****************************************
+func.path<-function(list.path.root = c("D:/atiroms","C:/Users/atiro"),
+                    path.exp.=path.exp,
+                    dir.in.=dir.in,
+                    dir.out.=dir.out){
+  path.root<-NA
+  for(p in list.path.root){
+    if(file.exists(p)){
+      path.root<-p
+    }
+  }
+  if(is.na(path.root)){
+    print("Error: root path could not be found.")
+  }
+  path.script <- file.path(path.root,"GitHub/MRI_Analysis")
+  path.common <- file.path(path.root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path.in     <- file.path(path.root,path.exp.,dir.in.)
+  path.out    <- file.path(path.root,path.exp.,dir.out.)
+  output <- list("script"=path.script,"input"=path.in,"output"=path.out,"common"=path.common)
+  return(output)
+}
+
+paths<-func.path()
+
+
+#****************************************
+# Original library ======================
+#****************************************
+source(file.path(paths$script,"Functionalities/Functions.R"))
+source(file.path(paths$script,"Functionalities/Figures.R"))
+
+
+
+
 
 
 #### Parameters ####

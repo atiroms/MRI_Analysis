@@ -25,9 +25,9 @@ as.numeric.factor <- function(x) {
 #****************************************
 # Experiment folder preparation =========
 #****************************************
-func.createdirs<-function(paths){
-  list.createdirs<-c(paths$output,file.path(paths$output,"output"))
-  for(d in list.createdirs){
+func_createdirs<-function(paths){
+  list_createdirs<-c(paths$output,file.path(paths$output,"output"))
+  for(d in list_createdirs){
     if (!file.exists(d)){
       dir.create(d)
     }
@@ -39,12 +39,16 @@ func.createdirs<-function(paths){
 #****************************************
 # Returns ROI dictionary ================
 #****************************************
-func.dict.roi<-function(paths,
+func_dict_roi<-function(paths,
                         file.roi="ROI.csv"){
   output<-read.csv(file.path(paths$common,file.roi))
   return(output)
 }
 
+
+#****************************************
+# Old functions ======== ================
+#****************************************
 
 #### ID Converter ####
 ConvertID<-function(input,dict,from_type,to_type){

@@ -3,50 +3,50 @@
 #****************************************
 
 # R script to extract ROI average BOLD signal from XCP data
-# execute extract.xcp() for data extraction.
+# execute extract_xcp() for data extraction.
 
 
 #****************************************
 # Parameters ============================
 #****************************************
-path.exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-dir.in   <- "02_ts_test_5sub"
-dir.out  <- "03_ts_extract"
+path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+dir_in   <- "02_ts_test_5sub"
+dir_out  <- "03_ts_extract"
 
-prefix.file.input<-"sub-"
-suffix.file.input<-"_power264_ts.1D"
+prefix_file_input<-"sub-"
+suffix_file_input<-"_power264_ts.1D"
 
-list.id.subj<-c(14,19,26,28,29)
+list_id_subj<-c(14,19,26,28,29)
 
-atlas.roi<-"Power"
-list.id.roi<-seq(264)
+atlas_roi<-"Power"
+list_id_roi<-seq(264)
 
 
 #****************************************
-# Root path finder============
+# Create path list ======================
 #****************************************
-func.path<-function(list.path.root = c("D:/atiroms","C:/Users/atiro"),
-                         path.exp.=path.exp,
-                         dir.in.=dir.in,
-                         dir.out.=dir.out){
-  path.root<-NA
-  for(p in list.path.root){
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
+                         path_exp_=path_exp,
+                         dir_in_=dir_in,
+                         dir_out_=dir_out){
+  path_root<-NA
+  for(p in list_path_root){
     if(file.exists(p)){
-      path.root<-p
+      path_root<-p
     }
   }
-  if(is.na(path.root)){
+  if(is.na(path_root)){
     print("Error: root path could not be found.")
   }
-  path.script <- file.path(path.root,"GitHub/MRI_Analysis")
-  path.common <- file.path(path.root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
-  path.in     <- file.path(path.root,path.exp.,dir.in.)
-  path.out    <- file.path(path.root,path.exp.,dir.out.)
-  output <- list("script"=path.script,"input"=path.in,"output"=path.out,"common"=path.common)
+  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
+  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_in     <- file.path(path_root,path_exp_,dir_in_)
+  path_out    <- file.path(path_root,path_exp_,dir_out_)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,"common"=path_common)
   return(output)
 }
 
-paths<-func.path()
+paths<-func_path()
 
 
 #****************************************
@@ -58,29 +58,29 @@ source(file.path(paths$script,"Functionalities/Functions.R"))
 #****************************************
 # Data extraction =======================
 #****************************************
-extract.xcp<-function(paths.=paths,
-                      dict.roi.=dict.roi,
-                      prefix.file.input.=prefix.file.input,
-                      suffix.file.input.=suffix.file.input,
-                      list.id.subj.=list.id.subj,
-                      atlas.roi.=atlas.roi,
-                      list.id.roi.=list.id.roi
+extract_xcp<-function(paths_=paths,
+                      dict_roi_=dict_roi,
+                      prefix_file_input_=prefix_file_input,
+                      suffix_file_input_=suffix_file_input,
+                      list_id_subj_=list_id_subj,
+                      atlas_roi_=atlas_roi,
+                      list_id_roi_=list_id_roi
                       ){
   
-  nullobj<-func.createdirs(paths)
-  dict.roi<-func.dict.roi(paths)
+  nullobj<-func_createdirs(paths)
+  dict_roi<-func_dict_roi(paths)
   
-  output<-data.frame(matrix(ncol=length(list.id.roi.)+2, nrow=0))
-  for (id.subj in list.id.subj){
-    file.input<-paste(prefix.file.input., sprintf("%05d", id.subj), suffix.file.input., sep="")
-    ts.subj<-read.csv(file.path(paths.$input,"output",file.input),header=F,sep=" ")
-    df.roi<-dict.roi.[which(dict.roi.$Atlas==atlas.roi.),]
-    list.id.roi<-as.character(df.roi$ID_long)
-    ts.subj<-cbind(id.subj, seq(dim(ts.subj)[1]),ts.subj)
-    colnames(ts.subj)<- c("ID_pnTTC","timeframe",list.id.roi)
-    output<-rbind(output, ts.subj)
+  output<-data.frame(matrix(ncol=length(list_id_roi_)+2, nrow=0))
+  for (id_subj in list_id_subj){
+    file_input<-paste(prefix_file_input_, sprintf("%05d", id_subj), suffix_file_input_, sep="")
+    ts_subj<-read.csv(file.path(paths_$input,"output",file_input),header=F,sep=" ")
+    df_roi<-dict_roi_[which(dict_roi_$Atlas==atlas_roi_),]
+    list_id_roi<-as.character(df_roi$ID_long)
+    ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
+    colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
+    output<-rbind(output, ts_subj)
   }
   
-  write.csv(output, file.path(paths.$output,"output","timeseries.csv"),row.names=F)
+  write.csv(output, file.path(paths_$output,"output","timeseries.csv"),row.names=F)
   return(output)
 }
