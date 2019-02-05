@@ -9,9 +9,10 @@
 #****************************************
 # Parameters ============================
 #****************************************
-path.exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-dir.in   <- ""
-dir.out  <- ""
+path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+dir_in   <- ""
+dir_out  <- ""
+subset_subj <- list(list("column"="W1_T1QC_rsfMRIexist_CONNvoxelQC20","value"=1))
 
 
 #****************************************
@@ -26,28 +27,28 @@ library(tidyverse)
 #****************************************
 # Create path list ======================
 #****************************************
-func.path<-function(list.path.root = c("D:/atiroms","C:/Users/atiro"),
-                    path.exp.=path.exp,
-                    dir.in.=dir.in,
-                    dir.out.=dir.out){
-  path.root<-NA
-  for(p in list.path.root){
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
+                    path_exp_=path_exp,
+                    dir_in_=dir_in,
+                    dir_out_=dir_out){
+  path_root<-NA
+  for(p in list_path_root){
     if(file.exists(p)){
-      path.root<-p
+      path_root<-p
     }
   }
-  if(is.na(path.root)){
+  if(is.na(path_root)){
     print("Error: root path could not be found.")
   }
-  path.script <- file.path(path.root,"GitHub/MRI_Analysis")
-  path.common <- file.path(path.root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
-  path.in     <- file.path(path.root,path.exp.,dir.in.)
-  path.out    <- file.path(path.root,path.exp.,dir.out.)
-  output <- list("script"=path.script,"input"=path.in,"output"=path.out,"common"=path.common)
+  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
+  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_in     <- file.path(path_root,path_exp_,dir_in_)
+  path_out    <- file.path(path_root,path_exp_,dir_out_)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,"common"=path_common)
   return(output)
 }
 
-paths<-func.path()
+paths<-func_path()
 
 
 #****************************************
@@ -57,8 +58,10 @@ source(file.path(paths$script,"Functionalities/Functions.R"))
 source(file.path(paths$script,"Functionalities/Figures.R"))
 
 
-
-
+#****************************************
+# Data loading ==========================
+#****************************************
+data<-func_clinical_data(paths,subset_subj)
 
 
 #### Parameters ####
