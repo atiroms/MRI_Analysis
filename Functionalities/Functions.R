@@ -55,18 +55,52 @@ func_clinical_data<-function(paths,
                              ){
   df_clinical <- read.csv(file.path(paths$common,file_clinical))
   for (list_subset in subset_subj){
-    df_clinical <- df_clinical[which(df_clinical[,list_subset$column]==list_subset$value)]
+    df_clinical <- df_clinical[which(df_clinical[,list_subset[["column"]]]==list_subset[["value"]]),]
   }
   list_id_subj<-df_clinical$ID_pnTTC
   df_id<-df_clinical[,1:(which(colnames(df_clinical)=="Clinical")-1)]
-  df_clinical<-df_clinical[,(-2):(-which(names(clinical_data)=="Clinical"))]
+  df_clinical<-df_clinical[,(-2):(-which(colnames(df_clinical)=="Clinical"))]
   n_subj<-length(list_id_subj)
   n_data_clinical<-ncol(df_clinical)-1
   
   output<-list("df_clinical"=df_clinical,"list_id_subj"=list_id_subj,"df_id"=df_id,
-               "n_subj"=n_subj,"m_data_clinical"=n_data_clinical)
+               "n_subj"=n_subj,"n_data_clinical"=n_data_clinical)
   return(output)
 }
+
+
+#****************************************
+# General correlation calculation =======
+#****************************************
+func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T){
+  corr <-rcorr(as.matrix(input), type="pearson")
+  n_node<-ncol(input)
+  corr_flat<-data.frame(matrix(nrow=n_node*(n_node-1)/2,ncol=6))
+  colnames(corr_flat)<-c("from","from_label","to","to_label","r","p")
+  k<-0
+  for (i in 1:(n_node-1)){
+    for (j in (i+1):n_node){
+      k<-k+1
+      corr_flat[k,1:4]<-c(rownames(corr$r)[i],
+                          dict_roi[which(dict_roi$ID_long==rownames(corr$r)[i]),"label_proper"],
+                          colnames(corr$r)[j],
+                          dict_roi[which(dict_roi$ID_long==colnames(corr$r)[j]),"label_proper"],
+                          corr$r[i,j],
+                          corr$P[i,j])
+    }
+  }
+  if (plot){
+    graph<-plot_corrmat(input=corr$r,title=paste(prefix_outputfile,"Correlation Matrix"))
+  }else{
+    graph<-NULL
+  }
+  if (save){
+    write.csv(corr_flat, file.path(paths$output,"output",paste(prefix_outputfile,"rp.csv",sep="_")),row.names=F)
+  }
+  output<-list("corr"=corr, "corr_flat"=corr_flat,"graph"=graph)
+  return(output)
+}
+
 
 
 #****************************************
