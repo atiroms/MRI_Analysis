@@ -72,7 +72,7 @@ func_clinical_data<-function(paths,
 #****************************************
 # General correlation calculation =======
 #****************************************
-func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T){
+func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T,save_plot=T){
   corr <-rcorr(as.matrix(input), type="pearson")
   n_node<-ncol(input)
   corr_flat<-data.frame(matrix(nrow=n_node*(n_node-1)/2,ncol=6))
@@ -91,6 +91,9 @@ func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T){
   }
   if (plot){
     fig<-plot_corrmat(input=corr$r,dict_roi,title=paste(prefix_outputfile,"Correlation Matrix"))
+    if(save_plot){
+      ggsave(paste(prefix_outputfile,"mat.eps"),fig,"eps",file.path(paths$output,"output"))
+    }
   }else{
     fig<-NULL
   }
