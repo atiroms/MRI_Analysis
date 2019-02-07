@@ -17,13 +17,17 @@ library(colorRamps)
 #****************************************
 # Plot correlation matrix ===============
 #****************************************
-plot_corrmat<-function(input,title){
+plot_corrmat<-function(input,dict_roi,title){
   input<-data.frame(input)
-  colnames(input)<-ConvertID(colnames(input),roi_data,"ID_long","label_proper")
+  for(i in seq(ncol(input))){
+    colnames(input)[i]<-as.character(dict_roi[which(dict_roi$ID_long==colnames(input)[i]),"label_proper"])
+  }
   input<-rownames_to_column(input, "row")
-  input$row<-ConvertID(input$row,roi_data,"ID_long","label_proper")
-  tidyinput<-gather(input,column,r,2:ncol(input))
-  fig<-ggplot(tidyinput, aes(column, row)) +
+  for(i in seq(nrow(input))){
+    input$row[i]<-as.character(dict_roi[which(dict_roi$ID_long==input$row[i]),"label_proper"])
+  }
+  input_tidy<-gather(input,column,r,2:ncol(input))
+  fig<-ggplot(input_tidy, aes(column, row)) +
     geom_tile(aes(fill = r)) +
     scale_fill_gradientn(colors = matlab.like2(100),name="r") +
     scale_y_discrete(limits = rev(input$row)) +
@@ -44,7 +48,7 @@ plot_corrmat<-function(input,title){
 
 
 #****************************************
-# Old graphs =============================
+# OBSOLETE ==============================
 #****************************************
 
 #### Circular Plotting ####

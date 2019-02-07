@@ -81,23 +81,23 @@ func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T){
   for (i in 1:(n_node-1)){
     for (j in (i+1):n_node){
       k<-k+1
-      corr_flat[k,1:4]<-c(rownames(corr$r)[i],
-                          dict_roi[which(dict_roi$ID_long==rownames(corr$r)[i]),"label_proper"],
+      corr_flat[k,1:6]<-c(rownames(corr$r)[i],
+                          as.character(dict_roi[which(dict_roi$ID_long==rownames(corr$r)[i]),"label_proper"]),
                           colnames(corr$r)[j],
-                          dict_roi[which(dict_roi$ID_long==colnames(corr$r)[j]),"label_proper"],
+                          as.character(dict_roi[which(dict_roi$ID_long==colnames(corr$r)[j]),"label_proper"]),
                           corr$r[i,j],
                           corr$P[i,j])
     }
   }
   if (plot){
-    graph<-plot_corrmat(input=corr$r,title=paste(prefix_outputfile,"Correlation Matrix"))
+    fig<-plot_corrmat(input=corr$r,dict_roi,title=paste(prefix_outputfile,"Correlation Matrix"))
   }else{
-    graph<-NULL
+    fig<-NULL
   }
   if (save){
     write.csv(corr_flat, file.path(paths$output,"output",paste(prefix_outputfile,"rp.csv",sep="_")),row.names=F)
   }
-  output<-list("corr"=corr, "corr_flat"=corr_flat,"graph"=graph)
+  output<-list("corr"=corr, "corr_flat"=corr_flat,"fig"=fig)
   return(output)
 }
 

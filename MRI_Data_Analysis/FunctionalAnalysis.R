@@ -1,36 +1,36 @@
-#****************************************
-# Description ===========================
-#****************************************
+#**************************************************
+# Description =====================================
+#**************************************************
 
 # R script to analyze ROI average BOLD signal.
 # Execute fc_all() to execute
 
 
-#****************************************
-# Parameters ============================
-#****************************************
+#**************************************************
+# Parameters ======================================
+#**************************************************
 path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
 dir_in   <- "03_ts_extract"
-dir_out  <- "04_fc_all"
-subset_subj <- list(list("column"="W1_T1exist","value"=1))
+dir_out  <- "04_fc"
+subset_subj <- list(list("column"="W1_5sub","value"=1))
 subset_roi  <- c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
                  "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
                  "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
                  "Memory retrieval?","Cerebellar")
 
 
-#****************************************
-# Libraries =============================
-#****************************************
+#**************************************************
+# Libraries =======================================
+#**************************************************
 library(Hmisc)
 library(FactoMineR)
 library(ica)
 library(tidyverse)
 
 
-#****************************************
-# Create path list ======================
-#****************************************
+#**************************************************
+# Create path list ================================
+#**************************************************
 func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
                     path_exp_=path_exp,
                     dir_in_=dir_in,
@@ -55,54 +55,76 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
 paths<-func_path()
 
 
-#****************************************
-# Original library ======================
-#****************************************
+#**************************************************
+# Original library ================================
+#**************************************************
 source(file.path(paths$script,"Functionalities/Functions.R"))
 source(file.path(paths$script,"Functionalities/Graphs.R"))
 
 
-#****************************************
-# Clinical data loading =================
-#****************************************
-data_clinical<-func_clinical_data(paths,subset_subj)
-
-
-#****************************************
-# Functional data loading ===============
-#****************************************
+#**************************************************
+# Functional data loading =========================
+#**************************************************
 func_data_functional<-function(paths,data_clinical,subset_roi){
   df_functional <- read.csv(file.path(paths$input,"output","timeseries.csv"))
-  df_functional <- df_functional[is.element(df_functonal$ID_pnTTC,data_clinical$list_id_subj),]
-  list_roi <- colnames(df_functionl)[c(-1,-2)]
+  df_functional <- df_functional[is.element(df_functional$ID_pnTTC,data_clinical$list_id_subj),]
+  list_id_roi <- colnames(df_functional)[c(-1,-2)]
   dict_roi <- func_dict_roi(paths)
-  dict_roi <- dict_roi[is.element(dict_roi$ID_long,list_roi),]
+  dict_roi <- dict_roi[is.element(dict_roi$ID_long,list_id_roi),]
   dict_roi <- dict_roi[is.element(dict_roi$group,subset_roi),]
-  list_id_roi <- dict_roi$ID_log
+  list_id_roi <- as.character(dict_roi$ID_long)
   n_roi <- length(list_id_roi)
-  df_functional <- cbind(df_functional[,c(1,2)],df_functional[,is.element(list_roi)])
+  df_functional <- cbind(df_functional[,c(1,2)],df_functional[,is.element(colnames(df_functional),list_id_roi)])
   output <- list("df_functional"=df_functional,"list_id_roi"=list_id_roi,"dict_roi"=dict_roi,"n_roi"=n_roi)
   return(output)
 }
 
 
-#****************************************
-# Functional correlation of all sub =====
-#****************************************
-fc_all<-function(paths){
-  data_clinical<-func_clinical_data(paths,subset_subj)
-  data_functional<-func_data_functional(paths,data_clinical,subset_roi)
-  nullobj<-func_createdirs(paths)
-  corr<-func_corr(data_functional$df_functional[,c(-1,-2)], data_functonal$dict_roi,paths,prefix_outputfile="FC")
-  
-  fig1<-corr[[3]]
-  graph<-Corr2Graph(corr)
-  fig2<-CircularPlot(graph,
-                     pvalue_type="p_Benjamini_Hochberg",
-                     input_title = "Functional Correlation for All Subjects")
-  return(list(corr,fig1,fig2))
-  
+#**************************************************
+# Functional correlation of each subs =============
+#**************************************************
+fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
+  data_clinical<-func_clinical_data(paths_,subset_subj_)
+  data_functional<-func_data_functional(paths_,data_clinical,subset_roi_)
+  nullobj<-func_createdirs(paths_)
+  fc_stack<-data.frame(matrix(ncol=7,nrow=0))
+  for (id in data_clinical$list_id_subj){
+    fc<-func_corr(input=data_functional$df_functional[which(data_functional$df_functional$ID_pnTTC==id),c(-1,-2)],
+                  dict_roi=data_functional$dict_roi,
+                  paths_,
+                  prefix_outputfile=paste("FC",sprintf("%05d", id),sep="_"),
+                  plot=T,save=T)$corr_flat
+    fc_stack<-rbind(fc_stack,cbind(ID_pnTTC=rep(id,nrow(fc)),fc))
+  }
+  colnames(fc_stack)<-c("ID_pnTTC","from","from_label","to","to_label","r","p")
+  write.csv(fc_stack, file.path(paths_$output,"output","fc.csv"),row.names = F)
+  return(fc_stack)
 }
+
+
+#**************************************************
+# Functional correlation of all subs ==============
+#**************************************************
+fc_all<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
+  data_clinical<-func_clinical_data(paths_,subset_subj_)
+  data_functional<-func_data_functional(paths_,data_clinical,subset_roi_)
+  nullobj<-func_createdirs(paths_)
+  fc<-func_corr(input=data_functional$df_functional[,c(-1,-2)],
+                dict_roi=data_functional$dict_roi,
+                paths_,prefix_outputfile="FC",
+                plot=T,save=T)
+  graph<-Corr2Graph(fc)
+  fig_circ<-CircularPlot(graph,
+                         pvalue_type="p_Benjamini_Hochberg",
+                         input_title = "Functional Correlation for All Subjects")
+  output<-list("fc"=fc$corr,"fc_flat"=corr$corr_flat,"fig_corrmat"=graph,"fig_circ"=fig_circular)
+  return(output)
+}
+
+
+#**************************************************
+# OBSOLETE ========================================
+#**************************************************
 
 
 #### Parameters ####
