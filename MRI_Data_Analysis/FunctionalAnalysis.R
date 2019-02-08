@@ -87,16 +87,16 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   data_functional<-func_data_functional(paths_,data_clinical,subset_roi_)
   nullobj<-func_createdirs(paths_)
-  fc_stack<-data.frame(matrix(ncol=7,nrow=0))
+  fc_stack<-data.frame(matrix(ncol=5,nrow=0))
   for (id in data_clinical$list_id_subj){
     fc<-func_corr(input=data_functional$df_functional[which(data_functional$df_functional$ID_pnTTC==id),c(-1,-2)],
                   dict_roi=data_functional$dict_roi,
                   paths_,
-                  prefix_outputfile=paste("FC",sprintf("%05d", id),sep="_"),
+                  prefix_outputfile=paste("fc",sprintf("%05d", id),sep="_"),
                   plot=T,save=T)$corr_flat
     fc_stack<-rbind(fc_stack,cbind(ID_pnTTC=rep(id,nrow(fc)),fc))
   }
-  colnames(fc_stack)<-c("ID_pnTTC","from","from_label","to","to_label","r","p")
+  colnames(fc_stack)<-c("ID_pnTTC","from","to","r","p")
   write.csv(fc_stack, file.path(paths_$output,"output","fc.csv"),row.names = F)
   return(fc_stack)
 }

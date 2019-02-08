@@ -29,20 +29,20 @@ plot_corrmat<-function(input,dict_roi,title){
   input_tidy<-gather(input,column,r,2:ncol(input))
   fig<-ggplot(input_tidy, aes(column, row)) +
     geom_tile(aes(fill = r)) +
-    scale_fill_gradientn(colors = matlab.like2(100),name="r") +
+    scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1)) +
     scale_y_discrete(limits = rev(input$row)) +
     scale_x_discrete(limits = input$row, position="top") +
     ggtitle(title) +
     theme_light() +
     theme(plot.title = element_text(hjust = 0.5),
-          axis.text.x = element_text(size=5,angle = 90,vjust=0.3,hjust=0),
-          axis.text.y = element_text(size=5),
+          axis.text.x = element_text(size=800/ncol(input),angle = 90,vjust=0,hjust=0),
+          axis.text.y = element_text(size=800/ncol(input)),
           axis.title=element_blank(),
           panel.grid.major=element_blank(),
           panel.grid.minor = element_blank(),
           panel.border = element_blank(),
           panel.background = element_blank())
-  return(fig)
+    return(fig)
 }
 
 
