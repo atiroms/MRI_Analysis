@@ -90,7 +90,7 @@ func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T,sav
   if (plot){
     fig<-plot_corrmat(input=corr$r,dict_roi,title=paste(prefix_outputfile,"correlation matrix"))
     if(save_plot){
-      ggsave(paste(prefix_outputfile,"mat.eps"),plot=fig,device="eps",
+      ggsave(paste(prefix_outputfile,"mat.eps",sep="_"),plot=fig,device="eps",
              path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
   }else{
