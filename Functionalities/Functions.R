@@ -58,12 +58,12 @@ func_clinical_data<-function(paths,
     df_clinical <- df_clinical[which(df_clinical[,list_subset[["column"]]]==list_subset[["value"]]),]
   }
   list_id_subj<-df_clinical$ID_pnTTC
-  df_id<-df_clinical[,1:(which(colnames(df_clinical)=="Clinical")-1)]
+  df_id_subj<-df_clinical[,1:(which(colnames(df_clinical)=="Clinical")-1)]
   df_clinical<-df_clinical[,(-2):(-which(colnames(df_clinical)=="Clinical"))]
   n_subj<-length(list_id_subj)
   n_data_clinical<-ncol(df_clinical)-1
   
-  output<-list("df_clinical"=df_clinical,"list_id_subj"=list_id_subj,"df_id"=df_id,
+  output<-list("df_clinical"=df_clinical,"list_id_subj"=list_id_subj,"df_id_subj"=df_id_subj,
                "n_subj"=n_subj,"n_data_clinical"=n_data_clinical)
   return(output)
 }
