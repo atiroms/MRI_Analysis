@@ -9,8 +9,10 @@
 #**************************************************
 # Parameters ======================================
 #**************************************************
+
+# parameters for fc()
 path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-#dir_in<- "05_ts_temp"
+#dir_in   <- "05_ts_temp"
 #dir_out  <- "13_fc_temp"
 #dir_in   <- "06_ts_t1w"
 #dir_out  <- "14_fc_t1w"
@@ -24,13 +26,22 @@ path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_out  <- "18_fc_36p_native"
 #dir_in   <- "11_ts_aroma_2mm"
 #dir_out  <- "19_fc_aroma_2mm"
-dir_in   <- "12_ts_acompcor_2mm"
-dir_out  <- "20_fc_acompcor_2mm"
+#dir_in   <- "12_ts_acompcor_2mm"
+#dir_out  <- "20_fc_acompcor_2mm"
 subset_subj <- list(list("column"="W1_5sub","value"=1))
-subset_roi  <- c("Uncertain","Default mode","Sensory/somatomotor Hand","Sensory/somatomotor Mouth",
-                 "Fronto-parietal Task Control","Cingulo-opercular Task Control","Subcortical",
-                 "Salience","Auditory","Visual","Dorsal attention","Ventral attention",
+subset_roi  <- c("Uncertain","Default mode","Sensory/somatomotor Hand",
+                 "Sensory/somatomotor Mouth","Fronto-parietal Task Control",
+                 "Cingulo-opercular Task Control","Subcortical","Salience",
+                 "Auditory","Visual","Dorsal attention","Ventral attention",
                  "Memory retrieval?","Cerebellar")
+
+# parameters for fc_corr()
+path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","16_fc_36p_1mm","17_fc_36p_2mm",
+            "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
+dir_out <- "21_fc_corr"
+subset_subj <- list(list("column"="W1_5sub","value"=1))
+
 
 
 #**************************************************
@@ -62,7 +73,8 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
   path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
   path_in     <- file.path(path_root,path_exp_,dir_in_)
   path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,"common"=path_common)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+                 "common"=path_common)
   return(output)
 }
 
@@ -81,18 +93,23 @@ source(file.path(paths$script,"Functionalities/Graphs.R"))
 #**************************************************
 func_data_functional<-function(paths,data_clinical,subset_roi){
   df_functional <- read.csv(file.path(paths$input,"output","timeseries.csv"))
-  df_functional <- df_functional[is.element(df_functional$ID_pnTTC,data_clinical$list_id_subj),]
+  df_functional <- df_functional[is.element(df_functional$ID_pnTTC,
+                                            data_clinical$list_id_subj),]
   list_id_roi <- colnames(df_functional)[c(-1,-2)]
   dict_roi <- func_dict_roi(paths)
   dict_roi <- dict_roi[is.element(dict_roi$ID_long,list_id_roi),]
   dict_roi <- dict_roi[is.element(dict_roi$group,subset_roi),]
   list_id_roi <- as.character(dict_roi$ID_long)
   n_roi <- length(list_id_roi)
-  df_functional <- cbind(df_functional[,c(1,2)],df_functional[,is.element(colnames(df_functional),list_id_roi)])
+  df_functional <- cbind(df_functional[,c(1,2)],
+                         df_functional[,is.element(colnames(df_functional),
+                                                   list_id_roi)])
   list_id_subj_exists <- sort(unique(df_functional$ID_pnTTC))
   n_subj_exists <- length(list_id_subj_exists)
-  output <- list("df_functional"=df_functional,"list_id_roi"=list_id_roi,"dict_roi"=dict_roi,"n_roi"=n_roi,
-                 "list_id_subj_exists"=list_id_subj_exists,"n_subj_exists"=n_subj_exists)
+  output <- list("df_functional"=df_functional,"list_id_roi"=list_id_roi,
+                 "dict_roi"=dict_roi,"n_roi"=n_roi,
+                 "list_id_subj_exists"=list_id_subj_exists,
+                 "n_subj_exists"=n_subj_exists)
   return(output)
 }
 
@@ -122,6 +139,13 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   print("Finished calculating all FCs.")
   return(fc_stack)
 }
+
+
+#**************************************************
+# FC-FC correlation ===============================
+#**************************************************
+# for comparison of preprocessing methods
+fc_corr<-function(paths_=paths,subset_subj_=subset_subj)
 
 
 #**************************************************
