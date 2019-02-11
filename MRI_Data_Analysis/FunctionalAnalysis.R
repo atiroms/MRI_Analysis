@@ -11,7 +11,7 @@
 #**************************************************
 
 # parameters for fc()
-path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in   <- "05_ts_temp"
 #dir_out  <- "13_fc_temp"
 #dir_in   <- "06_ts_t1w"
@@ -35,14 +35,6 @@ subset_roi  <- c("Uncertain","Default mode","Sensory/somatomotor Hand",
                  "Auditory","Visual","Dorsal attention","Ventral attention",
                  "Memory retrieval?","Cerebellar")
 
-# parameters for fc_corr()
-path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","16_fc_36p_1mm","17_fc_36p_2mm",
-            "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
-dir_out <- "21_fc_corr"
-subset_subj <- list(list("column"="W1_5sub","value"=1))
-
-
 
 #**************************************************
 # Libraries =======================================
@@ -56,7 +48,7 @@ library(tidyverse)
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
                     path_exp_=path_exp,
                     dir_in_=dir_in,
                     dir_out_=dir_out){
@@ -139,14 +131,6 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   print("Finished calculating all FCs.")
   return(fc_stack)
 }
-
-
-#**************************************************
-# FC-FC correlation ===============================
-#**************************************************
-# for comparison of preprocessing methods
-fc_corr<-function(paths_=paths,subset_subj_=subset_subj)
-
 
 #**************************************************
 # Functional correlation of all subs ==============

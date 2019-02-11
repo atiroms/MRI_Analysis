@@ -12,7 +12,7 @@
 #path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
 #path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub"
-path_out <- "/home/atiroms/Documents/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in   <- "30_xcp_36p"
 #dir_out  <- "05_ts_temp"
 #dir_in   <- "32_xcp_36p_nativein"
@@ -42,7 +42,7 @@ list_id_roi<-seq(264)
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms/Documents"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
                     path_in_=path_in,
                     path_out_=path_out,
                     dir_in_=dir_in,
@@ -57,7 +57,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_common <- file.path(path_root,"Dropbox/MRI/pnTTC/Puberty/Stats/CommonData")
   path_in     <- file.path(path_in_,dir_in_)
   path_out    <- file.path(path_out_,dir_out_)
   output <- list("script"=path_script,"input"=path_in,"output"=path_out,"common"=path_common)

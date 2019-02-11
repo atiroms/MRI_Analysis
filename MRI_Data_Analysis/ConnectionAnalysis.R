@@ -1,9 +1,101 @@
-#### Description ####
-
+#**************************************************
+# Description =====================================
+#**************************************************
 # R script to analyze relationship between structural/functional connection and clinical data.
 # Inputs can be functional correlation from rsfMRI data, or Jackknife esimate of structural covariance from T1 data.
-# 
 
+
+#**************************************************
+# Parameters ======================================
+#**************************************************
+# parameters for fc_corr()
+path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+#dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","16_fc_36p_1mm","17_fc_36p_2mm",
+dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
+            "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
+dir_out <- "21_fc_corr"
+subset_subj <- list(list("column"="W1_5sub","value"=1))
+
+
+#**************************************************
+# Libraries =======================================
+#**************************************************
+
+
+#**************************************************
+# Create path list ================================
+#**************************************************
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
+                    path_exp_=path_exp,
+                    dir_in_=dir_in,
+                    dir_out_=dir_out){
+  path_root<-NA
+  for(p in list_path_root){
+    if(file.exists(p)){
+      path_root<-p
+    }
+  }
+  if(is.na(path_root)){
+    print("Error: root path could not be found.")
+  }
+  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
+  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_in     <- file.path(path_root,path_exp_,dir_in_)
+  path_out    <- file.path(path_root,path_exp_,dir_out_)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
+  return(output)
+}
+
+paths<-func_path()
+
+
+#**************************************************
+# Original library ================================
+#**************************************************
+source(file.path(paths$script,"Functionalities/Functions.R"))
+source(file.path(paths$script,"Functionalities/Graphs.R"))
+
+
+#**************************************************
+# FC-FC correlation ===============================
+#**************************************************
+# for comparison of preprocessing methods
+fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
+  print("Starting to calculate FC-FC correlation.")
+  data_clinical<-func_clinical_data(paths_,subset_subj_)
+  nullobj<-func_createdirs(paths_,copy_log=F)
+  for (id in data_clinical$list_id_subj){
+    df_fc_allstudy<-data.frame(colnames=c("from","to",paths_$input))
+    for (study in paths_$input){
+      file_input<-paste("fc_",sprintf("%05d", id),"_rp.csv",sep="")
+      path_file_input<-file.path(study,"output",file_input)
+      if (file.exists(path_file_input)){
+        df_fc<-read.csv(path_file_input)
+        if (nrow(df_fc_allstudy)==0){
+          df_fc_allstudy[,c("from","to",study)]<-df_fc[,c("from","to","r")]
+        }else{
+          df_fc_allstudy<-cbind(df_fc_allstudy,df_fc[,"r"])
+          colnames(df_fc_allstudy)[colnames(df_fc_allstudy)=="r"]<-study
+        }
+      }else{
+        df_fc_allstudy<-cbind(df_fc_allstudy,rep(NA,ncol(df_fc_allstudy)))
+        colnames(df_fc_allstudy)[ncol(df_fc_allstudy)]<-study
+      }
+    }
+    
+  }
+
+}
+
+
+
+
+
+
+#**************************************************
+# OBSOLETE ========================================
+#**************************************************
 
 #### Parameters ####
 

@@ -25,7 +25,7 @@ as.numeric.factor <- function(x) {
 #****************************************
 # Experiment folder preparation =========
 #****************************************
-func_createdirs<-function(paths){
+func_createdirs<-function(paths,copy_log=T){
   list_createdirs<-c(paths$output,file.path(paths$output,"output"))
   for(d in list_createdirs){
     if (!file.exists(d)){
