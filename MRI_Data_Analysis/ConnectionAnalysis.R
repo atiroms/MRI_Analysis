@@ -20,6 +20,8 @@ subset_subj <- list(list("column"="W1_5sub","value"=1))
 #**************************************************
 # Libraries =======================================
 #**************************************************
+library(ggplot2)
+library(GGally)
 
 
 #**************************************************
@@ -67,13 +69,15 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=F)
   for (id in data_clinical$list_id_subj){
-    df_fc_allstudy<-data.frame(colnames=c("from","to",paths_$dir_in))
+    df_fc_allstudy<-data.frame(matrix(ncol=9,nrow=0))
+    colnames(df_fc_allstudy)<-c("from","to",paths_$dir_in)
     for (id_study in seq(length(paths_$dir_in))){
       file_input<-paste("fc_",sprintf("%05d", id),"_rp.csv",sep="")
       path_file_input<-file.path(paths_$input[id_study],"output",file_input)
       if (file.exists(path_file_input)){
         df_fc<-read.csv(path_file_input)
         if (nrow(df_fc_allstudy)==0){
+          nrow(df_fc_allstudy)<-nrow(df_fc)
           df_fc_allstudy[,c("from","to",paths_$dir_in[id_study])]<-df_fc[,c("from","to","r")]
         }else{
           df_fc_allstudy[,paths_$dir_in[id_study]]<-df_fc[,"r"]
@@ -82,25 +86,26 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
         df_fc_allstudy[,paths_$dir_in[id_study]]<-NA
       }
     }
-    corr<-rcorr(as.matrix(df_fc_allstudy[,c(-1,-2)]),type="pearson")
-    corr<-data.frame(corr$r)
-    corr<-rownames_to_column(corr, "row")
-    corr_tidy<-gather(corr,column,r,2:ncol(corr))
-    fig<-ggplot(corr_tidy, aes(column, row)) +
-      geom_tile(aes(fill = r)) +
-      scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1)) +
-      scale_y_discrete(limits = rev(input$row)) +
-      scale_x_discrete(limits = input$row, position="top") +
-      ggtitle(title) +
-      theme_light() +
-      theme(plot.title = element_text(hjust = 0.5),
-            axis.text.x = element_text(size=800/ncol(input),angle = 90,vjust=0,hjust=0),
-            axis.text.y = element_text(size=800/ncol(input)),
-            axis.title=element_blank(),
-            panel.grid.major=element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.border = element_blank(),
-            panel.background = element_blank())
+    ggpairs(df_fc_allstudy[,c(-1,-2)])
+    #corr<-rcorr(as.matrix(df_fc_allstudy[,c(-1,-2)]),type="pearson")
+    #corr<-data.frame(corr$r)
+    #corr<-rownames_to_column(corr, "row")
+    #corr_tidy<-gather(corr,column,r,2:ncol(corr))
+    #fig<-ggplot(corr_tidy, aes(column, row)) +
+    #  geom_tile(aes(fill = r)) +
+    #  scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1)) +
+    #  scale_y_discrete(limits = rev(input$row)) +
+    #  scale_x_discrete(limits = input$row, position="top") +
+    #  ggtitle(title) +
+    #  theme_light() +
+    #  theme(plot.title = element_text(hjust = 0.5),
+    #        axis.text.x = element_text(size=800/ncol(input),angle = 90,vjust=0,hjust=0),
+    #        axis.text.y = element_text(size=800/ncol(input)),
+    #        axis.title=element_blank(),
+    #        panel.grid.major=element_blank(),
+    #        panel.grid.minor = element_blank(),
+    #        panel.border = element_blank(),
+    #        panel.background = element_blank())
     
   }
 
@@ -114,6 +119,11 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
 #**************************************************
 # OBSOLETE ========================================
 #**************************************************
+
+
+
+
+
 
 #### Parameters ####
 
