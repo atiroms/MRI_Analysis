@@ -40,8 +40,8 @@ func_createdirs<-function(paths){
 # Returns ROI dictionary ================
 #****************************************
 func_dict_roi<-function(paths,
-                        file.roi="ROI.csv"){
-  output<-read.csv(file.path(paths$common,file.roi))
+                        file_roi="ROI.csv"){
+  output<-read.csv(file.path(paths$common,file_roi))
   return(output)
 }
 

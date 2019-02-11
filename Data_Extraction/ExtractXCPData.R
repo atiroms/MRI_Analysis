@@ -9,14 +9,16 @@
 #**************************************************
 # Parameters ======================================
 #**************************************************
-path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
-path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+#path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
+#path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub"
+path_out <- "/home/atiroms/Documents/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in   <- "30_xcp_36p"
 #dir_out  <- "05_ts_temp"
-dir_in   <- "32_xcp_36p_nativein"
-dir_out  <- "06_ts_t1w"
-#dir_in   <- "33"
-#dir_out  <- "07_ts_temponly"
+#dir_in   <- "32_xcp_36p_nativein"
+#dir_out  <- "06_ts_t1w"
+dir_in   <- "33_xcp_36p_templatein"
+dir_out  <- "07_ts_temponly"
 #dir_in   <- "37_xcp_36p_spkreg_1mm"
 #dir_out  <- "08_ts_36p_1mm"
 #dir_in   <- "38_xcp_36p_spkreg_2mm"
@@ -40,7 +42,7 @@ list_id_roi<-seq(264)
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms/Documents"),
                     path_in_=path_in,
                     path_out_=path_out,
                     dir_in_=dir_in,
