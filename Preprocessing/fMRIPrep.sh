@@ -124,3 +124,10 @@ singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_f
 
 ## same as above except output resampling grid in 2mm and output only in template space
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/36_fmriprep_latest_syn_templateout_native:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --write-graph --template-resampling-grid='native' --use-syn-sdc --use-aroma --output-space template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: test_5sub/36_fmriprep_latest_syn_templateout_native\nStart time: 20190204_2030" | sendmail atirom.umusus@gmail.com
+
+## run on real data (at last!)
+# first half
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/19_1_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 19_1_fmriprep\nStart time: 20190212_2100" | sendmail atirom.umusus@gmail.com
+
+# second half
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 19_2_fmriprep\nStart time: 20190212_2100" | sendmail atirom.umusus@gmail.com
