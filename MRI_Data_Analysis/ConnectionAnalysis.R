@@ -13,7 +13,7 @@ path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","16_fc_36p_1mm","17_fc_36p_2mm",
 dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
             "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
-dir_out <- "21_fc_corr"
+dir_out <- "22_fc_corr"
 subset_subj <- list(list("column"="W1_5sub","value"=1))
 
 
@@ -68,47 +68,49 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
   print("Starting to calculate FC-FC correlation.")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=F)
-  for (id in data_clinical$list_id_subj){
-    df_fc_allstudy<-data.frame(matrix(ncol=9,nrow=0))
-    colnames(df_fc_allstudy)<-c("from","to",paths_$dir_in)
+  figs<-list()
+  for (id_subj in data_clinical$list_id_subj){
+    print(paste("Starting to calculate",as.character(id_subj),sep=" "))
+    list_path_file_input<-NULL
+    id_study_first<-0
     for (id_study in seq(length(paths_$dir_in))){
-      file_input<-paste("fc_",sprintf("%05d", id),"_rp.csv",sep="")
+      file_input<-paste("fc_",sprintf("%05d", id_subj),"_rp.csv",sep="")
       path_file_input<-file.path(paths_$input[id_study],"output",file_input)
       if (file.exists(path_file_input)){
-        df_fc<-read.csv(path_file_input)
-        if (nrow(df_fc_allstudy)==0){
-          nrow(df_fc_allstudy)<-nrow(df_fc)
-          df_fc_allstudy[,c("from","to",paths_$dir_in[id_study])]<-df_fc[,c("from","to","r")]
-        }else{
-          df_fc_allstudy[,paths_$dir_in[id_study]]<-df_fc[,"r"]
+        list_path_file_input<-c(list_path_file_input,path_file_input)
+        if(id_study_first==0){
+          id_study_first<-id_study
         }
       }else{
-        df_fc_allstudy[,paths_$dir_in[id_study]]<-NA
+        list_path_file_input<-c(list_path_file_input,NA)
       }
     }
-    ggpairs(df_fc_allstudy[,c(-1,-2)])
-    #corr<-rcorr(as.matrix(df_fc_allstudy[,c(-1,-2)]),type="pearson")
-    #corr<-data.frame(corr$r)
-    #corr<-rownames_to_column(corr, "row")
-    #corr_tidy<-gather(corr,column,r,2:ncol(corr))
-    #fig<-ggplot(corr_tidy, aes(column, row)) +
-    #  geom_tile(aes(fill = r)) +
-    #  scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1)) +
-    #  scale_y_discrete(limits = rev(input$row)) +
-    #  scale_x_discrete(limits = input$row, position="top") +
-    #  ggtitle(title) +
-    #  theme_light() +
-    #  theme(plot.title = element_text(hjust = 0.5),
-    #        axis.text.x = element_text(size=800/ncol(input),angle = 90,vjust=0,hjust=0),
-    #        axis.text.y = element_text(size=800/ncol(input)),
-    #        axis.title=element_blank(),
-    #        panel.grid.major=element_blank(),
-    #        panel.grid.minor = element_blank(),
-    #        panel.border = element_blank(),
-    #        panel.background = element_blank())
+    if(id_study_first==0){
+      print("No input available.")
+    }
     
+    for (id_study in seq(length(paths_$dir_in))){
+      path_file_input<-list_path_file_input[id_study]
+      if(!is.na(path_file_input)){
+        df_fc<-read.csv(path_file_input)
+        if(id_study==id_study_first){
+          df_fc_allstudy<-data.frame(matrix(ncol=length(paths_$dir_in)+2,nrow=nrow(df_fc)))
+          colnames(df_fc_allstudy)<-c("from","to",paths_$dir_in)
+        }
+        df_fc_allstudy[,c("from","to",paths_$dir_in[id_study])]<-df_fc[,c("from","to","r")]
+      }
+    }
+    
+    fig<-ggpairs(df_fc_allstudy[,c(-1,-2)],
+                 lower=list(continuous=wrap("points",alpha=0.1, size=0.001)),
+                 title=paste(sprintf("%05d",id_subj),"fc_corr",sep="_"))
+    ggsave(paste(sprintf("%05d",id_subj),"fc_corr.eps",sep="_"),plot=fig,device=cairo_ps,
+           path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+    figs<-c(figs,list(fig))
+    print(paste("Finished calculating subject",as.character(id_subj),sep=" "))
   }
-
+  names(figs)<-as.character(data_clinical$list_id_subj)
+  print("Finished calculating FC-FC correlation.")
 }
 
 
