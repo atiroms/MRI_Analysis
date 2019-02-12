@@ -102,7 +102,8 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
     }
     
     fig<-ggpairs(df_fc_allstudy[,c(-1,-2)],
-                 lower=list(continuous=wrap("points",alpha=0.1, size=0.001)),
+                 #lower=list(continuous=wrap("points",alpha=0.1, size=0.001)),
+                 lower=list(continuous=wrap("points", size=0.001)),
                  title=paste(sprintf("%05d",id_subj),"fc_corr",sep="_"))
     ggsave(paste(sprintf("%05d",id_subj),"fc_corr.eps",sep="_"),plot=fig,device=cairo_ps,
            path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
