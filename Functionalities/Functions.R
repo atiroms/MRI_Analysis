@@ -1,18 +1,18 @@
-#****************************************
-# Description ===========================
-#****************************************
+#**************************************************
+# Description =====================================
+#**************************************************
 
 # R script for common MRI analysis functions
 
 
-#****************************************
-# Libraries =============================
-#****************************************
+#**************************************************
+# Libraries =======================================
+#**************************************************
 library(tidyverse)
 
-#****************************************
-# Factor to numeric function ============
-#****************************************
+#**************************************************
+# Factor to numeric function ======================
+#**************************************************
 as.numeric.factor <- function(x) {
   if (class(x)=="factor"){
     return(as.numeric(levels(x))[x])
@@ -22,9 +22,9 @@ as.numeric.factor <- function(x) {
 }
 
 
-#****************************************
-# Experiment folder preparation =========
-#****************************************
+#**************************************************
+# Experiment folder preparation ===================
+#**************************************************
 func_createdirs<-function(paths,copy_log=T){
   list_createdirs<-c(paths$output,file.path(paths$output,"output"))
   for(d in list_createdirs){
@@ -36,9 +36,9 @@ func_createdirs<-function(paths,copy_log=T){
 }
 
 
-#****************************************
-# Returns ROI dictionary ================
-#****************************************
+#**************************************************
+# Returns ROI dictionary ==========================
+#**************************************************
 func_dict_roi<-function(paths,
                         file_roi="ROI.csv"){
   output<-read.csv(file.path(paths$common,file_roi))
@@ -46,9 +46,9 @@ func_dict_roi<-function(paths,
 }
 
 
-#****************************************
-# Clinical data loading =================
-#****************************************
+#**************************************************
+# Clinical data loading ===========================
+#**************************************************
 func_clinical_data<-function(paths,
                              subset_subj,
                              file_clinical= "CSUB.csv"
@@ -69,9 +69,9 @@ func_clinical_data<-function(paths,
 }
 
 
-#****************************************
-# General correlation calculation =======
-#****************************************
+#**************************************************
+# General correlation calculation =================
+#**************************************************
 func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T,save_plot=T){
   corr <-rcorr(as.matrix(input), type="pearson")
   n_node<-ncol(input)
@@ -105,9 +105,9 @@ func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T,sav
 
 
 
-#****************************************
-# Old functions =========================
-#****************************************
+#**************************************************
+# Old functions ===================================
+#**************************************************
 
 #### ID Converter ####
 ConvertID<-function(input,dict,from_type,to_type){

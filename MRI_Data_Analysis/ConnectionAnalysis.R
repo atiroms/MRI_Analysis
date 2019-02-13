@@ -10,10 +10,11 @@
 #**************************************************
 # parameters for fc_corr()
 path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-#dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","16_fc_36p_1mm","17_fc_36p_2mm",
 dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
             "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
+#dir_in <- c("17_fc_36p_2mm","19_fc_aroma_2mm","20_fc_acompcor_2mm")
 dir_out <- "22_fc_corr"
+#dir_out <- "23_fc_corr_heatmap"
 subset_subj <- list(list("column"="W1_5sub","value"=1))
 
 
@@ -102,8 +103,10 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
     }
     
     fig<-ggpairs(df_fc_allstudy[,c(-1,-2)],
-                 lower=list(continuous=wrap("points",alpha=0.01,size=0.001,stroke = 0, shape = ".")),
-                 #lower=list(continuous=wrap("points", size=0.001)),
+                 upper=list(continuous=custom_corr_heatmap),
+                 #lower=list(continuous=wrap("points",alpha=0.01,size=0.001,stroke = 0, shape = ".")),
+                 lower=list(continuous=custom_smooth),
+                 diag=list(continuous=custom_densityDiag),
                  title=paste(sprintf("%05d",id_subj),"fc_corr",sep="_"))
     ggsave(paste(sprintf("%05d",id_subj),"fc_corr.eps",sep="_"),plot=fig,device=cairo_ps,
            path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
@@ -112,6 +115,7 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
   }
   names(figs)<-as.character(data_clinical$list_id_subj)
   print("Finished calculating FC-FC correlation.")
+  return(figs)
 }
 
 
