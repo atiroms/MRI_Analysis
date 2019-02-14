@@ -15,7 +15,35 @@ library(car)
 #**************************************************
 # GLM analysis ====================================
 #**************************************************
-GLMroutine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar){
+#glm_routine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar){
+glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
+  name_model<-paste(colnames(df_covar_sub)[,-which(colnames(df_covar_sub)=="ID_pnTTC")],sep="_")
+  for (i in seq(nrow(df_meas_mri))){
+    df_mri_sub<-df_mri
+    for (col_meas in colnames(df_meas_mri)){
+      df_mri_sub<-df_mri_sub[which(df_mri_sub[,col_meas]==df_meas_mri[i,col_meas]),]
+    }
+    
+    # objective variable (some MRI measure)
+    var_obj<-as.numeric.factor(df_mri_sub["value"])
+    
+    formula_lm<-var_obj~1
+    for (j in seq(ncol(df_covar_sub))){
+      formula_lm<-update(formula_lm,~.+df_covar_sub[,j])
+    }
+    glmfit<-lm(formula_lm)
+    if(ncol(df_covar_sub)>1){
+      suppressWarnings(vifactor<-vif(glmfit))
+    }else{
+      vifactor<-NaN
+    }
+    
+  }
+  
+  
+  
+  
+  
   n_measures<-nrow(input_measures)
   output<-data.frame(matrix(nrow=0,ncol=(9+ncol(input_measures))))
 #  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_measures))
@@ -76,21 +104,39 @@ GLMroutine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar
 
 
 func_glm<-function(df_mri,data_clinical,list_covar){
-  # subset mri data and clinical data according to clinical data availability
+  # subset clinical data according to clinical data availability
   df_clinical<-data_clinical$df_clinical
   for (covar in list_covar){
     df_clinical<-df_clinical[which(!is.na(df_clinical[,covar])),]
   }
-  #data_clinical$df_clinical<-df_clinical
   list_id_subj<-df_clinical$ID_pnTTC
   
+  # set up covariate dataframe according to subsetting
   df_covar<-df_clinical[,c("IC_pnTTC",list_covar)]
   for (covar in list_covar){
-    colmean<-mean(df_covar[,covar])
-    df_covar[,covar]<-df_covar[,covar]-colmean
+    df_covar[,covar]<-df_covar[,covar]-mean(df_covar[,covar])
   }
   
+  # subset MRI datarame
+  df_mri<-df_mri[df_mri$ID_pnTTC %in% list_id_subj]
+  
+  # df of measurements per subject
+  df_meas_mri<-df_mri[df_mri$ID_pnTTC==df_mri[1,ID_pnTTC],]
+  df_meas_mri[,c("ID_pnTTC","value")]<-list(NULL)
+  
+  n_covar<-length(list_covar)
+  
+  for (i in n_covar:1){
+    combn_covar<-combn(n_covar,i)
+    n_combn_covar<-dim(combn_covar)[2]
+    for (j in 1:combn_covar){
+      id_covar<-combn_covar[,j]
+      df_covar_sub<-df_covar[,c("ID_pnTTC",list_covar[id_covar])]
+      glm_routine(df_mri,df_meas_mri,df_covar_sub)
+    }
+  }
 
+  
   
 #  MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname,filename){
 #  n_covariates<-length(input_covariate_label)
