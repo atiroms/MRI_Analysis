@@ -74,8 +74,28 @@ GLMroutine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar
   return(output)
 }
 
-CommonGLM<-function(MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname,filename){
-  n_covariates<-length(input_covariate_label)
+
+func_glm<-function(df_mri,data_clinical,list_covar){
+  # subset mri data and clinical data according to clinical data availability
+  df_clinical<-data_clinical$df_clinical
+  for (covar in list_covar){
+    df_clinical<-df_clinical[which(!is.na(df_clinical[,covar])),]
+  }
+  #data_clinical$df_clinical<-df_clinical
+  list_id_subj<-df_clinical$ID_pnTTC
+  
+  df_covar<-df_clinical[,c("IC_pnTTC",list_covar)]
+  for (covar in list_covar){
+    colmean<-mean(df_covar[,covar])
+    df_covar[,covar]<-df_covar[,covar]-colmean
+  }
+  
+
+  
+#  MRI_data,input_covariate_label=covariate_label,global_covariate=F,dirname,filename){
+#  n_covariates<-length(input_covariate_label)
+
+
 #  output<-MRI_data[which(MRI_data$ID_pnTTC==MRI_data[1,"ID_pnTTC"]),
 #                   -c(which(colnames(MRI_data)=="ID_pnTTC"),which(colnames(MRI_data)=="value"))]
 #  output<-data.frame(output)
