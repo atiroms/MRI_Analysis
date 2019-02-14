@@ -1,16 +1,20 @@
-#### Description ####
-
+#**************************************************
+# Description =====================================
+#**************************************************
 # R script for performing general linear model fitting calculations
 
 
-#### Libraries ####
+#**************************************************
+# Libraries =======================================
+#**************************************************
 
 library(multcomp)
 library(car)
 
 
-#### General Linear Model Analysis ####
-
+#**************************************************
+# GLM analysis ====================================
+#**************************************************
 GLMroutine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar){
   n_measures<-nrow(input_measures)
   output<-data.frame(matrix(nrow=0,ncol=(9+ncol(input_measures))))

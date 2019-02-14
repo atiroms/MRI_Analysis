@@ -8,6 +8,9 @@
 #**************************************************
 # Parameters ======================================
 #**************************************************
+# parameters for glm_fc()
+list_covar<-c("W1_Tanner_Stage","W1_Age_at_MRI")
+
 # parameters for fc_corr()
 path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
 dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
@@ -61,16 +64,81 @@ source(file.path(paths$script,"functionality/graph.R"))
 
 
 #**************************************************
+# General linear model of FCs =====================
+#**************************************************
+glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
+  print("Starting to calculate GLM of FCs.")
+  data_clinical<-func_clinical_data(paths_,subset_subj_)
+  nullobj<-func_createdirs(paths_,copy_log=T)
+  path_file_input<-file.path(paths_$input,"output","fc.csv")
+  df_fc<-read.csv(path_file_input)
+  df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
+  
+  glm<-func_glm(df_fc,data_clinical,list_covar_)
+  
+  
+  
+  
+  connection_data_tidy<-connection_data[,-which(colnames(connection_data)=="p")]
+  connection_data_tidy<-rename(connection_data_tidy,value=r)
+  glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname,"GLM_FC.csv")
+  
+  models_expvars<-glm[intersect(which(glm[,"from"]==glm[1,"from"]),
+                                which(glm[,"to"]==glm[1,"to"])),
+                      c("model","exp_var")]
+  fig<-NULL
+  glm_ordered<-NULL
+  for (i in 1:nrow(models_expvars)){
+    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
+    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
+    glm_subset<-glm[id_obs,]
+    glm_subset<-cbind(glm_subset,MultCompCorr(glm_subset))
+    for (j in rois){
+      id_obs<-union(which(glm_subset$from==j),which(glm_subset$to==j))
+      id_obs<-id_obs[order(id_obs)]
+      glm_subsubset<-glm_subset[id_obs,]
+      pvalues<-MultCompCorr(glm_subsubset)
+      for (k in 1:length(id_obs)){
+        for (l in colnames(pvalues)){
+          if (is.null(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          }else if (is.na(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          }else{
+            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(glm_subset[id_obs[k],paste("seed",l,sep="_")],
+                                                               pvalues[k,l])
+          }
+        }
+      }
+    }
+    nodes_edges<-GLM_FC2Graph(glm_subset,rois)
+    fig_title<-paste("GLM Beta of Model:",models_expvars[i,"model"],
+                     ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+    fig<-c(fig,list(CircularPlot(nodes_edges,
+                                 pvalue_type="seed_p_Benjamini_Hochberg",
+                                 input_title=fig_title)))
+    #    fig<-c(fig,list(CircularPlot(nodes_edges,pvalue_type="p","GLM Beta Values")))
+    glm_ordered<-rbind(glm_ordered,glm_subset)
+  }
+  write.csv(glm_ordered, file.path(dirname,"GLM_FC_ordered.csv"),row.names=F)
+  output<-list(glm_ordered,fig)
+  names(output)<-c("GLM","Figures")
+  return(output)
+}
+
+
+
+#**************************************************
 # FC-FC correlation ===============================
 #**************************************************
 # for comparison of preprocessing methods
 
 fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
   print("Starting to calculate FC-FC correlation.")
-  data_clinical<-func_clinical_data(paths_,subset_subj_)
+  df_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=F)
   figs<-list()
-  for (id_subj in data_clinical$list_id_subj){
+  for (id_subj in df_clinical$list_id_subj){
     print(paste("Starting to calculate",as.character(id_subj),sep=" "))
     list_path_file_input<-NULL
     id_study_first<-0
@@ -113,7 +181,7 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
     figs<-c(figs,list(fig))
     print(paste("Finished calculating subject",as.character(id_subj),sep=" "))
   }
-  names(figs)<-as.character(data_clinical$list_id_subj)
+  names(figs)<-as.character(df_clinical$list_id_subj)
   print("Finished calculating FC-FC correlation.")
   return(figs)
 }

@@ -83,22 +83,22 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # Functional data loading =========================
 #**************************************************
-func_data_functional<-function(paths,data_clinical,subset_roi){
-  df_functional <- read.csv(file.path(paths$input,"output","timeseries.csv"))
-  df_functional <- df_functional[is.element(df_functional$ID_pnTTC,
-                                            data_clinical$list_id_subj),]
-  list_id_roi <- colnames(df_functional)[c(-1,-2)]
+func_data_timeseries<-function(paths,df_clinical,subset_roi){
+  df_timeseries <- read.csv(file.path(paths$input,"output","timeseries.csv"))
+  df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
+                                            df_clinical$list_id_subj),]
+  list_id_roi <- colnames(df_timeseries)[c(-1,-2)]
   dict_roi <- func_dict_roi(paths)
   dict_roi <- dict_roi[is.element(dict_roi$ID_long,list_id_roi),]
   dict_roi <- dict_roi[is.element(dict_roi$group,subset_roi),]
   list_id_roi <- as.character(dict_roi$ID_long)
   n_roi <- length(list_id_roi)
-  df_functional <- cbind(df_functional[,c(1,2)],
-                         df_functional[,is.element(colnames(df_functional),
+  df_timeseries <- cbind(df_timeseries[,c(1,2)],
+                         df_timeseries[,is.element(colnames(df_timeseries),
                                                    list_id_roi)])
-  list_id_subj_exists <- sort(unique(df_functional$ID_pnTTC))
+  list_id_subj_exists <- sort(unique(df_timeseries$ID_pnTTC))
   n_subj_exists <- length(list_id_subj_exists)
-  output <- list("df_functional"=df_functional,"list_id_roi"=list_id_roi,
+  output <- list("df_timeseries"=df_timeseries,"list_id_roi"=list_id_roi,
                  "dict_roi"=dict_roi,"n_roi"=n_roi,
                  "list_id_subj_exists"=list_id_subj_exists,
                  "n_subj_exists"=n_subj_exists)
@@ -112,14 +112,14 @@ func_data_functional<-function(paths,data_clinical,subset_roi){
 fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   print("Starting to calculate FC.")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
-  data_functional<-func_data_functional(paths_,data_clinical,subset_roi_)
-  data_clinical$list_id_subj<-data_functional$list_id_subj_exist
-  data_clinical$n_subj_exists<-data_functional$n_subj_exists
+  data_timeseries<-func_data_timeseries(paths_,data_clinical,subset_roi_)
+  data_clinical$list_id_subj<-df_timeseries$list_id_subj_exist
+  data_clinical$n_subj_exists<-df_timeseries$n_subj_exists
   nullobj<-func_createdirs(paths_)
   fc_stack<-data.frame(matrix(ncol=5,nrow=0))
-  for (id in data_clinical$list_id_subj){
-    fc<-func_corr(input=data_functional$df_functional[which(data_functional$df_functional$ID_pnTTC==id),c(-1,-2)],
-                  dict_roi=data_functional$dict_roi,
+  for (id in df_clinical$list_id_subj){
+    fc<-func_corr(input=data_timeseries$df_timeseries[which(data_timeseries$df_timeseries$ID_pnTTC==id),c(-1,-2)],
+                  dict_roi=data_timeseries$dict_roi,
                   paths_,
                   prefix_outputfile=paste("fc",sprintf("%05d", id),sep="_"),
                   plot=T,save=T)$corr_flat
@@ -132,17 +132,18 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   return(fc_stack)
 }
 
+
 #**************************************************
 # Functional correlation of all subs ==============
 #**************************************************
 fc_all<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   data_clinical<-func_clinical_data(paths_,subset_subj_)
-  data_functional<-func_data_functional(paths_,data_clinical,subset_roi_)
-  data_clinical$list_id_subj<-data_functional$list_id_subj_exists
-  data_clinical$n_subj<-data_functional$n_subj_exists
+  data_timeseries<-func_data_timeseries(paths_,data_clinical,subset_roi_)
+  data_clinical$list_id_subj<-data_timeseries$list_id_subj_exists
+  data_clinical$n_subj<-data_timeseries$n_subj_exists
   nullobj<-func_createdirs(paths_)
-  fc<-func_corr(input=data_functional$df_functional[,c(-1,-2)],
-                dict_roi=data_functional$dict_roi,
+  fc<-func_corr(input=data_timeseries$df_timeseries[,c(-1,-2)],
+                dict_roi=data_timeseries$dict_roi,
                 paths_,prefix_outputfile="FC",
                 plot=T,save=T)
   graph<-Corr2Graph(fc)
