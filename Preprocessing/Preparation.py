@@ -71,33 +71,51 @@ class InsertST_PED():
 
 class SubsetBIDS():
     def __init__(self,
-        ses_remain={'ses-01','ses-02'}, # sessions not deleted 
-        delete_T1only=True,
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/09_boldexist'
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output'
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/input',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/log/id_mild_2.csv',
+        ses_remain={'ses-01','ses-02'}, # sessions not deleted 
+        delete_T1only=True
         ):
 
-        list_dir_all = os.listdir(path_exp)
-        list_dir_all.sort()
-        for dir_sub in list_dir_all:
-            if dir_sub.startswith('sub-'):
-                path_sub=path_exp +'/' + dir_sub
-                list_dir_ses = os.listdir(path_sub)
-                for dir_ses in list_dir_ses:
-                    path_ses=path_sub +'/' + dir_ses
-                    delete_ses=False
-                    if delete_T1only:
-                        list_dir_modality=os.listdir(path_ses)
-                        if not 'func' in list_dir_modality:
+        if path_file_id!="": 
+            with open(path_file_id, 'r') as list_id:
+                list_id=list_id.readlines()
+                list_id=[int(x.strip('\n')) for x in list_id]
+                list_id.sort()
+
+            list_dir_all = os.listdir(path_exp)
+            list_dir_all.sort()
+            for dir_sub in list_dir_all:
+                if dir_sub.startswith('sub-'):
+                    id_sub=int(dir_sub.replace('sub-',''))
+                    if not id_sub in list_id:
+                        path_sub=path_exp +'/' + dir_sub
+                        shutil.rmtree(path_sub)
+                        print('Deleted ' + dir_sub + ' as subject not on the list.')
+        else:
+            list_dir_all = os.listdir(path_exp)
+            list_dir_all.sort()
+            for dir_sub in list_dir_all:
+                if dir_sub.startswith('sub-'):
+                    path_sub=path_exp +'/' + dir_sub
+                    list_dir_ses = os.listdir(path_sub)
+                    for dir_ses in list_dir_ses:
+                        path_ses=path_sub +'/' + dir_ses
+                        delete_ses=False
+                        if delete_T1only:
+                            list_dir_modality=os.listdir(path_ses)
+                            if not 'func' in list_dir_modality:
+                                delete_ses=True
+                        if not dir_ses in ses_remain:
                             delete_ses=True
-                    if not dir_ses in ses_remain:
-                        delete_ses=True
-                    if delete_ses:
-                        shutil.rmtree(path_ses)
-                    
-                if len(os.listdir(path_sub))==0:
-                    shutil.rmtree(path_sub)
-                    print('Deleted ' + dir_sub + ' as no data exists for the subject.')
+                        if delete_ses:
+                            shutil.rmtree(path_ses)
+
+                    if len(os.listdir(path_sub))==0:
+                        shutil.rmtree(path_sub)
+                        print('Deleted ' + dir_sub + ' as no data exists for the subject.')
 
         list_dir_postremoval=os.listdir(path_exp)
         list_dir_postremoval.sort()
@@ -166,12 +184,15 @@ class Fs2Fmriprep():
     def __init__(self,
         #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
         #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/input/id_5sub.txt',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/input/id_5sub.txt',
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/input/id_5sub.txt',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/log/id_mild_2.csv',
         #path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
+        #path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
+        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/output',
         #path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
         #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output/freesurfer'
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/output/freesurfer'
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/output/freesurfer'
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/output/freesurfer'
         ):
 
         with open(path_file_id, 'r') as list_id:
@@ -429,6 +450,60 @@ class ExtractMltDcmHeader():
 
         print('All done.')
 
+
+##################################################
+# Extract XCP-processed FC or TS data
+##################################################
+
+class ExtractXCP():
+    def __init__(self,
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p',
+        #path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/42_fc',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/43_ts',
+        atlases=['aal116','glasser360','gordon333','power264','schaefer100','schaefer200','schaefer400'],
+        #suffix_result='.net',
+        suffix_result='_ts.1D',
+        file_id='id_5sub.txt'
+        ):
+
+        print('Starting XCP result extraction.')
+
+        # Create output folder
+        print('Starting to create output folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating output folder.')
+
+        # Copy log folder
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        # Copy result
+        print('Starting to copy result files.')
+        path_file_id=os.path.join(path_output,'log',file_id)
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+        for index in list_id:
+            label_sub='sub-'+str(index).zfill(5)
+            for atlas in atlases:
+                file_from=label_sub+'_'+atlas+suffix_result
+                path_file_from=os.path.join(path_input,'output',label_sub,'fcon',atlas,file_from)
+                path_file_to=os.path.join(path_output,'output',file_from)
+                shutil.copy(path_file_from,path_file_to)
+            print('Copied results for '+ label_sub)
+        print('Finished copying result files')
+
+        print('Finishd XCP result extraction.')
+                
 
 ##################################################
 # Change folder permission
