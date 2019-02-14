@@ -56,8 +56,8 @@ paths<-func_path()
 #**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"Functionalities/Functions.R"))
-source(file.path(paths$script,"Functionalities/Graphs.R"))
+source(file.path(paths$script,"functionality/function.R"))
+source(file.path(paths$script,"functionality/graph.R"))
 
 
 #**************************************************
