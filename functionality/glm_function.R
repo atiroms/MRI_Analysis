@@ -15,9 +15,10 @@ library(car)
 #**************************************************
 # GLM analysis ====================================
 #**************************************************
-#glm_routine<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar){
+
 glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
   name_model<-paste(colnames(df_covar_sub)[,-which(colnames(df_covar_sub)=="ID_pnTTC")],sep="_")
+  output<-data.frame()
   for (i in seq(nrow(df_meas_mri))){
     df_mri_sub<-df_mri
     for (col_meas in colnames(df_meas_mri)){
@@ -42,14 +43,30 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
     
     # Calculate stats for each explanatory variables
     for (j in seq(ncol(df_covar_sub))){
-      
+      contrast<-matrix(0L,nrow=1, ncol=ncol(df_covar)+1)
+      contrast[1,j+1]<-1
+      ttest<-tryCatch(summary(glht(glmfit, linfct = contrast))$test,
+                      error=function(e){return(NaN)},
+                      warning=function(e){return(NaN)},
+                      silent=T)
+      if (length(ttest)==1){
+        output_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar)[j],
+                          NaN,NaN,NaN,NaN,
+                          vifactor[j],xic[1],xic[2])
+      }else{
+        output_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar)[j],
+                          ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],
+                          vifactor[j],xic[1],xic[2])
+      }
+      colnames(output_meas)<-c(colnames(df_meas_mri),"model","var_exp","beta","sigma","t","p","VIF","AIC","BIC")
+      output<-rbind(output,output_add)
     }
   }
+  return(output)
+}
+
   
-  
-  
-  
-  
+glm_routine_old<-function(input_MRI_data,input_measures,input_covar,id_covar,n_expvar){
   n_measures<-nrow(input_measures)
   output<-data.frame(matrix(nrow=0,ncol=(9+ncol(input_measures))))
 #  output<-data.frame(matrix(ncol=2+5*n_expvar,nrow=n_measures))
