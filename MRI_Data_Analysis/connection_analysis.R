@@ -70,11 +70,12 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
   print("Starting to calculate GLM of FCs.")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
-  path_file_input<-file.path(paths_$input,"output","fc.csv")
-  df_fc<-read.csv(path_file_input)
+  df_fc<-read.csv(file.path(paths_$input,"output","fc.csv"))
   df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
+  colnames(df_fc)[colnames(d_fc)=="r"]<-"value"
   
-  glm<-func_glm(df_fc,data_clinical,list_covar_)
+  df_glm<-func_glm(df_fc,data_clinical,list_covar_)
+  write.csv(df_glm,file.path(paths_$output,"output","glm.csv"))
   
   
   
