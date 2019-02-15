@@ -24,20 +24,26 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
       df_mri_sub<-df_mri_sub[which(df_mri_sub[,col_meas]==df_meas_mri[i,col_meas]),]
     }
     
-    # objective variable (some MRI measure)
+    # Objective variable (some MRI measure)
     var_obj<-as.numeric.factor(df_mri_sub["value"])
     
+    # GLM calculation
     formula_lm<-var_obj~1
     for (j in seq(ncol(df_covar_sub))){
       formula_lm<-update(formula_lm,~.+df_covar_sub[,j])
     }
     glmfit<-lm(formula_lm)
+    
+    # Variance inflation factor
+    vifactor<-NaN
     if(ncol(df_covar_sub)>1){
       suppressWarnings(vifactor<-vif(glmfit))
-    }else{
-      vifactor<-NaN
     }
     
+    # Calculate stats for each explanatory variables
+    for (j in seq(ncol(df_covar_sub))){
+      
+    }
   }
   
   
