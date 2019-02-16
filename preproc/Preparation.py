@@ -10,6 +10,7 @@ import nilearn.image as nl_image
 import json
 import numpy as np
 import pydicom
+import datetime
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
 def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
@@ -219,9 +220,11 @@ class Fs2Fmriprep():
 
 class CreateCohortfile():
     def __init__(self,
+        n_proc=1,
         #path_out='C:/Users/atiro/Dropbox/MRI/XCP_tutorial',
         #path_file_id='C:/Users/atiro/Dropbox/MRI/XCP_tutorial/id.txt',
-        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/func_cohort.csv',
+        #path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/func_cohort.csv',
+        path_dir_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input',
         path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/log/id_5sub.txt',
         suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
         #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
@@ -234,21 +237,39 @@ class CreateCohortfile():
             list_id=list_id.readlines()
             list_id=[int(x.strip('\n')) for x in list_id]
             list_id.sort()
-        output_anat=pd.DataFrame(columns=['id0','img'])
+
+        # Make list of ID lists
+        n_subj=len(list_id)
+        n_subj_per_proc=int(np.ceil(n_subj/n_proc))
+        n_proc_floor=n_proc*n_subj_per_proc-n_subj
+        n_proc_ceil=n_proc-n_proc_floor
+        print('  '+str(n_subj)+' total subs, '+str(n_proc)+' total procs, '+str(n_proc_ceil)+' procs with '
+              +str(n_subj_per_proc)+' subs, '+str(n_proc_floor)+' procs with '+ str(n_subj_per_proc-1)+' subs.')
+        list_list_id=[]
+        for id_proc in range(n_proc):
+            if id_proc<n_proc_ceil:
+                list_list_id.append(list_id[(id_proc*n_subj_per_proc):((id_proc+1)*n_subj_per_proc)])
+            else:
+                list_list_id.append(list_id[(n_subj_per_proc*n_proc_ceil+(id_proc-n_proc_ceil)*(n_subj_per_proc-1)):
+                                            (n_subj_per_proc*n_proc_ceil+(id_proc-n_proc_ceil+1)*(n_subj_per_proc-1))])
+        
+        #output_anat=pd.DataFrame(columns=['id0','img'])
         #output_func=pd.DataFrame(columns=['id0','antsct','img'])
-        output_func=pd.DataFrame(columns=['id0','img'])
-        for index in list_id:
-            output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
-                                                      'input/fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
-                                                     index=output_anat.columns),
-                                           ignore_index=True)
-            output_func=output_func.append(pd.Series(['sub-'+str(index).zfill(5),
-                                                      #'xcp_output/sub-'+str(index).zfill(5)+'/struc',
-                                                      'input/fmriprep/sub-'+str(index).zfill(5)+'/ses-01/func/sub-'+str(index).zfill(5)+suffix_file],
-                                                     index=output_func.columns),
-                                           ignore_index=True)
-        #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
-        output_func.to_csv(path_file_out,index=False)
+        for id_proc in range(n_proc):
+            output_func=pd.DataFrame(columns=['id0','img'])
+            for id_subj in list_list_id[id_proc]:
+                #output_anat=output_anat.append(pd.Series(['sub-'+str(index).zfill(5),
+                #                                          'input/fmriprep/sub-'+str(index).zfill(5)+'/anat/sub-'+str(index).zfill(5)+'_desc-preproc_T1w.nii.gz'],
+                #                                         index=output_anat.columns),
+                #                               ignore_index=True)
+                output_func=output_func.append(pd.Series(['sub-'+str(id_subj).zfill(5),
+                                                          #'xcp_output/sub-'+str(id_subj).zfill(5)+'/struc',
+                                                          'input/fmriprep/sub-'+str(id_subj).zfill(5)+'/ses-01/func/sub-'+str(id_subj).zfill(5)+suffix_file],
+                                                         index=output_func.columns),
+                                               ignore_index=True)
+            #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
+            path_file_out=os.path.join(path_dir_out,'func_cohort_'+str(id_proc).zfill(2)+'.csv')
+            output_func.to_csv(path_file_out,index=False)
         print('Finished creating XCP cohort file.')
 
 
@@ -279,31 +300,67 @@ class MoveAnat():
 
 
 ##################################################
+# Generate multiple scripts for parallel XCP
+##################################################
+class XCPScript():
+    def __init__(self,
+        n_proc=1,
+        path_exp='',
+        file_design='',
+        path_img_xcp='',
+        script=''
+        ):
+
+        output=''
+        for id_proc in range(n_proc):
+            str_id_proc=str(id_proc).zfill(2)
+            script_proc_head='# Process No. '+ str_id_proc + '\n'
+            script_proc=script
+            script_proc=script_proc.replace('{path_exp}',path_exp).replace('{file_design}',file_design).replace('{path_img_xcp}',path_img_xcp)
+            script_proc=script_proc.replace('{id_proc}',str_id_proc)
+            script_proc_tail='\n\n\n'
+            script_proc=script_proc_head+script_proc+script_proc_tail
+            output=output+script_proc
+
+        path_file_output=os.path.join(path_exp,'log','XCP_script.sh')
+        file=open(path_file_output,'w')
+        file.write(output)
+        file.close()       
+
+
+##################################################
 # XCP preparation
 ##################################################
 # joining the above two classes and some more
 
 class XCPPrep():
     def __init__(self,
+        n_proc=5,
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein',
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/31_fmriprep_latest_syn_templateout',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/37_xcp_36p_spkreg_1mm',
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/38_xcp_36p_spkreg_2mm',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/40_xcp_aroma_2mm',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/41_xcp_acompcor_2mm',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/41_xcp_acompcor_2mm',
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/36_fmriprep_latest_syn_templateout_native',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/39_xcp_36p_spkreg_native',
+        path_fmriprep='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        path_exp='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/44_xcp_parallel',
         file_id='id_5sub.txt',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
-        path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
-        #path_file_design='fc-36p_fconly.dsn'
-        #path_file_design='fc-36p_fconly_old.dsn'
-        #path_file_design='fc-36p_spkreg_fconly.dsn'
-        #path_file_design='fc-aroma_fconly.dsn'
-        path_file_design='fc-acompcor_fconly.dsn'
+        #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
+        path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
+        #file_design='fc-36p_fconly.dsn',
+        #file_design='fc-36p_fconly_old.dsn',
+        #file_design='fc-36p_spkreg_fconly.dsn',
+        #file_design='fc-aroma_fconly.dsn',
+        #file_design='fc-acompcor_fconly.dsn',
+        file_design='fc-acompcor_fconly_noqcfc.dsn',
+        path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
+        script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
 
         print('Starting XCP preparation.')
@@ -314,6 +371,8 @@ class XCPPrep():
         list_paths_mkdir.append(path_exp)
         for d in ['input','output']:
             list_paths_mkdir.append(os.path.join(path_exp,d))
+        for i in range(n_proc):
+            list_paths_mkdir.append(os.path.join(path_exp,'output',str(i).zfill(2)))
         for p in list_paths_mkdir:
             if not os.path.exists(p):
                 os.makedirs(p)
@@ -326,8 +385,10 @@ class XCPPrep():
         shutil.copytree(path_log_in,path_log_out)
         print('Finished copying fMRIPrep log folder.')
 
-        # Create XCP cohor file
-        _=CreateCohortfile(path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
+        # Create XCP cohort file
+        _=CreateCohortfile(n_proc=n_proc,
+                           #path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
+                           path_dir_out=os.path.join(path_exp,'input'),
                            path_file_id=os.path.join(path_exp,'log',file_id),
                            suffix_file=suffix_img)
 
@@ -342,13 +403,18 @@ class XCPPrep():
         _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
 
         # Copy XCP design file from GitHub repsitory
-        print('Starting to copy XCP design file')
-        path_dsn_in=os.path.join(path_folder_design,path_file_design)
-        path_dsn_out=os.path.join(path_exp,'input',path_file_design)
+        print('Starting to copy XCP design file.')
+        path_dsn_in=os.path.join(path_folder_design,file_design)
+        path_dsn_out=os.path.join(path_exp,'input',file_design)
         shutil.copy(path_dsn_in,path_dsn_out)
-        print('Finished copying XCP design file')
+        print('Finished copying XCP design file.')
 
-        print('Finished XCP preparation')
+        # Generate XCP script
+        print('Starting to generate XCP script.')
+        _=XCPScript(n_proc, path_exp,file_design,path_img_xcp,script)
+        print('Finished generating XCP script.')
+
+        print('Finished XCP preparation.')
 
 
 ##################################################
