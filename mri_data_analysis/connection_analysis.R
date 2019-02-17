@@ -75,31 +75,33 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
   colnames(df_fc)[colnames(d_fc)=="r"]<-"value"
   
   df_glm<-func_glm(df_fc,data_clinical,list_covar_)
-  write.csv(df_glm,file.path(paths_$output,"output","glm.csv"))
+  path_file_glm<-file.path(paths_$output,"output","glm.csv")
+  write.csv(df_glm,path_file_glm)
+  print(paste("  GLM of FCs saved in:",path_file_glm,sep=" "))
+  print("Finished calculating GLM of FCs.")
   
+  # DF of GLM models and explainig variables
+  df_model_expvar<-df_glm[intersect(which(df_glm[,"from"]==df_glm[1,"from"]),
+                                    which(df_glm[,"to"]==df_glm[1,"to"])),
+                          c("model","exp_var")]
   
-  
-  
-  connection_data_tidy<-connection_data[,-which(colnames(connection_data)=="p")]
-  connection_data_tidy<-rename(connection_data_tidy,value=r)
-  glm<-CommonGLM(connection_data_tidy,covariate_label,F,dirname,"GLM_FC.csv")
-  
-  models_expvars<-glm[intersect(which(glm[,"from"]==glm[1,"from"]),
-                                which(glm[,"to"]==glm[1,"to"])),
-                      c("model","exp_var")]
   fig<-NULL
   glm_ordered<-NULL
-  for (i in 1:nrow(models_expvars)){
-    id_obs<-which(glm[,"model"]==models_expvars[i,"model"])
-    id_obs<-intersect(id_obs,which(glm[,"exp_var"]==models_expvars[i,"exp_var"]))
-    glm_subset<-glm[id_obs,]
-    glm_subset<-cbind(glm_subset,MultCompCorr(glm_subset))
+  # iterate over model / explaining variable pairs
+  for (i in 1:nrow(df_model_expvar)){
+    # Subset of df_glm of all connections with the i'th model / expvar pair
+    df_glm_subset<-df_glm[intersect(which(glm[,"model"]==df_model_expvar[i,"model"]),
+                                    which(glm[,"exp_var"]==df_model_expvar[i,"exp_var"])),]
+    # Add columns for all connection-level multiple comparison-corrected p values
+    df_glm_subset<-cbind(df_glm_subset,mltcomp_corr(df_glm_subset))
+    
+    # for each ROI, calculate seed-level multiple comparison-corrected p values
     for (j in rois){
       id_obs<-union(which(glm_subset$from==j),which(glm_subset$to==j))
       id_obs<-id_obs[order(id_obs)]
-      glm_subsubset<-glm_subset[id_obs,]
-      pvalues<-MultCompCorr(glm_subsubset)
-      for (k in 1:length(id_obs)){
+      glm_subsubset<-glm_subset[id_obs,]  # subset of glm_subset, starts or ends ad ROI j
+      pvalues<-MultCompCorr(glm_subsubset)  # multiple comparison-corrected p values
+      for (k in 1:length(id_obs)){  # iterate over connections which starts / ends at ROI j
         for (l in colnames(pvalues)){
           if (is.null(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
             glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
@@ -113,8 +115,8 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
       }
     }
     nodes_edges<-GLM_FC2Graph(glm_subset,rois)
-    fig_title<-paste("GLM Beta of Model:",models_expvars[i,"model"],
-                     ", Explanatory Variable:",models_expvars[i,"exp_var"],sep=" ")
+    fig_title<-paste("GLM Beta of Model:",df_model_expvar[i,"model"],
+                     ", Explanatory Variable:",df_model_expvar[i,"exp_var"],sep=" ")
     fig<-c(fig,list(CircularPlot(nodes_edges,
                                  pvalue_type="seed_p_Benjamini_Hochberg",
                                  input_title=fig_title)))

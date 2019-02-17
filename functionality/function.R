@@ -102,3 +102,18 @@ func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T,sav
   output<-list("corr"=corr, "corr_flat"=corr_flat,"fig"=fig)
   return(output)
 }
+
+
+#**************************************************
+# Multiple comparison correction of p values ======
+#**************************************************
+
+mltcomp_corr<-function(input){
+  output<-data.frame(p_Bonferroni=p.adjust(input$p,method = "bonferroni"))
+  output$p_Holm_Bonferroni<-p.adjust(input$p,method = "holm")
+  output$p_Hochberg<-p.adjust(input$p,method = "hochberg")
+  output$p_Hommel<-p.adjust(input$p,method = "hommel")
+  output$p_Benjamini_Hochberg<-p.adjust(input$p,method="BH")
+  output$p_Benjamini_Yekutieli<-p.adjust(input$p,method="BY")
+  return(output)
+}

@@ -19,7 +19,7 @@ library(car)
 # GLM modelling and statistics calculation per one GLM
 glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
   name_model<-paste(colnames(df_covar_sub)[,-which(colnames(df_covar_sub)=="ID_pnTTC")],sep="_")
-  output<-data.frame()
+  <-data.frame()
   for (i in seq(nrow(df_meas_mri))){
     df_mri_sub<-df_mri
     for (col_meas in colnames(df_meas_mri)){
@@ -51,19 +51,19 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
                       warning=function(e){return(NaN)},
                       silent=T)
       if (length(ttest)==1){
-        output_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j],
-                          NaN,NaN,NaN,NaN,
-                          vifactor[j],xic[1],xic[2])
+        df_output_per_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j],
+                                  NaN,NaN,NaN,NaN,
+                                  vifactor[j],xic[1],xic[2])
       }else{
-        output_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j],
-                          ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],
-                          vifactor[j],xic[1],xic[2])
+        df_output_per_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j],
+                                  ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],
+                                  vifactor[j],xic[1],xic[2])
       }
-      colnames(output_meas)<-c(colnames(df_meas_mri),"model","var_exp","beta","sigma","t","p","VIF","AIC","BIC")
-      output<-rbind(output,output_add)
+      colnames(df_output_per_meas)<-c(colnames(df_meas_mri),"model","var_exp","beta","sigma","t","p","VIF","AIC","BIC")
+      df_output<-rbind(df_output,df_output_per_meas)
     }
   }
-  return(output)
+  return(df_output)
 }
 
 
@@ -88,31 +88,31 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   df_meas_mri<-df_mri[df_mri$ID_pnTTC==df_mri[1,ID_pnTTC],]
   df_meas_mri[,c("ID_pnTTC","value")]<-list(NULL)
   
-  n_covar<-length(list_covar)
-  
-  output<-NULL
-  for (i in n_covar:1){
-    combn_covar<-combn(n_covar,i)
+  df_glm<-NULL
+  for (i in length(list_covar):1){   # Iterate over number of covariates
+    combn_covar<-combn(length(list_covar),i)
     n_combn_covar<-dim(combn_covar)[2]
-    for (j in 1:combn_covar){
+    for (j in 1:n_combn_covar){   # Iterate over combination of covariates
       id_covar<-combn_covar[,j]
       df_covar_sub<-df_covar[,c("ID_pnTTC",list_covar[id_covar])]
-      output<-rbind(output,glm_routine(df_mri,df_meas_mri,df_covar_sub))
+      # Calculate GLM model for each model (set of variables)
+      df_glm<-rbind(df_glm,glm_routine(df_mri,df_meas_mri,df_covar_sub)) 
     }
-  }
-  output$AIC_best<-F
-  output$BIC_best<-F
-  for (i in 1:n_measures){
-    obs_id<-1:nrow(output)
-    for (j in colnames(measures)){
-      obs_id<-intersect(obs_id,which(output[,j]==measures[i,j]))
-    }
-    id_minAIC<-which.min(output[obs_id,"AIC"])
-    output[obs_id[id_minAIC],"AIC_best"]<-T
-    id_minBIC<-which.min(output[obs_id,"BIC"])
-    output[obs_id[id_minBIC],"BIC_best"]<-T
   }
   
-  #write.csv(output, file.path(dirname,filename),row.names=F)
-  return(output)
+  # For each MRI measure, calculate which model exhibits smallest AIC or BIC
+  df_glm$AIC_min<-F
+  df_glm$BIC_min<-F
+  for (i in 1:nrow(df_meas_mri)){
+    id_obs<-1:nrow(df_glm)
+    for (j in colnames(df_meas_mri)){
+      id_obs<-intersect(id_obs,which(df_glm[,j]==df_meas_mri[i,j]))
+    }
+    id_minAIC<-which.min(df_glm[id_obs,"AIC"])
+    df_glm[id_obs[id_minAIC],"AIC_min"]<-T
+    id_minBIC<-which.min(df_glm[id_obs,"BIC"])
+    df_glm[id_obs[id_minBIC],"BIC_min"]<-T
+  }
+  
+  return(df_glm)
 }
