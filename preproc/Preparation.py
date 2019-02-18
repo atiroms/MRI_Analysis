@@ -421,6 +421,14 @@ class XCPPrep():
 
 
 ##################################################
+# Unite XCP multiprocessing results
+##################################################
+
+# move xcp result
+# integrate func-cohort.csv
+# integrate n*_quant?
+
+##################################################
 # Space ID file
 ##################################################
 # MRIQC data merging with CSUB file
