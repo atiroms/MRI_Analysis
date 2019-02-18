@@ -15,27 +15,18 @@ library(colorRamps)
 
 
 #**************************************************
-# Plot correlation matrix =========================
+# Plot correlation matrix in heatmap ==============
 #**************************************************
-plot_corrmat<-function(input,dict_roi,title){
-  input<-data.frame(input)
-  for(i in seq(ncol(input))){
-    colnames(input)[i]<-as.character(dict_roi[which(dict_roi$ID_long==colnames(input)[i]),"label_proper"])
-  }
-  input<-rownames_to_column(input, "row")
-  for(i in seq(nrow(input))){
-    input$row[i]<-as.character(dict_roi[which(dict_roi$ID_long==input$row[i]),"label_proper"])
-  }
+cor_heatmap<-function(input){
   input_tidy<-gather(input,column,r,2:ncol(input))
   fig<-ggplot(input_tidy, aes(column, row)) +
     geom_tile(aes(fill = r)) +
     scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1)) +
     scale_y_discrete(limits = rev(input$row)) +
     scale_x_discrete(limits = input$row, position="top") +
-    ggtitle(title) +
+    #ggtitle(title) +
     theme_light() +
-    theme(plot.title = element_text(hjust = 0.5),
-          axis.text.x = element_text(size=700/ncol(input),angle = 90,vjust=0,hjust=0),
+    theme(axis.text.x = element_text(size=700/ncol(input),angle = 90,vjust=0,hjust=0),
           axis.text.y = element_text(size=700/ncol(input)),
           axis.title=element_blank(),
           panel.grid.major=element_blank(),

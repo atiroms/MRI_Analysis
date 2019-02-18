@@ -72,34 +72,22 @@ func_clinical_data<-function(paths,
 #**************************************************
 # General correlation calculation =================
 #**************************************************
-func_corr<-function(input, dict_roi, paths, prefix_outputfile, plot=T,save=T,save_plot=T){
-  corr <-rcorr(as.matrix(input), type="pearson")
+func_cor<-function(input){
+  cor <-rcorr(as.matrix(input), type="pearson")
   n_node<-ncol(input)
-  corr_flat<-data.frame(matrix(nrow=n_node*(n_node-1)/2,ncol=4))
-  colnames(corr_flat)<-c("from","to","r","p")
+  cor_flat<-data.frame(matrix(nrow=n_node*(n_node-1)/2,ncol=4))
+  colnames(cor_flat)<-c("from","to","r","p")
   k<-0
   for (i in 1:(n_node-1)){
     for (j in (i+1):n_node){
       k<-k+1
-      corr_flat[k,1:4]<-c(rownames(corr$r)[i],
-                          colnames(corr$r)[j],
-                          corr$r[i,j],
-                          corr$P[i,j])
+      cor_flat[k,1:4]<-c(rownames(cor$r)[i],
+                          colnames(cor$r)[j],
+                          cor$r[i,j],
+                          cor$P[i,j])
     }
   }
-  if (plot){
-    fig<-plot_corrmat(input=corr$r,dict_roi,title=paste(prefix_outputfile,"correlation matrix"))
-    if(save_plot){
-      ggsave(paste(prefix_outputfile,"mat.eps",sep="_"),plot=fig,device=cairo_ps,
-             path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
-    }
-  }else{
-    fig<-NULL
-  }
-  if (save){
-    write.csv(corr_flat, file.path(paths$output,"output",paste(prefix_outputfile,"rp.csv",sep="_")),row.names=F)
-  }
-  output<-list("corr"=corr, "corr_flat"=corr_flat,"fig"=fig)
+  output<-list("cor"=cor, "cor_flat"=cor_flat)
   return(output)
 }
 
