@@ -353,8 +353,8 @@ class XCPPrep():
         path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/45_xcp_acompcor_full',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/46_xcp_acompcor_fc_roiquant',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/47_xcp_acompcor_full',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/48_xcp_acompcor_fc_roiquant',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/47_xcp_acompcor_full',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/48_xcp_acompcor_fc_roiquant',
         file_id='id_5sub.txt',
         #file_id='id_mild_1.csv',
         #file_id='id_mild_2.csv',
@@ -368,8 +368,8 @@ class XCPPrep():
         #file_design='fc-36p_spkreg_fconly.dsn',
         #file_design='fc-aroma_fconly.dsn',
         #file_design='fc-acompcor_fconly.dsn',
-        file_design='fc-acompcor.dsn',
-        #file_design='fc-acompcor_fc_roiquant.dsn',
+        #file_design='fc-acompcor.dsn',
+        file_design='fc-acompcor_fc_roiquant.dsn',
         path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
         script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
