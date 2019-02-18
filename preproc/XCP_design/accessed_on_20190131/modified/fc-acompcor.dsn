@@ -33,7 +33,7 @@
 ###################################################################
 
 analysis=fc_$(whoami)
-design=/data/jux/BBL/projects/testACT/script/designfiles/fc-aroma.dsn
+design=/data/jux/BBL/projects/testACT/script/designfiles/fc-acompcor.dsn
 sequence=anatomical
 standard=MNI%2x2x2
 
@@ -41,8 +41,7 @@ standard=MNI%2x2x2
 # PIPELINE
 ###################################################################
 
-#pipeline=prestats,confound2,regress,fcon,reho,alff,seed,roiquant,norm,qcfc
-pipeline=prestats,confound2,regress,fcon,norm,qcfc
+pipeline=prestats,confound2,regress,fcon,reho,alff,seed,roiquant,norm,qcfc
 
 ###################################################################
 # 1 PRESTATS
@@ -56,20 +55,20 @@ prestats_process[1]=FMP
 # 2 CONFOUND2
 ###################################################################
 
-confound2_rps[2]=0
+confound2_rps[2]=1
 confound2_rms[2]=0
-confound2_wm[2]=1
-confound2_csf[2]=1
+confound2_wm[2]=0
+confound2_csf[2]=0
 confound2_gsr[2]=0
-confound2_acompcor[2]=0
+confound2_acompcor[2]=1
 confound2_tcompcor[2]=0
-confound2_aroma[2]=1
+confound2_aroma[2]=0
 confound2_past[2]=0
-confound2_dx[2]=0
+confound2_dx[2]=1
 confound2_sq[2]=1
 confound2_censor[2]=0
 confound2_censor_contig[2]=0
-confound2_rerun[2]=0
+confound2_rerun[2]=1
 confound2_cleanup[2]=1
 
 ###################################################################
@@ -109,47 +108,47 @@ fcon_cleanup[4]=1
 # 5 REHO
 ###################################################################
 
-#reho_nhood[5]=vertices
-#reho_roikw[5]=0 # does nothing at the moment
-#reho_sptf[5]=susan
-#reho_smo[5]=6
-#reho_rerun[5]=0
-#reho_cleanup[5]=1
+reho_nhood[5]=vertices
+reho_roikw[5]=0 # does nothing at the moment
+reho_sptf[5]=susan
+reho_smo[5]=6
+reho_rerun[5]=0
+reho_cleanup[5]=1
 
 ###################################################################
 # 6 ALFF
 ###################################################################
 
-#alff_hipass[6]=0.01
-#alff_lopass[6]=0.08
-#alff_sptf[6]=susan
-#alff_smo[6]=6
-#alff_rerun[6]=0
-#alff_cleanup[6]=1
+alff_hipass[6]=0.01
+alff_lopass[6]=0.08
+alff_sptf[6]=susan
+alff_smo[6]=6
+alff_rerun[6]=0
+alff_cleanup[6]=1
 
 ###################################################################
 # 7 SEED
 ###################################################################
 
-#seed_points[7]=0,-62,24
-#seed_radius[7]=8
-#seed_names[7]=PCC
-#seed_mask[cxt]=
-#seed_metric[7]=corrcoef
-#seed_sptf[7]=susan
-#seed_smo[7]=6
-#seed_rerun[7]=0
-#seed_cleanup[7]=1
+seed_points[7]=0,-62,24
+seed_radius[7]=8
+seed_names[7]=PCC
+seed_mask[cxt]=
+seed_metric[7]=corrcoef
+seed_sptf[7]=susan
+seed_smo[7]=6
+seed_rerun[7]=0
+seed_cleanup[7]=1
 
 ###################################################################
 # 8 ROIQUANT
 ###################################################################
 
-#roiquant_atlas[8]=power264
-#roiquant_globals[8]=1
-#roiquant_vol[8]=0
-#roiquant_rerun[8]=0
-#roiquant_cleanup[8]=1
+roiquant_atlas[8]=power264
+roiquant_globals[8]=1
+roiquant_vol[8]=0
+roiquant_rerun[8]=0
+roiquant_cleanup[8]=1
 
 ###################################################################
 # 9 NORM

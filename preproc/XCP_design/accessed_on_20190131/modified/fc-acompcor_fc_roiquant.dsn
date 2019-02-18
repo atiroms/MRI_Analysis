@@ -33,7 +33,7 @@
 ###################################################################
 
 analysis=fc_$(whoami)
-design=/data/jux/BBL/projects/testACT/script/designfiles/fc-aroma.dsn
+design=/data/jux/BBL/projects/testACT/script/designfiles/fc-acompcor.dsn
 sequence=anatomical
 standard=MNI%2x2x2
 
@@ -42,7 +42,7 @@ standard=MNI%2x2x2
 ###################################################################
 
 #pipeline=prestats,confound2,regress,fcon,reho,alff,seed,roiquant,norm,qcfc
-pipeline=prestats,confound2,regress,fcon,norm,qcfc
+pipeline=prestats,confound2,regress,fcon,roiquant,norm,qcfc
 
 ###################################################################
 # 1 PRESTATS
@@ -56,20 +56,20 @@ prestats_process[1]=FMP
 # 2 CONFOUND2
 ###################################################################
 
-confound2_rps[2]=0
+confound2_rps[2]=1
 confound2_rms[2]=0
-confound2_wm[2]=1
-confound2_csf[2]=1
+confound2_wm[2]=0
+confound2_csf[2]=0
 confound2_gsr[2]=0
-confound2_acompcor[2]=0
+confound2_acompcor[2]=1
 confound2_tcompcor[2]=0
-confound2_aroma[2]=1
+confound2_aroma[2]=0
 confound2_past[2]=0
-confound2_dx[2]=0
+confound2_dx[2]=1
 confound2_sq[2]=1
 confound2_censor[2]=0
 confound2_censor_contig[2]=0
-confound2_rerun[2]=0
+confound2_rerun[2]=1
 confound2_cleanup[2]=1
 
 ###################################################################
@@ -145,11 +145,11 @@ fcon_cleanup[4]=1
 # 8 ROIQUANT
 ###################################################################
 
-#roiquant_atlas[8]=power264
-#roiquant_globals[8]=1
-#roiquant_vol[8]=0
-#roiquant_rerun[8]=0
-#roiquant_cleanup[8]=1
+roiquant_atlas[8]=power264
+roiquant_globals[8]=1
+roiquant_vol[8]=0
+roiquant_rerun[8]=0
+roiquant_cleanup[8]=1
 
 ###################################################################
 # 9 NORM
@@ -165,4 +165,3 @@ qcfc_atlas[10]=power264
 qcfc_sig[10]=fdr
 qcfc_rerun[10]=0
 qcfc_cleanup[10]=1
-
