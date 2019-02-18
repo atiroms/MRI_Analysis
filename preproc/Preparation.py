@@ -377,6 +377,13 @@ class XCPPrep():
                 os.makedirs(p)
         print('Finished creating experiment folder.')
 
+        # Copy fmriprep log file
+        print('Starting to copy fMRIPrep log folder.')
+        path_log_in=os.path.join(path_fmriprep,'log')
+        path_log_out=os.path.join(path_exp,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying fMRIPrep log folder.')
+
         # Create XCP cohort file
         _=CreateCohortfile(n_proc=n_proc,
                            #path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
@@ -395,13 +402,6 @@ class XCPPrep():
         print('Starting to generate XCP script.')
         _=XCPScript(n_proc, path_exp,file_design,path_img_xcp,script)
         print('Finished generating XCP script.')
-
-        # Copy fmriprep log file
-        print('Starting to copy fMRIPrep log folder.')
-        path_log_in=os.path.join(path_fmriprep,'log')
-        path_log_out=os.path.join(path_exp,'log')
-        shutil.copytree(path_log_in,path_log_out)
-        print('Finished copying fMRIPrep log folder.')
 
         # Copy fMRIPrep preprocessed data to /input folder
         if not skip_fmriprep_copy:
