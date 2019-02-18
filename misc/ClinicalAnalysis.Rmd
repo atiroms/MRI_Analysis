@@ -1,0 +1,140 @@
+---
+title: "Clinical Analysis"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+## Parameters
+
+```{r Parameters, include=FALSE}
+#parent_dir <- "D:/atiroms"
+parent_dir <- "C:/Users/atiro"
+
+script_dir <- file.path(parent_dir,"GitHub/MRI_Analysis")
+input_dir <- file.path(parent_dir,"DropBox/MRI/Statistics/TS_Clinical")
+output_dir <- file.path(input_dir,"Clinical_data")
+
+subject_subset <- data.frame(W1_T1QC=1)
+```
+
+## Libraries
+
+```{r Libraries, include=FALSE}
+library(knitr)
+library(kableExtra)
+library(stargazer)
+library(formatR)
+library(ggplot2)
+library(ggpubr)
+library(plyr)
+
+source(file.path(script_dir,"Functionalities/Functions.R"))
+dirname<-ExpDir("Clinical")
+opts_knit$set(root.dir = dirname)
+```
+
+## Data Loading
+
+```{r Data Loading, include=FALSE, results='asis', tidy=TRUE, tidy.opts=list(width.cutoff=55)}
+source(file.path(script_dir,"Functionalities/LoadClinicalData.R"))
+clinical_data$Sex<-factor(clinical_data$Sex, levels=c(1,2))
+clinical_data <-clinical_data[which(!is.na(clinical_data$Sex)),]
+N_data<-data.frame(matrix(ncol=4,nrow=1))
+colnames(N_data)<-c("","Total","Male","Female")
+N_data[1,]<-c("Quality-controlled T1 and clinical data", nrow(clinical_data), length(which(clinical_data$Sex==1)), length(which(clinical_data$Sex==2)))
+#kable(N_data,"html",booktabs=T,caption="Subjects",digits=1) %>%
+#  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+#kable(N_data,"latex",booktabs=T,caption="Subjects",digits=1) %>%
+#  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+#kable(N_data,"latex",booktabs=T) %>%
+#  kable_styling(bootstrap_options = "striped", full_width = F, position = "left") %>%
+#  save_kable(file = "table.tex", self_contained = T)
+#stargazer(N_data, type = "html" , summary = FALSE, header=FALSE, rownames = FALSE,title="Subjects",out="N_data.html")
+```
+
+## TS Sex-wise Barplot
+
+```{r TS Sex-wise Barplot, echo=FALSE, fig.height=3, fig.width=5, results='asis', tidy=TRUE, tidy.opts=list(width.cutoff=55)}
+TS_data<-clinical_data[which(!is.na(clinical_data$W1_Tanner_Stage)),]
+N_data<-rbind(N_data,c("Tanner stage data",nrow(TS_data),length(which(TS_data$Sex==1)),length(which(TS_data$Sex==2))))
+#stargazer(N_data, type = "html" , summary = FALSE, header=FALSE, rownames = FALSE,title="Subjects",out="N_data2.html")
+kable(N_data,"latex",booktabs=T,caption="Subjects",digits=0) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center") %>%
+  column_spec(1, width = "10em")
+
+ggplot(as.data.frame(with(TS_data, table(W1_Tanner_Stage = factor(W1_Tanner_Stage), Sex))),aes(factor(W1_Tanner_Stage), y = Freq, fill = Sex)) +
+  geom_col(width=0.7, position = position_dodge(width=0.8)) + 
+  scale_fill_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral"),drop=FALSE) +
+  ggtitle("Tanner Stage for pn-TTC 1st Wave") +
+  xlab("Tanner Stage") +
+  ylab("Number of Subjects") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(size=10), axis.text.y = element_text(size=10), panel.grid.major.x=element_blank())
+```
+
+## TS-Age Sex-wise Correlation
+```{r TS-Age Sex-wise Correlation, echo=FALSE, fig.height=3, fig.width=5, results='asis', tidy=TRUE, tidy.opts=list(width.cutoff=55)}
+#TS_data <-TS_data[which(!is.na(TS_data$W1_Age_at_MRI)),]
+#TS_data<-TS_data[which(TS_data$T1exist==1),]
+TS_data_male <-TS_data[which(TS_data$Sex==1),]
+TS_data_female <-TS_data[which(TS_data$Sex==2),]
+TS_Age_Pearson_male <- cor.test(x=TS_data_male$W1_Age_at_MRI, y=TS_data_male$W1_Tanner_Stage, method = 'pearson', exact=F)
+TS_Age_Pearson_female <- cor.test(x=TS_data_female$W1_Age_at_MRI, y=TS_data_female$W1_Tanner_Stage, method = 'pearson', exact=F)
+TS_Age_Spearman_male <- cor.test(x=TS_data_male$W1_Age_at_MRI, y=TS_data_male$W1_Tanner_Stage, method = 'spearman', exact=F)
+TS_Age_Spearman_female <- cor.test(x=TS_data_female$W1_Age_at_MRI, y=TS_data_female$W1_Tanner_Stage, method = 'spearman', exact=F)
+cortest_data<-data.frame(matrix(ncol=6,nrow=2))
+cortest_data[1,]<-c(TS_Age_Pearson_male$estimate,TS_Age_Pearson_male$statistic,TS_Age_Pearson_male$p.value,TS_Age_Spearman_male$estimate,TS_Age_Spearman_male$statistic,TS_Age_Spearman_male$p.value)
+cortest_data[2,]<-c(TS_Age_Pearson_female$estimate,TS_Age_Pearson_female$statistic,TS_Age_Pearson_female$p.value,TS_Age_Spearman_female$estimate,TS_Age_Spearman_female$statistic,TS_Age_Spearman_female$p.value)
+colnames(cortest_data)<-c("r","t","p","r","s","p")
+rownames(cortest_data)<-c("Male","Female")
+#stargazer(cortest_data, type = "html" , summary = FALSE, header=FALSE, rownames = TRUE,digits=1,digits.extra=4, title="TS-Age Correlation", out="cortest_data.html")
+kable(cortest_data,"latex",booktabs=T,caption="TS-Age Correlation",digits=c(3,2,5,3,2,5)) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center") %>%
+  add_header_above(c("", "Pearson" = 3, "Spearman" = 3))
+```
+
+## TS-Age Sex-wise Regression
+```{r TS-Age Sex-wise Regression, echo=FALSE, fig.height=3, fig.width=5, results='asis', tidy=TRUE, tidy.opts=list(width.cutoff=55)}
+TS_Age_LM_male<-c(AIC(lm(W1_Tanner_Stage ~ W1_Age_at_MRI, data=TS_data_male)),AIC(lm(W1_Tanner_Stage ~ poly(W1_Age_at_MRI,2), data=TS_data_male)),AIC(lm(W1_Tanner_Stage ~ poly(W1_Age_at_MRI,3), data=TS_data_male)))
+TS_Age_LM_female<-c(AIC(lm(W1_Tanner_Stage ~ W1_Age_at_MRI, data=TS_data_female)),AIC(lm(W1_Tanner_Stage ~ poly(W1_Age_at_MRI,2), data=TS_data_female)),AIC(lm(W1_Tanner_Stage ~ poly(W1_Age_at_MRI,3), data=TS_data_female)))
+
+AIC_data<-data.frame(matrix(nrow=2,ncol=3))
+AIC_data[1,]<-c(TS_Age_LM_male)
+AIC_data[2,]<-c(TS_Age_LM_female)
+colnames(AIC_data)<-c("Linear","Quadratic","Cubic")
+rownames(AIC_data)<-c("Male","Female")
+#stargazer(AIC_data, type = "html" , summary = FALSE, header=FALSE, rownames = FALSE,out="aic_data.html")
+kable(AIC_data,"latex",booktabs=T,caption="AIC of Polynomial Models",digits=1) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+
+ggplot(TS_data,aes(x=W1_Age_at_MRI, y=W1_Tanner_Stage, colour=Sex,fill=Sex)) +
+  geom_point() +
+  scale_colour_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral")) +
+  scale_fill_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral")) +
+  geom_smooth(method = "lm") +
+  ggtitle("Tanner Stage vs Age for pn-TTC 1st Wave") +
+  xlab("Age (day)") +
+  ylab("Tanner Stage") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(size=10), axis.text.y = element_text(size=10), panel.grid.minor=element_blank())
+```
+
+## TS Residual-Age Plot
+```{r TS Residual-Age Plot, echo=FALSE, fig.height=3, fig.width=5, results='asis', tidy=TRUE, tidy.opts=list(width.cutoff=55)}
+TS_data_male$W1_Tanner_Stage_residual<-lm(W1_Tanner_Stage ~ W1_Age_at_MRI, data=TS_data_male)$residuals
+TS_data_female$W1_Tanner_Stage_residual<-lm(W1_Tanner_Stage ~ W1_Age_at_MRI, data=TS_data_female)$residuals
+TS_data<-rbind(TS_data_male,TS_data_female)
+TS_data<-TS_data[order(TS_data$ID_pnTTC),]
+
+ggplot(TS_data,aes(x=W1_Age_at_MRI, y=W1_Tanner_Stage_residual, colour=Sex,fill=Sex)) +
+  geom_point() +
+  scale_colour_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral")) +
+  scale_fill_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral")) +
+  ggtitle("Tanner Stage Residual vs Age for pn-TTC 1st Wave") +
+  xlab("Age (day)") +
+  ylab("Tanner Stage Residual") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(size=10), axis.text.y = element_text(size=10))
+```
