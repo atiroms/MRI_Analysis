@@ -116,3 +116,30 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   
   return(df_glm)
 }
+
+
+#**************************************************
+# GLM of FC results into nodes and edges ==========
+#**************************************************
+
+glm_fc2graph<-function(input_glm,input_nodes){
+  nodes<-data.frame(label=as.character(input_nodes))
+  nodes$label<-as.character(nodes$label)
+  nodes<-rowid_to_column(nodes, "id")
+  input_glm$from<-as.character(input_glm$from)
+  input_glm$to<-as.character(input_glm$to)
+  edges<-left_join(input_glm, nodes, by = c("from" = "label")) 
+  edges<-edges[,-which(colnames(edges)=="from")]
+  edges<-rename(edges, from = id)
+  edges<-left_join(edges, nodes, by = c("to" = "label"))
+  edges<-edges[,-which(colnames(edges)=="to")]
+  edges<-rename(edges, to = id)
+  edges<-rename(edges, weight=beta)
+  collabel<-colnames(edges)
+  collabel<-collabel[-c(which(collabel=="from"),which(collabel=="to"))]
+  collabel<-c("from","to",collabel)
+  edges<-edges[,collabel]
+  output<-list("nodes"=nodes,"edges"=edges)
+  return(output)
+}
+

@@ -73,7 +73,6 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
   df_fc<-read.csv(file.path(paths_$input,"output","fc.csv"))
   df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
   colnames(df_fc)[colnames(d_fc)=="r"]<-"value"
-  
   df_glm<-func_glm(df_fc,data_clinical,list_covar_)
   path_file_glm<-file.path(paths_$output,"output","glm.csv")
   write.csv(df_glm,path_file_glm)
@@ -84,7 +83,7 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
   df_model_expvar<-df_glm[intersect(which(df_glm[,"from"]==df_glm[1,"from"]),
                                     which(df_glm[,"to"]==df_glm[1,"to"])),
                           c("model","exp_var")]
-  
+  list_roi<-sort(unite(unique(df_fc$from),unique(df_fc$to)))
   fig<-NULL
   glm_ordered<-NULL
   # iterate over model / explaining variable pairs
@@ -96,25 +95,26 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar){
     df_glm_subset<-cbind(df_glm_subset,mltcomp_corr(df_glm_subset))
     
     # for each ROI, calculate seed-level multiple comparison-corrected p values
-    for (j in rois){
+    for (j in list_roi){
       id_obs<-union(which(glm_subset$from==j),which(glm_subset$to==j))
       id_obs<-id_obs[order(id_obs)]
-      glm_subsubset<-glm_subset[id_obs,]  # subset of glm_subset, starts or ends ad ROI j
-      pvalues<-MultCompCorr(glm_subsubset)  # multiple comparison-corrected p values
+      df_glm_subsubset<-df_glm_subset[id_obs,]  # subset of glm_subset, starts or ends ad ROI j
+      pvalues<-mltcomp_corr(df_glm_subsubset)  # multiple comparison-corrected p values
       for (k in 1:length(id_obs)){  # iterate over connections which starts / ends at ROI j
         for (l in colnames(pvalues)){
-          if (is.null(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
-            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+          if (is.null(df_glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+            df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
           }else if (is.na(glm_subset[id_obs[k],paste("seed",l,sep="_")])){
-            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+            df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
           }else{
-            glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(glm_subset[id_obs[k],paste("seed",l,sep="_")],
-                                                               pvalues[k,l])
+            df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(df_glm_subset[id_obs[k],paste("seed",l,sep="_")],
+                                                                  pvalues[k,l])
           }
         }
       }
     }
-    nodes_edges<-GLM_FC2Graph(glm_subset,rois)
+    graph<-glm_fc2graph(df_glm_subset,list_roi)
+    
     fig_title<-paste("GLM Beta of Model:",df_model_expvar[i,"model"],
                      ", Explanatory Variable:",df_model_expvar[i,"exp_var"],sep=" ")
     fig<-c(fig,list(CircularPlot(nodes_edges,
