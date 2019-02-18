@@ -11,7 +11,9 @@
 #**************************************************
 #path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
 #path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
-path_in <- "/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub"
+#path_in <- "/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub"
+#path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc"
 path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in   <- "30_xcp_36p"
 #dir_out  <- "05_ts_temp"
@@ -29,9 +31,13 @@ path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_out  <- "11_ts_aroma_2mm"
 #dir_in   <- "41_xcp_acompcor_2mm"
 #dir_out  <- "12_ts_acompcor_2mm"
+#dir_in    <- "44_xcp_parallel"
+#dir_out   <- "24_ts_acompcor_2mm"
 
-dir_in    <- "44_xcp_parallel"
-dir_out   <- "24_ts_acompcor_2mm"
+#dir_in <-"23_1_xcp_acompcor"
+#dir_out <-"03_1_ts_acompcor"
+dir_in <-"23_2_xcp_acompcor"
+dir_out <-"03_2_ts_acompcor"
 
 prefix_file_input<-"sub-"
 suffix_file_input<-"_power264_ts.1D"
@@ -110,7 +116,9 @@ extract_xcp<-function(paths_=paths,
       print(paste("Finished extracting subject",as.character(id_subj),sep=" "))
     }
   }
+  print("Starting to save results.")
   write.csv(output, file.path(paths_$output,"output","timeseries.csv"),row.names=F)
+  print("Finished saving results.")
   print("Finished extracting all files.")
   return(output)
 }
