@@ -351,7 +351,7 @@ class XCPPrep():
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
         path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/45_xcp_acompcor_full',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/45_xcp_acompcor_fc_roiquant',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/46_xcp_acompcor_fc_roiquant',
         file_id='id_5sub.txt',
         #file_id='id_mild_1.csv',
         #file_id='id_mild_2.csv',
