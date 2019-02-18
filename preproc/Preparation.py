@@ -335,25 +335,29 @@ class XCPScript():
 
 class XCPPrep():
     def __init__(self,
+        #skip_fmriprep_copy=False,
+        #skip_fmriprep_moveanat=False,
+        skip_fmriprep_copy=True,
+        skip_fmriprep_moveanat=True,
         n_proc=20,
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_1_xcp_36p',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_1_xcp_acompcor',
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_2_xcp_36p',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
         #file_id='id_5sub.txt',
-        #file_id='id_mild_1.csv',
-        file_id='id_mild_2.csv',
+        file_id='id_mild_1.csv',
+        #file_id='id_mild_2.csv',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
         #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
-        #file_design='fc-aroma_fconly_noqcfc.dsn',
-        file_design='fc-acompcor_fconly_noqcfc.dsn',
+        file_design='fc-aroma_fconly_noqcfc.dsn',
+        #file_design='fc-acompcor_fconly_noqcfc.dsn',
         path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
         script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
@@ -373,13 +377,6 @@ class XCPPrep():
                 os.makedirs(p)
         print('Finished creating experiment folder.')
 
-        # Copy fmriprep log file
-        print('Starting to copy fMRIPrep log folder.')
-        path_log_in=os.path.join(path_fmriprep,'log')
-        path_log_out=os.path.join(path_exp,'log')
-        shutil.copytree(path_log_in,path_log_out)
-        print('Finished copying fMRIPrep log folder.')
-
         # Create XCP cohort file
         _=CreateCohortfile(n_proc=n_proc,
                            #path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
@@ -387,17 +384,7 @@ class XCPPrep():
                            path_file_id=os.path.join(path_exp,'log',file_id),
                            suffix_file=suffix_img)
 
-        # Copy fMRIPrep preprocessed data to /input folder
-        print('Starting to copy fMRIPrep folder.')
-        path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
-        path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
-        shutil.copytree(path_fmriprep_in,path_fmriprep_out)
-        print('Finished copying fmriprep folder.')
-
-        # Move fmriprep /anat folder contents (workaround of XCP bug)
-        _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
-
-        # Copy XCP design file from GitHub repsitory
+        # Copy XCP design file from Git local repsitory
         print('Starting to copy XCP design file.')
         path_dsn_in=os.path.join(path_folder_design,file_design)
         path_dsn_out=os.path.join(path_exp,'input',file_design)
@@ -408,6 +395,27 @@ class XCPPrep():
         print('Starting to generate XCP script.')
         _=XCPScript(n_proc, path_exp,file_design,path_img_xcp,script)
         print('Finished generating XCP script.')
+
+        # Copy fmriprep log file
+        print('Starting to copy fMRIPrep log folder.')
+        path_log_in=os.path.join(path_fmriprep,'log')
+        path_log_out=os.path.join(path_exp,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying fMRIPrep log folder.')
+
+        # Copy fMRIPrep preprocessed data to /input folder
+        if not skip_fmriprep_copy:
+            print('Starting to copy fMRIPrep folder.')
+            path_fmriprep_in=os.path.join(path_fmriprep,'output/fmriprep')
+            path_fmriprep_out=os.path.join(path_exp,'input/fmriprep')
+            shutil.copytree(path_fmriprep_in,path_fmriprep_out)
+            print('Finished copying fmriprep folder.')
+
+        # Move fmriprep /anat folder contents (workaround of XCP bug)
+        print("Starting to move contents of /anat folder.")
+        if not skip_fmriprep_moveanat:
+            _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
+        print("Finished moving contents of /anat folder.")
 
         print('Finished XCP preparation.')
 
