@@ -340,17 +340,17 @@ class XCPPrep():
         skip_fmriprep_copy=True,
         skip_fmriprep_moveanat=True,
         n_proc=20,
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_1_xcp_36p',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_1_xcp_acompcor',
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_2_xcp_36p',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_2_xcp_aroma',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_2_xcp_aroma',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
         #file_id='id_5sub.txt',
-        file_id='id_mild_1.csv',
-        #file_id='id_mild_2.csv',
+        #file_id='id_mild_1.csv',
+        file_id='id_mild_2.csv',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
@@ -412,10 +412,10 @@ class XCPPrep():
             print('Finished copying fmriprep folder.')
 
         # Move fmriprep /anat folder contents (workaround of XCP bug)
-        print("Starting to move contents of /anat folder.")
         if not skip_fmriprep_moveanat:
+            print("Starting to move contents of /anat folder.")
             _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
-        print("Finished moving contents of /anat folder.")
+            print("Finished moving contents of /anat folder.")
 
         print('Finished XCP preparation.')
 
