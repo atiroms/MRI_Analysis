@@ -76,16 +76,16 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   list_id_subj<-df_clinical$ID_pnTTC
   
   # Set up covariate dataframe according to subsetting
-  df_covar<-df_clinical[,c("IC_pnTTC",list_covar)]
+  df_covar<-df_clinical[,c("ID_pnTTC",list_covar)]
   for (covar in list_covar){
     df_covar[,covar]<-df_covar[,covar]-mean(df_covar[,covar])
   }
   
   # Subset MRI datarame
-  df_mri<-df_mri[df_mri$ID_pnTTC %in% list_id_subj]
+  df_mri<-df_mri[df_mri$ID_pnTTC %in% list_id_subj,]
   
   # df of measurements per subject
-  df_meas_mri<-df_mri[df_mri$ID_pnTTC==df_mri[1,ID_pnTTC],]
+  df_meas_mri<-df_mri[df_mri$ID_pnTTC==df_mri[1,"ID_pnTTC"],]
   df_meas_mri[,c("ID_pnTTC","value")]<-list(NULL)
   
   df_glm<-NULL

@@ -9,16 +9,22 @@
 # Parameters ======================================
 #**************************************************
 # parameters for glm_fc()
-list_covar<-c("W1_Tanner_Stage","W1_Age_at_MRI")
+list_covar<-c("W1_Tanner_Max","W1_Age_at_MRI")
 
 # parameters for fc_corr()
-path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
-            "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
+#path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
+#dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
+#            "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
 #dir_in <- c("17_fc_36p_2mm","19_fc_aroma_2mm","20_fc_acompcor_2mm")
-dir_out <- "22_fc_corr"
+#dir_out <- "22_fc_corr"
 #dir_out <- "23_fc_corr_heatmap"
-subset_subj <- list(list("column"="W1_5sub","value"=1))
+dir_in <- "25_fc_acompcor_2mm"
+dir_out <- "26_glm_fc_acompcor"
+#dir_in <- "07_fc_acompcor"
+#dir_out <- "11_glm_fc_acompcor"
+#subset_subj <- list(list("column"="W1_5sub","value"=1))
+subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
 thr_pvalue <- 0.05
 
@@ -68,14 +74,15 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # General linear model of FCs =====================
 #**************************************************
-glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,thr_pvalue){
+glm_fc<-function(paths_=paths,subset_subj_=subset_subj,
+                 list_covar_=list_covar,thr_pvalue_=thr_pvalue){
   print("Starting to calculate GLM of FCs.")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
   df_fc<-read.csv(file.path(paths_$input,"output","fc.csv"))
   df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
-  colnames(df_fc)[colnames(d_fc)=="r"]<-"value"
-  df_glm<-func_glm(df_fc,data_clinical,list_covar_)
+  colnames(df_fc)[colnames(df_fc)=="r"]<-"value"
+  df_glm<-func_glm(df_mri=df_fc,data_clinical,list_covar=list_covar_)
   path_file_glm<-file.path(paths_$output,"output","glm.csv")
   write.csv(df_glm,path_file_glm)
   print(paste("  GLM of FCs saved in:",path_file_glm,sep=" "))
@@ -125,7 +132,7 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,th
       graph$node[j,"label"]<-as.character(dict_roi[which(dict_roi$ID_long==graph$node[j,"label"]),"label_proper"])
     }
     
-    fig_circular<-graph_circular(input=graph,type_pvalue="seed_p_Benjamini_Hochberg",thr_pvalue=thr_pvalue)
+    fig_circular<-graph_circular(input=graph,type_pvalue="seed_p_Benjamini_Hochberg",thr_pvalue=thr_pvalue_)
     
     fig_circular<-fig_circular +
       ggtitle(paste("GLM Beta\nModel: ",df_model_expvar[i,"model"],"\nExplanatory Variable: ",df_model_expvar[i,"exp_var"],sep=" ")) +
