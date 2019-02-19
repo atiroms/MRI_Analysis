@@ -34,10 +34,15 @@ path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in    <- "44_xcp_parallel"
 #dir_out   <- "24_ts_acompcor_2mm"
 
+#dir_in <-"22_1_xcp_aroma"
+#dir_out <-"02_1_ts_aroma"
+dir_in <-"22_2_xcp_aroma"
+dir_out <-"02_2_ts_aroma"
+
 #dir_in <-"23_1_xcp_acompcor"
 #dir_out <-"03_1_ts_acompcor"
-dir_in <-"23_2_xcp_acompcor"
-dir_out <-"03_2_ts_acompcor"
+#dir_in <-"23_2_xcp_acompcor"
+#dir_out <-"03_2_ts_acompcor"
 
 prefix_file_input<-"sub-"
 suffix_file_input<-"_power264_ts.1D"
