@@ -48,6 +48,9 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
       suppressWarnings(vifactor<-vif(glmfit))
     }
     
+    # Calculate information criteria
+    xic<-c(AIC(glmfit),BIC(glmfit))
+    
     # Calculate stats for each explanatory variables
     for (j in seq(ncol(df_covar_sub)-1)){
       contrast<-matrix(0L,nrow=1, ncol=ncol(df_covar_sub))
@@ -57,17 +60,20 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
                       warning=function(e){return(NaN)},
                       silent=T)
       if (length(ttest)==1){
-        df_output_per_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j],
+        df_output_per_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j+1],
                                   NaN,NaN,NaN,NaN,
                                   vifactor[j],xic[1],xic[2])
       }else{
-        df_output_per_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j],
+        df_output_per_meas<-cbind(df_meas_mri[i,],name_model,colnames(df_covar_sub)[j+1],
                                   ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1],
                                   vifactor[j],xic[1],xic[2])
       }
-      colnames(df_output_per_meas)<-c(colnames(df_meas_mri),"model","var_exp","beta","sigma","t","p","VIF","AIC","BIC")
+      colnames(df_output_per_meas)<-c(colnames(df_meas_mri),"model","var_exp","beta","sigma",
+                                      "t","p","VIF","AIC","BIC")
       df_output<-rbind(df_output,df_output_per_meas)
     }
+    print(paste("  Finished calculating MRI measure ",
+                as.character(i)," / ",as.character(nrow(df_meas_mri)),sep=""))
   }
   return(df_output)
 }
@@ -102,7 +108,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
       id_covar<-combn_covar[,j]
       df_covar_sub<-df_covar[,c("ID_pnTTC",list_covar[id_covar])]
       # Calculate GLM model for each model (set of variables)
-      df_glm<-rbind(df_glm,glm_routine(df_mri,df_meas_mri,df_covar_sub)) 
+      df_glm<-rbind(df_glm,glm_routine(df_mri,df_meas_mri,df_covar_sub))
     }
   }
   

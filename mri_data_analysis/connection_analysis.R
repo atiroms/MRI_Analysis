@@ -23,8 +23,8 @@ dir_in <- "25_fc_acompcor_2mm"
 dir_out <- "26_glm_fc_acompcor"
 #dir_in <- "07_fc_acompcor"
 #dir_out <- "11_glm_fc_acompcor"
-#subset_subj <- list(list("column"="W1_5sub","value"=1))
-subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
+subset_subj <- list(list("column"="W1_5sub","value"=1))
+#subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
 thr_pvalue <- 0.05
 
@@ -68,6 +68,7 @@ paths<-func_path()
 # Original library ================================
 #**************************************************
 source(file.path(paths$script,"functionality/function.R"))
+source(file.path(paths$script,"functionality/glm_function.R"))
 source(file.path(paths$script,"functionality/graph.R"))
 
 
@@ -80,11 +81,14 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
   df_fc<-read.csv(file.path(paths_$input,"output","fc.csv"))
+  # Convert NaN's to zero, delete p column and change column name r to value
+  df_fc$r[which(is.nan(df_fc$r))]<-0
   df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
   colnames(df_fc)[colnames(df_fc)=="r"]<-"value"
+  # Calculate GLM
   df_glm<-func_glm(df_mri=df_fc,data_clinical,list_covar=list_covar_)
   path_file_glm<-file.path(paths_$output,"output","glm.csv")
-  write.csv(df_glm,path_file_glm)
+  write.csv(df_glm,path_file_glm,row.names = F)
   print(paste("  GLM of FCs saved in:",path_file_glm,sep=" "))
   print("Finished calculating GLM of FCs.")
   
