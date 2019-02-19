@@ -18,8 +18,8 @@ library(car)
 
 # GLM modelling and statistics calculation per one GLM
 glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
-  name_model<-paste(colnames(df_covar_sub)[,-which(colnames(df_covar_sub)=="ID_pnTTC")],sep="_")
-  <-data.frame()
+  name_model<-paste(colnames(df_covar_sub)[-which(colnames(df_covar_sub)=="ID_pnTTC")],collapse="_")
+  df_output<-data.frame()
   for (i in seq(nrow(df_meas_mri))){
     df_mri_sub<-df_mri
     for (col_meas in colnames(df_meas_mri)){
@@ -27,13 +27,19 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
     }
     
     # Objective variable (some MRI measure)
-    var_obj<-as.numeric.factor(df_mri_sub["value"])
+    var_obj<-as.numeric.factor(df_mri_sub$value)
     
-    # GLM calculation
-    formula_lm<-var_obj~1
-    for (j in seq(ncol(df_covar_sub))){
-      formula_lm<-update(formula_lm,~.+df_covar_sub[,j])
+    # Define GLM formula as string first
+    for (j in seq(ncol(df_covar_sub)-1)){
+      assign(paste("covar",as.character(j),sep="_"),df_covar_sub[,j+1])
+      if (j==1){
+        str_formula_lm<-"var_obj~covar_1"
+      }else{
+        str_formula_lm<-paste(str_formula_lm,"+covar_",as.character(j),sep="")
+      }
     }
+    # Convert model string to formula ovject
+    formula_lm<-as.formula(str_formula_lm)
     glmfit<-lm(formula_lm)
     
     # Variance inflation factor
@@ -43,8 +49,8 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
     }
     
     # Calculate stats for each explanatory variables
-    for (j in seq(ncol(df_covar_sub))){
-      contrast<-matrix(0L,nrow=1, ncol=ncol(df_covar_sub)+1)
+    for (j in seq(ncol(df_covar_sub)-1)){
+      contrast<-matrix(0L,nrow=1, ncol=ncol(df_covar_sub))
       contrast[1,j+1]<-1
       ttest<-tryCatch(summary(glht(glmfit, linfct = contrast))$test,
                       error=function(e){return(NaN)},
