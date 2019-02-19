@@ -99,12 +99,14 @@ custom_densityDiag <- function(data, mapping, ...){
 # circular graph ==================================
 #**************************************************
 graph_circular<-function(input,type_pvalue,thr_pvalue){
-  edge_plot<-input$edges
+  edge_plot<-input$edge
   edge_plot<-edge_plot[which(edge_plot[,type_pvalue]<thr_pvalue),]
-  node_plot<-input$nodes
+  node_plot<-input$node
   r_node<-grep("^R ",node_plot$label)
   l_node<-rev(grep("^L ",node_plot$label))
-  node_plot<-rbind(node_plot[r_node,],node_plot[c(-r_node,-l_node),],node_plot[l_node,])
+  if (length(r_node)+length(l_node)>0){
+    node_plot<-rbind(node_plot[r_node,],node_plot[c(-r_node,-l_node),],node_plot[l_node,])
+  }
   node_plot$angle <- 90 - 360 * ((1:nrow(node_plot))-0.5) / nrow(node_plot)
   node_plot$hjust<-ifelse(node_plot$angle < -90, 1, 0)
   node_plot$angle<-ifelse(node_plot$angle < -90, node_plot$angle+180, node_plot$angle)
@@ -114,7 +116,7 @@ graph_circular<-function(input,type_pvalue,thr_pvalue){
   fig<-ggraph(data_igraph, layout = "linear",circular = T) +
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=label, angle = angle, hjust=hjust,vjust=0.2),
-                   size=2.5, alpha=1) +
+                   size=400/nrow(node_plot), alpha=1) +
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
     scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+

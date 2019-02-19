@@ -19,6 +19,7 @@ library(car)
 # GLM modelling and statistics calculation per one GLM
 glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
   name_model<-paste(colnames(df_covar_sub)[-which(colnames(df_covar_sub)=="ID_pnTTC")],collapse="_")
+  print(paste("  Calculating model",name_model,sep=" "))
   df_output<-data.frame()
   for (i in seq(nrow(df_meas_mri))){
     df_mri_sub<-df_mri
@@ -44,7 +45,7 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
     
     # Variance inflation factor
     vifactor<-NaN
-    if(ncol(df_covar_sub)>1){
+    if(ncol(df_covar_sub)>2){
       suppressWarnings(vifactor<-vif(glmfit))
     }
     
@@ -72,8 +73,8 @@ glm_routine<-function(df_mri,df_meas_mri,df_covar_sub){
                                       "t","p","VIF","AIC","BIC")
       df_output<-rbind(df_output,df_output_per_meas)
     }
-    print(paste("  Finished calculating MRI measure ",
-                as.character(i)," / ",as.character(nrow(df_meas_mri)),sep=""))
+    #print(paste("  Finished calculating MRI measure ",
+    #            as.character(i)," / ",as.character(nrow(df_meas_mri)),sep=""))
   }
   return(df_output)
 }
@@ -113,6 +114,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   }
   
   # For each MRI measure, calculate which model exhibits smallest AIC or BIC
+  print("  Comparing information criteria.")
   df_glm$AIC_min<-F
   df_glm$BIC_min<-F
   for (i in 1:nrow(df_meas_mri)){
