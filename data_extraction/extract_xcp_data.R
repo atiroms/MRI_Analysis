@@ -52,8 +52,8 @@ suffix_file_input<-"_ts.1D"
 
 #list_id_subj<-c(14,19,26,28,29)
 
-atlas_roi<-"Power"
-list_id_roi<-seq(264)
+#atlas_roi<-"Power"
+#list_id_roi<-seq(264)
 
 
 #**************************************************
@@ -97,21 +97,11 @@ extract_xcp_per_atlas<-function(paths__,
                                 atlas,
                                 dict_roi
                                 ){
-                                
-                                #paths_=paths,
-                                #prefix_file_input_=prefix_file_input,
-                                #suffix_file_input_=suffix_file_input,
-                                #list_id_subj_=list_id_subj,
-                                #atlas_roi_=atlas_roi,
-                                #list_id_roi_=list_id_roi
-                                #){
   
-  #nullobj<-func_createdirs(paths_)
-  #dict_roi<-func_dict_roi(paths_)
+  df_roi<-dict_roi[which(dict_roi$atlas==atlas),]
+  list_id_roi<-as.character(df_roi$id)
   
-  
-  
-  output<-data.frame(matrix(ncol=length(list_id_roi_)+2, nrow=0))
+  output<-data.frame(matrix(ncol=length(list_id_roi)+2, nrow=0))
   
   list_dir_proc<-list.dirs(file.path(paths_$input,"output"),recursive=F)
   for (dir_proc in list_dir_proc){
@@ -120,20 +110,18 @@ extract_xcp_per_atlas<-function(paths__,
     list_id_subj<-substring(list_dir_subj,5,9)
     list_id_subj<-as.integer(list_id_subj)
     for (id_subj in list_id_subj){
-      file_input<-paste(prefix_file_input_, sprintf("%05d", id_subj), suffix_file_input_, sep="")
-      path_input<-file.path(dir_proc,paste("sub-",sprintf("%05d", id_subj),sep=""),"fcon","power264",file_input)
+      file_input<-paste("sub-", sprintf("%05d", id_subj), "_ts.1D", sep="")
+      path_input<-file.path(dir_proc,paste("sub-",sprintf("%05d", id_subj),sep=""),"fcon",atlas,file_input)
       ts_subj<-read.csv(path_input,header=F,sep=" ")
-      df_roi<-dict_roi[which(dict_roi$Atlas==atlas_roi_),]
-      list_id_roi<-as.character(df_roi$ID_long)
       ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
       colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
       output<-rbind(output, ts_subj)
       print(paste("Finished extracting subject",as.character(id_subj),sep=" "))
     }
   }
-  print("Starting to save results.")
-  write.csv(output, file.path(paths_$output,"output","timeseries.csv"),row.names=F)
-  print("Finished saving results.")
+  print("    Starting to save results.")
+  write.csv(output, file.path(paths_$output,"output",paste(atlas,"timeseries.csv",sep="_")),row.names=F)
+  print("    Finished saving results.")
   #print("Finished extracting all files.")
   #return(output)
 }
