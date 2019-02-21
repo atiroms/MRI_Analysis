@@ -44,8 +44,11 @@ dir_out <-"02_2_ts_aroma"
 #dir_in <-"23_2_xcp_acompcor"
 #dir_out <-"03_2_ts_acompcor"
 
+
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 prefix_file_input<-"sub-"
-suffix_file_input<-"_power264_ts.1D"
+#suffix_file_input<-"_power264_ts.1D"
+suffix_file_input<-"_ts.1D"
 
 #list_id_subj<-c(14,19,26,28,29)
 
@@ -90,16 +93,23 @@ source(file.path(paths$script,"functionality/function.R"))
 #**************************************************
 # Data extraction =================================
 #**************************************************
-extract_xcp<-function(paths_=paths,
-                      prefix_file_input_=prefix_file_input,
-                      suffix_file_input_=suffix_file_input,
-                      #list_id_subj_=list_id_subj,
-                      atlas_roi_=atlas_roi,
-                      list_id_roi_=list_id_roi
-                      ){
+extract_xcp_per_atlas<-function(paths__,
+                                atlas,
+                                dict_roi
+                                ){
+                                
+                                #paths_=paths,
+                                #prefix_file_input_=prefix_file_input,
+                                #suffix_file_input_=suffix_file_input,
+                                #list_id_subj_=list_id_subj,
+                                #atlas_roi_=atlas_roi,
+                                #list_id_roi_=list_id_roi
+                                #){
   
-  nullobj<-func_createdirs(paths_)
-  dict_roi<-func_dict_roi(paths_)
+  #nullobj<-func_createdirs(paths_)
+  #dict_roi<-func_dict_roi(paths_)
+  
+  
   
   output<-data.frame(matrix(ncol=length(list_id_roi_)+2, nrow=0))
   
@@ -124,6 +134,19 @@ extract_xcp<-function(paths_=paths,
   print("Starting to save results.")
   write.csv(output, file.path(paths_$output,"output","timeseries.csv"),row.names=F)
   print("Finished saving results.")
-  print("Finished extracting all files.")
-  return(output)
+  #print("Finished extracting all files.")
+  #return(output)
+}
+
+extract_xcp<-function(paths_=paths,
+                      list_atlas_=list_atlas
+                      ){
+  print("Starting to extract XCP results.")
+  nullobj<-func_createdirs(paths_)
+  dict_roi<-func_dict_roi(paths_)
+  for (atlas in list_atlas){
+    print(paste("  Starting to extract XCP results for atlas: "),atlas,sep="")
+    extract_xcp_per_atlas(paths__=paths_,atlas=atlas,dict_roi=dict_roi)
+    print(paste("  Finished extracting XCP results for atlas: "),atlas,sep="")
+  }
 }
