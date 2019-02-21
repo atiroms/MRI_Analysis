@@ -101,8 +101,7 @@ extract_xcp_per_atlas<-function(paths__,
   df_roi<-dict_roi[which(dict_roi$atlas==atlas),]
   list_id_roi<-as.character(df_roi$id)
   
-  output<-data.frame(matrix(ncol=length(list_id_roi)+2, nrow=0))
-  
+  output<-data.frame()
   list_dir_proc<-list.dirs(file.path(paths_$input,"output"),recursive=F)
   for (dir_proc in list_dir_proc){
     list_dir_subj<-list.dirs(dir_proc,recursive=F,full.names=F)
@@ -120,7 +119,7 @@ extract_xcp_per_atlas<-function(paths__,
     }
   }
   print("    Starting to save results.")
-  write.csv(output, file.path(paths_$output,"output",paste(atlas,"timeseries.csv",sep="_")),row.names=F)
+  write.csv(output, file.path(paths_$output,"output",paste("timeseries_",atlas,".csv",sep="")),row.names=F)
   print("    Finished saving results.")
   #print("Finished extracting all files.")
   #return(output)
