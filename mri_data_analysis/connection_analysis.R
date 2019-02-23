@@ -90,7 +90,7 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   for (atlas in list_atlas_){
     print(paste("  Starting to calculate for atlas: ",atlas,sep=""))
-    df_fc<-read.csv(file.path(paths_$input,"output",paste(atlas,"_fc.csv",sep="")))
+    df_fc<-read.csv(file.path(paths_$input,"output",paste("fc_",atlas,".csv",sep="")))
     # Convert NaN's to zero, delete p column and change column name r to value
     df_fc$r[which(is.nan(df_fc$r))]<-0
     df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
@@ -100,10 +100,10 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     data_glm<-func_glm(df_mri=df_fc,data_clinical,list_covar=list_covar_)
     print("    Finished calculating GLM of FCs.")
     print("    Starting to save GLM of FCs.")
-    write.csv(data_glm$glm,file.path(paths_$output,"output",paste(atlas,"_glm.csv",sep="")),row.names = F)
-    write.csv(data_glm$ic,file.path(paths_$output,"output",paste(atlas,"_ic.csv",sep="")),row.names = F)
-    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste(atlas,"_min_ic.csv",sep="")),row.names = F)
-    write.csv(data_glm$vif,file.path(paths_$output,"output",paste(atlas,"_vif.csv",sep="")),row.names = F)
+    write.csv(data_glm$glm,file.path(paths_$output,"output",paste("glm_",atlas,".csv",sep="")),row.names = F)
+    write.csv(data_glm$ic,file.path(paths_$output,"output",paste("ic_",atlas,".csv",sep="")),row.names = F)
+    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("min_ic_",atlas,".csv",sep="")),row.names = F)
+    write.csv(data_glm$vif,file.path(paths_$output,"output",paste("vif_",atlas,".csv",sep="")),row.names = F)
     print("    Finished saving GLM of FCs.")
     
     print("    Starting to calculate seed-level multiple comparison correction and graphs.")
@@ -153,7 +153,7 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
           ggtitle(paste("GLM Beta\nModel: ",name_model,"\nExplanatory Variable: ",name_var_exp,sep=" ")) +
           theme(plot.title = element_text(hjust = 0.5))
         
-        ggsave(paste(atlas,"_model-",name_model,"_expvar-",name_var_exp,"_glm_graph.eps",sep=""),
+        ggsave(paste("glm_graph_",atlas,"_model-",name_model,"_expvar-",name_var_exp,".eps",sep=""),
                plot=fig_circular,device=cairo_ps,path=file.path(paths_$output,"output"),
                dpi=300,height=10,width=10,limitsize=F)
         

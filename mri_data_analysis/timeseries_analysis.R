@@ -162,7 +162,7 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi,list_a
       fig_fc_heatmap<-fig_fc_heatmap + ggtitle(paste(sprintf("%05d", id_subj),"Functional Connectivity",sep=" "))+ theme(plot.title = element_text(hjust = 0.5))
       
       # Save heatmap plot
-      ggsave(paste(atlas,sprintf("%05d", id_subj),"fc_heatmap.eps",sep="_"),plot=fig_fc_heatmap,device=cairo_ps,
+      ggsave(paste("fc_heatmap_",atlas,"_",sprintf("%05d", id_subj),".eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
              path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       
       print(paste("    Finished calculating FC for subject",as.character(id_subj),sep=" "))
