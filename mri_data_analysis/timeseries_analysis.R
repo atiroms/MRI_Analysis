@@ -168,9 +168,9 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi,list_a
       print(paste("    Finished calculating FC for subject",as.character(id_subj),sep=" "))
     }
     colnames(df_fc_stack)<-c("ID_pnTTC","from","to","r","p")
-    print("Starting to save all subject results.")
+    print("    Starting to save all subject results.")
     write.csv(df_fc_stack, file.path(paths_$output,"output",paste(atlas,"_fc.csv",sep="")),row.names = F)
-    print("Finished saving all subject results.")
+    print("    Finished saving all subject results.")
     print(paste("  Finished calculating for atlas: ",atlas, sep=""))
   }
   print("Finished calculating all FCs.")
