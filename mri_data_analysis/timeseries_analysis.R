@@ -11,8 +11,8 @@
 #**************************************************
 
 # parameters for fc()
-#path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
-path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
+path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+#path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_in   <- "05_ts_temp"
 #dir_out  <- "13_fc_temp"
 #dir_in   <- "06_ts_t1w"
@@ -32,14 +32,16 @@ path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_in   <- "24_ts_acompcor_2mm"
 #dir_out  <- "25_fc_acompcor_2mm"
 
-dir_in   <- "27_ts_acompcor"
-dir_out  <- "28_fc_acompcor"
+#dir_in   <- "27_ts_acompcor"
+#dir_out  <- "28_fc_acompcor"
 
 #dir_in <-"03_3_ts_acompcor"
 #dir_out <-"07_fc_acompcor"
+dir_in <-"12_3_ts_aroma"
+dir_out <-"16_fc_aroma"
 
-subset_subj <- list(list("column"="W1_5sub","value"=1))
-#subset_subj <- list(list("column"="W1_T1QC_new_mild_rsfMRIexist","value"=1))
+#subset_subj <- list(list("column"="W1_5sub","value"=1))
+subset_subj <- list(list("column"="W1_T1QC_new_mild_rsfMRIexist","value"=1))
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 
