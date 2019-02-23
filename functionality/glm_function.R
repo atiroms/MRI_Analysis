@@ -184,8 +184,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
           df_output_per_model_expvar_meas_row<-cbind(df_meas_mri[k,],name_model,list_covar_sub[j],
                                                      ttest$coefficients[1],ttest$sigma[1],ttest$tstat[1],ttest$pvalues[1])
         }
-        colnames(df_output_per_model_expvar_meas_row)
-            <-c(colnames(df_meas_mri),"model","var_exp","beta","sigma","t","p")
+        colnames(df_output_per_model_expvar_meas_row)<-c(colnames(df_meas_mri),"model","var_exp","beta","sigma","t","p")
         df_output_per_model_expvar_meas<-rbind(df_output_per_model_expvar_meas,df_output_per_model_expvar_meas_row)
       }
       
