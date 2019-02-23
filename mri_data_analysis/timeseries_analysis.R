@@ -32,11 +32,18 @@ path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in   <- "24_ts_acompcor_2mm"
 #dir_out  <- "25_fc_acompcor_2mm"
 
-dir_in <-"03_3_ts_acompcor"
-dir_out <-"07_fc_acompcor"
+#dir_in   <- "27_ts_acompcor"
+#dir_out  <- "28_fc_acompcor"
+
+#dir_in <-"03_3_ts_acompcor"
+#dir_out <-"07_fc_acompcor"
+dir_in <-"12_3_ts_aroma"
+dir_out <-"16_fc_aroma"
 
 #subset_subj <- list(list("column"="W1_5sub","value"=1))
 subset_subj <- list(list("column"="W1_T1QC_new_mild_rsfMRIexist","value"=1))
+
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 
 subset_roi  <- c("Uncertain","Default mode","Sensory/somatomotor Hand",
                  "Sensory/somatomotor Mouth","Fronto-parietal Task Control",
@@ -93,27 +100,28 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # Functional data loading =========================
 #**************************************************
-func_data_timeseries<-function(paths,data_clinical,subset_roi){
-  print("Starting to load timeseries data.")
-  df_timeseries <- read.csv(file.path(paths$input,"output","timeseries.csv"))
+#func_data_timeseries<-function(paths,data_clinical,subset_roi,atlas_=atlas){
+func_data_timeseries<-function(paths__,data_clinical_,atlas_=atlas){
+  print("    Starting to load timeseries data.")
+  df_timeseries <- read.csv(file.path(paths__$input,"output",paste("ts_",atlas_,".csv",sep="")))
   df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
-                                            data_clinical$list_id_subj),]
+                                            data_clinical_$list_id_subj),]
   list_id_roi <- colnames(df_timeseries)[c(-1,-2)]
-  dict_roi <- func_dict_roi(paths)
-  dict_roi <- dict_roi[is.element(dict_roi$ID_long,list_id_roi),]
-  dict_roi <- dict_roi[is.element(dict_roi$group,subset_roi),]
-  list_id_roi <- as.character(dict_roi$ID_long)
+  dict_roi <- func_dict_roi(paths__)
+  dict_roi <- dict_roi[is.element(dict_roi$id,list_id_roi),]
+  #dict_roi <- dict_roi[is.element(dict_roi$group,subset_roi),]
+  list_id_roi <- as.character(dict_roi$id)
   n_roi <- length(list_id_roi)
   df_timeseries <- cbind(df_timeseries[,c(1,2)],
                          df_timeseries[,is.element(colnames(df_timeseries),
                                                    list_id_roi)])
-  list_id_subj_exists <- sort(unique(df_timeseries$ID_pnTTC))
-  n_subj_exists <- length(list_id_subj_exists)
+  list_id_subj_exist <- sort(unique(df_timeseries$ID_pnTTC))
+  n_subj_exist <- length(list_id_subj_exist)
   output <- list("df_timeseries"=df_timeseries,"list_id_roi"=list_id_roi,
                  "dict_roi"=dict_roi,"n_roi"=n_roi,
-                 "list_id_subj_exists"=list_id_subj_exists,
-                 "n_subj_exists"=n_subj_exists)
-  print("Finished loading timeseries data.")
+                 "list_id_subj_exist"=list_id_subj_exist,
+                 "n_subj_exist"=n_subj_exist)
+  print("    Finished loading timeseries data.")
   return(output)
 }
 
@@ -121,46 +129,52 @@ func_data_timeseries<-function(paths,data_clinical,subset_roi){
 #**************************************************
 # Functional correlation of each subs =============
 #**************************************************
-fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
+fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi,list_atlas_=list_atlas){
   print("Starting to calculate FC.")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
-  data_timeseries<-func_data_timeseries(paths_,data_clinical,subset_roi_)
-  data_clinical$list_id_subj<-data_timeseries$list_id_subj_exist
-  data_clinical$n_subj_exists<-data_timeseries$n_subj_exists
   nullobj<-func_createdirs(paths_)
-  df_fc_stack<-data.frame(matrix(ncol=5,nrow=0))
-  for (id_subj in data_clinical$list_id_subj){
-    data_fc<-func_cor(input=data_timeseries$df_timeseries[which(data_timeseries$df_timeseries$ID_pnTTC==id_subj),c(-1,-2)])
-
-    df_fc_flat<-data_fc$cor_flat
-    write.csv(df_fc_flat, file.path(paths_$output,"output",paste(sprintf("%05d", id_subj),"fc.csv",sep="_")),row.names=F)
-    df_fc_stack<-rbind(df_fc_stack,cbind(ID_pnTTC=rep(id_subj,nrow(df_fc_flat)),df_fc_flat))
+  
+  for (atlas in list_atlas_){
+    print(paste("  Starting to calculate for atlas: ",atlas,sep=""))
+    data_timeseries<-func_data_timeseries(paths__=paths_,data_clinical_=data_clinical,atlas_=atlas)
+    data_clinical$list_id_subj_exist<-data_timeseries$list_id_subj_exist
+    data_clinical$n_subj_exist<-data_timeseries$n_subj_exist
     
-    # Convert ID_long to label_proper for heatmap plotting
-    df_fc_roilabel<-data.frame(data_fc$cor$r)
-    dict_roi<-data_timeseries$dict_roi
-    for(i in seq(ncol(df_fc_roilabel))){
-      colnames(df_fc_roilabel)[i]<-as.character(dict_roi[which(dict_roi$ID_long==colnames(df_fc_roilabel)[i]),"label_proper"])
+    df_fc_stack<-data.frame()
+    for (id_subj in data_clinical$list_id_subj_exist){
+      data_fc<-func_cor(input=data_timeseries$df_timeseries[which(data_timeseries$df_timeseries$ID_pnTTC==id_subj),c(-1,-2)])
+      
+      df_fc_flat<-data_fc$cor_flat
+      #write.csv(df_fc_flat, file.path(paths_$output,"output",paste(atlas,sprintf("%05d", id_subj),"fc.csv",sep="_")),row.names=F)
+      df_fc_stack<-rbind(df_fc_stack,cbind(ID_pnTTC=rep(id_subj,nrow(df_fc_flat)),df_fc_flat))
+      
+      # Convert ID_long to label_proper for heatmap plotting
+      df_fc_roilabel<-data.frame(data_fc$cor$r)
+      dict_roi<-data_timeseries$dict_roi
+      for(i in seq(ncol(df_fc_roilabel))){
+        colnames(df_fc_roilabel)[i]<-as.character(dict_roi[which(dict_roi$id==colnames(df_fc_roilabel)[i]),"label"])
+      }
+      df_fc_roilabel<-rownames_to_column(df_fc_roilabel, "row")
+      for(i in seq(nrow(df_fc_roilabel))){
+        df_fc_roilabel$row[i]<-as.character(dict_roi[which(dict_roi$id==df_fc_roilabel$row[i]),"label"])
+      }
+      
+      # Heatmap plot of FC correlation matrix
+      fig_fc_heatmap<-cor_heatmap(input=df_fc_roilabel)
+      fig_fc_heatmap<-fig_fc_heatmap + ggtitle(paste(sprintf("%05d", id_subj),"Functional Connectivity",sep=" "))+ theme(plot.title = element_text(hjust = 0.5))
+      
+      # Save heatmap plot
+      ggsave(paste("fc_heatmap_",atlas,"_",sprintf("%05d", id_subj),".eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
+             path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+      
+      print(paste("    Finished calculating FC for subject",as.character(id_subj),sep=" "))
     }
-    df_fc_roilabel<-rownames_to_column(df_fc_roilabel, "row")
-    for(i in seq(nrow(df_fc_roilabel))){
-      df_fc_roilabel$row[i]<-as.character(dict_roi[which(dict_roi$ID_long==df_fc_roilabel$row[i]),"label_proper"])
-    }
-    
-    # Heatmap plot of FC correlation matrix
-    fig_fc_heatmap<-cor_heatmap(input=df_fc_roilabel)
-    fig_fc_heatmap<-fig_fc_heatmap + ggtitle(paste(sprintf("%05d", id_subj),"Functional Connectivity",sep=" "))+ theme(plot.title = element_text(hjust = 0.5))
-    
-    # Save heatmap plot
-    ggsave(paste(sprintf("%05d", id_subj),"fc_heatmap.eps",sep="_"),plot=fig_fc_heatmap,device=cairo_ps,
-           path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
-    
-    print(paste("Finished calculating FC for subject",as.character(id_subj),sep=" "))
+    colnames(df_fc_stack)<-c("ID_pnTTC","from","to","r","p")
+    print("    Starting to save all subject results.")
+    write.csv(df_fc_stack, file.path(paths_$output,"output",paste("fc_",atlas,".csv",sep="")),row.names = F)
+    print("    Finished saving all subject results.")
+    print(paste("  Finished calculating for atlas: ",atlas, sep=""))
   }
-  colnames(df_fc_stack)<-c("ID_pnTTC","from","to","r","p")
-  print("Starting to save all subject results.")
-  write.csv(df_fc_stack, file.path(paths_$output,"output","fc.csv"),row.names = F)
-  print("Finished saving all subject results.")
   print("Finished calculating all FCs.")
   return(df_fc_stack)
 }
@@ -172,8 +186,8 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
 fc_all<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi){
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   data_timeseries<-func_data_timeseries(paths_,data_clinical,subset_roi_)
-  data_clinical$list_id_subj<-data_timeseries$list_id_subj_exists
-  data_clinical$n_subj<-data_timeseries$n_subj_exists
+  data_clinical$list_id_subj<-data_timeseries$list_id_subj_exist
+  data_clinical$n_subj<-data_timeseries$n_subj_exist
   nullobj<-func_createdirs(paths_)
   fc<-func_corr(input=data_timeseries$df_timeseries[,c(-1,-2)],
                 dict_roi=data_timeseries$dict_roi,

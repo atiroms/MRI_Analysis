@@ -19,12 +19,19 @@ path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_in <- c("17_fc_36p_2mm","19_fc_aroma_2mm","20_fc_acompcor_2mm")
 #dir_out <- "22_fc_corr"
 #dir_out <- "23_fc_corr_heatmap"
-dir_in <- "25_fc_acompcor_2mm"
-dir_out <- "26_glm_fc_acompcor"
+#dir_in <- "25_fc_acompcor_2mm"
+#dir_out <- "26_glm_fc_acompcor"
+#dir_out <- "27_glm_fc_acompcor2"
+dir_in<-"28_fc_acompcor"
+dir_out<-"29_glm_fc_acompcor"
+
 #dir_in <- "07_fc_acompcor"
 #dir_out <- "11_glm_fc_acompcor"
 subset_subj <- list(list("column"="W1_5sub","value"=1))
 #subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
+
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-c("aal116")
 
 thr_pvalue <- 0.05
 
@@ -75,87 +82,89 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # General linear model of FCs =====================
 #**************************************************
-glm_fc<-function(paths_=paths,subset_subj_=subset_subj,
-                 list_covar_=list_covar,thr_pvalue_=thr_pvalue){
-  print("Starting to calculate GLM of FCs.")
+glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
+                 thr_pvalue_=thr_pvalue,list_atlas_=list_atlas){
+  print("Starting glm_fc()")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
-  df_fc<-read.csv(file.path(paths_$input,"output","fc.csv"))
-  # Convert NaN's to zero, delete p column and change column name r to value
-  df_fc$r[which(is.nan(df_fc$r))]<-0
-  df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
-  colnames(df_fc)[colnames(df_fc)=="r"]<-"value"
-  # Calculate GLM
-  df_glm<-func_glm(df_mri=df_fc,data_clinical,list_covar=list_covar_)
-  #path_file_glm<-file.path(paths_$output,"output","glm.csv")
-  #write.csv(df_glm,path_file_glm,row.names = F)
-  #print(paste("  GLM of FCs saved in:",path_file_glm,sep=" "))
-  print("Finished calculating GLM of FCs.")
   
-  print("Starting to calculate model-wise metrics and graphs.")
-  # DF of GLM models and explanatory variables
-  df_model_expvar<-df_glm[intersect(which(df_glm[,"from"]==df_glm[1,"from"]),
-                                    which(df_glm[,"to"]==df_glm[1,"to"])),
-                          c("model","var_exp")]
-  list_roi<-sort(unique(c(as.character(unique(df_fc$from)),as.character(unique(df_fc$to)))))
-  dict_roi <- func_dict_roi(paths_)
-  dict_roi <- dict_roi[is.element(dict_roi$ID_long,list_roi),]
-  
-  df_glm_output<-NULL
-  # iterate over model / explanatory variable pairs
-  for (i in 1:nrow(df_model_expvar)){
-    # Subset of df_glm of all connections with the i'th model / expvar pair
-    #print(paste("  Calculating model:",df_model_expvar[i,"model"],", explanatory variable:",df_model_expvar[i,"var_exp"],sep=" "))
-    df_glm_subset<-df_glm[intersect(which(df_glm[,"model"]==df_model_expvar[i,"model"]),
-                                    which(df_glm[,"var_exp"]==df_model_expvar[i,"var_exp"])),]
-    # Add columns for all connection-level multiple comparison-corrected p values
-    df_glm_subset<-cbind(df_glm_subset,mltcomp_corr(df_glm_subset))
+  for (atlas in list_atlas_){
+    print(paste("  Starting to calculate for atlas: ",atlas,sep=""))
+    df_fc<-read.csv(file.path(paths_$input,"output",paste("fc_",atlas,".csv",sep="")))
+    # Convert NaN's to zero, delete p column and change column name r to value
+    df_fc$r[which(is.nan(df_fc$r))]<-0
+    df_fc<-df_fc[,-which(colnames(df_fc)=="p")]
+    colnames(df_fc)[colnames(df_fc)=="r"]<-"value"
+    # Calculate GLM
+    print("    Starting to calculate GLM of FCs.")
+    data_glm<-func_glm(df_mri=df_fc,data_clinical,list_covar=list_covar_)
+    print("    Finished calculating GLM of FCs.")
+    print("    Starting to save GLM of FCs.")
+    write.csv(data_glm$glm,file.path(paths_$output,"output",paste("glm_",atlas,".csv",sep="")),row.names = F)
+    write.csv(data_glm$ic,file.path(paths_$output,"output",paste("ic_",atlas,".csv",sep="")),row.names = F)
+    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("min_ic_",atlas,".csv",sep="")),row.names = F)
+    write.csv(data_glm$vif,file.path(paths_$output,"output",paste("vif_",atlas,".csv",sep="")),row.names = F)
+    print("    Finished saving GLM of FCs.")
     
-    # for each ROI, calculate seed-level multiple comparison-corrected p values
-    for (j in list_roi){
-      id_obs<-union(which(df_glm_subset$from==j),which(df_glm_subset$to==j))
-      id_obs<-id_obs[order(id_obs)]
-      df_glm_subsubset<-df_glm_subset[id_obs,]  # subset of df_glm_subset, starts or ends ad ROI j
-      pvalues<-mltcomp_corr(df_glm_subsubset)  # multiple comparison-corrected p values
-      for (k in 1:length(id_obs)){  # iterate over connections which starts / ends at ROI j
-        for (l in colnames(pvalues)){
-          if (is.null(df_glm_subset[id_obs[k],paste("seed",l,sep="_")])){
-            df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
-          }else if (is.na(df_glm_subset[id_obs[k],paste("seed",l,sep="_")])){
-            df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
-          }else{
-            df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(df_glm_subset[id_obs[k],paste("seed",l,sep="_")],
-                                                                  pvalues[k,l])
+    print("    Starting to calculate seed-level multiple comparison correction and graphs.")
+    
+    list_roi <- sort(unique(c(as.character(unique(df_fc$from)),as.character(unique(df_fc$to)))))
+    dict_roi <- func_dict_roi(paths_)
+    dict_roi <- dict_roi[is.element(dict_roi$id,list_roi),]
+    
+    for (i in seq(length(data_glm$list_model))){
+      model<-data_glm$list_model[[i]]
+      for (var_exp in model){
+        name_model<-paste(list_covar[model],collapse="_")
+        name_var_exp<-list_covar[var_exp]
+        print(paste("      Starting to calculate for model: ",name_model,", expvar: ",name_var_exp,sep=""))
+        df_glm_subset<-data_glm$glm[intersect(which(data_glm$glm[,"model"]==name_model),
+                                              which(data_glm$glm[,"var_exp"]==name_var_exp)),]
+        # Add columns for global-level multiple comparison-corrected p values
+        df_glm_subset<-cbind(df_glm_subset,mltcomp_corr(df_glm_subset))
+        
+        for (j in list_roi){
+          id_obs<-sort(union(which(df_glm_subset$from==j),which(df_glm_subset$to==j)))
+          df_glm_subsubset<-df_glm_subset[id_obs,]  # subset of df_glm_subset, starts or ends ad ROI j
+          pvalues<-mltcomp_corr(df_glm_subsubset)  # multiple comparison-corrected p values
+          for (k in seq(length(id_obs))){  # iterate over connections which starts / ends at ROI j
+            for (l in colnames(pvalues)){
+              if (is.null(df_glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+                df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+              }else if (is.na(df_glm_subset[id_obs[k],paste("seed",l,sep="_")])){
+                df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
+              }else{
+                df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-min(df_glm_subset[id_obs[k],paste("seed",l,sep="_")],
+                                                                      pvalues[k,l])
+              }
+            }
           }
         }
+        
+        
+        # For each model / expvar pair, convert df into nodes/edges data
+        graph<-glm_fc2graph(df_glm_subset,list_roi)
+        for (j in 1:nrow(graph$node)){
+          graph$node[j,"label"]<-as.character(dict_roi[which(dict_roi$id==graph$node[j,"label"]),"label"])
+        }
+        
+        fig_circular<-graph_circular(input=graph,type_pvalue="seed_p_benjamini_hochberg",thr_pvalue=thr_pvalue_)
+        fig_circular<-fig_circular +
+          ggtitle(paste("GLM Beta\nModel: ",name_model,"\nExplanatory Variable: ",name_var_exp,sep=" ")) +
+          theme(plot.title = element_text(hjust = 0.5))
+        
+        ggsave(paste("glm_graph_",atlas,"_model-",name_model,"_expvar-",name_var_exp,".eps",sep=""),
+               plot=fig_circular,device=cairo_ps,path=file.path(paths_$output,"output"),
+               dpi=300,height=10,width=10,limitsize=F)
+        
+        print(paste("      Finished calculating for model: ",name_model,", expvar: ",name_var_exp,sep=""))
       }
     }
-    
-    # For each model / expvar pair, convert df into nodes/edges data
-    graph<-glm_fc2graph(df_glm_subset,list_roi)
-    for (j in 1:nrow(graph$node)){
-      graph$node[j,"label"]<-as.character(dict_roi[which(dict_roi$ID_long==graph$node[j,"label"]),"label_proper"])
-    }
-    
-    fig_circular<-graph_circular(input=graph,type_pvalue="seed_p_Benjamini_Hochberg",thr_pvalue=thr_pvalue_)
-    
-    fig_circular<-fig_circular +
-      ggtitle(paste("GLM Beta\nModel: ",df_model_expvar[i,"model"],"\nExplanatory Variable: ",df_model_expvar[i,"var_exp"],sep=" ")) +
-      theme(plot.title = element_text(hjust = 0.5))
-    
-
-    ggsave(paste("Model",df_model_expvar[i,"model"],
-                 "ExpVar",df_model_expvar[i,"var_exp"],
-                 "glm_graph.eps",sep="_"),plot=fig_circular,device=cairo_ps,
-           path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
-  
-    df_glm_output<-rbind(df_glm_output,df_glm_subset)
-    print(paste("  Finished calculating model: ",df_model_expvar[i,"model"],", expvar: ",df_model_expvar[i,"var_exp"],sep=""))
+    print("    Finished calculating seed-level multiple comparison correction and graphs.")
+    print(paste("  Finished calculating for atlas: ",atlas,sep=""))
   }
   
-  write.csv(df_glm_output, file.path(paths_$output,"output","glm_fc.csv"),row.names=F)
-  print("Finished calculating model-wise metrics and graphs.")
-  return(df_glm_output)
+  print("Finished all calculations of glm_fc()")
 }
 
 

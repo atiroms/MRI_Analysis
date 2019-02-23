@@ -111,8 +111,9 @@ graph_circular<-function(input,type_pvalue,thr_pvalue){
   node_plot$hjust<-ifelse(node_plot$angle < -90, 1, 0)
   node_plot$angle<-ifelse(node_plot$angle < -90, node_plot$angle+180, node_plot$angle)
   data_igraph <- graph_from_data_frame(d = edge_plot, vertices = node_plot, directed = F)
-  limit_color <- max(abs(max(edge_plot$weight)),abs(min(edge_plot$weight)))
-  limit_color <- c(-limit_color,limit_color)
+  #limit_color <- max(abs(max(edge_plot$weight)),abs(min(edge_plot$weight)))
+  #limit_color <- c(-limit_color,limit_color)
+  limit_color <- c(-1,1)
   fig<-ggraph(data_igraph, layout = "linear",circular = T) +
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=label, angle = angle, hjust=hjust,vjust=0.2),

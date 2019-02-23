@@ -97,11 +97,11 @@ func_cor<-function(input){
 #**************************************************
 
 mltcomp_corr<-function(input){
-  output<-data.frame(p_Bonferroni=p.adjust(input$p,method = "bonferroni"))
-  output$p_Holm_Bonferroni<-p.adjust(input$p,method = "holm")
-  output$p_Hochberg<-p.adjust(input$p,method = "hochberg")
-  output$p_Hommel<-p.adjust(input$p,method = "hommel")
-  output$p_Benjamini_Hochberg<-p.adjust(input$p,method="BH")
-  output$p_Benjamini_Yekutieli<-p.adjust(input$p,method="BY")
+  output<-data.frame("p_bonferroni"=p.adjust(input$p,method = "bonferroni"),
+                     "p_holm_bonferroni"=p.adjust(input$p,method = "holm"),
+                     "p_hockberg"=p.adjust(input$p,method = "holm"),
+                     "p_hommel"=p.adjust(input$p,method = "hommel"),
+                     "p_benjamini_hochberg"=p.adjust(input$p,method="BH"),
+                     "p_benjamini_yukutieli"=p.adjust(input$p,method="BY"))
   return(output)
 }
