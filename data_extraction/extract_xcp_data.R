@@ -11,10 +11,11 @@
 #**************************************************
 #path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
 #path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
-#path_in <- "/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub"
+path_in <- "/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub"
 #path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
-path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc"
-path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+#path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc"
+#path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_in   <- "30_xcp_36p"
 #dir_out  <- "05_ts_temp"
 #dir_in   <- "32_xcp_36p_nativein"
@@ -33,11 +34,13 @@ path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_out  <- "12_ts_acompcor_2mm"
 #dir_in    <- "44_xcp_parallel"
 #dir_out   <- "24_ts_acompcor_2mm"
+dir_in    <- "47_xcp_acompcor_full"
+dir_out   <- "27_ts_acompcor"
 
 #dir_in <-"22_1_xcp_aroma"
 #dir_out <-"02_1_ts_aroma"
-dir_in <-"22_2_xcp_aroma"
-dir_out <-"02_2_ts_aroma"
+#dir_in <-"22_2_xcp_aroma"
+#dir_out <-"02_2_ts_aroma"
 
 #dir_in <-"23_1_xcp_acompcor"
 #dir_out <-"03_1_ts_acompcor"
@@ -102,14 +105,13 @@ extract_xcp_per_atlas<-function(paths__,
   list_id_roi<-as.character(df_roi$id)
   
   output<-data.frame()
-  list_dir_proc<-list.dirs(file.path(paths_$input,"output"),recursive=F)
+  list_dir_proc<-list.dirs(file.path(paths__$input,"output"),recursive=F)
   for (dir_proc in list_dir_proc){
     list_dir_subj<-list.dirs(dir_proc,recursive=F,full.names=F)
     list_dir_subj<-list_dir_subj[startsWith(list_dir_subj,'sub-')]
-    list_id_subj<-substring(list_dir_subj,5,9)
-    list_id_subj<-as.integer(list_id_subj)
+    list_id_subj<-as.integer(substring(list_dir_subj,5,9))
     for (id_subj in list_id_subj){
-      file_input<-paste("sub-", sprintf("%05d", id_subj), "_ts.1D", sep="")
+      file_input<-paste("sub-", sprintf("%05d", id_subj), "_",atlas,"_ts.1D", sep="")
       path_input<-file.path(dir_proc,paste("sub-",sprintf("%05d", id_subj),sep=""),"fcon",atlas,file_input)
       ts_subj<-read.csv(path_input,header=F,sep=" ")
       ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
@@ -119,7 +121,7 @@ extract_xcp_per_atlas<-function(paths__,
     }
   }
   print("    Starting to save results.")
-  write.csv(output, file.path(paths_$output,"output",paste("timeseries_",atlas,".csv",sep="")),row.names=F)
+  write.csv(output, file.path(paths__$output,"output",paste("timeseries_",atlas,".csv",sep="")),row.names=F)
   print("    Finished saving results.")
   #print("Finished extracting all files.")
   #return(output)
@@ -131,9 +133,10 @@ extract_xcp<-function(paths_=paths,
   print("Starting to extract XCP results.")
   nullobj<-func_createdirs(paths_)
   dict_roi<-func_dict_roi(paths_)
-  for (atlas in list_atlas){
-    print(paste("  Starting to extract XCP results for atlas: "),atlas,sep="")
+  for (atlas in list_atlas_){
+    print(paste("  Starting to extract XCP results for atlas: ",atlas,sep=""))
     extract_xcp_per_atlas(paths__=paths_,atlas=atlas,dict_roi=dict_roi)
-    print(paste("  Finished extracting XCP results for atlas: "),atlas,sep="")
+    print(paste("  Finished extracting XCP results for atlas: ",atlas,sep=""))
   }
+  print("Finished extracting XCP results.")
 }
