@@ -101,7 +101,7 @@ source(file.path(paths$script,"functionality/graph.R"))
 #func_data_timeseries<-function(paths,data_clinical,subset_roi,atlas_=atlas){
 func_data_timeseries<-function(paths__,data_clinical_,atlas_=atlas){
   print("    Starting to load timeseries data.")
-  df_timeseries <- read.csv(file.path(paths__$input,"output",paste("timeseries_",atlas_,".csv",sep="")))
+  df_timeseries <- read.csv(file.path(paths__$input,"output",paste("ts_",atlas_,".csv",sep="")))
   df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
                                             data_clinical_$list_id_subj),]
   list_id_roi <- colnames(df_timeseries)[c(-1,-2)]
@@ -169,7 +169,7 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi,list_a
     }
     colnames(df_fc_stack)<-c("ID_pnTTC","from","to","r","p")
     print("    Starting to save all subject results.")
-    write.csv(df_fc_stack, file.path(paths_$output,"output",paste(atlas,"_fc.csv",sep="")),row.names = F)
+    write.csv(df_fc_stack, file.path(paths_$output,"output",paste("fc_",atlas,".csv",sep="")),row.names = F)
     print("    Finished saving all subject results.")
     print(paste("  Finished calculating for atlas: ",atlas, sep=""))
   }

@@ -19,16 +19,19 @@ path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_in <- c("17_fc_36p_2mm","19_fc_aroma_2mm","20_fc_acompcor_2mm")
 #dir_out <- "22_fc_corr"
 #dir_out <- "23_fc_corr_heatmap"
-dir_in <- "25_fc_acompcor_2mm"
+#dir_in <- "25_fc_acompcor_2mm"
 #dir_out <- "26_glm_fc_acompcor"
-dir_out <- "27_glm_fc_acompcor2"
+#dir_out <- "27_glm_fc_acompcor2"
+dir_in<-"28_fc_acompcor"
+dir_out<-"29_glm_fc_acompcor"
+
 #dir_in <- "07_fc_acompcor"
 #dir_out <- "11_glm_fc_acompcor"
 subset_subj <- list(list("column"="W1_5sub","value"=1))
 #subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-c("aal116")
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-c("aal116")
 
 thr_pvalue <- 0.05
 
@@ -105,26 +108,26 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     
     print("    Starting to calculate seed-level multiple comparison correction and graphs.")
     
-    list_roi <- sort(unite(unique(df_fc$from),unique(df_fc$to)))
+    list_roi <- sort(unique(c(as.character(unique(df_fc$from)),as.character(unique(df_fc$to)))))
     dict_roi <- func_dict_roi(paths_)
     dict_roi <- dict_roi[is.element(dict_roi$id,list_roi),]
     
-    for (i in data_glm$list_model){
-      for (j in i){
-        name_model<-paste(list_covar[i],collapse="_")
-        name_var_exp<-list_coar[j]
-        print(paste("      Starting to calculate for model: ",model,"expvar: ",var_exp,sep=" "))
+    for (i in seq(length(data_glm$list_model))){
+      model<-data_glm$list_model[[i]]
+      for (var_exp in model){
+        name_model<-paste(list_covar[model],collapse="_")
+        name_var_exp<-list_covar[var_exp]
+        print(paste("      Starting to calculate for model: ",name_model,", expvar: ",name_var_exp,sep=""))
         df_glm_subset<-data_glm$glm[intersect(which(data_glm$glm[,"model"]==name_model),
                                               which(data_glm$glm[,"var_exp"]==name_var_exp)),]
         # Add columns for global-level multiple comparison-corrected p values
         df_glm_subset<-cbind(df_glm_subset,mltcomp_corr(df_glm_subset))
         
         for (j in list_roi){
-          id_obs<-union(which(df_glm_subset$from==j),which(df_glm_subset$to==j))
-          id_obs<-id_obs[order(id_obs)]
+          id_obs<-sort(union(which(df_glm_subset$from==j),which(df_glm_subset$to==j)))
           df_glm_subsubset<-df_glm_subset[id_obs,]  # subset of df_glm_subset, starts or ends ad ROI j
           pvalues<-mltcomp_corr(df_glm_subsubset)  # multiple comparison-corrected p values
-          for (k in 1:length(id_obs)){  # iterate over connections which starts / ends at ROI j
+          for (k in seq(length(id_obs))){  # iterate over connections which starts / ends at ROI j
             for (l in colnames(pvalues)){
               if (is.null(df_glm_subset[id_obs[k],paste("seed",l,sep="_")])){
                 df_glm_subset[id_obs[k],paste("seed",l,sep="_")]<-pvalues[k,l]
@@ -142,20 +145,19 @@ glm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
         # For each model / expvar pair, convert df into nodes/edges data
         graph<-glm_fc2graph(df_glm_subset,list_roi)
         for (j in 1:nrow(graph$node)){
-          graph$node[j,"label"]<-as.character(dict_roi[which(dict_roi$ID_long==graph$node[j,"label"]),"label_proper"])
+          graph$node[j,"label"]<-as.character(dict_roi[which(dict_roi$id==graph$node[j,"label"]),"label"])
         }
         
         fig_circular<-graph_circular(input=graph,type_pvalue="seed_p_benjamini_hochberg",thr_pvalue=thr_pvalue_)
-        
         fig_circular<-fig_circular +
           ggtitle(paste("GLM Beta\nModel: ",name_model,"\nExplanatory Variable: ",name_var_exp,sep=" ")) +
           theme(plot.title = element_text(hjust = 0.5))
         
+        ggsave(paste(atlas,"_model-",name_model,"_expvar-",name_var_exp,"_glm_graph.eps",sep=""),
+               plot=fig_circular,device=cairo_ps,path=file.path(paths_$output,"output"),
+               dpi=300,height=10,width=10,limitsize=F)
         
-        ggsave(paste(sprintf("%05d", id_subj),"glm_graph.eps",sep="_"),plot=fig_circular,device=cairo_ps,
-               path_=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
-        
-        print(paste("      Finished calculating for model: ",model,"expvar: ",var_exp,sep=" "))
+        print(paste("      Finished calculating for model: ",name_model,", expvar: ",name_var_exp,sep=""))
       }
     }
     print("    Finished calculating seed-level multiple comparison correction and graphs.")

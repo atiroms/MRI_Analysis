@@ -125,7 +125,7 @@ extract_xcp_per_atlas<-function(paths__,
     }
   }
   print(paste("    Starting to save timeseries for atlas: ",atlas,sep=""))
-  write.csv(output, file.path(paths__$output,"output",paste("timeseries_",atlas,".csv",sep="")),row.names=F)
+  write.csv(output, file.path(paths__$output,"output",paste("ts_",atlas,".csv",sep="")),row.names=F)
   print(paste("    Finished saving timeseries for atlas: ",atlas,sep=""))
   #print("Finished extracting all files.")
   #return(output)

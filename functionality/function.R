@@ -101,7 +101,7 @@ mltcomp_corr<-function(input){
                      "p_holm_bonferroni"=p.adjust(input$p,method = "holm"),
                      "p_hockberg"=p.adjust(input$p,method = "holm"),
                      "p_hommel"=p.adjust(input$p,method = "hommel"),
-                     "p_benjamini_hockberg"=p.adjust(input$p,method="BH"),
+                     "p_benjamini_hochberg"=p.adjust(input$p,method="BH"),
                      "p_benjamini_yukutieli"=p.adjust(input$p,method="BY"))
   return(output)
 }
