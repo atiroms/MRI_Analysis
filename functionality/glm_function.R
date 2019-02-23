@@ -87,7 +87,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
     n_subj_pre<-dim(df_clinical)[1]
     df_clinical<-df_clinical[which(!is.na(df_clinical[,covar])),]
     n_subj_post<-dim(df_clinical)[1]
-    print(paste("  Covariate: ",covar," exists in ",as.character(n_subj_post)," / ",
+    print(paste("      Covariate: ",covar," exists in ",as.character(n_subj_post)," / ",
                 as.characer(n_subj_pre)," subjects.",sep=""))
   }
   list_id_subj<-df_clinical$ID_pnTTC
@@ -105,7 +105,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   # df of measurements per subject
   df_meas_mri<-df_mri[df_mri$ID_pnTTC==df_mri[1,"ID_pnTTC"],]
   df_meas_mri[,c("ID_pnTTC","value")]<-list(NULL)
-  print(paste("  ",as.characer(dim(df_meas_mri)[1])," measures per subject.",sep=""))
+  print(paste("      ",as.characer(dim(df_meas_mri)[1])," measures per subject.",sep=""))
   
   list_model<-list()
   for (i in length(list_covar):1){
@@ -115,7 +115,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
       list_model<-c(list_model,list(combn_covar[,j]))
     }
   }
-  print(paste("  ",as.character(length(list_model))," GLM models will be calculated.",sep=""))
+  print(paste("  ",as.character(length(list_model)),"      GLM models will be calculated.",sep=""))
   
   df_output_per_model<-data.frame()               # VIF is stored
   df_output_per_meas<-data.frame()                # AIC_min and BIC_min are stored
@@ -126,7 +126,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
     model<-list_model[[i]]
     list_covar_sub<-list_covar[model]
     name_model<-paste(list_covar_sub,collapse="_")
-    print(paste("  Model with covarite: ",paste(list_covar_sub,collapse=" ")," will be calculated.",sep=""))
+    print(paste("      Model with covarite: ",paste(list_covar_sub,collapse=" ")," will be calculated.",sep=""))
     for (j in seq(length(list_covar_sub))){
       assign(paste("covar",as.character(j),sep="_"),df_covar[,list_covar_sub[j]])
       if (j==1){
@@ -142,7 +142,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
     
     for (j in seq(length(model))){  # Iterate over explanatory variables
       # contrast matrix
-      print(paste("  Explanaory variable: ",list_covar_sub[j],sep=""))
+      print(paste("      Explanaory variable: ",list_covar_sub[j],sep=""))
       contrast<-matrix(0L,nrow=1, ncol=length(model)+1)
       contrast[1,j+1]<-1
       for (k in seq(nrow(df_meas_mri))){  # Iterate over MRI measures
@@ -204,7 +204,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   #}
   
   # For each MRI measure, calculate which model exhibits smallest AIC or BIC
-  print("  Starting to compare information criteria.")
+  print("      Starting to compare information criteria.")
   for (i in seq(nrow(df_meas_mri))){
     df_output_per_model_meas_sub<-df_output_per_model_meas
     for (col_meas in colnames(df_meas_mri)){
@@ -215,7 +215,7 @@ func_glm<-function(df_mri,data_clinical,list_covar){
                                        "min_bic"=df_output_per_model_meas_sub[which.min(df_output_per_model_meas_sub$bic),"model"])
     df_output_per_meas<-rbind(df_output_per_meas,df_output_per_meas_row)
   }
-  print("  Finished comparing information criteria")
+  print("      Finished comparing information criteria")
   
   output<-list("glm"=df_output_per_model_expvar_meas,"ic"=df_output_per_model_meas,
                "min_ic"=df_output_per_meas,"vif"=df_output_per_model,"list_model"=list_modelf)

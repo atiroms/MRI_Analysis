@@ -143,7 +143,7 @@ fc<-function(paths_=paths,subset_subj_=subset_subj,subset_roi_=subset_roi,list_a
       data_fc<-func_cor(input=data_timeseries$df_timeseries[which(data_timeseries$df_timeseries$ID_pnTTC==id_subj),c(-1,-2)])
       
       df_fc_flat<-data_fc$cor_flat
-      write.csv(df_fc_flat, file.path(paths_$output,"output",paste(atlas,sprintf("%05d", id_subj),"fc.csv",sep="_")),row.names=F)
+      #write.csv(df_fc_flat, file.path(paths_$output,"output",paste(atlas,sprintf("%05d", id_subj),"fc.csv",sep="_")),row.names=F)
       df_fc_stack<-rbind(df_fc_stack,cbind(ID_pnTTC=rep(id_subj,nrow(df_fc_flat)),df_fc_flat))
       
       # Convert ID_long to label_proper for heatmap plotting
