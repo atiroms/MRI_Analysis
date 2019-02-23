@@ -37,12 +37,12 @@ path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #dir_in    <- "47_xcp_acompcor_full"
 #dir_out   <- "27_ts_acompcor"
 
-dir_in <-"22_1_xcp_aroma"
+#dir_in <-"22_1_xcp_aroma"
 #dir_out <-"02_1_ts_aroma"
-dir_out<-"12_1_ts_aroma"
-#dir_in <-"22_2_xcp_aroma"
+#dir_out<-"12_1_ts_aroma"
+dir_in <-"22_2_xcp_aroma"
 #dir_out <-"02_2_ts_aroma"
-#dir_out<-"12_2_ts_aroma"
+dir_out<-"12_2_ts_aroma"
 
 #dir_in <-"23_1_xcp_acompcor"
 #dir_out <-"03_1_ts_acompcor"
@@ -121,12 +121,12 @@ extract_xcp_per_atlas<-function(paths__,
       ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
       colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
       output<-rbind(output, ts_subj)
-      print(paste("Finished extracting subject",as.character(id_subj),sep=" "))
+      print(paste("    Finished extracting atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
     }
   }
-  print("    Starting to save results.")
+  print(paste("    Starting to save timeseries for atlas: ",atlas,sep=""))
   write.csv(output, file.path(paths__$output,"output",paste("timeseries_",atlas,".csv",sep="")),row.names=F)
-  print("    Finished saving results.")
+  print(paste("    Finished saving timeseries for atlas: ",atlas,sep=""))
   #print("Finished extracting all files.")
   #return(output)
 }
