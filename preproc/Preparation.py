@@ -542,9 +542,75 @@ class ExtractMltDcmHeader():
 
 
 ##################################################
+# Extract motion parameter data
+##################################################
+# extract motion parameter data from fMRIPrep result (FSL mcflirt)
+# calculate cumulative motion
+
+class ExtractMotion():
+    def __init__(self,
+        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion'
+        ):
+
+        print('Starting motion parameter extraction')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy fmriprep log file
+        print('Starting to copy fMRIPrep log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying fMRIPrep log folder.')
+
+        # read and process motion parmeter data
+        print('Starting to extract motion data.')
+        list_dir_all = os.listdir(os.path.join(path_input,'output','fmriprep'))
+        list_sub=[int(d.replace('sub-','')) for d in list_dir_all if os.path.isdir(os.path.join(path_input,'output','fmriprep',d)) and d.startswith('sub-')]
+        list_sub.sort()
+        df_motion=pd.DataFrame(np.nan,
+                               columns=['ID_pnTTC',
+                                        'trans_x_max','trans_x_mean','trans_x_cumul',
+                                        'trans_y_max','trans_y_mean','trans_y_cumul',
+                                        'trans_z_max','trans_z_mean','trans_z_cumul',
+                                        'rot_x_max','rot_x_mean','rot_x_cumul',
+                                        'rot_y_max','rot_y_mean','rot_y_cumul',
+                                        'rot_z_max','rot_z_mean','rot_z_cumul',],
+                               index=range(max(list_sub)))
+        df_motion.loc[:,'ID_pnTTC']=range(1,(max(list_sub)+1))
+        for i in range(len(list_sub)):
+            print('extracting from subject: ',str(list_sub[i]))
+            name_sub='sub-'+str(list_sub[i]).zfill(5)
+            path_file_confound=name_sub+'_ses-01_task-rest_desc-confounds_regressors.tsv'
+            path_file_confound=os.path.join(path_input,'output','fmriprep',name_sub,'ses-01','func',path_file_confound)
+            df_confound=pd.read_csv(path_file_confound,delimiter='\t')
+            for j in ['trans','rot']:
+                for k in ['x','y','z']:
+                    colname=j+'_'+k
+                    ts=df_confound.loc[:,colname]
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(abs(ts))
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_cumul']=abs(sum(ts))
+
+        path_file_output=os.path.join(path_output,'output','motion.tsv')
+        df_motion.to_csv(path_file_output,sep='\t',index=False)
+        print('Finished motion parameter extraction')
+
+
+##################################################
 # Extract XCP-processed FC or TS data
 ##################################################
-
+# This class is no longer used.
+# R extract_xcp() function is used instead
 class ExtractXCP():
     def __init__(self,
         path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p',
