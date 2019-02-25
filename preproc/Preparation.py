@@ -549,8 +549,10 @@ class ExtractMltDcmHeader():
 
 class ExtractMotion():
     def __init__(self,
-        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion'
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
+        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/20_2_fmriprep',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/25_2_motion'
         ):
 
         print('Starting motion parameter extraction')
@@ -579,12 +581,12 @@ class ExtractMotion():
         list_sub.sort()
         df_motion=pd.DataFrame(np.nan,
                                columns=['ID_pnTTC',
-                                        'trans_x_max','trans_x_mean','trans_x_cumul',
-                                        'trans_y_max','trans_y_mean','trans_y_cumul',
-                                        'trans_z_max','trans_z_mean','trans_z_cumul',
-                                        'rot_x_max','rot_x_mean','rot_x_cumul',
-                                        'rot_y_max','rot_y_mean','rot_y_cumul',
-                                        'rot_z_max','rot_z_mean','rot_z_cumul',],
+                                        'trans_x_max','rot_x_max',
+                                        'trans_y_max','rot_y_max',
+                                        'trans_z_max','rot_z_max',
+                                        'trans_x_mean','rot_x_mean',
+                                        'trans_y_mean','rot_y_mean',
+                                        'trans_z_mean','rot_z_mean'],
                                index=range(max(list_sub)))
         df_motion.loc[:,'ID_pnTTC']=range(1,(max(list_sub)+1))
         for i in range(len(list_sub)):
@@ -598,8 +600,7 @@ class ExtractMotion():
                     colname=j+'_'+k
                     ts=df_confound.loc[:,colname]
                     df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
-                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(abs(ts))
-                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_cumul']=abs(sum(ts))
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
 
         path_file_output=os.path.join(path_output,'output','motion.tsv')
         df_motion.to_csv(path_file_output,sep='\t',index=False)
