@@ -608,6 +608,57 @@ class ExtractMotion():
 
 
 ##################################################
+# Extract Normalized NIfTI data
+##################################################
+# Extract XCP-preprocessed NIfTI data
+
+class ExtractNifti():
+    def __init__(self,
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
+        path_input='Q:/MRI/pnTTC/Preproc/test_5sub/44_xcp_parallel',
+        path_output='Q:/MRI/pnTTC/Preproc/test_5sub/51_nifti'
+        ):
+
+        print('Starting NIfTI extraction.')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        list_paths_mkdir.append(os.path.join(path_output,'output','norm'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy log file
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        # Copy NifTI files
+        print('Starting to copy NIfTI files.')
+        list_dir_thread = os.listdir(os.path.join(path_input,'output'))
+        list_dir_thread.sort()
+        for dir_thread in list_dir_thread:
+            list_dir_all=os.listdir(os.path.join(path_input,'output',dir_thread))
+            list_dir_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_input,'output',dir_thread,d)) and d.startswith('sub-')]
+            list_dir_sub.sort()
+            for dir_sub in list_dir_sub:
+                path_file_from=dir_sub + '_img_sm6Std.nii.gz'
+                path_file_from=os.path.join(path_input,'output',dir_thread,dir_sub,'norm',path_file_from)
+                path_folder_to=os.path.join(path_output,'output','norm')
+                shutil.copy(path_file_from,path_folder_to)
+                print('Copied: '+dir_sub)
+        
+        print('Finished copying NIfTI files.')
+
+
+##################################################
 # Extract XCP-processed FC or TS data
 ##################################################
 # This class is no longer used.
