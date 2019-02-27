@@ -614,10 +614,16 @@ class ExtractMotion():
 
 class ExtractNifti():
     def __init__(self,
-        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
-        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
-        path_input='Q:/MRI/pnTTC/Preproc/test_5sub/44_xcp_parallel',
-        path_output='Q:/MRI/pnTTC/Preproc/test_5sub/51_nifti'
+        #path_input='Q:/MRI/pnTTC/Preproc/test_5sub/44_xcp_parallel',
+        #path_output='Q:/MRI/pnTTC/Preproc/test_5sub/51_nifti'
+        #path_input='Q:/MRI/pnTTC/Preproc/23_1_xcp_acompcor',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_1_conn_acompcor'
+        #path_input='P:/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_2_conn_acompcor'
+        #path_input='Q:/MRI/pnTTC/Preproc/22_1_xcp_aroma',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_1_conn_aroma'
+        path_input='P:/MRI/pnTTC/Preproc/22_2_xcp_aroma',
+        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_2_conn_aroma'
         ):
 
         print('Starting NIfTI extraction.')
