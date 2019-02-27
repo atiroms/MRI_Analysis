@@ -11,6 +11,8 @@ import json
 import numpy as np
 import pydicom
 import datetime
+import gzip
+
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
 def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
@@ -335,8 +337,6 @@ class XCPScript():
 
 class XCPPrep():
     def __init__(self,
-        #skip_fmriprep_copy=False,
-        #skip_fmriprep_moveanat=False,
         skip_fmriprep_copy=True,
         skip_fmriprep_moveanat=True,
         n_proc=20,
@@ -662,6 +662,26 @@ class ExtractNifti():
                 print('Copied: '+dir_sub)
         
         print('Finished copying NIfTI files.')
+
+
+##################################################
+# Pickup and unzip nii.gz data
+##################################################
+
+class PickupUnzip():
+    def __init__(self,
+        path_input='',
+        path_output='',
+        path_file_clinical='***/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
+        ):
+
+        df_cinical=pd.read_csv(path_file_clinical)
+        for id_subj in df_clinical.loc[:,'ID_pnTTC']:
+            
+
+with gzip.open('file.txt.gz', 'rb') as f_in:
+    with open('file.txt', 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
 
 
 ##################################################
