@@ -667,6 +667,7 @@ class ExtractNifti():
 ##################################################
 # Pickup and unzip nii.gz data
 ##################################################
+# CONN preparation
 
 class PickupUnzip():
     def __init__(self,
@@ -675,13 +676,25 @@ class PickupUnzip():
         path_file_clinical='***/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
         ):
 
-        df_cinical=pd.read_csv(path_file_clinical)
-        for id_subj in df_clinical.loc[:,'ID_pnTTC']:
-            
+        print('Starting pick-up and unzipping of .nii.gz data.')
 
-with gzip.open('file.txt.gz', 'rb') as f_in:
-    with open('file.txt', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
+        print('Starting to load clinical data.')        
+        df_clinical=pd.read_csv(path_file_clinical)
+        print('Finished loading clinical data.')
+
+        print('Starting to pick-up and unzip image data.')
+        for id_subj in df_clinical.loc[:,'ID_pnTTC']:
+            name_file_input=str(id_subj).zfill(5)+'_img_sm6Std.nii.gz'
+            path_file_input=os.path.join(path_input,'output',name_file_input)
+            name_file_output=str(id_subj).zfill(5)+'_img_sm6Std.nii'
+            path_file_output=os.path.join(path_output,'output',name_file_output)
+            with gzip.open(path_file_input, 'rb') as img_in:
+                with open(path_file_output, 'wb') as img_out:
+                    shutil.copyfileobj(img_in, img_out)
+            print('Finished pick-up and unzipping for subject:'+ str(id_subj))
+        print('Finished pick-up and unzipping image data.')
+
+        print('Finished.')
 
 
 ##################################################
