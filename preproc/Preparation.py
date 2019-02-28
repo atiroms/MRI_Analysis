@@ -671,23 +671,40 @@ class ExtractNifti():
 
 class PickupUnzip():
     def __init__(self,
-        path_input='',
-        path_output='',
-        path_file_clinical='***/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
+        path_input='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_xcpout_acompcor',
+        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/32_conn_acompcor',
+        path_file_clinical='D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
         ):
 
         print('Starting pick-up and unzipping of .nii.gz data.')
 
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'input'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy log file
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
         print('Starting to load clinical data.')        
-        df_clinical=pd.read_csv(path_file_clinical)
+        df_clinical=pd.read_csv(path_file_clinical,encoding='cp932')
         print('Finished loading clinical data.')
 
         print('Starting to pick-up and unzip image data.')
         for id_subj in df_clinical.loc[:,'ID_pnTTC']:
-            name_file_input=str(id_subj).zfill(5)+'_img_sm6Std.nii.gz'
-            path_file_input=os.path.join(path_input,'output',name_file_input)
-            name_file_output=str(id_subj).zfill(5)+'_img_sm6Std.nii'
-            path_file_output=os.path.join(path_output,'output',name_file_output)
+            name_file_input='sub-'+str(id_subj).zfill(5)+'_img_sm6Std.nii.gz'
+            path_file_input=os.path.join(path_input,'output','norm',name_file_input)
+            name_file_output='sub-'+str(id_subj).zfill(5)+'_img_sm6Std.nii'
+            path_file_output=os.path.join(path_output,'input',name_file_output)
             with gzip.open(path_file_input, 'rb') as img_in:
                 with open(path_file_output, 'wb') as img_out:
                     shutil.copyfileobj(img_in, img_out)
