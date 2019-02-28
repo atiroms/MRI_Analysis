@@ -671,8 +671,8 @@ class ExtractNifti():
 
 class PickupUnzip():
     def __init__(self,
-        path_input='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_xcpout_acompcor',
-        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/32_conn_acompcor',
+        path_input='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_xcpout_aroma',
+        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/33_conn_aroma',
         path_file_clinical='D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
         ):
 
