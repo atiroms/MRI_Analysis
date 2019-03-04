@@ -33,10 +33,10 @@ class PickupFile():
         #prefix='CSUB-'
         #suffix='C-01.nii'
 
-        path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/preprocessed_image/all'
-        path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/preprocessed_image/female_t1exist'
-        path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/preprocessed_image'
-        file_id='id_female.txt'
+        path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/16_vbm/image/image_all'
+        path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/16_vbm/image/image_female_TSfullexist'
+        path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/16_vbm/image'
+        file_id='id_female_TSfullexist.txt'
         prefix='smwc1CSUB-'
         suffix='C-01.nii'
         ############
