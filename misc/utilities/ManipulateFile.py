@@ -26,11 +26,18 @@ class PickupFile():
     def __init__(self):
         ############
         # Parameters
-        path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/01_nii'
-        path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/02_qc_new_mild'
-        path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/00_config'
-        file_id='id_t1qc_new_mild.txt'
-        prefix='CSUB-'
+        #path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/01_nii'
+        #path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/02_qc_new_mild'
+        #path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/00_config'
+        #file_id='id_t1qc_new_mild.txt'
+        #prefix='CSUB-'
+        #suffix='C-01.nii'
+
+        path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/preprocessed_image/all'
+        path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/preprocessed_image/female_t1exist'
+        path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/preprocessed_image'
+        file_id='id_female.txt'
+        prefix='smwc1CSUB-'
         suffix='C-01.nii'
         ############
 
