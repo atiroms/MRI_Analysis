@@ -11,6 +11,8 @@ import json
 import numpy as np
 import pydicom
 import datetime
+import gzip
+
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
 def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
@@ -335,22 +337,20 @@ class XCPScript():
 
 class XCPPrep():
     def __init__(self,
-        #skip_fmriprep_copy=False,
-        #skip_fmriprep_moveanat=False,
         skip_fmriprep_copy=True,
         skip_fmriprep_moveanat=True,
-        #n_proc=20,
-        n_proc=10,
+        n_proc=20,
+        #n_proc=10,
         #n_proc=5,
         #n_proc=1,
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_1_xcp_36p',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_1_xcp_acompcor',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/24_1_xcp_acompcor',
         path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_2_xcp_36p',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_2_xcp_36p',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/24_2_xcp_acompcor',
         #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/45_xcp_acompcor_full',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/46_xcp_acompcor_fc_roiquant',
@@ -363,9 +363,9 @@ class XCPPrep():
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
-        file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
+        #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
         #file_design='fc-aroma_fconly_noqcfc.dsn',
-        #file_design='fc-acompcor_fconly_noqcfc.dsn',
+        file_design='fc-acompcor_fconly_noqcfc.dsn',
         #file_design='fc-36p_spkreg_fconly.dsn',
         #file_design='fc-aroma_fconly.dsn',
         #file_design='fc-acompcor_fconly.dsn',
@@ -542,9 +542,183 @@ class ExtractMltDcmHeader():
 
 
 ##################################################
+# Extract motion parameter data
+##################################################
+# extract motion parameter data from fMRIPrep result (FSL mcflirt)
+# calculate cumulative motion
+
+class ExtractMotion():
+    def __init__(self,
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
+        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/20_2_fmriprep',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/25_2_motion'
+        ):
+
+        print('Starting motion parameter extraction')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy fmriprep log file
+        print('Starting to copy fMRIPrep log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying fMRIPrep log folder.')
+
+        # read and process motion parmeter data
+        print('Starting to extract motion data.')
+        list_dir_all = os.listdir(os.path.join(path_input,'output','fmriprep'))
+        list_sub=[int(d.replace('sub-','')) for d in list_dir_all if os.path.isdir(os.path.join(path_input,'output','fmriprep',d)) and d.startswith('sub-')]
+        list_sub.sort()
+        df_motion=pd.DataFrame(np.nan,
+                               columns=['ID_pnTTC',
+                                        'trans_x_max','rot_x_max',
+                                        'trans_y_max','rot_y_max',
+                                        'trans_z_max','rot_z_max',
+                                        'trans_x_mean','rot_x_mean',
+                                        'trans_y_mean','rot_y_mean',
+                                        'trans_z_mean','rot_z_mean'],
+                               index=range(max(list_sub)))
+        df_motion.loc[:,'ID_pnTTC']=range(1,(max(list_sub)+1))
+        for i in range(len(list_sub)):
+            print('extracting from subject: ',str(list_sub[i]))
+            name_sub='sub-'+str(list_sub[i]).zfill(5)
+            path_file_confound=name_sub+'_ses-01_task-rest_desc-confounds_regressors.tsv'
+            path_file_confound=os.path.join(path_input,'output','fmriprep',name_sub,'ses-01','func',path_file_confound)
+            df_confound=pd.read_csv(path_file_confound,delimiter='\t')
+            for j in ['trans','rot']:
+                for k in ['x','y','z']:
+                    colname=j+'_'+k
+                    ts=df_confound.loc[:,colname]
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
+
+        path_file_output=os.path.join(path_output,'output','motion.tsv')
+        df_motion.to_csv(path_file_output,sep='\t',index=False)
+        print('Finished motion parameter extraction')
+
+
+##################################################
+# Extract Normalized NIfTI data
+##################################################
+# Extract XCP-preprocessed NIfTI data
+
+class ExtractNifti():
+    def __init__(self,
+        #path_input='Q:/MRI/pnTTC/Preproc/test_5sub/44_xcp_parallel',
+        #path_output='Q:/MRI/pnTTC/Preproc/test_5sub/51_nifti'
+        #path_input='Q:/MRI/pnTTC/Preproc/23_1_xcp_acompcor',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_1_conn_acompcor'
+        #path_input='P:/MRI/pnTTC/Preproc/23_2_xcp_acompcor',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_2_conn_acompcor'
+        #path_input='Q:/MRI/pnTTC/Preproc/22_1_xcp_aroma',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_1_conn_aroma'
+        path_input='P:/MRI/pnTTC/Preproc/22_2_xcp_aroma',
+        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_2_conn_aroma'
+        ):
+
+        print('Starting NIfTI extraction.')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        list_paths_mkdir.append(os.path.join(path_output,'output','norm'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy log file
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        # Copy NifTI files
+        print('Starting to copy NIfTI files.')
+        list_dir_thread = os.listdir(os.path.join(path_input,'output'))
+        list_dir_thread.sort()
+        for dir_thread in list_dir_thread:
+            list_dir_all=os.listdir(os.path.join(path_input,'output',dir_thread))
+            list_dir_sub=[d for d in list_dir_all if os.path.isdir(os.path.join(path_input,'output',dir_thread,d)) and d.startswith('sub-')]
+            list_dir_sub.sort()
+            for dir_sub in list_dir_sub:
+                path_file_from=dir_sub + '_img_sm6Std.nii.gz'
+                path_file_from=os.path.join(path_input,'output',dir_thread,dir_sub,'norm',path_file_from)
+                path_folder_to=os.path.join(path_output,'output','norm')
+                shutil.copy(path_file_from,path_folder_to)
+                print('Copied: '+dir_sub)
+        
+        print('Finished copying NIfTI files.')
+
+
+##################################################
+# Pickup and unzip nii.gz data
+##################################################
+# CONN preparation
+
+class PickupUnzip():
+    def __init__(self,
+        path_input='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_xcpout_aroma',
+        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/33_conn_aroma',
+        path_file_clinical='D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
+        ):
+
+        print('Starting pick-up and unzipping of .nii.gz data.')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'input'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy log file
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        print('Starting to load clinical data.')        
+        df_clinical=pd.read_csv(path_file_clinical,encoding='cp932')
+        print('Finished loading clinical data.')
+
+        print('Starting to pick-up and unzip image data.')
+        for id_subj in df_clinical.loc[:,'ID_pnTTC']:
+            name_file_input='sub-'+str(id_subj).zfill(5)+'_img_sm6Std.nii.gz'
+            path_file_input=os.path.join(path_input,'output','norm',name_file_input)
+            name_file_output='sub-'+str(id_subj).zfill(5)+'_img_sm6Std.nii'
+            path_file_output=os.path.join(path_output,'input',name_file_output)
+            with gzip.open(path_file_input, 'rb') as img_in:
+                with open(path_file_output, 'wb') as img_out:
+                    shutil.copyfileobj(img_in, img_out)
+            print('Finished pick-up and unzipping for subject:'+ str(id_subj))
+        print('Finished pick-up and unzipping image data.')
+
+        print('Finished.')
+
+
+##################################################
 # Extract XCP-processed FC or TS data
 ##################################################
-
+# This class is no longer used.
+# R extract_xcp() function is used instead
 class ExtractXCP():
     def __init__(self,
         path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/30_xcp_36p',

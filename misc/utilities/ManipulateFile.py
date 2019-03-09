@@ -26,12 +26,19 @@ class PickupFile():
     def __init__(self):
         ############
         # Parameters
-        path_from=''
-        path_to=''
-        path_id=''
-        file_id=''
-        prefix=''
-        suffix=''
+        #path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/01_nii'
+        #path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/02_qc_new_mild'
+        #path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/17_spm/00_config'
+        #file_id='id_t1qc_new_mild.txt'
+        #prefix='CSUB-'
+        #suffix='C-01.nii'
+
+        path_from='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/16_vbm/image/image_all'
+        path_to='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/16_vbm/image/image_female_TSfullexist'
+        path_id='D:/atiroms/MRI/pnTTC/pnTTC1_T1_C/16_vbm/image'
+        file_id='id_female_TSfullexist.txt'
+        prefix='smwc1CSUB-'
+        suffix='C-01.nii'
         ############
 
         file_id_open=open(path_id + '/' + file_id, 'r')
@@ -224,8 +231,8 @@ class Folder2File():
     def __init__(self):
         ############
         # Parameters
-        path_from=''
-        path_to=''
+        path_from='C:/Users/atiroms/Downloads/MRI_output'
+        path_to='C:/Users/atiroms/Downloads/MRI_output2'
         ############
         list_file=glob.glob(path_from + '/*/output.nii')
         for path in list_file:
@@ -235,3 +242,4 @@ class Folder2File():
             shutil.copy(file_from, file_to)
             print('Converted file: '+ file_from + '.')
         print('Done.')
+

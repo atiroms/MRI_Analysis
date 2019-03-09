@@ -9,13 +9,13 @@
 #**************************************************
 # Parameters ======================================
 #**************************************************
-path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
+#path_in  <- "P:/MRI/pnTTC/Preproc/test_5sub"
 #path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
-path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
+#path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #path_in <- "/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub"
 #path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
-#path_in <- "/media/veracrypt2/MRI/pnTTC/Preproc"
-#path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc"
+path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #path_out <- "/home/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_in   <- "30_xcp_36p"
 #dir_out  <- "05_ts_temp"
@@ -35,8 +35,14 @@ path_out <- "D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 #dir_out  <- "12_ts_acompcor_2mm"
 #dir_in    <- "44_xcp_parallel"
 #dir_out   <- "24_ts_acompcor_2mm"
-dir_in    <- "47_xcp_acompcor_full"
-dir_out   <- "27_ts_acompcor"
+#dir_in    <- "47_xcp_acompcor_full"
+#dir_out   <- "27_ts_acompcor"
+
+dir_in <-"21_1_xcp_36p"
+dir_out<-"11_1_ts_36p"
+#dir_in <-"21_2_xcp_36p"
+#dir_out<-"11_2_ts_36p"
+
 
 #dir_in <-"22_1_xcp_aroma"
 #dir_out <-"02_1_ts_aroma"
