@@ -118,7 +118,7 @@ class GenerateScript():
         #      'C-01.nii -subject ',
         #      ' -all -qcache'],
         text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite/CSUB-',
-              'C-02.nii -subject ',
+              'C-02.nii.gz -subject ',
               ' -all -qcache'],
         connector=' ; '
         ):
