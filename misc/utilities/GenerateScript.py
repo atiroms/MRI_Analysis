@@ -1,26 +1,23 @@
-#############
-# LIBRARIES #
-#############
+##################################################
+# Libraries
+##################################################
 
 import os
 import math
 
 
-####################################
-# ZERO-PAD AND CONCATENATE ID FILE #
-####################################
+##################################################
+# Zero-pad and concatenate id file
+##################################################
 # read id file, zero-pad and concatenate into a string
 # for general use
 
 class ZeropadConcat():
-    def __init__(self):
-        ############
-        # Parameters
-        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_W2_T1exist.txt'
-        n_zfill=5
+    def __init__(self,
+        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_W2_T1exist.txt',
+        n_zfill=5,
         path_file_output='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_string_W2_T1exist.txt'
-        ############
-
+        ):
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[int(x.strip('\n')) for x in list_id]
@@ -34,9 +31,9 @@ class ZeropadConcat():
         print('All done.')
 
 
-##########################
-# READ ID FILE INTO LIST #
-##########################
+##################################################
+# read ID file into list
+##################################################
 
 class ReadID():
     def __init__(self,
@@ -49,13 +46,14 @@ class ReadID():
         self.output=[int(x.strip('\n')) for x in file]
 
 
-#########################
-# SCAN FOLDER INTO LIST #
-#########################
+##################################################
+# Scan FreeSurfer folder into ID list
+##################################################
 
-class ExtractFolderID():
+class ScanFSFolder():
     def __init__(self,
-        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon',
         list_exceptions=['fsaverage', 'id.txt','script.txt']
         ):
 
@@ -65,33 +63,50 @@ class ExtractFolderID():
         self.output = [int(i) for i in list_dir if i not in list_exceptions]
 
 
-###############################
-# SAVE LIST ID INTO TEXT FILE #
-###############################
+##################################################
+# Scan .nii.gz folder into ID list
+##################################################
+
+class ScanNiiFolder():
+    def __init__(self,
+        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite',
+        list_exceptions=['fsaverage', 'id.txt','script.txt']
+        ):
+
+        list_dir = os.listdir(path_exp)
+        list_dir.sort()
+        list_id= [int(i.replace('CSUB-','').replace('C-02.nii.gz','')) for i in list_dir if i not in list_exceptions]
+        list_id.sort()
+        self.output=list_id
+
+
+##################################################
+# save list id into text file
+##################################################
 
 class SaveListID():
-    def __init__(self,list_id):
-        ############
-        # Parameters
-        path_file_output=''
-        ############
+    def __init__(self,
+        list_id,
+        path_file_output='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/list_id.txt'
+        ):
 
         self.output=''
         for item in list_id:
-            self.output=self.output + item + '\n'
+            self.output=self.output + str(item) + '\n'
         file=open(path_file_output,'w')
         file.write(self.output)
         file.close()
 
 
-################################
-# GENERATE SCRIPT FROM ID FILE #
-################################
+##################################################
+# generate script from ID file
+##################################################
 
 class GenerateScript():
     def __init__(self,
         list_id,
-        head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output\ncd $SUBJECTS_DIR\n',
+        #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output\ncd $SUBJECTS_DIR\n',
+        head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/output\ncd $SUBJECTS_DIR\n',
         #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n',
         #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
         #      'C-01.nii -subject ',
@@ -99,8 +114,11 @@ class GenerateScript():
         #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
         #      'C-02.nii.gz -subject ',
         #      ' -all -qcache'],
-        text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii/CSUB-',
-              'C-01.nii -subject ',
+        #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii/CSUB-',
+        #      'C-01.nii -subject ',
+        #      ' -all -qcache'],
+        text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite/CSUB-',
+              'C-02.nii -subject ',
               ' -all -qcache'],
         connector=' ; '
         ):
@@ -113,16 +131,17 @@ class GenerateScript():
                 self.output=self.output + connector
 
 
-###############################################
-# GENERATE SCRIPTS FOR MANUAL MULTIPROCESSING #
-###############################################
+##################################################
+# generate scripts for manual multiprocessing
+##################################################
 
 class GenerateMultiScript():
     def __init__(self,
         list_id,
         #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script',
-        path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_recon_t1qcout.sh',
-        n_scripts=32
+        #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_recon_t1qcout.sh',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/16_recon_t1qcout.sh',
+        n_scripts=19
         ):
 
         len_list=len(list_id)
@@ -140,11 +159,11 @@ class GenerateMultiScript():
         file.close()
 
 
-####################################################
-# GENERATE MULTIPLE SCRIPTS FOR REMAINING SUBJECTS #
-####################################################
+##################################################
+# generate multiple scripts for remaining subjects
+##################################################
 
 class RemainingScript():
     def __init__(self):
-        list_diff=list(set(ReadID().output)-set(ExtractFolderID().output))
+        list_diff=list(set(ReadID().output)-set(ScanFSFolder().output))
         GenerateMultiScript(list_diff)
