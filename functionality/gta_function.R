@@ -1,13 +1,18 @@
-#### Description ####
-
+#**************************************************
+# Description =====================================
+#**************************************************
 # R script for calculation of metrics of weighted graph theoretical analysis
 
 
-#### Libraries ####
+#**************************************************
+# Libraries =======================================
+#**************************************************
 library(igraph)
 
 
-#### Basic Measures ####
+#**************************************************
+# Basic functions =================================
+#**************************************************
 iGraph2Nodes<-function(input){
   nodes<-data.frame(node=V(input)$name,label_proper=V(input)$label_proper)
   return(nodes)
@@ -100,7 +105,9 @@ WeightedDistance<-function(input_igraph=NULL,input_length=NULL){
 # Weighted Geometric Means of Triangles
 
 
-#### Measures of Integration ####
+#**************************************************
+# Measures of integration =========================
+#**************************************************
 
 # Weighted Characteristic Path Length / Average Weighted Path Length / Average Distance
 WeightedCharPath<-function(input_igraph=NULL,input_distance=NULL){
@@ -185,7 +192,9 @@ WeightedGlobalEfficiency<-function(input_igraph=NULL,input_distance=NULL){
 }
 
 
-#### Measures of Segregation ####
+#**************************************************
+# Measures of segregation =========================
+#**************************************************
 
 # Weighted clustering coefficient
 WeightedClustCoef<-function(input){
@@ -330,7 +339,9 @@ WeightedModularity<-function(input,gamma_v=1){
 # Community structure using clique-percolation (not in Rubinov NeuroImage 2010)
 
 
-#### Means of centrality ####
+#**************************************************
+# Measures of centrality ==========================
+#**************************************************
 
 # Weighted Degree Centrality / Strength / Weighted Degree
 WeightedStrength<-function(input){
@@ -447,7 +458,9 @@ WeightedEigenvectorCentrality<-function(input){
 
 # motif fingerprint
 
-#### Measures of resilience ####
+#**************************************************
+# Measures of resilience ==========================
+#**************************************************
 
 # Cumulative weighted degree distribution
 CumWeightedDegreeDist<-function(input){
@@ -491,7 +504,9 @@ WeightedAssortativityCoef<-function(input){
   return(output)
 }
 
-#### Other Concepts ####
+#**************************************************
+# Other measures  =================================
+#**************************************************
 
 # Weighted network Small-worldness
 WeightedNetworkSmallWorldness<-function(input){

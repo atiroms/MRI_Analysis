@@ -41,6 +41,8 @@ thr_pvalue <- 0.05
 #**************************************************
 library(ggplot2)
 library(GGally)
+library(igraph)
+library(qgraph)
 
 
 #**************************************************
@@ -77,6 +79,199 @@ paths<-func_path()
 source(file.path(paths$script,"functionality/function.R"))
 source(file.path(paths$script,"functionality/glm_function.R"))
 source(file.path(paths$script,"functionality/graph.R"))
+source(file.path(paths$script,"functionality/gta_function.R"))
+
+
+
+#**************************************************
+# GTA functionalities =============================
+#**************************************************
+
+Edges2iGraph<-function(input){
+  edges<-data.frame(matrix(ncol=3,nrow=n_connections))
+  edges[,1:2]<-connections[,c("from","to")]
+  for (i in 1:n_connections){
+    edges[i,3]<-as.numeric(input[intersect(which(input$from==connections[i,"from"]),
+                                           which(input$to==connections[i,"to"])),"r"])
+  }
+  colnames(edges)<-c("from","to","weight")
+  nodes<-data.frame(id=rois)
+  nodes$label_proper<-ConvertID(nodes$id,roi_data,"ID_long","label_proper")
+  output <- graph.data.frame(d = edges, vertices = nodes, directed = F)
+  return(output)
+}
+
+
+# Subset edges according to desired cost
+SubsetEdges<-function(input_graph, input_cost){
+  n_edges4cost<-as.integer(n_rois*(n_rois-1)/2*input_cost)
+  edges2delete<-head(order(E(input_graph)$weight),(n_connections-n_edges4cost))
+  output<-delete.edges(input_graph,edges2delete)
+  return(output)
+}
+
+
+# add metric to output list in weighted GTA
+AddMetric<-function(input){
+  output<-data.frame(matrix(nrow=0,ncol=4))
+  if (!is.null(input$graph)){
+    output_add<-cbind(node="graph",node_label=NA,metric=input$name[[1]],value=input$graph)
+    output<-rbind(output,output_add)
+  }
+  if (!is.null(input$node)){
+    output_add<-cbind(node=names(input$node),
+                      node_label=ConvertID(names(input$node),roi_data,"ID_long","label_proper"),
+                      metric=input$name[[1]],value=input$node)
+    output<-rbind(output,output_add)
+  }
+  colnames(output)<-c("node","node_label","metric","value")
+  return(output)
+}
+
+
+#**************************************************
+# Binary GTA ======================================
+#**************************************************
+
+# Calculate binary graph metrics
+BinaryMetrics<-function(input_graph){
+  metrics<-data.frame(matrix(nrow=0,ncol=3))
+  colnames(metrics)<-c("node","metric","value")
+  ## graph-level metrics
+  # characteristic path length
+  metrics<-rbind(metrics,cbind(node="graph",metric="characteristic path length",
+                               value=average.path.length(input_graph)))
+  # global efficiency
+  eff<-1/(shortest.paths(input_graph))
+  eff[!is.finite(eff)]<-0
+  metrics<-rbind(metrics,cbind(node="graph",metric="global efficiency",
+                               value=mean(eff,na.rm=TRUE)))
+  # global clustering coefficient
+  metrics<-rbind(metrics,cbind(node="graph",metric="global clustering coefficient",
+                               value=transitivity(input_graph)))
+  # average clustering coefficient
+  metrics<-rbind(metrics,cbind(node="graph",metric="average clustering coefficient",
+                               value=transitivity(input_graph,type="average")))
+  # local efficiency
+  # modularity
+  # small-worldness
+  suppressWarnings(metrics<-rbind(metrics,cbind(node="graph",metric="small-world index",
+                                                value=smallworldIndex(input_graph)$index)))
+  
+  ## node-level metrics
+  # degree centrality
+  metrics<-rbind(metrics,cbind(node=rois,metric="degree centrality",
+                               value=centr_degree(input_graph)$res))
+  # betweenness centrality
+  metrics<-rbind(metrics,cbind(node=rois,metric="betweenness centrality",
+                               value=centr_betw(input_graph)$res))
+  # eigenvector centrality
+  metrics<-rbind(metrics,cbind(node=rois,metric="eigenvector centrality",
+                               value=eigen_centrality(input_graph)$vector))
+  
+  rownames(metrics)<-NULL
+  return(metrics)
+}
+
+# Iterate over costs
+ItrCost<-function(input_graph){
+  output<-data.frame()
+  for (i in cost){
+    subgraph<-SubsetEdges(input_graph,i)
+    E(subgraph)$weight<-1
+    metrics<-BinaryMetrics(subgraph)
+    metrics<-cbind(cost=i,metrics)
+    output<-rbind(output,metrics)
+  }
+  output$value<-as.numeric(output$value)
+  metric_list<-output[which(output$cost==cost[1]),c("node","metric")]
+  average<-data.frame()
+  for (i in 1:nrow(metric_list)){
+    average<-rbind(average,
+                   cbind(cost="average",node=as.character(metric_list[i,"node"]),
+                         metric=as.character(metric_list[i,"metric"]),
+                         value=mean(output[intersect(which(output$node==metric_list[i,"node"]),
+                                                     which(output$metric==metric_list[i,"metric"])),"value"])))
+  }
+  output<-rbind(output,average)
+  rownames(output)<-NULL
+  return(output)
+}
+
+
+#**************************************************
+# Weighted GTA ======================================
+#**************************************************
+
+WeightedMetric<-function(input_igraph){
+  metrics<-data.frame(matrix(nrow=0,ncol=4))
+  distance<-WeightedDistance(input_igraph)$distance
+  
+  metrics<-rbind(metrics,AddMetric(WeightedCharPath(input_distance=distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedEccentricity(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedRadius(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedDiameter(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedGlobalEfficiency(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedClustCoef(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedTransitivity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedModularity(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedClosenessCentrality(input_distance = distance)))
+  metrics<-rbind(metrics,AddMetric(WeightedBetweennessCentrality(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedEigenvectorCentrality(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
+  metrics<-rbind(metrics,AddMetric(WeightedAssortativityCoef(input = input_igraph)))
+  
+  colnames(metrics)<-c("node","node_label","metric","value")
+  rownames(metrics)<-NULL
+  return(metrics)
+}
+
+
+#### Graph Theoretical Analysis ####
+
+gta<-function(absolute=T,threshold=NA){
+  dirname<-ExpDir("GTA")
+  #  output_binary<-data.frame()
+  for (i in 1:n_subject){
+    print(paste("Calculating subject No.",i,", ID_pnTTC:",subject_id[i]))
+    Sys.sleep(0.01)
+    flush.console()
+    subject_graph<-Edges2iGraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
+    #    subject_metric_binary<-ItrCost(subject_graph)
+    #    output_binary<-rbind(output_binary,
+    #                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
+    #                               subject_metric_binary))
+    if (absolute){
+      E(subject_graph)$weight<-abs(E(subject_graph)$weight)
+    }
+    subject_metric_weighted<-WeightedMetric(subject_graph)
+    output_weighted_add<-cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
+                               subject_metric_weighted)
+    write.csv(output_weighted_add, file.path(dirname,sprintf("GTA_weighted_%05d.csv",i)),row.names=F)
+  }
+  output_weighted<-data.frame()
+  for (i in 1:n_subject){
+    output_weighted_add<-read.csv(file.path(dirname,sprintf("GTA_weighted_%05d.csv",i)))
+    output_weighted<-rbind(output_weighted,output_weighted_add)
+  }
+  
+  #  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
+  write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
+  #  output<-list(output_binary,output_weighted)
+  #  names(output)<-c("Binary","Weighted")
+  glm<-CommonGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname,"GLM_GTA.csv")
+  output_weighted_tidy<-output_weighted[,c("ID_pnTTC","node","metric","value")]
+  li<-CommonLI(output_weighted_tidy,"node",dirname,"LI_GTA.csv")
+  li_tidy<-li[,c("ID_pnTTC","node","metric","L_ROI_ID","R_ROI_ID","Laterality_Index")]
+  colnames(li_tidy)[6]<-"value"
+  glm_li<-CommonGLM(li_tidy,covariate_label,global_covariate=F,dirname=dirname,"GLM_LI_GTA.csv")
+  output<-list(output_weighted,glm,li,glm_li)
+  names(output)<-c("Weighted_GTA","GLM_of_GTA","LI_of_GTA","GLM_of_LI_of_GTA")
+  return(output)
+}
+
 
 
 #**************************************************

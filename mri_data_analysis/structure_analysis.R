@@ -30,16 +30,6 @@ subset_subj <- list(list("column"="W1_5sub","value"=1))
 
 input_roi_type <- "label_fs"
 
-p_uncorrected<-0.001
-p_corrected<-0.05
-
-n_components<-10
-#n_components<-30
-#n_components<-5
-tsne_dims<-2
-tsne_perplexity<-30
-tsne_max_itr<-1000
-
 
 #**************************************************
 # Libraries =======================================
@@ -127,6 +117,17 @@ glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,f
 # OBSOLETE ========================================
 #**************************************************
 
+##### Parameters ####
+#p_uncorrected<-0.001
+#p_corrected<-0.05
+#
+#n_components<-10
+##n_components<-30
+##n_components<-5
+#tsne_dims<-2
+#tsne_perplexity<-30
+#tsne_max_itr<-1000
+#
 ##### Data Loading ####
 #
 #source(file.path(script_dir,"Functionalities/LoadClinicalData.R"))
