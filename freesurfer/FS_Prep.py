@@ -4,6 +4,55 @@
 
 import os
 import math
+import pandas as pd
+
+
+##################################################
+# Check FreeSurfer files
+##################################################
+# Check FreeSurfer folder for subject list, error log and folder size.
+
+class CheckFreesurfer():
+    def __init__(self,
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output',
+        #path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/output',
+        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/output',
+        string_log_ok='finished without error at',
+        #file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/check_freesurfer.csv'
+        file_output='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/16_checkfreesurfer.csv'
+        ):
+
+        list_dir_all = os.listdir(path_exp)
+        list_sub = [d for d in list_dir_all if (os.path.isdir(os.path.join(path_exp,d)) and not d.startswith('fsaverage'))]
+        list_sub.sort()
+        df_out=pd.DataFrame(columns=['sub','log','size'])
+        list_log_error=[]
+        for sub in list_sub:
+            print('Checking subject '+ str(sub)+ ' ...')
+            with open(os.path.join(path_exp,sub,'scripts/recon-all.log'),'r') as file_log:
+                text_log=file_log.read()
+            if string_log_ok in text_log:
+                log_ok=1
+            else:
+                log_ok=0
+                list_log_error.append(sub)
+            df_out=df_out.append(pd.Series([sub,log_ok,self.get_dir_size(path=os.path.join(path_exp,sub))],index=df_out.columns),ignore_index=True)
+        df_out.to_csv(file_output,index=False)
+        print('Total FreeSurfer subject folders: ' + str(len(list_sub)))
+        print('FreeSurfer Log Error in:')
+        print(list_log_error)
+        print('All done.')
+
+    def get_dir_size(self, path='.'):
+        total = 0
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_file():
+                    total += entry.stat().st_size
+                elif entry.is_dir():
+                    total += self.get_dir_size(entry.path)
+        return total
 
 
 ##################################################
@@ -167,50 +216,3 @@ class RemainingScript():
     def __init__(self):
         list_diff=list(set(ReadID().output)-set(ScanFSFolder().output))
         GenerateMultiScript(list_diff)
-
-
-##################################################
-# Check FreeSurfer files
-##################################################
-# Check FreeSurfer folder for subject list, error log and folder size.
-
-class CheckFreesurfer():
-    def __init__(self,
-        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output',
-        path_exp='/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/output',
-        string_log_ok='finished without error at',
-        #file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/check_freesurfer.csv'
-        file_output='/media/atiroms/MORITA_HDD4/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/log/12_checkfreesurfer.csv'
-        ):
-
-        list_dir_all = os.listdir(path_exp)
-        list_sub = [d for d in list_dir_all if (os.path.isdir(os.path.join(path_exp,d)) and not d.startswith('fsaverage'))]
-        list_sub.sort()
-        df_out=pd.DataFrame(columns=['sub','log','size'])
-        list_log_error=[]
-        for sub in list_sub:
-            print('Checking subject '+ str(sub)+ ' ...')
-            with open(os.path.join(path_exp,sub,'scripts/recon-all.log'),'r') as file_log:
-                text_log=file_log.read()
-            if string_log_ok in text_log:
-                log_ok=1
-            else:
-                log_ok=0
-                list_log_error.append(sub)
-            df_out=df_out.append(pd.Series([sub,log_ok,self.get_dir_size(path=os.path.join(path_exp,sub))],index=df_out.columns),ignore_index=True)
-        df_out.to_csv(file_output,index=False)
-        print('Total FreeSurfer subject folders: ' + str(len(list_sub)))
-        print('FreeSurfer Log Error in:')
-        print(list_log_error)
-        print('All done.')
-
-    def get_dir_size(self, path='.'):
-        total = 0
-        with os.scandir(path) as it:
-            for entry in it:
-                if entry.is_file():
-                    total += entry.stat().st_size
-                elif entry.is_dir():
-                    total += self.get_dir_size(entry.path)
-        return total
