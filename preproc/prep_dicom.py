@@ -32,16 +32,45 @@ shutil.copyfileobj = _copyfileobj_patched
 
 class ExtractDcmHeader():
     def __init__(self,
-        path_file_in='P:/MRI/pnTTC/Preproc/00_dicom_ses12_exist/pnTTC2_T1/CSUB-00003C-02/IM-0001-0001-0001.dcm'
+        #path_file_in='P:/MRI/pnTTC/Preproc/00_dicom_ses12_exist/pnTTC2_T1/CSUB-00003C-02/IM-0001-0001-0001.dcm'
+        #path_file_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+Fieldmap_SBPRS - 301/IM-0001-0001-0001.dcm',
+        path_file_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+Fieldmap_SBPRS - 301/IM-0001-0002-0001.dcm',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/31_dcm2nii/output/header/output.csv',
+        output_file=True
         ):
 
         img_in=pydicom.read_file(path_file_in)
         df_header=pd.DataFrame(columns=['tag','name','value'])
         for element in img_in:
             df_header=df_header.append(pd.Series([str(element.tag),element.name,element.repval],index=df_header.columns),ignore_index=True)
+        if output_file:
+            df_header.to_csv(path_file_out)
         self.output=df_header
         #print('DICOM element count: '+ str(len(df_header)))
         #print('All done.')
+
+
+class ExtractAll():
+    def __init__(self,
+        path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+Fieldmap_SBPRS - 301',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/31_dcm2nii/output/header/header.csv',
+        n_keys=353
+        ):
+        list_file = os.listdir(path_in)
+        list_file.sort()
+        #label_col=['file']+[str(num) for num in np.arange(n_keys)]
+        #df_header_mlt=pd.DataFrame(columns=label_col)
+        df_header_mlt=pd.DataFrame()
+        for name_file in list_file:
+            print('Extracting '+ name_file)
+            path_file_in=os.path.join(path_in,name_file)
+            df_header=ExtractDcmHeader(path_file_in=path_file_in,output_file=False).output
+            values=df_header.loc[:,'value']
+            #values.reindex([str(num) for num in np.arange(n_keys)])
+            values=pd.concat([pd.Series(name_file,index=['file']),values])
+            df_header_mlt=df_header_mlt.append(values,ignore_index=True)
+        df_header_mlt.to_csv(path_file_out)
+        print('Done!')
 
 class ExtractMltDcmHeader():
     def __init__(self,
