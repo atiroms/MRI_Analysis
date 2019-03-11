@@ -63,9 +63,9 @@ class CheckFreesurfer():
 
 class ZeropadConcat():
     def __init__(self,
-        path_file_id='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_W2_T1exist.txt',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/13_meas/log/list_id.txt',
         n_zfill=5,
-        path_file_output='/media/veracrypt1/MRI/pnTTC/BIDS/misc/id_string_W2_T1exist.txt'
+        path_file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/13_meas/log/str_id.txt'
         ):
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
@@ -102,7 +102,8 @@ class ReadID():
 class ScanFSFolder():
     def __init__(self,
         #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon',
+        path_exp='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/output',
         list_exceptions=['fsaverage', 'id.txt','script.txt']
         ):
 
@@ -136,7 +137,8 @@ class ScanNiiFolder():
 class SaveListID():
     def __init__(self,
         list_id,
-        path_file_output='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/list_id.txt'
+        #path_file_output='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/list_id.txt'
+        path_file_output='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/log/list_id.txt'
         ):
 
         self.output=''
