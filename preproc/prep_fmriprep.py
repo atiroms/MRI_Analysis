@@ -26,19 +26,24 @@ shutil.copyfileobj = _copyfileobj_patched
 
 
 ##################################################
-# Insert slice timing and phase encoding direction
+# Insert information to BIDS json sidecar
 ##################################################
 # fMRIPrep preparation
-# Insert slice timing and phase encoding direction data to BIDS JSON file to use in fMRIPrep
+# Insert slice timing, phase encoding direction, effective echo spacing and total readout time
+# data to BIDS JSON file to use in fMRIPrep
 
-class InsertST_PED():
+class EditJson():
     def __init__(self,
         TR=2.5,
         n_slices=40,
         PED='j-',
+        EES=0.00070302532,     # Fieldmap parameter
+        TRT=0.04218151959,     # Fieldmap parameter
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output',
-        sessions=['ses-01','ses-02']
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/34_bids/output',
+        #sessions=['ses-01','ses-02']
+        sessions=['ses-01']
         ):
 
         list_dir_all = os.listdir(path_exp)
@@ -60,9 +65,11 @@ class InsertST_PED():
                             data = json.load(file_json_input)
                         data['SliceTiming']=list_slicetiming
                         data['PhaseEncodingDirection']=PED
+                        data['EffectiveEchoSpacing']=EES
+                        data['TotalReadoutTime']=TRT
                         with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
                             json.dump(data, file_json_output,indent=2, sort_keys=True)
-                        print('Added ST and PED data to ' + filename_json + '.')
+                        print('Modified JSON file ' + filename_json + '.')
         print('All done.')
 
 
