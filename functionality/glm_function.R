@@ -16,7 +16,7 @@ library(car)
 # GLM analysis ====================================
 #**************************************************
 
-func_glm<-function(df_mri,data_clinical,list_covar){
+func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global_covar=NA){
   # subset clinical data according to clinical data availability
   df_clinical<-data_clinical$df_clinical
   for (covar in list_covar){
@@ -33,6 +33,14 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   df_covar_demean<-df_covar
   for (covar in list_covar){
     df_covar_demean[,covar]<-df_covar_demean[,covar]-mean(df_covar_demean[,covar])
+  }
+  
+  # SUbset global covariate dataframe
+  if(!is.na(key_global_covar)){
+    df_global_covar<-df_global_covar[df_global_covar$ID_pnTTC %in% list_id_subj,]
+    colnames(df_global_covar)[2]<-"value"
+    df_global_covar_demean<-df_global_covar
+    df_global_covar_demean[,"value"]<-df_global_covar_demean[,"value"]-mean(df_global_covar_demean[,"value"])
   }
   
   # Subset MRI dataframe
@@ -61,8 +69,10 @@ func_glm<-function(df_mri,data_clinical,list_covar){
   for (i in seq(length(list_model))){  # Iterate over models (set of covariates)
     model<-list_model[[i]]
     list_covar_sub<-list_covar[model]
+    
     name_model<-paste(list_covar_sub,collapse="_")
-    print(paste("      Model with covarite: ",paste(list_covar_sub,collapse=" and ")," will be calculated.",sep=""))
+    name_model_pint<-paste(list_covar_sub,collapse=" and ")
+
     for (j in seq(length(list_covar_sub))){
       assign(paste("covar",as.character(j),sep="_"),df_covar_demean[,list_covar_sub[j]])
       if (j==1){
@@ -71,6 +81,14 @@ func_glm<-function(df_mri,data_clinical,list_covar){
         str_formula_lm<-paste(str_formula_lm,"+covar_",as.character(j),sep="")
       }
     }
+    if (!is.na(key_global_covar)){
+      j<-j+1
+      assign(paste("covar",as.character(j),sep="_"),df_global_covar_demean[,"value"])
+      str_formula_lm<-paste(str_formula_lm,"+covar_",as.character(j),sep="")
+      name_model<-paste(name_model,key_global_covar,sep="_")
+      name_model_print<-paste(name_model_print,key_global_covar,sep=" and ")
+    }
+    print(paste("      Model with covarite: ",name_model_print," will be calculated.",sep=""))
     
     # Convert model string to formula object
     # This formula is iteratively used for all mri measures
@@ -79,7 +97,12 @@ func_glm<-function(df_mri,data_clinical,list_covar){
     for (j in seq(length(model))){  # Iterate over explanatory variables
       # contrast matrix
       print(paste("      Evaluating explanaory variable: ",list_covar_sub[j],sep=""))
-      contrast<-matrix(0L,nrow=1, ncol=length(model)+1)
+      if(!is.na(key_global_covar)){
+        contrast<-matrix(0L,nrow=1, ncol=length(model)+1)
+      }else{
+        contrast<-matrix(0L,nrow=1, ncol=length(model)+2)
+      }
+      
       contrast[1,j+1]<-1
       for (k in seq(nrow(df_meas_mri))){  # Iterate over MRI measures
         df_mri_sub<-df_mri
@@ -96,9 +119,16 @@ func_glm<-function(df_mri,data_clinical,list_covar){
           # VIF is defined one for each model (set of covariates)
           if (k==1){
             vifactor<-NaN
-            if(length(model)>1){
-              suppressWarnings(vifactor<-vif(glmfit))
+            if(!is.na(key_global_covar)){
+              if(length(model)>2){
+                suppressWarnings(vifactor<-vif(glmfit))
+              }
+            }else{
+              if(length(model)>1){
+                suppressWarnings(vifactor<-vif(glmfit))
+              }
             }
+            
             df_output_per_model_row<-data.frame("model"=name_model, "vif"=vifactor)
             df_output_per_model<-rbind(df_output_per_model,df_output_per_model_row)
           }
