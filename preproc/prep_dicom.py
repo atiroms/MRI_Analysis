@@ -34,8 +34,10 @@ class ExtractDcmHeader():
     def __init__(self,
         #path_file_in='P:/MRI/pnTTC/Preproc/00_dicom_ses12_exist/pnTTC2_T1/CSUB-00003C-02/IM-0001-0001-0001.dcm'
         #path_file_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+Fieldmap_SBPRS - 301/IM-0001-0001-0001.dcm',
-        path_file_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+Fieldmap_SBPRS - 301/IM-0001-0002-0001.dcm',
-        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/31_dcm2nii/output/header/output.csv',
+        #path_file_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+Fieldmap_SBPRS - 301/IM-0001-0002-0001.dcm',
+        #path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/31_dcm2nii/output/header/output.csv',
+        path_file_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv/input/CSUB-00014C-01/CSUB-00014C-01/Csub/+rsfMRI_SBPRS - 401/IM-0001-0001-0001.dcm',
+        path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/31_dcm2nii/output/rsfMRI_header/header.csv',
         output_file=True
         ):
 
