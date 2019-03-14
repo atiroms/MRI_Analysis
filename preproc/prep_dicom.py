@@ -37,14 +37,16 @@ class TarGz():
         #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
         path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
         path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON',
-        type_subj='C-01'
+        type_subj=['C-01','C-02','M-01','P-01']
         ):
 
         print('Starting to pickup subjects and compressing files.')
         list_file = os.listdir(path_in)
-        list_file =[f for f in list_file if type_subj in f]
-        list_file.sort()
-        print('Number of subjects / studies: ' + str(len(list_file)))
+        list_file_slctd=[]
+        for t_s in type_subj:
+            list_file_slctd =list_file_slctd+[f for f in list_file if t_s in f]
+        list_file_slctd.sort()
+        print('Number of subjects / studies: ' + str(len(list_file_slctd)))
 
         for f in list_file:
             path_dir_in=os.path.join(path_in, f)
