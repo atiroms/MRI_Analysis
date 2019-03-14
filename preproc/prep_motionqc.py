@@ -6,11 +6,11 @@ import os
 import shutil
 import pandas as pd
 import csv
-import nilearn.image as nl_image
+#import nilearn.image as nl_image
 import json
 import numpy as np
-import pydicom
-import datetime
+#import pydicom
+#import datetime
 #import gzip
 
 
@@ -101,12 +101,18 @@ class SpaceIDFile():
     def __init__(self,
         #path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_T1w.tsv',
         #path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_T1w_spaced.tsv',
-        path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_bold.tsv',
-        path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_bold_spaced.tsv',
+        #path_file_input='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/input/group_bold.tsv',
+        #path_file_output='/media/veracrypt1/MRI/pnTTC/Preproc/17_extractqc_ses1_t1exist/output/group_bold_spaced.tsv',
+        #path_file_input='D:/atiroms/Dropbox/MRI/pnTTC/Info/QC_New/w2_source/group_T1w.tsv',
+        #path_file_output='D:/atiroms/Dropbox/MRI/pnTTC/Info/QC_New/w2_source/w2_group_T1w_spaced.csv',
+        path_file_input='D:/atiroms/Dropbox/MRI/pnTTC/Info/QC_New/w2_source/group_bold.tsv',
+        path_file_output='D:/atiroms/Dropbox/MRI/pnTTC/Info/QC_New/w2_source/group_bold_spaced.csv',
         colname_id_input='bids_name',
         prefix_id_input='sub-',
         #suffix_id_input='_ses-01_T1w'
-        suffix_id_input='_ses-01_task-rest_bold'
+        #suffix_id_input='_ses-02_T1w'
+        #suffix_id_input='_ses-01_task-rest_bold'
+        suffix_id_input='_ses-02_task-rest_bold'
         ):
 
         df=pd.read_csv(path_file_input, delimiter='\t')
@@ -124,7 +130,8 @@ class SpaceIDFile():
         cols_df.remove('ID_pnTTC')
         cols_df=['ID_pnTTC'] +cols_df
         df=df[cols_df]
-        df.to_csv(path_file_output,sep='\t',index=False)
+        #df.to_csv(path_file_output,sep='\t',index=False)
+        df.to_csv(path_file_output,index=False)
         print('All done.')
 
 
