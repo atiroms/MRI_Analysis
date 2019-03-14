@@ -48,7 +48,7 @@ class TarGz():
         list_file_slctd.sort()
         print('Number of subjects / studies: ' + str(len(list_file_slctd)))
 
-        for f in list_file:
+        for f in list_file_slctd:
             path_dir_in=os.path.join(path_in, f)
             path_file_out=os.path.join(path_out,f+'.tar.gz')
             with tarfile.open(path_file_out, "w:gz") as tar:
