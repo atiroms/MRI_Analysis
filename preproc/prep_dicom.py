@@ -37,7 +37,7 @@ class TarGz():
         #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
         path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
         path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON',
-        type_subj='C-02'
+        type_subj='C-01'
         ):
 
         print('Starting to pickup subjects and compressing files.')
