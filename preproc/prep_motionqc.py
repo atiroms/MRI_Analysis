@@ -11,7 +11,7 @@ import json
 import numpy as np
 import pydicom
 import datetime
-import gzip
+#import gzip
 
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):

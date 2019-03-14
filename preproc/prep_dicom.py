@@ -6,12 +6,13 @@ import os
 import shutil
 import pandas as pd
 import csv
-import nilearn.image as nl_image
-import json
+#import nilearn.image as nl_image
+#import json
 import numpy as np
 import pydicom
-import datetime
-import gzip
+#import datetime
+#import gzip
+import tarfile
 
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
@@ -23,6 +24,36 @@ def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
             break
         fdst.write(buf)
 shutil.copyfileobj = _copyfileobj_patched
+
+
+##################################################
+# make tar.gz file of participant subfolders
+##################################################
+# used to manipulate pnTTC raw data
+
+class TarGz():
+    def __init__(self,
+        #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
+        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        type_subj='C-02'
+        ):
+
+        print('Starting to pickup subjects and compressing files.')
+        list_file = os.listdir(path_in)
+        list_file =[f for f in list_file if type_subj in f]
+        list_file.sort()
+        print('Number of subjects / studies: ' + str(len(list_file)))
+
+        for f in list_file:
+            path_dir_in=os.path.join(path_in, f)
+            path_file_out=os.path.join(path_out,f+'.tar.gz')
+            with tarfile.open(path_file_out, "w:gz") as tar:
+                tar.add(path_dir_in, arcname=os.path.basename(path_dir_in))
+            print('Finished compressiong ' + f)
+        
+        print('Finished pickup and compressing files.')
 
 
 ##################################################
