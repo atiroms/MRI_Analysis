@@ -44,8 +44,9 @@ class TarGz():
         list_file = os.listdir(path_in)
         list_file_slctd=[]
         for t_s in type_subj:
-            list_file_slctd =list_file_slctd+[f for f in list_file if t_s in f]
-        list_file_slctd.sort()
+            list_file_slctd_add=[f for f in list_file if t_s in f]
+            list_file_slctd_add.sort()
+            list_file_slctd =list_file_slctd+list_file_slctd_add
         print('Number of subjects / studies: ' + str(len(list_file_slctd)))
 
         for f in list_file_slctd:
