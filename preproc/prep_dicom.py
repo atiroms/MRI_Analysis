@@ -36,7 +36,7 @@ class TarGz():
         #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
         #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
         path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
-        path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
         type_subj=['C-01','C-02','M-01','P-01']
         ):
 
