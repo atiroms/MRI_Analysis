@@ -66,7 +66,6 @@ class TarGz():
         
         print('Finished pickup and compressing files.')
 
-a=TarGz()
 
 ##################################################
 # Extract DICOM header metadata
