@@ -35,29 +35,38 @@ class TarGz():
     def __init__(self,
         #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
         #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
-        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
-        path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
+        #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
+        path_in='/Volumes/MRI_Ext1/smorita/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        path_out='/Volumes/MRI_Ext1/smorita/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
         type_subj=['C-01','C-02','M-01','P-01']
         ):
 
         print('Starting to pickup subjects and compressing files.')
-        list_file = os.listdir(path_in)
-        list_file_slctd=[]
+        list_dir = os.listdir(path_in)
+        list_dir_slctd=[]
         for t_s in type_subj:
-            list_file_slctd_add=[f for f in list_file if t_s in f]
-            list_file_slctd_add.sort()
-            list_file_slctd =list_file_slctd+list_file_slctd_add
-        print('Number of subjects / studies: ' + str(len(list_file_slctd)))
+            list_dir_slctd_add=[f for f in list_dir if t_s in f]
+            list_dir_slctd_add.sort()
+            list_dir_slctd =list_dir_slctd+list_dir_slctd_add
+        print('Number of subjects / studies: ' + str(len(list_dir_slctd)))
 
-        for f in list_file_slctd:
-            path_dir_in=os.path.join(path_in, f)
-            path_file_out=os.path.join(path_out,f+'.tar.gz')
-            with tarfile.open(path_file_out, "w:gz") as tar:
-                tar.add(path_dir_in, arcname=os.path.basename(path_dir_in))
-            print('Finished compressiong ' + f)
+        for dir_subj in list_dir_slctd:
+            path_dir_subj_out=os.path.join(path_out,dir_subj)
+            os.mkdir(path_dir_subj_out)
+            list_dir_study=os.listdir(os.path.join(path_in,dir_subj))
+            list_dir_study=[d for d in list_dir_study if d!='.DS_Store']
+            list_dir_seq=os.listdir(os.path.join(path_in,dir_subj,list_dir_study[0]))
+            for dir_seq in list_dir_seq:
+                path_dir_in=os.path.join(path_in, dir_subj, list_dir_study[0], dir_seq)
+                path_file_out=os.path.join(path_dir_subj_out,dir_seq+'.tar.gz')
+                with tarfile.open(path_file_out, "w:gz") as tar:
+                    tar.add(path_dir_in, arcname=os.path.basename(path_dir_in))
+            print('Finished compressiong ' + dir_subj)
         
         print('Finished pickup and compressing files.')
 
+a=TarGz()
 
 ##################################################
 # Extract DICOM header metadata
