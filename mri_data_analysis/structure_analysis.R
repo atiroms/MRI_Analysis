@@ -9,16 +9,11 @@
 # Parameters ======================================
 #**************************************************
 
-#file_input <- "W1_FS_Volume_Cortex.csv"
-file_input <- "W1_FS_Volume_Subcortex.csv"
-#file_input <- "W1_FS_Volume_WM.csv"
-#file_input <- "W1_FS_Volume_Cerebellum.csv"
-#file_input <- "W1_FS_Volume_Hippocampus.csv"
-#file_input <- "W1_FS_Thickness.csv"
-#file_input <- "W1_FS_Area.csv"
-#file_input <- "W1_FS_Curv.csv"
-#file_input <- "W1_FS_Global.csv"
+path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
+dir_in <-"00_source"
+dir_out <-"01_extract"
 
+wave <- 1
 list_covar<-c("W1_Tanner_Max","W1_Age_at_MRI")
 
 file_global_covar<-"W1_FS_Global.csv"
@@ -27,8 +22,6 @@ key_global_covar<-"eTIV"
 
 subset_subj <- list(list("column"="W1_5sub","value"=1))
 #subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
-
-input_roi_type <- "label_fs"
 
 
 #**************************************************
@@ -95,7 +88,6 @@ glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,f
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
   df_str<-read.csv(file.path(paths_$input,"output",file_input_))
-  df_str<-gather(df_str,key=ROI,value=value, -ID_pnTTC)
   df_str$value[which(is.nan(df_str$value))]<-0
   df_global_covar<-read.csv(file.path(paths_$input,"output",file_global_covar_))
   df_global_covar<-df_global_covar[,c("ID_pnTTC",key_global_covar_)]
