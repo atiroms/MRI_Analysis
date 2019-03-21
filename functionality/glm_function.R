@@ -38,7 +38,7 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
   # SUbset global covariate dataframe
   if(!is.na(key_global_covar)){
     df_global_covar<-df_global_covar[df_global_covar$ID_pnTTC %in% list_id_subj,]
-    colnames(df_global_covar)[2]<-"value"
+    #colnames(df_global_covar)[2]<-"value"
     df_global_covar_demean<-df_global_covar
     df_global_covar_demean[,"value"]<-df_global_covar_demean[,"value"]-mean(df_global_covar_demean[,"value"])
   }
@@ -71,7 +71,7 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
     list_covar_sub<-list_covar[model]
     
     name_model<-paste(list_covar_sub,collapse="_")
-    name_model_pint<-paste(list_covar_sub,collapse=" and ")
+    name_model_print<-paste(list_covar_sub,collapse=" and ")
 
     for (j in seq(length(list_covar_sub))){
       assign(paste("covar",as.character(j),sep="_"),df_covar_demean[,list_covar_sub[j]])
@@ -96,7 +96,7 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
     
     for (j in seq(length(model))){  # Iterate over explanatory variables
       # contrast matrix
-      print(paste("      Evaluating explanaory variable: ",list_covar_sub[j],sep=""))
+      print(paste("        Evaluating explanaory variable: ",list_covar_sub[j],sep=""))
       if(!is.na(key_global_covar)){
         contrast<-matrix(0L,nrow=1, ncol=length(model)+1)
       }else{
