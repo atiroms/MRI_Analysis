@@ -61,8 +61,8 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
   }
   print(paste("      ",as.character(length(list_model))," GLM models will be calculated.",sep=""))
   
-  df_output_per_model<-data.frame()               # VIF is stored
   df_output_per_meas<-data.frame()                # AIC_min and BIC_min are stored
+  df_output_per_model_expvar<-data.frame()        # VIF is stored
   df_output_per_model_meas<-data.frame()          # AIC and BIC are stored
   df_output_per_model_expvar_meas<-data.frame()   # beta, sigma, t and p are stored
   
@@ -98,9 +98,9 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
       # contrast matrix
       print(paste("        Evaluating explanaory variable: ",list_covar_sub[j],sep=""))
       if(!is.na(key_global_covar)){
-        contrast<-matrix(0L,nrow=1, ncol=length(model)+1)
-      }else{
         contrast<-matrix(0L,nrow=1, ncol=length(model)+2)
+      }else{
+        contrast<-matrix(0L,nrow=1, ncol=length(model)+1)
       }
       
       contrast[1,j+1]<-1
@@ -120,17 +120,20 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
           if (k==1){
             vifactor<-NaN
             if(!is.na(key_global_covar)){
-              if(length(model)>2){
-                suppressWarnings(vifactor<-vif(glmfit))
-              }
-            }else{
               if(length(model)>1){
                 suppressWarnings(vifactor<-vif(glmfit))
               }
+            }else{
+              if(length(model)>2){
+                suppressWarnings(vifactor<-vif(glmfit))
+              }
             }
-            
-            df_output_per_model_row<-data.frame("model"=name_model, "vif"=vifactor)
-            df_output_per_model<-rbind(df_output_per_model,df_output_per_model_row)
+            if(!is.na(key_global_covar)){
+              df_output_per_model_expvar_row<-data.frame("model"=name_model, "var_exp"=c(list_covar_sub,key_global_covar),"vif"=vifactor)
+            }else{
+              df_output_per_model_expvar_row<-data.frame("model"=name_model, "var_exp"=list_covar_sub,"vif"=vifactor)
+            }
+            df_output_per_model_expvar<-rbind(df_output_per_model_expvar,df_output_per_model_expvar_row)
           }
           
           # Calculate information criteria
@@ -171,8 +174,13 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
   }
   print("      Finished comparing information criteria")
   
+  rownames(df_output_per_meas)<-NULL
+  rownames(df_output_per_model_expvar)<-NULL
+  rownames(df_output_per_model_meas)<-NULL
+  rownames(df_output_per_model_expvar_meas)<-NULL
+  
   output<-list("glm"=df_output_per_model_expvar_meas,"ic"=df_output_per_model_meas,
-               "min_ic"=df_output_per_meas,"vif"=df_output_per_model,"list_model"=list_model)
+               "min_ic"=df_output_per_meas,"vif"=df_output_per_model_expvar,"list_model"=list_model)
   
   return(output)
 }

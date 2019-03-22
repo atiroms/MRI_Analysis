@@ -91,6 +91,7 @@ glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,f
   print("Starting glm_str()")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
+  dict_roi<-func_dict_roi(paths_)
   df_str<-read.csv(file.path(paths_$input,"output",file_input_))
   df_str$value[which(is.nan(df_str$value))]<-0
   df_global_covar<-df_str[which(df_str$measure=="global" & df_str$wave==wave & df_str$roi==key_global_covar_),]
@@ -102,6 +103,16 @@ glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,f
     }else{
       data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_)
     }
+    for (i in seq(length(data_glm))){
+      if (is.element("roi",colnames(data_glm[[i]]))){
+        id_roicol<-which(colnames(data_glm[[i]])=="roi")
+        label_roi<-NULL
+        for(j in data_glm[[i]]$roi){
+          label_roi<-c(label_roi,as.character(dict_roi[which(dict_roi$id==j),"label"]))
+        }
+        data_glm[[i]]<-cbind(data_glm[[i]][,1:id_roicol],"label_roi"=label_roi,data_glm[[i]][,(1+id_roicol):ncol(data_glm[[i]])])
+      }
+    }
     write.csv(data_glm$glm,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_glm.csv",sep="")),row.names = F)
     write.csv(data_glm$ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_ic.csv",sep="")),row.names = F)
     write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_min_ic.csv",sep="")),row.names = F)
@@ -109,6 +120,7 @@ glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,f
     print(paste("    Finished calculating GLM of ",meas,sep=""))
   }
   print("Finished glm_str().")
+  return(data_glm)
   
 }
 
