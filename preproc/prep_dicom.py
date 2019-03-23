@@ -6,12 +6,13 @@ import os
 import shutil
 import pandas as pd
 import csv
-import nilearn.image as nl_image
-import json
+#import nilearn.image as nl_image
+#import json
 import numpy as np
 import pydicom
-import datetime
-import gzip
+#import datetime
+#import gzip
+import tarfile
 
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
@@ -23,6 +24,47 @@ def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
             break
         fdst.write(buf)
 shutil.copyfileobj = _copyfileobj_patched
+
+
+##################################################
+# make tar.gz file of participant subfolders
+##################################################
+# used to manipulate pnTTC raw data
+
+class TarGz():
+    def __init__(self,
+        #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_test',
+        #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
+        path_in='/Volumes/MRI_Ext1/smorita/MRI/pnTTC/Raw/HUMAN-01-ANON',
+        path_out='/Volumes/MRI_Ext1/smorita/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
+        type_subj=['C-01','C-02','M-01','P-01']
+        ):
+
+        print('Starting to pickup subjects and compressing files.')
+        list_dir = os.listdir(path_in)
+        list_dir_slctd=[]
+        for t_s in type_subj:
+            list_dir_slctd_add=[f for f in list_dir if t_s in f]
+            list_dir_slctd_add.sort()
+            list_dir_slctd =list_dir_slctd+list_dir_slctd_add
+        print('Number of subjects / studies: ' + str(len(list_dir_slctd)))
+
+        for dir_subj in list_dir_slctd:
+            path_dir_subj_out=os.path.join(path_out,dir_subj)
+            os.mkdir(path_dir_subj_out)
+            list_dir_study=os.listdir(os.path.join(path_in,dir_subj))
+            list_dir_study=[d for d in list_dir_study if d!='.DS_Store']
+            list_dir_seq=os.listdir(os.path.join(path_in,dir_subj,list_dir_study[0]))
+            for dir_seq in list_dir_seq:
+                path_dir_in=os.path.join(path_in, dir_subj, list_dir_study[0], dir_seq)
+                path_file_out=os.path.join(path_dir_subj_out,dir_seq+'.tar.gz')
+                with tarfile.open(path_file_out, "w:gz") as tar:
+                    tar.add(path_dir_in, arcname=os.path.basename(path_dir_in))
+            print('Finished compressiong ' + dir_subj)
+        
+        print('Finished pickup and compressing files.')
 
 
 ##################################################

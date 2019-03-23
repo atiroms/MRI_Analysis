@@ -9,26 +9,23 @@
 # Parameters ======================================
 #**************************************************
 
-#file_input <- "W1_FS_Volume_Cortex.csv"
-file_input <- "W1_FS_Volume_Subcortex.csv"
-#file_input <- "W1_FS_Volume_WM.csv"
-#file_input <- "W1_FS_Volume_Cerebellum.csv"
-#file_input <- "W1_FS_Volume_Hippocampus.csv"
-#file_input <- "W1_FS_Thickness.csv"
-#file_input <- "W1_FS_Area.csv"
-#file_input <- "W1_FS_Curv.csv"
-#file_input <- "W1_FS_Global.csv"
+path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
+dir_in <-"01_extract"
+dir_out <-"02_glm"
 
+wave <- 1
+measure <-c("volume","thickness","area")
 list_covar<-c("W1_Tanner_Max","W1_Age_at_MRI")
 
-file_global_covar<-"W1_FS_Global.csv"
-#key_global<-"BrainSegVolNotVent"
+#key_global_covar<-"BrainSegVolNotVent"
 key_global_covar<-"eTIV"
 
-subset_subj <- list(list("column"="W1_5sub","value"=1))
-#subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
+file_input<-"fs_measure.csv"
 
-input_roi_type <- "label_fs"
+subset_subj <- list(list("column"="W1_T1QC","value"=1),list("column"="Sex","value"=1))
+#subset_subj <- list(list("column"="W1_T1QC","value"=1),list("column"="Sex","value"=2))
+#subset_subj <- list(list("column"="W1_5sub","value"=1))
+#subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
 
 #**************************************************
@@ -89,26 +86,41 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GLM of structural measures ======================
 #**************************************************
 glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
-                  file_global_covar_=file_global_covar,key_global_covar_=key_global_covar,
-                  thr_pvalue_=thr_pvalue){
+                  wave_=wave,key_global_covar_=key_global_covar
+                  ){
   print("Starting glm_str()")
   data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_,copy_log=T)
+  dict_roi<-func_dict_roi(paths_)
   df_str<-read.csv(file.path(paths_$input,"output",file_input_))
-  df_str<-gather(df_str,key=ROI,value=value, -ID_pnTTC)
   df_str$value[which(is.nan(df_str$value))]<-0
-  df_global_covar<-read.csv(file.path(paths_$input,"output",file_global_covar_))
-  df_global_covar<-df_global_covar[,c("ID_pnTTC",key_global_covar_)]
-  print("    Starting to calculate GLM of structural measures.")
-  data_glm<-func_glm(df_mri=df_str,data_clinical,list_covar=list_covar_,df_global_covar=df_global_covar,key_global_covar=key_global_covar_)
-  
-  print("    Finished calculating GLM of structural measures.")
-  print("    Starting to save GLM of structural measures.")
-  write.csv(data_glm$glm,file.path(paths_$output,"output",paste("glm.csv",sep="")),row.names = F)
-  write.csv(data_glm$ic,file.path(paths_$output,"output",paste("ic.csv",sep="")),row.names = F)
-  write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("min_ic.csv",sep="")),row.names = F)
-  write.csv(data_glm$vif,file.path(paths_$output,"output",paste("vif.csv",sep="")),row.names = F)
-  print("    Finished saving GLM of structural measures.")
+  df_global_covar<-df_str[which(df_str$measure=="global" & df_str$wave==wave & df_str$roi==key_global_covar_),]
+  for (meas in measure){
+    print(paste("    Starting to calculate GLM of ",meas,sep=""))
+    df_str_meas<-df_str[which(df_str$measure==meas & df_str$wave==wave_),]
+    if (meas=="volume"){
+      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_,df_global_covar=df_global_covar,key_global_covar=key_global_covar_)
+    }else{
+      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_)
+    }
+    for (i in seq(length(data_glm))){
+      if (is.element("roi",colnames(data_glm[[i]]))){
+        id_roicol<-which(colnames(data_glm[[i]])=="roi")
+        label_roi<-NULL
+        for(j in data_glm[[i]]$roi){
+          label_roi<-c(label_roi,as.character(dict_roi[which(dict_roi$id==j),"label"]))
+        }
+        data_glm[[i]]<-cbind(data_glm[[i]][,1:id_roicol],"label_roi"=label_roi,data_glm[[i]][,(1+id_roicol):ncol(data_glm[[i]])])
+      }
+    }
+    write.csv(data_glm$glm,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_glm.csv",sep="")),row.names = F)
+    write.csv(data_glm$ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_ic.csv",sep="")),row.names = F)
+    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_min_ic.csv",sep="")),row.names = F)
+    write.csv(data_glm$vif,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_vif.csv",sep="")),row.names = F)
+    print(paste("    Finished calculating GLM of ",meas,sep=""))
+  }
+  print("Finished glm_str().")
+  return(data_glm)
   
 }
 

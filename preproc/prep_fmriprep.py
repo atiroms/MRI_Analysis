@@ -11,7 +11,7 @@ import json
 import numpy as np
 import pydicom
 import datetime
-import gzip
+#import gzip
 
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
@@ -41,9 +41,10 @@ class EditJson():
         TRT=0.04218151959,     # Fieldmap parameter
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/34_bids/output',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/34_bids/output',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep/input',
         #sessions=['ses-01','ses-02']
-        sessions=['ses-01']
+        sessions=['ses-02']
         ):
 
         list_dir_all = os.listdir(path_exp)
@@ -83,8 +84,8 @@ class SubsetBIDS():
     def __init__(self,
         #path_exp='/media/veracrypt1/MRI/pnTTC/BIDS/09_boldexist'
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/input',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/log/id_mild_2.csv',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep/input',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep/log/w2_id_mild_2.csv',
         ses_remain={'ses-01','ses-02'}, # sessions not deleted 
         delete_T1only=True
         ):
@@ -195,14 +196,14 @@ class Fs2Fmriprep():
         #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
         #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/input/id_5sub.txt',
         #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/input/id_5sub.txt',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/log/id_mild_2.csv',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/log/w2_id_mild_1.csv',
         #path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
         #path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
-        path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist/output',
+        path_in='/media/veracrypt2/MRI/pnTTC/pnTTC2_T1_C/FS/17_recon/output',
         #path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
         #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output/freesurfer'
         #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/output/freesurfer'
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep/output/freesurfer'
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/output/freesurfer'
         ):
 
         with open(path_file_id, 'r') as list_id:

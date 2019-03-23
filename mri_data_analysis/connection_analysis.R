@@ -253,10 +253,6 @@ WeightedMetric<-function(input_igraph){
 }
 
 
-
-
-#### Graph Theoretical Analysis ####
-
 gta_weight<-function(absolute=T,threshold=NA){
   dirname<-ExpDir("GTA")
   #  output_binary<-data.frame()
