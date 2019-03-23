@@ -38,10 +38,11 @@ class CreateCohortfile():
         #path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/func_cohort.csv',
         path_dir_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input',
         path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/log/id_5sub.txt',
-        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
         #dir_input='16_fmriprep_newfs'
+        ses='ses-01'
         ):
 
         print('Starting to create XCP cohort file.')
@@ -76,7 +77,7 @@ class CreateCohortfile():
                 #                               ignore_index=True)
                 output_func=output_func.append(pd.Series(['sub-'+str(id_subj).zfill(5),
                                                           #'xcp_output/sub-'+str(id_subj).zfill(5)+'/struc',
-                                                          'input/fmriprep/sub-'+str(id_subj).zfill(5)+'/ses-01/func/sub-'+str(id_subj).zfill(5)+suffix_file],
+                                                          'input/fmriprep/sub-'+str(id_subj).zfill(5)+'/'+ses+'/func/sub-'+str(id_subj).zfill(5)+suffix_file],
                                                          index=output_func.columns),
                                                ignore_index=True)
             #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
@@ -94,7 +95,8 @@ class CreateCohortfile():
 class MoveAnat():
     def __init__(self,
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/fmriprep',
+        ses='ses-01'
         ):
 
         print('Starting to move fMRIPrep anat folder contents.')
@@ -103,7 +105,7 @@ class MoveAnat():
         list_sub.sort()
         for sub in list_sub:
             path_from=os.path.join(path_exp,sub,'anat')
-            path_to=os.path.join(path_exp,sub,'ses-01','anat')
+            path_to=os.path.join(path_exp,sub,ses,'anat')
             for f in os.listdir(path_from):
                 shutil.move(os.path.join(path_from,f),path_to)
             print('Moved ' + sub + '/anat contents.')
@@ -147,29 +149,15 @@ class XCPScript():
 
 class XCPPrep():
     def __init__(self,
-        skip_fmriprep_copy=True,
-        skip_fmriprep_moveanat=True,
+        skip_fmriprep_copy=False,
+        skip_fmriprep_moveanat=False,
         n_proc=20,
-        #n_proc=10,
-        #n_proc=5,
-        #n_proc=1,
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_1_xcp_36p',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/24_1_xcp_acompcor',
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_2_xcp_36p',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/24_2_xcp_acompcor',
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/45_xcp_acompcor_full',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/46_xcp_acompcor_fc_roiquant',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/47_xcp_acompcor_full',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/48_xcp_acompcor_fc_roiquant',
-        #file_id='id_5sub.txt',
-        #file_id='id_mild_1.csv',
-        file_id='id_mild_2.csv',
-        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/28_1_xcp_acompcor',
+        file_id='w2_id_mild_1.csv',
+        ses='ses-02',
+        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
@@ -212,7 +200,8 @@ class XCPPrep():
                            #path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
                            path_dir_out=os.path.join(path_exp,'input'),
                            path_file_id=os.path.join(path_exp,'log',file_id),
-                           suffix_file=suffix_img)
+                           suffix_file=suffix_img,
+                           ses=ses)
 
         # Copy XCP design file from Git local repsitory
         print('Starting to copy XCP design file.')
@@ -237,7 +226,8 @@ class XCPPrep():
         # Move fmriprep /anat folder contents (workaround of XCP bug)
         if not skip_fmriprep_moveanat:
             print("Starting to move contents of /anat folder.")
-            _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
+            _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'),
+                       ses=ses)
             print("Finished moving contents of /anat folder.")
 
         print('Finished XCP preparation.')
