@@ -120,11 +120,11 @@ func_glm<-function(df_mri,data_clinical,list_covar,df_global_covar=NA,key_global
           if (k==1){
             vifactor<-NaN
             if(!is.na(key_global_covar)){
-              if(length(model)>1){
+              if(length(model)>0){
                 suppressWarnings(vifactor<-vif(glmfit))
               }
             }else{
-              if(length(model)>2){
+              if(length(model)>1){
                 suppressWarnings(vifactor<-vif(glmfit))
               }
             }
