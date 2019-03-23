@@ -79,14 +79,16 @@ class ExtractMotion():
             name_sub='sub-'+str(list_sub[i]).zfill(5)
             path_file_confound=name_sub+'_'+ses+'_task-rest_desc-confounds_regressors.tsv'
             path_file_confound=os.path.join(path_input,'output','fmriprep',name_sub,ses,'func',path_file_confound)
-            df_confound=pd.read_csv(path_file_confound,delimiter='\t')
-            for j in ['trans','rot']:
-                for k in ['x','y','z']:
-                    colname=j+'_'+k
-                    ts=df_confound.loc[:,colname]
-                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
-                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
-
+            if os.path.exists(path_file_confound):
+                df_confound=pd.read_csv(path_file_confound,delimiter='\t')
+                for j in ['trans','rot']:
+                    for k in ['x','y','z']:
+                        colname=j+'_'+k
+                        ts=df_confound.loc[:,colname]
+                        df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
+                        df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
+            else:
+                print('Confound file does not exist for subject: '+str(list_sub[i]))
         path_file_output=os.path.join(path_output,'output','motion.tsv')
         df_motion.to_csv(path_file_output,sep='\t',index=False)
         print('Finished motion parameter extraction')
