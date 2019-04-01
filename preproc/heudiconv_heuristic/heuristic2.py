@@ -24,6 +24,6 @@ def infotodict(seqinfo):
             info[t1w].append(s.series_id)
         if s.dim1==64 and s.dim2==64 and s.dim3==10000:
             info[func_rest].append(s.series_id)
-        if s.dim1==64 and s.dim2==64 and s.dim3==160 and s.series_description=='+Fieldmap_SBPRS':
+        if s.dim1==64 and s.dim2==64 and s.dim3==160 and (s.series_description=='+Fieldmap_SBPRS' or s.series_description=='+Fieldmap'):
             info[fieldmap].append(s.series_id)
     return info

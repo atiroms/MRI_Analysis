@@ -11,4 +11,4 @@ sudo docker run --rm -it -v /media/veracrypt1/MRI/pnTTC/BIDS/test2:/base nipy/he
 
 
 # test on raw data
-sudo docker run --rm -it -v /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv:/base nipy/heudiconv:latest -d /base/input/CSUB-{subject}C-01/*/*/*/*.dcm -o /base/output/ -f convertall -s 00014 -ss 01 -c none --overwrite
+sudo docker run --rm -it -v /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/30_heudiconv:/base nipy/heudiconv:latest -d /base/input/CSUB-{subject}C-01/*/*.dcm -o /base/output/ -f convertall -s 00014 -ss 01 -c none --overwrite
