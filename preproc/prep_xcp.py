@@ -359,8 +359,8 @@ class ExtractQuality():
         #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/31_2_w1_quality_acompcor',
         #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/28_2_xcp_acompcor',
         #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/32_2_w2_quality_acompcor',
-        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_1_xcp_aroma',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/33_1_w2_quality_aroma',
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/33_2_w2_quality_aroma',
         ):
 
         print('Starting quality extraction')
