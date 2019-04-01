@@ -7,6 +7,7 @@ import shutil
 import pandas as pd
 import csv
 import nilearn.image as nl_image
+import nilearn.plotting as nl_plotting
 import json
 import numpy as np
 import pydicom
@@ -24,32 +25,61 @@ def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
         fdst.write(buf)
 shutil.copyfileobj = _copyfileobj_patched
 
-
 ##################################################
 # Calculate Phase difference Fieldmap image
 ##################################################
 
+
 #path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/32_heudiconv'
-path_in='C:/Users/NICT_WS/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
-path_out='C:/Users/NICT_WS/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
-path_file_fieldmap=os.path.join(path_in,'output','fieldmap','sub-00014',
-                                'ses-01','fmap','sub-00014_ses-01_fieldmap1.nii.gz')
-img=nl_image.load_img(path_file_fieldmap)
+path_in='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
+path_out='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
+#path_file_fieldmap=os.path.join(path_in,'output','fieldmap','sub-00014',
+#                                'ses-01','fmap','sub-00014_ses-01_fieldmap1.nii.gz')
+fmap_imag1=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
+                                          'fmap','sub-00014_ses-01_fieldmap1.nii.gz'))
+fmap_real1=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
+                                          'fmap','sub-00014_ses-01_fieldmap2.nii.gz'))
+fmap_imag2=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
+                                          'fmap','sub-00014_ses-01_fieldmap3.nii.gz'))
+fmap_real2=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
+                                          'fmap','sub-00014_ses-01_fieldmap4.nii.gz'))
 
-path_file_output=os.path.join(path_out,'output','output1.nii.gz')
-img.to_filename(path_file_output)
+fmap_mag1=nl_image.math_img('np.sqrt(img1**2.0 + img2**2.0)',img1=fmap_real1,img2=fmap_imag1)
+fmap_pha1=nl_image.math_img('np.arctan2(img2,img1)',img1=fmap_real1,img2=fmap_imag1)
+fmap_mag2=nl_image.math_img('np.sqrt(img1**2.0 + img2**2.0)',img1=fmap_real2,img2=fmap_imag2)
+fmap_pha2=nl_image.math_img('np.arctan2(img2,img1)',img1=fmap_real2,img2=fmap_imag2)
+fmap_sin1=nl_image.math_img('np.sin(img)',img=fmap_pha1)
+fmap_cos1=nl_image.math_img('np.cos(img)',img=fmap_pha1)
+fmap_sin2=nl_image.math_img('np.sin(img)',img=fmap_pha2)
+fmap_cos2=nl_image.math_img('np.cos(img)',img=fmap_pha2)
 
-import nilearn.plotting as nl_plotting
+# calculate phase difference (use arctan2, sin, cos so that the range is from -pi to +pi)
+fmap_phadiff=nl_image.math_img('np.arctan2(img2*img3-img1*img4,img2*img4+img1*img3)',
+                               img1=fmap_sin1,img2=fmap_cos1,img3=fmap_sin2,img4=fmap_cos2)
 
-nl_plotting.plot_stat_map(img)
+fmap_phadiff.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_phasediff.nii.gz'))
+fmap_mag1.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_magnitude1.nii.gz'))
+fmap_mag2.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_magnitude2.nii.gz'))
 
-nl_plotting.plot_glass_brain(img)
 
-nl_plotting.plot_stat_map(path_file_fieldmap)
 
-nl_plotting.plot_glass_brain(path_file_fieldmap)
+#fmap_absmean=nl_image.math_img('(img1+img2)/2',img1=fmap_mag1,img2=fmap_mag2)
+#fmap_absdiff=nl_image.math_img('img2-img1',img1=fmap_abs1,img2=fmap_abs2)
+#img=nl_image.load_img(path_file_fieldmap)
+
+
+
+nl_plotting.plot_epi(img)
+
+#nl_plotting.plot_stat_map(img)
+#nl_plotting.plot_glass_brain(img)
+#nl_plotting.plot_stat_map(path_file_fieldmap)
+#nl_plotting.plot_glass_brain(path_file_fieldmap)
 
 nl_plotting.show()
+
+
+
 
 
 ##################################################
