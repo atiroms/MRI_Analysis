@@ -26,6 +26,24 @@ shutil.copyfileobj = _copyfileobj_patched
 
 
 ##################################################
+# Calculate Phase difference Fieldmap image
+##################################################
+
+path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/32_heudiconv'
+path_file_fieldmap=os.path.join(path_in,'output','fieldmap','sub-00014',
+                                'ses-01','fmap','sub-00014_ses-01_fieldmap1.nii.gz')
+img=nl_image.load_img(path_file_fieldmap)
+
+import nilearn.plotting as nl_plotting
+
+nl_plotting.plot_stat_map(img)
+
+nl_plotting.plot_stat_map(path_file_fieldmap)
+
+nl_plotting.plot_glass_brain(path_file_fieldmap)
+
+
+##################################################
 # Insert information to BIDS json sidecar
 ##################################################
 # fMRIPrep preparation
