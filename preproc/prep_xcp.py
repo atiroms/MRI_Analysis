@@ -12,6 +12,7 @@ import numpy as np
 import pydicom
 import datetime
 import gzip
+import glob
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
 def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
@@ -343,6 +344,61 @@ class ExtractNifti():
                 print('Copied: '+dir_sub)
         
         print('Finished copying NIfTI files.')
+
+
+##################################################
+# Extract n*_quality.csv data
+##################################################
+# Extract from XCP result folder
+
+class ExtractQuality():
+    def __init__(self,
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/22_2_xcp_aroma',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/30_2_w1_quality_aroma',
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/24_2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/31_2_w1_quality_acompcor',
+        #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/28_2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/32_2_w2_quality_acompcor',
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_1_xcp_aroma',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/33_1_w2_quality_aroma',
+        ):
+
+        print('Starting quality extraction')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copylog file
+        print('Starting to copylog folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        # read quality data
+        print('Starting to extract quality data.')
+        list_dir_thread = os.listdir(os.path.join(path_input,'output'))
+        list_dir_thread.sort()
+        df_quality=pd.DataFrame()
+        for i in range(len(list_dir_thread)):
+            path_quality=os.path.join(path_input,'output',list_dir_thread[i],'group')
+            path_file_quality=glob.glob(path_quality+'/n*_quality.csv')[0]
+            df_quality_add=pd.read_csv(path_file_quality)
+            df_quality=pd.concat([df_quality,df_quality_add])
+            print('Finished extracting from thread: ',list_dir_thread[i])
+        df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
+        df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
+        df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
+        path_file_output=os.path.join(path_output,'output','quality.csv')
+        df_quality_spaced.to_csv(path_file_output,index=False)
+        print('Finished quality extraction.')
 
 
 ##################################################
