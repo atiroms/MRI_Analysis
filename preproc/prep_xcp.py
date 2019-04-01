@@ -303,8 +303,8 @@ class ExtractNifti():
         #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_2_conn_aroma'
         #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
         #path_output='/media/veracrypt2/MRI/pnTTC/pnTTC2_rsfMRI_C/16_2_xcpout_aroma'
-        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        path_output='/media/veracrypt2/MRI/pnTTC/pnTTC1_rsfMRI_C/33_2_xcpout_aroma'
+        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/24_1_xcp_acompcor',
+        path_output='/media/veracrypt2/MRI/pnTTC/pnTTC1_rsfMRI_C/34_1_xcpout_acompcor'
         ):
 
         print('Starting NIfTI extraction.')
