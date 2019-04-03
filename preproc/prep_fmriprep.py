@@ -180,14 +180,14 @@ class EditJson():
 
         print('Starting EditJson()')
         list_dir_subj=os.listdir(os.path.join(path_exp,'output'))
-        list_dir_subj=[d for d in list_dir_subj if d.startswith('subj-')]
+        list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
         list_dir_subj.sort()
         list_slicetiming=[i*TR/n_slices for i in range(n_slices)]
         for dir_subj in list_dir_subj:
-            list_dir_ses=os.listdir(os.path.join(path_exp,dir_subj))
+            list_dir_ses=os.listdir(os.path.join(path_exp,'output',dir_subj))
             list_dir_ses.sort()
             for dir_ses in list_dir_ses:
-                dir_func=path_exp +'/' + dir_subj + '/' + dir_ses + '/func'
+                dir_func=path_exp +'/output/' + dir_subj + '/' + dir_ses + '/func'
                 if os.path.exists(dir_func):
                     filename_json = dir_subj + '_' + dir_ses + '_task-rest_bold.json'
                     with open(dir_func + '/' + filename_json) as file_json_input:  
@@ -213,8 +213,8 @@ class PrepFmriprep():
         ):
         
         print('Starting PrepFmriprep()')
-        phasediff=PhaseDiff(path_in=path_in,path_out=path_out)
-        editjson=EditJson(path_exp=path_out)
+        _=PhaseDiff(path_in=path_in,path_out=path_out)
+        _=EditJson(path_exp=path_out)
         print('Finished PrepFmriprep()')
 
 
