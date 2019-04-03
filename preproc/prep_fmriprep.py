@@ -72,7 +72,11 @@ class PhaseDiff():
         list_dir_subj=os.listdir(os.path.join(path_in,'output'))
         list_file_meta=[d for d in list_dir_subj if not d.startswith('sub-')]
         for f in list_file_meta:
-            shutil.copy(os.path.join(path_in,'output',f),os.path.join(path_out,'input'))
+            path_file_meta=os.path.join(path_in,'output',f)
+            if os.path.isdir(path_file_meta):
+                shutil.copytree(path_file_meta,os.path.join(path_out,'input',f))
+            elif os.path.isfile(path_file_meta):
+                shutil.copy(path_file_meta,os.path.join(path_out,'input'))
         list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
         list_dir_subj.sort()
 
@@ -304,7 +308,7 @@ class Fs2Fmriprep():
         path_out='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/output'
         ):
 
-        print('Starting Fs2Fmriprep')
+        print('Starting Fs2Fmriprep()')
         with open(path_file_id, 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[int(x.strip('\n')) for x in list_id]
@@ -336,16 +340,16 @@ class Fs2Fmriprep():
 class PrepFmriprep():
     def __init__(self,
         #path_bids='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
-        #path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/53_bids_fmap',
-        path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/39_heudiconv',
-        #path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon',
-        path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/pnTTC1_T1_C_FS_10_recon',
+        path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/53_bids_fmap',
+        #path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/39_heudiconv',
+        path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon',
+        #path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/pnTTC1_T1_C_FS_10_recon',
         #path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap',
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/54_prep_fmriprep',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/41_prep_fmriprep',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/54_prep_fmriprep',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/41_prep_fmriprep',
         path_file_fslicense='/usr/local/freesurfer/license.txt',
-        #file_id='id_5sub.csv'
-        file_id='id_1sub.csv'
+        file_id='id_5sub.csv'
+        #file_id='id_1sub.csv'
         ):
         
         print('Starting PrepFmriprep()')
