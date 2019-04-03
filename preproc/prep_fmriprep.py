@@ -25,16 +25,16 @@ def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
         fdst.write(buf)
 shutil.copyfileobj = _copyfileobj_patched
 
+
 ##################################################
 # Calculate Phase difference Fieldmap image
 ##################################################
-
-
 #path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/32_heudiconv'
-path_in='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
-path_out='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
-#path_file_fieldmap=os.path.join(path_in,'output','fieldmap','sub-00014',
-#                                'ses-01','fmap','sub-00014_ses-01_fieldmap1.nii.gz')
+#path_in='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
+#path_out='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
+path_in='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
+path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
+
 fmap_imag1=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
                                           'fmap','sub-00014_ses-01_fieldmap1.nii.gz'))
 fmap_real1=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
@@ -62,24 +62,15 @@ fmap_mag1.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_magnitude
 fmap_mag2.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_magnitude2.nii.gz'))
 
 
-
 #fmap_absmean=nl_image.math_img('(img1+img2)/2',img1=fmap_mag1,img2=fmap_mag2)
 #fmap_absdiff=nl_image.math_img('img2-img1',img1=fmap_abs1,img2=fmap_abs2)
 #img=nl_image.load_img(path_file_fieldmap)
-
-
-
-nl_plotting.plot_epi(img)
-
+#nl_plotting.plot_epi(img)
 #nl_plotting.plot_stat_map(img)
 #nl_plotting.plot_glass_brain(img)
 #nl_plotting.plot_stat_map(path_file_fieldmap)
 #nl_plotting.plot_glass_brain(path_file_fieldmap)
-
-nl_plotting.show()
-
-
-
+#nl_plotting.show()
 
 
 ##################################################
