@@ -12,6 +12,7 @@ import numpy as np
 import pydicom
 import datetime
 import gzip
+import glob
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
 def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
@@ -38,10 +39,11 @@ class CreateCohortfile():
         #path_file_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/func_cohort.csv',
         path_dir_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input',
         path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/log/id_5sub.txt',
-        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'
+        suffix_file='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_file='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #dir_input='10_remini_syn_12dof'
         #dir_input='16_fmriprep_newfs'
+        ses='ses-01'
         ):
 
         print('Starting to create XCP cohort file.')
@@ -76,7 +78,7 @@ class CreateCohortfile():
                 #                               ignore_index=True)
                 output_func=output_func.append(pd.Series(['sub-'+str(id_subj).zfill(5),
                                                           #'xcp_output/sub-'+str(id_subj).zfill(5)+'/struc',
-                                                          'input/fmriprep/sub-'+str(id_subj).zfill(5)+'/ses-01/func/sub-'+str(id_subj).zfill(5)+suffix_file],
+                                                          'input/fmriprep/sub-'+str(id_subj).zfill(5)+'/'+ses+'/func/sub-'+str(id_subj).zfill(5)+suffix_file],
                                                          index=output_func.columns),
                                                ignore_index=True)
             #output_anat.to_csv(os.path.join(path_out,'anat_cohort.csv'),index=False)
@@ -94,7 +96,8 @@ class CreateCohortfile():
 class MoveAnat():
     def __init__(self,
         #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/22_xcp_aroma_aromain/input/fmriprep'
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/fmriprep'
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/33_xcp_36p_templatein/input/fmriprep',
+        ses='ses-01'
         ):
 
         print('Starting to move fMRIPrep anat folder contents.')
@@ -103,7 +106,7 @@ class MoveAnat():
         list_sub.sort()
         for sub in list_sub:
             path_from=os.path.join(path_exp,sub,'anat')
-            path_to=os.path.join(path_exp,sub,'ses-01','anat')
+            path_to=os.path.join(path_exp,sub,ses,'anat')
             for f in os.listdir(path_from):
                 shutil.move(os.path.join(path_from,f),path_to)
             print('Moved ' + sub + '/anat contents.')
@@ -150,32 +153,19 @@ class XCPPrep():
         skip_fmriprep_copy=True,
         skip_fmriprep_moveanat=True,
         n_proc=20,
-        #n_proc=10,
-        #n_proc=5,
-        #n_proc=1,
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_1_fmriprep',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_1_xcp_36p',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_1_xcp_aroma',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/24_1_xcp_acompcor',
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/20_2_fmriprep',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/21_2_xcp_36p',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/24_2_xcp_acompcor',
-        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/45_xcp_acompcor_full',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/46_xcp_acompcor_fc_roiquant',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/47_xcp_acompcor_full',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/48_xcp_acompcor_fc_roiquant',
-        #file_id='id_5sub.txt',
-        #file_id='id_mild_1.csv',
-        file_id='id_mild_2.csv',
-        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
+        #file_id='w2_id_mild_1.csv',
+        file_id='w2_id_mild_2_omit328.csv',
+        ses='ses-02',
+        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
         #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
-        #file_design='fc-aroma_fconly_noqcfc.dsn',
-        file_design='fc-acompcor_fconly_noqcfc.dsn',
+        file_design='fc-aroma_fconly_noqcfc.dsn',
+        #file_design='fc-acompcor_fconly_noqcfc.dsn',
         #file_design='fc-36p_spkreg_fconly.dsn',
         #file_design='fc-aroma_fconly.dsn',
         #file_design='fc-acompcor_fconly.dsn',
@@ -212,7 +202,8 @@ class XCPPrep():
                            #path_file_out=os.path.join(path_exp,'input/func_cohort.csv'),
                            path_dir_out=os.path.join(path_exp,'input'),
                            path_file_id=os.path.join(path_exp,'log',file_id),
-                           suffix_file=suffix_img)
+                           suffix_file=suffix_img,
+                           ses=ses)
 
         # Copy XCP design file from Git local repsitory
         print('Starting to copy XCP design file.')
@@ -237,7 +228,8 @@ class XCPPrep():
         # Move fmriprep /anat folder contents (workaround of XCP bug)
         if not skip_fmriprep_moveanat:
             print("Starting to move contents of /anat folder.")
-            _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'))
+            _=MoveAnat(path_exp=os.path.join(path_exp,'input/fmriprep'),
+                       ses=ses)
             print("Finished moving contents of /anat folder.")
 
         print('Finished XCP preparation.')
@@ -308,8 +300,12 @@ class ExtractNifti():
         #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/30_2_conn_acompcor'
         #path_input='Q:/MRI/pnTTC/Preproc/22_1_xcp_aroma',
         #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_1_conn_aroma'
-        path_input='P:/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_2_conn_aroma'
+        #path_input='P:/MRI/pnTTC/Preproc/22_2_xcp_aroma',
+        #path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_2_conn_aroma'
+        #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
+        #path_output='/media/veracrypt2/MRI/pnTTC/pnTTC2_rsfMRI_C/16_2_xcpout_aroma'
+        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/24_1_xcp_acompcor',
+        path_output='/media/veracrypt2/MRI/pnTTC/pnTTC1_rsfMRI_C/34_1_xcpout_acompcor'
         ):
 
         print('Starting NIfTI extraction.')
@@ -348,6 +344,61 @@ class ExtractNifti():
                 print('Copied: '+dir_sub)
         
         print('Finished copying NIfTI files.')
+
+
+##################################################
+# Extract n*_quality.csv data
+##################################################
+# Extract from XCP result folder
+
+class ExtractQuality():
+    def __init__(self,
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/22_2_xcp_aroma',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/30_2_w1_quality_aroma',
+        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/24_2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/31_2_w1_quality_acompcor',
+        #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/28_2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/32_2_w2_quality_acompcor',
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/33_2_w2_quality_aroma',
+        ):
+
+        print('Starting quality extraction')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copylog file
+        print('Starting to copylog folder.')
+        path_log_in=os.path.join(path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        # read quality data
+        print('Starting to extract quality data.')
+        list_dir_thread = os.listdir(os.path.join(path_input,'output'))
+        list_dir_thread.sort()
+        df_quality=pd.DataFrame()
+        for i in range(len(list_dir_thread)):
+            path_quality=os.path.join(path_input,'output',list_dir_thread[i],'group')
+            path_file_quality=glob.glob(path_quality+'/n*_quality.csv')[0]
+            df_quality_add=pd.read_csv(path_file_quality)
+            df_quality=pd.concat([df_quality,df_quality_add])
+            print('Finished extracting from thread: ',list_dir_thread[i])
+        df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
+        df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
+        df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
+        path_file_output=os.path.join(path_output,'output','quality.csv')
+        df_quality_spaced.to_csv(path_file_output,index=False)
+        print('Finished quality extraction.')
 
 
 ##################################################

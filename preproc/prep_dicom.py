@@ -13,6 +13,7 @@ import pydicom
 #import datetime
 #import gzip
 import tarfile
+import glob
 
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
@@ -27,7 +28,7 @@ shutil.copyfileobj = _copyfileobj_patched
 
 
 ##################################################
-# make tar.gz file of participant subfolders
+# make tar.gz file of sequence subfolders
 ##################################################
 # used to manipulate pnTTC raw data
 
@@ -65,6 +66,62 @@ class TarGz():
             print('Finished compressiong ' + dir_subj)
         
         print('Finished pickup and compressing files.')
+
+
+##################################################
+# Extract tar.gz file of sequence subfolders
+##################################################
+# used as HeuDiConv preparation
+
+class UntarGz():
+    def __init__(self,
+        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/34_w1_nii',
+        #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_zip_test',
+        #path_out='/media/veracrypt2/MRI/pnTTC/Preproc/34_w1_nii_test',
+        #list_type_subj=['C-01'],
+        list_type_subj=['C-01','C-02','M-01'],
+        list_type_sequence=['+MPRAGE_CBSN -','+rsfMRI_SBPRS -','+rsfMRI -','+Fieldmap_SBPRS -','+Fieldmap -']
+        ):
+
+        print('Starting to Untar files')
+
+        # Create experiment folder
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_out)
+        list_paths_mkdir.append(os.path.join(path_out,'output'))
+        for type_subj in list_type_subj:
+            list_paths_mkdir.append(os.path.join(path_out,'output',type_subj))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+        
+        for type_subj in list_type_subj:
+            print('Extracting '+type_subj)
+            list_dir_subj = os.listdir(os.path.join(path_in,type_subj))
+            list_dir_subj.sort()
+            print('Number of subject folders: ' + str(len(list_dir_subj)))
+
+            for dir_subj in list_dir_subj:
+                id_subj=int(dir_subj[5:10])
+                dir_subj_out='CSUB-'+str(id_subj).zfill(5)+type_subj
+                path_dir_subj_out=os.path.join(path_out,'output',type_subj,dir_subj_out)
+                if not os.path.exists(path_dir_subj_out):
+                    os.makedirs(path_dir_subj_out)
+                for type_sequence in list_type_sequence:
+                    list_dir_sequence=glob.glob(os.path.join(path_in,type_subj,dir_subj)+'/'+type_sequence+'*')
+                    if len(list_dir_sequence)>0:
+                        file_tar=tarfile.open(list_dir_sequence[0])
+                        file_tar.extractall(path=path_dir_subj_out)
+                        file_tar.close()
+                    elif len(list_dir_sequence)>1:
+                        print('Multiple sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
+                    elif len(list_dir_sequence)==0:
+                        print('No sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
+        
+        print('Finished Untarring files')
 
 
 ##################################################

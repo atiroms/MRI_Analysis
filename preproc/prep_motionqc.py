@@ -35,8 +35,9 @@ class ExtractMotion():
     def __init__(self,
         #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
-        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/20_2_fmriprep',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/25_2_motion'
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/27_2_motion',
+        ses='ses-02'
         ):
 
         print('Starting motion parameter extraction')
@@ -76,16 +77,18 @@ class ExtractMotion():
         for i in range(len(list_sub)):
             print('extracting from subject: ',str(list_sub[i]))
             name_sub='sub-'+str(list_sub[i]).zfill(5)
-            path_file_confound=name_sub+'_ses-01_task-rest_desc-confounds_regressors.tsv'
-            path_file_confound=os.path.join(path_input,'output','fmriprep',name_sub,'ses-01','func',path_file_confound)
-            df_confound=pd.read_csv(path_file_confound,delimiter='\t')
-            for j in ['trans','rot']:
-                for k in ['x','y','z']:
-                    colname=j+'_'+k
-                    ts=df_confound.loc[:,colname]
-                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
-                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
-
+            path_file_confound=name_sub+'_'+ses+'_task-rest_desc-confounds_regressors.tsv'
+            path_file_confound=os.path.join(path_input,'output','fmriprep',name_sub,ses,'func',path_file_confound)
+            if os.path.exists(path_file_confound):
+                df_confound=pd.read_csv(path_file_confound,delimiter='\t')
+                for j in ['trans','rot']:
+                    for k in ['x','y','z']:
+                        colname=j+'_'+k
+                        ts=df_confound.loc[:,colname]
+                        df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
+                        df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
+            else:
+                print('Confound file does not exist for subject: '+str(list_sub[i]))
         path_file_output=os.path.join(path_output,'output','motion.tsv')
         df_motion.to_csv(path_file_output,sep='\t',index=False)
         print('Finished motion parameter extraction')
