@@ -29,48 +29,135 @@ shutil.copyfileobj = _copyfileobj_patched
 ##################################################
 # Calculate Phase difference Fieldmap image
 ##################################################
-#path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/32_heudiconv'
-#path_in='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
-#path_out='D:/atiroms/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
-path_in='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv'
-path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
+# calculate phase difference image from HeuDiConv-converted BIDS folder.
+# original Philips data contains two real and two imaginary fieldmap images.
 
-fmap_imag1=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
-                                          'fmap','sub-00014_ses-01_fieldmap1.nii.gz'))
-fmap_real1=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
-                                          'fmap','sub-00014_ses-01_fieldmap2.nii.gz'))
-fmap_imag2=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
-                                          'fmap','sub-00014_ses-01_fieldmap3.nii.gz'))
-fmap_real2=nl_image.load_img(os.path.join(path_in,'output','fieldmap','sub-00014','ses-01',
-                                          'fmap','sub-00014_ses-01_fieldmap4.nii.gz'))
+class PhaseDiff():
+    def __init__(self,
+        path_in='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
+        path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap',
+        te1=0.00492,
+        te2=0.007416,
+        data_json_template={
+            "AcquisitionMatrixPE": 64,"BodyPartExamined": "BRAIN","ConversionSoftware": "dcm2niix",
+            "ConversionSoftwareVersion": "v1.0.20180622 GCC6.3.0","EchoTrainLength": 2,"FlipAngle": 60,
+            "ImageOrientationPatientDICOM": [1,0,0,0,1,0],"ImageType": ["ORIGINAL","PRIMARY","P","FFE",],
+            "InPlanePhaseEncodingDirectionDICOM": "COL","MRAcquisitionType": "2D",
+            "MagneticFieldStrength": 3,"Manufacturer": "Philips","ManufacturersModelName": "Achieva",
+            "Modality": "MR","PatientPosition": "HFS","PhaseEncodingAxis": "j",
+            "PhaseEncodingSteps": 64,"ReconMatrixPE": 64,"RepetitionTime": 0.488,"SliceThickness": 4,
+        }
+    ):
 
-fmap_mag1=nl_image.math_img('np.sqrt(img1**2.0 + img2**2.0)',img1=fmap_real1,img2=fmap_imag1)
-fmap_pha1=nl_image.math_img('np.arctan2(img2,img1)',img1=fmap_real1,img2=fmap_imag1)
-fmap_mag2=nl_image.math_img('np.sqrt(img1**2.0 + img2**2.0)',img1=fmap_real2,img2=fmap_imag2)
-fmap_pha2=nl_image.math_img('np.arctan2(img2,img1)',img1=fmap_real2,img2=fmap_imag2)
-fmap_sin1=nl_image.math_img('np.sin(img)',img=fmap_pha1)
-fmap_cos1=nl_image.math_img('np.cos(img)',img=fmap_pha1)
-fmap_sin2=nl_image.math_img('np.sin(img)',img=fmap_pha2)
-fmap_cos2=nl_image.math_img('np.cos(img)',img=fmap_pha2)
+        print('Starting PhaseDiff()')
+        
+        # Create output folder
+        print('Starting to create output folder.')
+        list_path_mkdir=[]
+        list_path_mkdir.append(path_out)
+        list_path_mkdir.append(os.path.join(path_out,'output'))
+        for p in list_path_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating output folder.')
 
-# calculate phase difference (use arctan2, sin, cos so that the range is from -pi to +pi)
-fmap_phadiff=nl_image.math_img('np.arctan2(img2*img3-img1*img4,img2*img4+img1*img3)',
-                               img1=fmap_sin1,img2=fmap_cos1,img3=fmap_sin2,img4=fmap_cos2)
+        # Copy log folder
+        print('Starting to copy log folder.')
+        path_log_in=os.path.join(path_in,'log')
+        path_log_out=os.path.join(path_out,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
 
-fmap_phadiff.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_phasediff.nii.gz'))
-fmap_mag1.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_magnitude1.nii.gz'))
-fmap_mag2.to_filename(os.path.join(path_out,'output','sub-00014_ses-01_magnitude2.nii.gz'))
+        # copy metadata files
+        list_dir_subj=os.listdir(os.path.join(path_in,'output'))
+        list_file_meta=[d for d in list_dir_subj if not d.startswith('sub-')]
+        for f in list_file_meta:
+            shutil.copy(os.path.join(path_in,'output',f),os.path.join(path_out,'output'))
+        list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
+        list_dir_subj.sort()
 
+        # calculate fieldmap phase difference
+        print('Starting to calculate phase difference.')
+        for dir_subj in list_dir_subj:
+            list_dir_ses=os.listdir(os.path.join(path_in,'output',dir_subj))
+            list_dir_ses.sort()
+            for dir_ses in list_dir_ses:
+                list_dir_seq=os.listdir(os.path.join(path_in,'output',dir_subj,dir_ses))
+                if ('anat' in list_dir_seq) and ('func' in list_dir_seq) and ('fmap' in list_dir_seq):
+                    list_path_mkdir=[]
+                    list_path_mkdir.append(os.path.join(path_out,'output',dir_subj))
+                    list_path_mkdir.append(os.path.join(path_out,'output',dir_subj,dir_ses))
+                    list_path_mkdir.append(os.path.join(path_out,'output',dir_subj,dir_ses,'fmap'))
+                    for p in list_path_mkdir:
+                        if not os.path.exists(p):
+                            os.makedirs(p)
+                    path_file_in_common=dir_subj+'_'+dir_ses+'_'
+                    path_file_in_common=os.path.join(path_in,'output',dir_subj,dir_ses,
+                                                    'fmap',path_file_in_common)
+                    fmap_imag1=nl_image.load_img(path_file_in_common+'fieldmap1.nii.gz')
+                    fmap_real1=nl_image.load_img(path_file_in_common+'fieldmap2.nii.gz')
+                    fmap_imag2=nl_image.load_img(path_file_in_common+'fieldmap3.nii.gz')
+                    fmap_real2=nl_image.load_img(path_file_in_common+'fieldmap4.nii.gz')
 
-#fmap_absmean=nl_image.math_img('(img1+img2)/2',img1=fmap_mag1,img2=fmap_mag2)
-#fmap_absdiff=nl_image.math_img('img2-img1',img1=fmap_abs1,img2=fmap_abs2)
-#img=nl_image.load_img(path_file_fieldmap)
-#nl_plotting.plot_epi(img)
-#nl_plotting.plot_stat_map(img)
-#nl_plotting.plot_glass_brain(img)
-#nl_plotting.plot_stat_map(path_file_fieldmap)
-#nl_plotting.plot_glass_brain(path_file_fieldmap)
-#nl_plotting.show()
+                    fmap_mag1=nl_image.math_img('np.sqrt(img1**2.0 + img2**2.0)',img1=fmap_real1,img2=fmap_imag1)
+                    fmap_pha1=nl_image.math_img('np.arctan2(img2,img1)',img1=fmap_real1,img2=fmap_imag1)
+                    fmap_mag2=nl_image.math_img('np.sqrt(img1**2.0 + img2**2.0)',img1=fmap_real2,img2=fmap_imag2)
+                    fmap_pha2=nl_image.math_img('np.arctan2(img2,img1)',img1=fmap_real2,img2=fmap_imag2)
+                    fmap_sin1=nl_image.math_img('np.sin(img)',img=fmap_pha1)
+                    fmap_cos1=nl_image.math_img('np.cos(img)',img=fmap_pha1)
+                    fmap_sin2=nl_image.math_img('np.sin(img)',img=fmap_pha2)
+                    fmap_cos2=nl_image.math_img('np.cos(img)',img=fmap_pha2)
+                    # calculate phase difference (use arctan2, sin, cos so that the range is from -pi to +pi)
+                    fmap_phadiff=nl_image.math_img('np.arctan2(img2*img3-img1*img4,img2*img4+img1*img3)',
+                                                   img1=fmap_sin1,img2=fmap_cos1,img3=fmap_sin2,img4=fmap_cos2)
+                    # correct nifti header information (10=2+8 meaning spacial unit=mm and temporal unit=sec)
+                    fmap_phadiff.header['xyzt_units']=np.array(10,dtype='uint8')
+                    fmap_mag1.header['xyzt_units']=np.array(10,dtype='uint8')
+                    fmap_mag2.header['xyzt_units']=np.array(10,dtype='uint8')
+
+                    path_file_out_common=dir_subj+'_'+dir_ses+'_'
+                    path_file_out_common=os.path.join(path_out,'output',dir_subj,dir_ses,'fmap',path_file_out_common)
+                    fmap_phadiff.to_filename(path_file_out_common+'phasediff.nii.gz')
+                    fmap_mag1.to_filename(path_file_out_common+'magnitude1.nii.gz')
+                    fmap_mag2.to_filename(path_file_out_common+'magnitude2.nii.gz')
+
+                    # Create new JSON file for phase difference image
+                    data_json=data_json_template
+                    data_json['EchoTime1']=te1
+                    data_json['EchoTime2']=te2
+                    data_json['IntendedFor']=dir_ses+'/func/'+dir_subj+'_'+dir_ses+'_task-rest_bold.nii.gz'
+                    with open(path_file_out_common+'phasediff.json', 'w') as file_json_out:
+                        json.dump(data_json, file_json_out,indent=2, sort_keys=True)
+
+                    # copy 'anat' and 'func' folders
+                    shutil.copytree(os.path.join(path_in,'output',dir_subj,dir_ses,'anat'),
+                                    os.path.join(path_out,'output',dir_subj,dir_ses,'anat'))
+                    shutil.copytree(os.path.join(path_in,'output',dir_subj,dir_ses,'func'),
+                                    os.path.join(path_out,'output',dir_subj,dir_ses,'func'))
+
+                    # create new '_scans.tsv' file
+                    df_scans=pd.read_csv(os.path.join(path_in,'output',dir_subj,dir_ses,dir_subj+'_'+dir_ses+'_scans.tsv'),sep='\t')
+                    df_scans.loc[df_scans['filename']=='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap1.nii.gz','filename']='fmap/'+dir_subj+'_'+dir_ses+'_phasediff.nii.gz'
+                    df_scans.loc[df_scans['filename']=='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap2.nii.gz','filename']='fmap/'+dir_subj+'_'+dir_ses+'_magnitude1.nii.gz'
+                    df_scans.loc[df_scans['filename']=='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap3.nii.gz','filename']='fmap/'+dir_subj+'_'+dir_ses+'_magnitude2.nii.gz'
+                    df_scans=df_scans.loc[df_scans['filename']!='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap4.nii.gz']
+                    df_scans.to_csv(os.path.join(path_out,'output',dir_subj,dir_ses,dir_subj+'_'+dir_ses+'_scans.tsv'),sep='\t',na_rep='n/a',index=False)
+
+                    print('Calculated phase difference for subject: '+dir_subj+', ses: '+dir_ses)
+                else:
+                    print('Sequence missing for subj: '+dir_subj+', ses: '+dir_ses)
+
+        # reset participants.tsv file
+        list_dir_subj=os.listdir(os.path.join(path_out,'output'))
+        list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
+        list_dir_subj.sort()
+        print('Number of subjects with anat, func and fmap data: '+str(len(list_dir_subj)))
+        df_participants=pd.DataFrame(data={'participant_id':list_dir_subj,'age':'N/A','sex':'None','group':'control'})
+        path_file_participants=os.path.join(path_out,'output','participants.tsv')
+        os.remove(path_file_participants)
+        df_participants.to_csv(path_file_participants,sep='\t',index=False)
+        
+        print('Finished PhaseDiff()')
 
 
 ##################################################
