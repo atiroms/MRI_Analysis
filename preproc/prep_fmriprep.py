@@ -55,7 +55,7 @@ class PhaseDiff():
         print('Starting to create output folder.')
         list_path_mkdir=[]
         list_path_mkdir.append(path_out)
-        list_path_mkdir.append(os.path.join(path_out,'output'))
+        list_path_mkdir.append(os.path.join(path_out,'input'))
         for p in list_path_mkdir:
             if not os.path.exists(p):
                 os.makedirs(p)
@@ -72,7 +72,7 @@ class PhaseDiff():
         list_dir_subj=os.listdir(os.path.join(path_in,'output'))
         list_file_meta=[d for d in list_dir_subj if not d.startswith('sub-')]
         for f in list_file_meta:
-            shutil.copy(os.path.join(path_in,'output',f),os.path.join(path_out,'output'))
+            shutil.copy(os.path.join(path_in,'output',f),os.path.join(path_out,'input'))
         list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
         list_dir_subj.sort()
 
@@ -86,9 +86,9 @@ class PhaseDiff():
                 list_dir_seq.sort()
                 if ('anat' in list_dir_seq) and ('func' in list_dir_seq) and ('fmap' in list_dir_seq):
                     list_path_mkdir=[]
-                    list_path_mkdir.append(os.path.join(path_out,'output',dir_subj))
-                    list_path_mkdir.append(os.path.join(path_out,'output',dir_subj,dir_ses))
-                    list_path_mkdir.append(os.path.join(path_out,'output',dir_subj,dir_ses,'fmap'))
+                    list_path_mkdir.append(os.path.join(path_out,'input',dir_subj))
+                    list_path_mkdir.append(os.path.join(path_out,'input',dir_subj,dir_ses))
+                    list_path_mkdir.append(os.path.join(path_out,'input',dir_subj,dir_ses,'fmap'))
                     for p in list_path_mkdir:
                         if not os.path.exists(p):
                             os.makedirs(p)
@@ -117,7 +117,7 @@ class PhaseDiff():
                     fmap_mag2.header['xyzt_units']=np.array(10,dtype='uint8')
 
                     path_file_out_common=dir_subj+'_'+dir_ses+'_'
-                    path_file_out_common=os.path.join(path_out,'output',dir_subj,dir_ses,'fmap',path_file_out_common)
+                    path_file_out_common=os.path.join(path_out,'input',dir_subj,dir_ses,'fmap',path_file_out_common)
                     fmap_phadiff.to_filename(path_file_out_common+'phasediff.nii.gz')
                     fmap_mag1.to_filename(path_file_out_common+'magnitude1.nii.gz')
                     fmap_mag2.to_filename(path_file_out_common+'magnitude2.nii.gz')
@@ -132,9 +132,9 @@ class PhaseDiff():
 
                     # copy 'anat' and 'func' folders
                     shutil.copytree(os.path.join(path_in,'output',dir_subj,dir_ses,'anat'),
-                                    os.path.join(path_out,'output',dir_subj,dir_ses,'anat'))
+                                    os.path.join(path_out,'input',dir_subj,dir_ses,'anat'))
                     shutil.copytree(os.path.join(path_in,'output',dir_subj,dir_ses,'func'),
-                                    os.path.join(path_out,'output',dir_subj,dir_ses,'func'))
+                                    os.path.join(path_out,'input',dir_subj,dir_ses,'func'))
 
                     # create new '_scans.tsv' file
                     df_scans=pd.read_csv(os.path.join(path_in,'output',dir_subj,dir_ses,dir_subj+'_'+dir_ses+'_scans.tsv'),sep='\t')
@@ -142,19 +142,19 @@ class PhaseDiff():
                     df_scans.loc[df_scans['filename']=='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap2.nii.gz','filename']='fmap/'+dir_subj+'_'+dir_ses+'_magnitude1.nii.gz'
                     df_scans.loc[df_scans['filename']=='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap3.nii.gz','filename']='fmap/'+dir_subj+'_'+dir_ses+'_magnitude2.nii.gz'
                     df_scans=df_scans.loc[df_scans['filename']!='fmap/'+dir_subj+'_'+dir_ses+'_fieldmap4.nii.gz']
-                    df_scans.to_csv(os.path.join(path_out,'output',dir_subj,dir_ses,dir_subj+'_'+dir_ses+'_scans.tsv'),sep='\t',na_rep='n/a',index=False)
+                    df_scans.to_csv(os.path.join(path_out,'input',dir_subj,dir_ses,dir_subj+'_'+dir_ses+'_scans.tsv'),sep='\t',na_rep='n/a',index=False)
 
                     print('Calculated phase difference for subject: '+dir_subj+', ses: '+dir_ses)
                 else:
                     print('Sequence missing for subj: '+dir_subj+', ses: '+dir_ses)
 
         # reset participants.tsv file
-        list_dir_subj=os.listdir(os.path.join(path_out,'output'))
+        list_dir_subj=os.listdir(os.path.join(path_out,'input'))
         list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
         list_dir_subj.sort()
         print('Number of subjects with anat, func and fmap data: '+str(len(list_dir_subj)))
         df_participants=pd.DataFrame(data={'participant_id':list_dir_subj,'age':'N/A','sex':'None','group':'control'})
-        path_file_participants=os.path.join(path_out,'output','participants.tsv')
+        path_file_participants=os.path.join(path_out,'input','participants.tsv')
         os.remove(path_file_participants)
         df_participants.to_csv(path_file_participants,sep='\t',index=False)
         
@@ -179,15 +179,15 @@ class EditJson():
         ):
 
         print('Starting EditJson()')
-        list_dir_subj=os.listdir(os.path.join(path_exp,'output'))
+        list_dir_subj=os.listdir(os.path.join(path_exp,'input'))
         list_dir_subj=[d for d in list_dir_subj if d.startswith('sub-')]
         list_dir_subj.sort()
         list_slicetiming=[i*TR/n_slices for i in range(n_slices)]
         for dir_subj in list_dir_subj:
-            list_dir_ses=os.listdir(os.path.join(path_exp,'output',dir_subj))
+            list_dir_ses=os.listdir(os.path.join(path_exp,'input',dir_subj))
             list_dir_ses.sort()
             for dir_ses in list_dir_ses:
-                dir_func=path_exp +'/output/' + dir_subj + '/' + dir_ses + '/func'
+                dir_func=path_exp +'/input/' + dir_subj + '/' + dir_ses + '/func'
                 if os.path.exists(dir_func):
                     filename_json = dir_subj + '_' + dir_ses + '_task-rest_bold.json'
                     with open(dir_func + '/' + filename_json) as file_json_input:  
@@ -200,22 +200,6 @@ class EditJson():
                         json.dump(data, file_json_output,indent=2, sort_keys=True)
                     print('Modified JSON file ' + filename_json + '.')
         print('Finished EditJson().')
-
-
-##################################################
-# Combination of above two
-##################################################
-
-class PrepFmriprep():
-    def __init__(self,
-        path_in='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
-        path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
-        ):
-        
-        print('Starting PrepFmriprep()')
-        _=PhaseDiff(path_in=path_in,path_out=path_out)
-        _=EditJson(path_exp=path_out)
-        print('Finished PrepFmriprep()')
 
 
 ##################################################
@@ -234,6 +218,7 @@ class SubsetBIDS():
         delete_T1only=True
         ):
 
+        print('Starting SubsetBIDS()')
         if path_file_id!="": 
             with open(path_file_id, 'r') as list_id:
                 list_id=list_id.readlines()
@@ -295,6 +280,87 @@ class SubsetBIDS():
                         tsvout.writerows([row])
                 cnt_row+=1
 
+        print('Finished SubsetBIDS()')
+
+
+##################################################
+# Pickup and copy FreeSurfer files
+##################################################
+# fMRIPrep preparation
+# Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
+
+class Fs2Fmriprep():
+    def __init__(self,
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/input/id_5sub.txt',
+        #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/input/id_5sub.txt',
+        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/log/w2_id_mild_1.csv',
+        #path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
+        #path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
+        path_in='/media/veracrypt2/MRI/pnTTC/pnTTC2_T1_C/FS/17_recon/output',
+        #path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output/freesurfer'
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/output/freesurfer'
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/output'
+        ):
+
+        print('Starting Fs2Fmriprep')
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+
+        list_path_mkdir=[]
+        list_path_mkdir.append(path_out)
+        list_path_mkdir.append(os.path.join(path_out,'freesurfer'))
+        for p in list_path_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        
+        for i in list_id:
+            path_folder_in=os.path.join(path_in,str(i).zfill(5))
+            path_folder_out=os.path.join(path_out,'freesurfer','sub-'+str(i).zfill(5))
+            shutil.copytree(path_folder_in,path_folder_out)
+            print('Copied and renamed '+ path_folder_in + '.')
+        path_folder_in=os.path.join(path_in,'fsaverage')
+        path_folder_out=os.path.join(path_out,'freesurfer','fsaverage')
+        shutil.copytree(path_folder_in,path_folder_out)
+        print('Copied '+ path_folder_in + '.')
+        print('Finished Fs2Fmriprep().')
+
+
+##################################################
+# All preparation for fMRIPrep
+##################################################
+
+class PrepFmriprep():
+    def __init__(self,
+        #path_bids='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
+        #path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/53_bids_fmap',
+        path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/39_heudiconv',
+        #path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon',
+        path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/pnTTC1_T1_C_FS_10_recon',
+        #path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/54_prep_fmriprep',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/41_prep_fmriprep',
+        path_file_fslicense='/usr/local/freesurfer/license.txt',
+        #file_id='id_5sub.csv'
+        file_id='id_1sub.csv'
+        ):
+        
+        print('Starting PrepFmriprep()')
+        _=PhaseDiff(path_in=path_bids,path_out=path_out)
+        _=EditJson(path_exp=path_out)
+        _=SubsetBIDS(path_exp=os.path.join(path_out,'input'),
+                     path_file_id=os.path.join(path_out,'log',file_id)
+                     )
+        _=Fs2Fmriprep(path_in=os.path.join(path_freesurfer,'output'),
+                      path_out=os.path.join(path_out,'output'),
+                      path_file_id=os.path.join(path_out,'log',file_id)
+                      )
+        shutil.copy(path_file_fslicense,os.path.join(path_out,'log'))
+        print('Finished PrepFmriprep()')
+
 
 ##################################################
 # Subset BIDS volumes
@@ -326,43 +392,6 @@ class SubsetVolume():
                         img_out=img_in.slicer[:,:,:,n_removevol:]
                         img_out.to_filename(path_img)
                         print('Removed initial ' + str(n_removevol) + ' images from ' + file_img_in + '.')
-        print('All done.')
-
-
-##################################################
-# Pickup and copy FreeSurfer files
-##################################################
-# fMRIPrep preparation
-# Pickup and copy FreeSurfer-processed file to use with fMRIPrep.
-
-class Fs2Fmriprep():
-    def __init__(self,
-        #path_file_id='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/id_sub.txt',
-        #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/input/id_5sub.txt',
-        #path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/input/id_5sub.txt',
-        path_file_id='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/log/w2_id_mild_1.csv',
-        #path_in='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10_recon',
-        #path_in='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon/freesurfer',
-        path_in='/media/veracrypt2/MRI/pnTTC/pnTTC2_T1_C/FS/17_recon/output',
-        #path_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/11_fs2fmriprep'
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/25_fmriprep/output/freesurfer'
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/26_fmriprep_latest/output/freesurfer'
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/26_1_fmriprep/output/freesurfer'
-        ):
-
-        with open(path_file_id, 'r') as list_id:
-            list_id=list_id.readlines()
-            list_id=[int(x.strip('\n')) for x in list_id]
-            list_id.sort()
-        for i in list_id:
-            path_folder_in=os.path.join(path_in,str(i).zfill(5))
-            path_folder_out=os.path.join(path_out,'sub-'+str(i).zfill(5))
-            shutil.copytree(path_folder_in,path_folder_out)
-            print('Copied and renamed '+ path_folder_in + '.')
-        path_folder_in=os.path.join(path_in,'fsaverage')
-        path_folder_out=os.path.join(path_out,'fsaverage')
-        shutil.copytree(path_folder_in,path_folder_out)
-        print('Copied '+ path_folder_in + '.')
         print('All done.')
 
 
