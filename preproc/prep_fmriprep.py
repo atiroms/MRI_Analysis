@@ -36,8 +36,8 @@ class PhaseDiff():
     def __init__(self,
         path_in='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
         path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap',
-        te1=0.00492,
-        te2=0.007416,
+        TE1=0.00492,
+        TE2=0.00738,
         data_json_template={
             "AcquisitionMatrixPE": 64,"BodyPartExamined": "BRAIN","ConversionSoftware": "dcm2niix",
             "ConversionSoftwareVersion": "v1.0.20180622 GCC6.3.0","EchoTrainLength": 2,"FlipAngle": 60,
@@ -83,6 +83,7 @@ class PhaseDiff():
             list_dir_ses.sort()
             for dir_ses in list_dir_ses:
                 list_dir_seq=os.listdir(os.path.join(path_in,'output',dir_subj,dir_ses))
+                list_dir_seq.sort()
                 if ('anat' in list_dir_seq) and ('func' in list_dir_seq) and ('fmap' in list_dir_seq):
                     list_path_mkdir=[]
                     list_path_mkdir.append(os.path.join(path_out,'output',dir_subj))
@@ -123,8 +124,8 @@ class PhaseDiff():
 
                     # Create new JSON file for phase difference image
                     data_json=data_json_template
-                    data_json['EchoTime1']=te1
-                    data_json['EchoTime2']=te2
+                    data_json['EchoTime1']=TE1
+                    data_json['EchoTime2']=TE2
                     data_json['IntendedFor']=dir_ses+'/func/'+dir_subj+'_'+dir_ses+'_task-rest_bold.nii.gz'
                     with open(path_file_out_common+'phasediff.json', 'w') as file_json_out:
                         json.dump(data_json, file_json_out,indent=2, sort_keys=True)
@@ -172,41 +173,49 @@ class EditJson():
         TR=2.5,
         n_slices=40,
         PED='j-',
-        EES=0.00070302532,     # Fieldmap parameter
-        TRT=0.04218151959,     # Fieldmap parameter
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/14_bids_ses1_t1exist_boldexist/output',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/24_st_ped/output',
-        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/34_bids/output',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep/input',
-        #sessions=['ses-01','ses-02']
-        sessions=['ses-02']
+        EES=0.00070302532,     # Fieldmap parameter, Brainvoyager implementation
+        TRT=0.04218151959,     # Fieldmap parameter, Brainvoyager implementation
+        path_exp='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
         ):
 
-        list_dir_all = os.listdir(path_exp)
-        list_dir_all.sort()
-        list_dir_sub=[]
-        list_dir_func=[]
-        list_slicetiming=[]
-        for i in range(n_slices):
-            list_slicetiming.append(i*TR/n_slices)
-        for dir_sub in list_dir_all:
-            if dir_sub.startswith('sub-'):
-                list_dir_sub.append(dir_sub)
-                for session in sessions:
-                    dir_func=path_exp +'/' + dir_sub + '/' + session + '/func'
-                    if os.path.exists(dir_func):
-                        list_dir_func.append(dir_func)
-                        filename_json = dir_sub + '_' + session + '_task-rest_bold.json'
-                        with open(dir_func + '/' + filename_json) as file_json_input:  
-                            data = json.load(file_json_input)
-                        data['SliceTiming']=list_slicetiming
-                        data['PhaseEncodingDirection']=PED
-                        data['EffectiveEchoSpacing']=EES
-                        data['TotalReadoutTime']=TRT
-                        with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
-                            json.dump(data, file_json_output,indent=2, sort_keys=True)
-                        print('Modified JSON file ' + filename_json + '.')
-        print('All done.')
+        print('Starting EditJson()')
+        list_dir_subj=os.listdir(os.path.join(path_exp,'output'))
+        list_dir_subj=[d for d in list_dir_subj if d.startswith('subj-')]
+        list_dir_subj.sort()
+        list_slicetiming=[i*TR/n_slices for i in range(n_slices)]
+        for dir_subj in list_dir_subj:
+            list_dir_ses=os.listdir(os.path.join(path_exp,dir_subj))
+            list_dir_ses.sort()
+            for dir_ses in list_dir_ses:
+                dir_func=path_exp +'/' + dir_subj + '/' + dir_ses + '/func'
+                if os.path.exists(dir_func):
+                    filename_json = dir_subj + '_' + dir_ses + '_task-rest_bold.json'
+                    with open(dir_func + '/' + filename_json) as file_json_input:  
+                        data = json.load(file_json_input)
+                    data['SliceTiming']=list_slicetiming
+                    data['PhaseEncodingDirection']=PED
+                    data['EffectiveEchoSpacing']=EES
+                    data['TotalReadoutTime']=TRT
+                    with open(dir_func + '/' + filename_json, 'w') as file_json_output:  
+                        json.dump(data, file_json_output,indent=2, sort_keys=True)
+                    print('Modified JSON file ' + filename_json + '.')
+        print('Finished EditJson().')
+
+
+##################################################
+# Combination of above two
+##################################################
+
+class PrepFmriprep():
+    def __init__(self,
+        path_in='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
+        path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap'
+        ):
+        
+        print('Starting PrepFmriprep()')
+        phasediff=PhaseDiff(path_in=path_in,path_out=path_out)
+        editjson=EditJson(path_exp=path_out)
+        print('Finished PrepFmriprep()')
 
 
 ##################################################
