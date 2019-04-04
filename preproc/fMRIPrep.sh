@@ -134,26 +134,64 @@ singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/19_2_fmriprep:
 
 
 ## test with fieldmap for 1 sub
-## 42 use fieldmap, 6 dof, without syn
+# 42 use fieldmap, 6 dof, without syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/42_fmriprep_fmap:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 42_fmriprep_fmap\nStart time: 20190403_1730" | sendmail atirom.umusus@gmail.com
 
-## 43 ignore fieldmap, 6 dof, without syn
+# 43 ignore fieldmap, 6 dof, without syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/43_fmriprep:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 43_fmriprep\nStart time: 20190403_1730" | sendmail atirom.umusus@gmail.com
 
-## 44 use fieldmap, 6 dof, force syn
+# 44 use fieldmap, 6 dof, force syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/44_fmriprep_fmap_syn:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --force-syn --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 44_fmriprep_fmap_syn\nStart time: 20190403_1730" | sendmail atirom.umusus@gmail.com
 
-## 45 ignore fieldmap, 6 dof, use syn
+# 45 ignore fieldmap, 6 dof, use syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/45_fmriprep_syn:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 45_fmriprep_syn\nStart time: 20190403_1730" | sendmail atirom.umusus@gmail.com
 
-## 46 use fieldmap, 9 dof, force syn
+# 46 use fieldmap, 9 dof, force syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/46_fmriprep_fmap_syn_9dof:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --force-syn --use-aroma --output-space T1w template --bold2t1w-dof=9 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 46_fmriprep_fmap_syn_9dof\nStart time: 20190403_2000" | sendmail atirom.umusus@gmail.com
 
-## 47 ignore fieldmap, 9 dof, use syn
+# 47 ignore fieldmap, 9 dof, use syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/47_fmriprep_syn_9dof:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=9 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 47_fmriprep_syn_9dof\nStart time: 20190403_2000" | sendmail atirom.umusus@gmail.com
 
-## 48 use fieldmap, 12 dof, force syn
+# 48 use fieldmap, 12 dof, force syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/48_fmriprep_fmap_syn_12dof:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --force-syn --use-aroma --output-space T1w template --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 48_fmriprep_fmap_syn_12dof\nStart time: 20190403_2000" | sendmail atirom.umusus@gmail.com
 
-## 49 ignore fieldmap, 12 dof, use syn
+# 49 ignore fieldmap, 12 dof, use syn
 singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/49_fmriprep_syn_12dof:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 49_fmriprep_syn_12dof\nStart time: 20190403_2000" | sendmail atirom.umusus@gmail.com
+
+
+## test with 5 subjects, revert to fmriprep 1.2.6-1
+# 55_01 ignore fieldmap, 6 dof, no SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_01_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_01_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_02 use fieldmap, 6 dof, no SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_02_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_02_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_03 ignore fieldmap, 6 dof, use SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_03_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_03_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_04 use fieldmap, 6 dof, force SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_04_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --force-syn --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_04_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_05 ignore fieldmap, 9 dof, no SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_05_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-aroma --output-space T1w template --bold2t1w-dof=9 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_05_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_06 use fieldmap, 9 dof, no SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_06_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=9 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_06_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_07 ignore fieldmap, 9 dof, use SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_07_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=9 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_07_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_08 use fieldmap, 9 dof, force SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_08_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --force-syn --use-aroma --output-space T1w template --bold2t1w-dof=9 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_08_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_09 ignore fieldmap, 12 dof, no SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_09_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-aroma --output-space T1w template --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_09_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_10 use fieldmap, 12 dof, no SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_10_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_10_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_11 ignore fieldmap, 12 dof, use SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_11_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_11_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
+
+# 55_12 use fieldmap, 12 dof, force SyN
+singularity run --cleanenv -B /media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_12_fmriprep:${HOME}/data /data/applications/fmriprep-1261.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --force-syn --use-aroma --output-space T1w template --bold2t1w-dof=12 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 55_12_fmriprep\nStart time: 20190404_1330" | sendmail atirom.umusus@gmail.com
