@@ -76,11 +76,9 @@ class TarGz():
 class UntarGz():
     def __init__(self,
         path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/34_w1_nii',
-        #path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_zip_test',
-        #path_out='/media/veracrypt2/MRI/pnTTC/Preproc/34_w1_nii_test',
-        #list_type_subj=['C-01'],
-        list_type_subj=['C-01','C-02','M-01'],
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/35_c2_dcm_slctd',
+        #list_type_subj=['C-01','C-02','M-01'],
+        list_type_subj=['C-02'],
         list_type_sequence=['+MPRAGE_CBSN -','+rsfMRI_SBPRS -','+rsfMRI -','+Fieldmap_SBPRS -','+Fieldmap -']
         ):
 
@@ -113,12 +111,12 @@ class UntarGz():
                 for type_sequence in list_type_sequence:
                     list_dir_sequence=glob.glob(os.path.join(path_in,type_subj,dir_subj)+'/'+type_sequence+'*')
                     if len(list_dir_sequence)>0:
+                        if len(list_dir_sequence)>1:
+                            print('Multiple sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
                         for i in range(len(list_dir_sequence)):
                             file_tar=tarfile.open(list_dir_sequence[i])
                             file_tar.extractall(path=path_dir_subj_out)
                             file_tar.close()
-                    elif len(list_dir_sequence)>1:
-                        print('Multiple sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
                     #elif len(list_dir_sequence)==0:
                     #    print('No sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
         
