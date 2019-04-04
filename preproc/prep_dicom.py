@@ -75,14 +75,14 @@ class TarGz():
 
 class UntarGz():
     def __init__(self,
-        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-ANON_zip',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/35_c2_dcm_slctd',
+        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-missing2-ANON_zip',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/34_c1_dcm_slctd',
         #list_type_subj=['C-01','C-02','M-01'],
-        list_type_subj=['C-02'],
+        list_type_subj=['C-01'],
         list_type_sequence=['+MPRAGE_CBSN -','+rsfMRI_SBPRS -','+rsfMRI -','+Fieldmap_SBPRS -','+Fieldmap -']
         ):
 
-        print('Starting to Untar files')
+        print('Starting UntarGz()')
 
         # Create experiment folder
         print('Starting to create experiment folder.')
@@ -120,7 +120,7 @@ class UntarGz():
                     #elif len(list_dir_sequence)==0:
                     #    print('No sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
         
-        print('Finished Untarring files')
+        print('Finished UntarGz()')
 
 
 ##################################################
