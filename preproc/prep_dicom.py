@@ -113,13 +113,14 @@ class UntarGz():
                 for type_sequence in list_type_sequence:
                     list_dir_sequence=glob.glob(os.path.join(path_in,type_subj,dir_subj)+'/'+type_sequence+'*')
                     if len(list_dir_sequence)>0:
-                        file_tar=tarfile.open(list_dir_sequence[0])
-                        file_tar.extractall(path=path_dir_subj_out)
-                        file_tar.close()
+                        for i in range(len(list_dir_sequence)):
+                            file_tar=tarfile.open(list_dir_sequence[i])
+                            file_tar.extractall(path=path_dir_subj_out)
+                            file_tar.close()
                     elif len(list_dir_sequence)>1:
                         print('Multiple sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
-                    elif len(list_dir_sequence)==0:
-                        print('No sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
+                    #elif len(list_dir_sequence)==0:
+                    #    print('No sequence folders for subject: '+dir_subj+', sequence: '+type_sequence)
         
         print('Finished Untarring files')
 
