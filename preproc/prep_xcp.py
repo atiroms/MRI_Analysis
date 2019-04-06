@@ -392,7 +392,7 @@ class ExtractQuality():
         filename_output='quality.csv'
         ):
 
-        print('Starting ExtractQualisyty().')
+        print('Starting ExtractQuality().')
 
         if not skip_mkdir:
             # Create experiment folder
@@ -415,7 +415,6 @@ class ExtractQuality():
             print('Finished copying log folder.')
 
         # read quality data
-        print('Starting to extract quality data.')
         list_dir_thread = os.listdir(os.path.join(path_input,'output'))
         list_dir_thread.sort()
         df_quality=pd.DataFrame()
@@ -443,7 +442,7 @@ class MultiExtractQuality():
     def __init__(self,
         prefix_path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_',
         suffix_path_input='_prestats',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/57_quality',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/57_quality',
         list_iteration=['01','02','03','04','05','06'],
         #list_iteration=['07','08','09','10','11','12'],
         ):
@@ -454,6 +453,7 @@ class MultiExtractQuality():
         list_paths_mkdir=[]
         list_paths_mkdir.append(path_output)
         list_paths_mkdir.append(os.path.join(path_output,'output'))
+        list_paths_mkdir.append(os.path.join(path_output,'output','quality'))
         for p in list_paths_mkdir:
             if not os.path.exists(p):
                 os.makedirs(p)
