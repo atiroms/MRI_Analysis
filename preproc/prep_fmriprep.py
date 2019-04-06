@@ -351,8 +351,8 @@ class PrepFmriprep():
         #path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap',
         #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/54_prep_fmriprep',
         #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/41_prep_fmriprep',
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/39_c1_prep_fmriprep',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/40_c2_prep_fmriprep',
+        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/39_c1_1_prep_fmriprep',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/40_c2_1_prep_fmriprep',
         #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/38_2_prep_fmriprep',
         path_file_fslicense='/usr/local/freesurfer/license.txt',
         #file_id='id_5sub.csv'
