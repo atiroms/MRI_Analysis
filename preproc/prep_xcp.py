@@ -387,23 +387,26 @@ class ExtractQuality():
     def __init__(self,
         path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_01_prestats',
         path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/57_01_quality',
-        skip_prep=False,
+        skip_mkdir=False,
+        skip_copylog=False,
         filename_output='quality.csv'
         ):
 
         print('Starting ExtractQualisyty().')
 
-        if not skip_prep:
+        if not skip_mkdir:
             # Create experiment folder
             print('Starting to create experiment folder.')
             list_paths_mkdir=[]
             list_paths_mkdir.append(path_output)
             list_paths_mkdir.append(os.path.join(path_output,'output'))
+            list_paths_mkdir.append(os.path.join(path_output,'output','quality'))
             for p in list_paths_mkdir:
                 if not os.path.exists(p):
                     os.makedirs(p)
             print('Finished creating experiment folder.')
 
+        if not skip_copylog:
             # Copy log file
             print('Starting to copylog folder.')
             path_log_in=os.path.join(path_input,'log')
@@ -425,7 +428,7 @@ class ExtractQuality():
         df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
         df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
         df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
-        path_file_output=os.path.join(path_output,'output',filename_output)
+        path_file_output=os.path.join(path_output,'output','quality',filename_output)
         df_quality_spaced.to_csv(path_file_output,index=False)
 
         print('Finished ExtractQuality().')
@@ -467,11 +470,29 @@ class MultiExtractQuality():
             path_input=prefix_path_input+itr+suffix_path_input
             filename_output=itr+'_quality.csv'
             _=ExtractQuality(path_input=path_input,path_output=path_output,
-                             filename_output=filename_output,skip_prep=True)
+                             filename_output=filename_output,
+                             skip_mkdir=True,skip_copylog=True)
             print('Finished extracting quality for '+itr)
         
         print('Finished MultiExtractQuality().')
 
+
+##################################################
+# Extraction of NIfTI and quality data
+##################################################
+
+class PostXCP():
+    def __init__(self,
+        path_input='',
+        path_output=''
+        ):
+
+        print('Starting PostXCP().')
+        _=ExtractNifti(path_input=path_input,path_output=path_output)
+        _=ExtractQuality(path_input=path_input,path_output=path_output,
+                         skip_mkdir=False,skip_copylog=True)
+        print('Finished PostXCP().')
+        
 
 ##################################################
 # Extract XCP-processed FC or TS data
