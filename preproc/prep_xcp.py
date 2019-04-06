@@ -254,6 +254,7 @@ class MultiPrepXCP():
         prefix_path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_',
         suffix_path_exp='_prestats',
         list_iteration=['01','02','03','04','05','06']
+        #list_iteration=['07','08','09','10','11','12'],
         ):
 
         print('Starting MultiPrepXCP().')
@@ -441,6 +442,7 @@ class MultiExtractQuality():
         suffix_path_input='_prestats',
         path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/57_quality',
         list_iteration=['01','02','03','04','05','06'],
+        #list_iteration=['07','08','09','10','11','12'],
         ):
 
         print('Starting MultiExtractQuality().')
@@ -464,7 +466,8 @@ class MultiExtractQuality():
         for itr in list_iteration:
             path_input=prefix_path_input+itr+suffix_path_input
             filename_output=itr+'_quality.csv'
-            _=ExtractQuality(path_input=path_input,path_output=path_output,filename_output=filename_output)
+            _=ExtractQuality(path_input=path_input,path_output=path_output,
+                             filename_output=filename_output,skip_prep=True)
             print('Finished extracting quality for '+itr)
         
         print('Finished MultiExtractQuality().')
