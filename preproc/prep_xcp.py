@@ -253,8 +253,9 @@ class MultiPrepXCP():
         suffix_path_fmriprep='_fmriprep',
         prefix_path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_',
         suffix_path_exp='_prestats',
-        list_iteration=['01','02','03','04','05','06']
+        #list_iteration=['01','02','03','04','05','06']
         #list_iteration=['07','08','09','10','11','12'],
+        list_iteration=['07','08','09','11'],
         ):
 
         print('Starting MultiPrepXCP().')
