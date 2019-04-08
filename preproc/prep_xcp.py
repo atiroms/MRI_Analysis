@@ -444,8 +444,9 @@ class MultiExtractQuality():
         prefix_path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_',
         suffix_path_input='_prestats',
         path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/57_quality',
-        list_iteration=['01','02','03','04','05','06'],
+        #list_iteration=['01','02','03','04','05','06'],
         #list_iteration=['07','08','09','10','11','12'],
+        list_iteration=['07','08','09','11'],
         ):
 
         print('Starting MultiExtractQuality().')
