@@ -75,8 +75,8 @@ class TarGz():
 
 class UntarGz():
     def __init__(self,
-        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-missing2-ANON_zip',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/34_c1_dcm_slctd',
+        path_in='/media/veracrypt2/MRI/pnTTC/Raw/HUMAN-01-missing4-ANON_zip',
+        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/34_c1_dcm_slctd_add',
         #list_type_subj=['C-01','C-02','M-01'],
         list_type_subj=['C-01'],
         list_type_sequence=['+MPRAGE_CBSN -','+rsfMRI_SBPRS -','+rsfMRI -','+Fieldmap_SBPRS -','+Fieldmap -']
