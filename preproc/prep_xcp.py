@@ -148,34 +148,41 @@ class XCPScript():
 ##################################################
 # joining the above three classes and some more
 
-class XCPPrep():
+class PrepXCP():
     def __init__(self,
-        skip_fmriprep_copy=True,
-        skip_fmriprep_moveanat=True,
-        n_proc=20,
-        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep',
-        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
+        skip_fmriprep_copy=False,
+        skip_fmriprep_moveanat=False,
+        #n_proc=20,
+        n_proc=1,
+        #path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep',
+        #path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
+        path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_01_fmriprep',
+        path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_01_prestats',
         #file_id='w2_id_mild_1.csv',
-        file_id='w2_id_mild_2_omit328.csv',
-        ses='ses-02',
-        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #file_id='w2_id_mild_2_omit328.csv',
+        file_id='id_5sub.csv',
+        ses='ses-01',
+        #ses='ses-02',
+        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
         #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
-        file_design='fc-aroma_fconly_noqcfc.dsn',
+        #file_design='fc-aroma_fconly_noqcfc.dsn',
         #file_design='fc-acompcor_fconly_noqcfc.dsn',
         #file_design='fc-36p_spkreg_fconly.dsn',
         #file_design='fc-aroma_fconly.dsn',
         #file_design='fc-acompcor_fconly.dsn',
         #file_design='fc-acompcor.dsn',
         #file_design='fc-acompcor_fc_roiquant.dsn',
-        path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
+        file_design='fc-prestats.dsn',
+        #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
+        path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
         script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
 
-        print('Starting XCP preparation.')
+        print('Starting PrepXCP().')
 
         # Create experiment folder
         print('Starting to create experiment folder.')
@@ -232,7 +239,33 @@ class XCPPrep():
                        ses=ses)
             print("Finished moving contents of /anat folder.")
 
-        print('Finished XCP preparation.')
+        print('Finished PrepXCP().')
+
+
+##################################################
+# Multiple XCP preparation
+##################################################
+# batch run of above
+
+class MultiPrepXCP():
+    def __init__(self,
+        prefix_path_fmriprep='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/55_',
+        suffix_path_fmriprep='_fmriprep',
+        prefix_path_exp='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_',
+        suffix_path_exp='_prestats',
+        #list_iteration=['01','02','03','04','05','06']
+        #list_iteration=['07','08','09','10','11','12'],
+        list_iteration=['07','08','09','11'],
+        ):
+
+        print('Starting MultiPrepXCP().')
+        for itr in list_iteration:
+            path_fmriprep=prefix_path_fmriprep+itr+suffix_path_fmriprep
+            path_exp=prefix_path_exp+itr+suffix_path_exp
+            _=PrepXCP(path_fmriprep=path_fmriprep,path_exp=path_exp)
+            print('Finished preparation of: '+itr)
+
+        print('Finished MultiPrepXCP().')
 
 
 ##################################################
@@ -353,37 +386,36 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/22_2_xcp_aroma',
-        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/30_2_w1_quality_aroma',
-        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/24_2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/31_2_w1_quality_acompcor',
-        #path_input='/media/veracrypt1/MRI/pnTTC/Preproc/28_2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/32_2_w2_quality_acompcor',
-        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/29_2_xcp_aroma',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/33_2_w2_quality_aroma',
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_01_prestats',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/57_01_quality',
+        skip_mkdir=False,
+        skip_copylog=False,
+        filename_output='quality.csv'
         ):
 
-        print('Starting quality extraction')
+        print('Starting ExtractQuality().')
 
-        # Create experiment folder
-        print('Starting to create experiment folder.')
-        list_paths_mkdir=[]
-        list_paths_mkdir.append(path_output)
-        list_paths_mkdir.append(os.path.join(path_output,'output'))
-        for p in list_paths_mkdir:
-            if not os.path.exists(p):
-                os.makedirs(p)
-        print('Finished creating experiment folder.')
+        if not skip_mkdir:
+            # Create experiment folder
+            print('Starting to create experiment folder.')
+            list_paths_mkdir=[]
+            list_paths_mkdir.append(path_output)
+            list_paths_mkdir.append(os.path.join(path_output,'output'))
+            list_paths_mkdir.append(os.path.join(path_output,'output','quality'))
+            for p in list_paths_mkdir:
+                if not os.path.exists(p):
+                    os.makedirs(p)
+            print('Finished creating experiment folder.')
 
-        # Copylog file
-        print('Starting to copylog folder.')
-        path_log_in=os.path.join(path_input,'log')
-        path_log_out=os.path.join(path_output,'log')
-        shutil.copytree(path_log_in,path_log_out)
-        print('Finished copying log folder.')
+        if not skip_copylog:
+            # Copy log file
+            print('Starting to copylog folder.')
+            path_log_in=os.path.join(path_input,'log')
+            path_log_out=os.path.join(path_output,'log')
+            shutil.copytree(path_log_in,path_log_out)
+            print('Finished copying log folder.')
 
         # read quality data
-        print('Starting to extract quality data.')
         list_dir_thread = os.listdir(os.path.join(path_input,'output'))
         list_dir_thread.sort()
         df_quality=pd.DataFrame()
@@ -396,10 +428,73 @@ class ExtractQuality():
         df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
         df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
         df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
-        path_file_output=os.path.join(path_output,'output','quality.csv')
+        path_file_output=os.path.join(path_output,'output','quality',filename_output)
         df_quality_spaced.to_csv(path_file_output,index=False)
-        print('Finished quality extraction.')
 
+        print('Finished ExtractQuality().')
+
+
+##################################################
+# Multiple Extract n*_quality.csv data
+##################################################
+# batch run of above
+
+class MultiExtractQuality():
+    def __init__(self,
+        prefix_path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_',
+        suffix_path_input='_prestats',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/57_quality',
+        #list_iteration=['01','02','03','04','05','06'],
+        #list_iteration=['07','08','09','10','11','12'],
+        list_iteration=['07','08','09','11'],
+        ):
+
+        print('Starting MultiExtractQuality().')
+
+        print('Starting to create experiment folder.')
+        list_paths_mkdir=[]
+        list_paths_mkdir.append(path_output)
+        list_paths_mkdir.append(os.path.join(path_output,'output'))
+        list_paths_mkdir.append(os.path.join(path_output,'output','quality'))
+        for p in list_paths_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating experiment folder.')
+
+        # Copy log file (only for the first input folder)
+        print('Starting to copylog folder.')
+        path_log_in=os.path.join(prefix_path_input+list_iteration[0]+suffix_path_input,'log')
+        path_log_out=os.path.join(path_output,'log')
+        shutil.copytree(path_log_in,path_log_out)
+        print('Finished copying log folder.')
+
+        for itr in list_iteration:
+            path_input=prefix_path_input+itr+suffix_path_input
+            filename_output=itr+'_quality.csv'
+            _=ExtractQuality(path_input=path_input,path_output=path_output,
+                             filename_output=filename_output,
+                             skip_mkdir=True,skip_copylog=True)
+            print('Finished extracting quality for '+itr)
+        
+        print('Finished MultiExtractQuality().')
+
+
+##################################################
+# Extraction of NIfTI and quality data
+##################################################
+
+class PostXCP():
+    def __init__(self,
+        path_input='',
+        path_output=''
+        ):
+
+        print('Starting PostXCP().')
+        _=ExtractNifti(path_input=path_input,path_output=path_output)
+        _=ExtractQuality(path_input=path_input,path_output=path_output,
+                         skip_mkdir=False,skip_copylog=True)
+        print('Finished PostXCP().')
+        
 
 ##################################################
 # Extract XCP-processed FC or TS data
