@@ -16,3 +16,9 @@ colnames(df_str_w2)[which(colnames(df_str_w2)=='W2_Age_at_MRI')]<-'age'
 colnames(df_str_w2)[which(colnames(df_str_w2)=='W2_Tanner_Max')]<-'tanner_max'
 
 df_str<-rbind(df_str_w1,df_str_w2)
+
+df_str<-df_str[which(df_str['roi']=='dk_01001'),]
+df_str<-df_str[which(!is.na(df_str['tanner_max'])),]
+df_str$ID_pnTTC<-as.factor(df_str$ID_pnTTC)
+
+model<-gam(measure ~ s(age) + s(tanner_max) + s(ID_pnTTC,bs='re'),data=df_str)
