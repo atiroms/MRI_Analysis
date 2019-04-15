@@ -21,4 +21,4 @@ df_str<-df_str[which(df_str['roi']=='dk_01001'),]
 df_str<-df_str[which(!is.na(df_str['tanner_max'])),]
 df_str$ID_pnTTC<-as.factor(df_str$ID_pnTTC)
 
-model<-gam(measure ~ s(age) + s(tanner_max) + s(ID_pnTTC,bs='re'),data=df_str)
+model<-gam(value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re'),data=df_str)
