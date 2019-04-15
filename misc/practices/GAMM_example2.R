@@ -2,8 +2,11 @@ library(mgcv)
 library(dplyr)
 
 
-df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+#df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+#df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+
+df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
 df_str<-df_str[which(df_str['measure']=='volume'),]
 df_str_w1<-df_str[which(df_str['wave']==1),]
@@ -22,3 +25,5 @@ df_str<-df_str[which(!is.na(df_str['tanner_max'])),]
 df_str$ID_pnTTC<-as.factor(df_str$ID_pnTTC)
 
 model<-gam(value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re'),data=df_str)
+
+summary(model)
