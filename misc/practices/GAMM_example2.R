@@ -2,6 +2,7 @@ library(mgcv)
 library(dplyr)
 library(ggplot2)
 library(itsadug)
+library(ggrepel)
 
 
 df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
@@ -47,14 +48,23 @@ df_clinical_w2$wave<-2
 df_clinical_rbind<-rbind(df_clinical_w1,df_clinical_w2)
 df_clinical_rbind$ID_pnTTC<-as.factor(df_clinical_rbind$ID_pnTTC)
 df_clinical_rbind$wave<-as.factor(df_clinical_rbind$wave)
+df_clinical_rbind$sex<-as.factor(df_clinical_rbind$sex)
 
 
 ggplot(df_clinical_rbind) +
-  #aes(x=age,y=tanner_max,color=wave) +
-  aes(x=age,y=tanner_full,color=wave) +
-  geom_point() +
-  geom_path(aes(group=ID_pnTTC,color=NULL)) +
-  ggtitle("Tanner stage vs Age")
+  #aes(x=age,y=tanner_max,color=wave, label=ID_pnTTC) +
+  aes(x=age,y=tanner_full,color=sex,shape=wave, label=ID_pnTTC) +
+  scale_colour_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral")) +
+  scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4)) +
+  geom_point(size=4) +
+  geom_text_repel(size=2) +
+  geom_path(aes(group=ID_pnTTC),color="black",size=0.5,alpha=0.5) +
+  ggtitle("Tanner stage vs Age") +
+  xlab("Age (day)") +
+  ylab("Tanner Stage") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),legend.justification=c(0,1), legend.position=c(0.05,0.95),legend.direction="horizontal",panel.grid.minor=element_blank())
+  
 
 
 mod_clinical<-gam(tanner_max ~ s(age) + s(ID_pnTTC,bs='re'),data=df_clinical_rbind)
