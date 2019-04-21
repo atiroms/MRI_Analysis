@@ -15,8 +15,11 @@ file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 list_measure <-c("volume","thickness","area")
-list_covar<-list("tanner_max"=c("W1_Tanner_Max","W2_Tanner_Max"),
-                 "age"=c("W1_Age_at_MRI","W2_Age_at_MRI"))
+list_covar<-list("tanner_max"=list("1"="W1_Tanner_Max",
+                                   "2"="W2_Tanner_Max"),
+                 "age"=list("1"="W1_Age_at_MRI",
+                            "2"="W2_Age_at_MRI")
+                 )
 
 #key_global_covar<-"BrainSegVolNotVent"
 key_global_covar<-"eTIV"
@@ -84,17 +87,15 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                    key_global_covar_=key_global_covar
                    ){
   print("Starting gamm_str().")
-  data_clinical<-func_clinical_data(paths_,wave,subset_subj_)
-  
   nullobj<-func_createdirs(paths_,copy_log=T)
-  dict_roi<-func_dict_roi(paths_)
+  df_clin<-func_clinical_data_long(paths_,list_wave_)
   df_str<-read.csv(file.path(paths_$input,"output",file_input_))
   df_str$value[which(is.nan(df_str$value))]<-0
-  for (wave in list_wave){
-    
-  }
-  
+  data_subset_join<-func_subset_join(df_clin,df_str,
+                                     list_wave_,list_measure_,subset_subj_,
+                                     list_covar,
+                                     rem_na_clin=T,rem_na_str=T)
+  df_join<-data_subset_join$df_join
+  dict_roi<-func_dict_roi(paths_)
   
 }
-
-
