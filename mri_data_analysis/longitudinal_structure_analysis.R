@@ -16,14 +16,21 @@ file_input<-"fs_measure.csv"
 list_wave <- c(1,2)
 #list_measure <-c("volume","thickness","area")
 list_measure <-"volume"
-list_covar<-list("tanner_max"=list("1"="W1_Tanner_Max",
-                                   "2"="W2_Tanner_Max"),
+list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+                               "2"="W2_Tanner_Max"),
                  "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI")
-                 )
+                            "2"="W2_Age_at_MRI"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Full",
+#                               "2"="W2_Tanner_Full"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI"))
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),list("key"="Sex","value"=1)),
-                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),list("key"="Sex","value"=1)))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+                             list("key"="W1_T1QC_new_mild","value"=1),
+                             list("key"="Sex","value"=1)),
+                    "2"=list(list("key"="W2_T1QC","value"=1),
+                             list("key"="W2_T1QC_new_mild","value"=1),
+                             list("key"="Sex","value"=1)))
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
@@ -124,8 +131,21 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   # Join clinical and structural data frames
   print('Joining clinical and structural data.')
   df_join<-inner_join(df_str_subset,df_clin_subset,by=c('ID_pnTTC','wave'))
-  
-  
+  df_out<-data.frame(matrix(nrow=0,ncol=8))
+  colnames(df_out)<-c("measure","roi","label_roi","term_smooth","F","p")
+  for (measure in list_measure){
+    df_join_measure<-df_join[df_join$measure==measure,]
+    list_roi<-unique(df_join_measure$roi)
+    list_roi<-list_roi[order(list_roi)]
+    for (roi in list_roi){
+      label_roi<-dict_roi[dict_roi$id==id,'label']
+      df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
+      mod_gamm<-gam(value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
+      s_table<-summary.gam(mod_gamm)$s.table
+      df_out_add<-data.frame(measure=measure,roi=roi,label_roi=label_roi,
+                             term_smooth=rownames(s_table),F=s_table[,'F'],p=s_table[,'p-value'])
+    }
+  }
   
   
 }
