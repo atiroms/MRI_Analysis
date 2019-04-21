@@ -33,7 +33,9 @@ func_createdirs<-function(paths,copy_log=T){
       dir.create(d)
     }
   }
-  file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+  if (copy_log){
+    file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+  }
 }
 
 
@@ -90,15 +92,15 @@ func_clinical_data_long<-function(paths,
 
 
 #**************************************************
-# Subset and join clinical/structural data  ======
+# Subset clinical data  ===========================
 #**************************************************
-# used for longitudinal structure analysis (GAMM)
+# used for longitudinal analysis (GAMM)
 
-func_subset_join<-function(df_clin,df_str,
-                            list_wave,list_measure,subset_subj,
-                            list_covar,
-                            rem_na_clin,rem_na_str
-                            ){
+func_subset_clin<-function(df_clin,
+                           list_wave,list_measure,subset_subj,
+                           list_covar,
+                           rem_na_clin
+                           ){
   df_clin_subset<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
   
   # Subset clinical data according to subsetting condition
@@ -135,8 +137,7 @@ func_subset_join<-function(df_clin,df_str,
   # Subset unused columns of clinical data
   # Subset clinical data with missing covariate value
   print('Subsetting clinical data with missing covariate value.')
-  colnames_df_dst<-c("ID_pnTTC","wave",names(list_covar))
-  df_clin_exist<-data.frame(matrix(nrow=0,ncol=length(colnames_df)))
+  df_clin_exist<-data.frame(matrix(nrow=0,ncol=length(list_covar)+2))
   list_id_exist<-list()
   for (wave in list_wave){
     str_wave<-as.character(wave)
@@ -175,12 +176,39 @@ func_subset_join<-function(df_clin,df_str,
   }
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
   
-  # Join clinical and structural data frames
-  print('Joining clinical and structural data.')
-  df_join<-inner_join(df_str,df_clin_exist,by=c('ID_pnTTC','wave'))
-  
-  output<-list('df_join'=df_join,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
+  output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)
+}
+
+
+#**************************************************
+# Subsetting Structural data  =====================
+#**************************************************
+func_subset_str<-function(df_str,
+                          list_measure,
+                          list_str_group,
+                          dict_roi){
+  
+  df_str_dst<-data.frame(matrix(nrow=0,ncol=ncol(df_str)))
+  for (measure in list_measure){
+    print(paste('Subsetting ',measure,' measures.',sep=''))
+    df_str_tmp<-df_str[df_str$measure==measure,]
+    list_roi<-unique(df_str_tmp$roi)
+    list_roi<-list_roi[order(list_roi)]
+    print(paste(as.character(length(list_roi)),' ROIs exist in the source data.',sep=''))
+    list_roi_subset<-NULL
+    for (roi in list_roi){
+      group_roi<-dict_roi[dict_roi$id==roi,'group']
+      if (group_roi %in% list_str_group){
+        list_roi_subset<-c(list_roi_subset,roi)
+      }
+    }
+    print(paste(as.character(length(list_roi_subset)),' ROIs remaining.',sep=''))
+    df_str_tmp<-df_str_tmp[df_str_tmp$roi %in% list_roi_subset,]
+    df_str_dst<-rbind(df_str_dst,df_str_tmp)
+  }
+  colnames(df_str_dst)<-colnames(df_str)
+  return(df_str_dst)
 }
 
 

@@ -14,21 +14,23 @@ dir_out <-"03_gamm"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
-list_measure <-c("volume","thickness","area")
+#list_measure <-c("volume","thickness","area")
+list_measure <-"volume"
 list_covar<-list("tanner_max"=list("1"="W1_Tanner_Max",
                                    "2"="W2_Tanner_Max"),
                  "age"=list("1"="W1_Age_at_MRI",
                             "2"="W2_Age_at_MRI")
                  )
 
+subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),list("key"="Sex","value"=1)),
+                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),list("key"="Sex","value"=1)))
+
+#list_str_group<-c("cortex","subcortex","white matter","global","misc")
+list_str_group<-"subcortex"
+
 #key_global_covar<-"BrainSegVolNotVent"
 key_global_covar<-"eTIV"
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),list("key"="Sex","value"=1)),
-                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),list("key"="Sex","value"=1)))
-#subset_subj <- list(list("column"="W1_T1QC","value"=1),list("column"="Sex","value"=2))
-#subset_subj <- list(list("column"="W1_5sub","value"=1))
-#subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
 
 #**************************************************
@@ -82,20 +84,48 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # GAMM of structural measures =====================
 #**************************************************
+
+paths_=paths
+subset_subj_=subset_subj
+list_covar_=list_covar
+file_input_=file_input
+list_wave_=list_wave
+list_measure_=list_measure
+list_str_group_=list_str_group
+key_global_covar_=key_global_covar
+
+
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
-                   list_wave_=list_wave,list_measure_=list_measure,
+                   list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
                    key_global_covar_=key_global_covar
                    ){
   print("Starting gamm_str().")
   nullobj<-func_createdirs(paths_,copy_log=T)
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
   df_clin<-func_clinical_data_long(paths_,list_wave_)
-  df_str<-read.csv(file.path(paths_$input,"output",file_input_))
-  df_str$value[which(is.nan(df_str$value))]<-0
-  data_subset_join<-func_subset_join(df_clin,df_str,
+  data_subset_clin<-func_subset_clin(df_clin,
                                      list_wave_,list_measure_,subset_subj_,
                                      list_covar,
-                                     rem_na_clin=T,rem_na_str=T)
-  df_join<-data_subset_join$df_join
+                                     rem_na_clin=T)
+  df_clin_subset<-data_subset_clin$df_clin
+  
+  # Load structural data
+  print('Loading structural data.')
+  df_str<-read.csv(file.path(paths_$input,"output",file_input_))
+  df_str$value[which(is.nan(df_str$value))]<-0
   dict_roi<-func_dict_roi(paths_)
+  df_str_subset<-func_subset_str(df_str,
+                                 list_measure_,
+                                 list_str_group_,
+                                 dict_roi)
+  
+  # Join clinical and structural data frames
+  print('Joining clinical and structural data.')
+  df_join<-inner_join(df_str_subset,df_clin_subset,by=c('ID_pnTTC','wave'))
+  
+  
+  
   
 }
