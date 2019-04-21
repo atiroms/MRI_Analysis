@@ -71,10 +71,10 @@ func_clinical_data<-function(paths,
 #**************************************************
 # Longitudinal clinical data loading ==============
 #**************************************************
-func_clinical_data<-function(paths,
-                             subset_subj,
-                             file_clinical= "CSUB.csv"
-                             ){
+func_clinical_data_long<-function(paths,
+                                  subset_subj,
+                                  file_clinical= "CSUB.csv"
+                                  ){
   df_clinical <- read.csv(file.path(paths$common,file_clinical))
   for (list_subset in subset_subj){
     df_clinical <- df_clinical[which(df_clinical[,list_subset[["column"]]]==list_subset[["value"]]),]
