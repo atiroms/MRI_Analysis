@@ -3,6 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(itsadug)
 library(ggrepel)
+library(voxel)
 
 
 #df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
@@ -36,8 +37,17 @@ model<-gam(formula,data=df_str)
 formula_lm<-as.formula(str_formula_lm)
 summary(model)
 summary.gam(model)$s.table
-class(summary.gam(model)$s.table)
+gam.check(model)
 
+df_str<-df_str
+df_str$resid<-resid(model)
+df_str$predict<-predict(model)
+plot <- ggplot(df_str, aes(x = tanner_max, y = value)) + 
+  geom_point(shape = 19, stroke = 1) +
+  xlab("tanner_max") + ylab("value") +
+  theme_bw()
+
+plot<-plot+geom_smooth(aes(y = predict),  method = gam, formula = y ~ s(x, bs = "ps"), data = df_str, size = 1, se = FALSE)
 
 
 #### longitudinal clinical data analysis ####
