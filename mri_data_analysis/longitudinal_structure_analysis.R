@@ -131,6 +131,12 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   # Join clinical and structural data frames
   print('Joining clinical and structural data.')
   df_join<-inner_join(df_str_subset,df_clin_subset,by=c('ID_pnTTC','wave'))
+  df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
+  df_join$wave<-as.factor(df_join$wave)
+  df_join$measure<-as.factor(df_join$measure)
+  
+  # Calculate GAMM
+  print('Calculating GAMM.')
   df_out<-data.frame(matrix(nrow=0,ncol=8))
   colnames(df_out)<-c("measure","roi","label_roi","term_smooth","F","p")
   for (measure in list_measure){
@@ -144,24 +150,19 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       s_table<-summary.gam(mod_gamm)$s.table
       df_out_add<-data.frame(measure=measure,roi=roi,label_roi=label_roi,
                              term_smooth=rownames(s_table),F=s_table[,'F'],p=s_table[,'p-value'])
+      df_out<-rbind(df_out,df_out_add)
+      plot<-plot_gamm(mod_gamm,'tanner')
+      plot<-(plot
+             + ggtitle('GAMM model')
+             + xlab('Tanner stage')
+             + ylab(measure))
+      ggsave(paste("fc_heatmap_",atlas,"_",sprintf("%05d", id_subj),".eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
+             path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
   }
   
   df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
   df_join$wave<-as.factor(df_join$wave)
   df_join$measure<-as.factor(df_join$measure)
-  
-  # Calculate GAMM
-  print('Calculating GAMM.')
-  for (measure in list_measure){
-    df_join_measure<-df_join[df_join$measure==measure,]
-    list_roi<-unique(df_join_measure$roi)
-    list_roi<-list_roi[order(list_roi)]
-    for (roi in list_roi){
-      df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
-      mod.gamm<-gam(value ~ s(age) + s(tanner_max,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
-    }
-  }
-  
   
 }

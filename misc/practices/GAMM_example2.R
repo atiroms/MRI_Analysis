@@ -4,13 +4,14 @@ library(ggplot2)
 library(itsadug)
 library(ggrepel)
 library(voxel)
+library(purrr)
 
 
-#df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-#df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
-df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+#df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+#df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
 df_str<-df_str[which(df_str['measure']=='volume'),]
 df_str_w1<-df_str[which(df_str['wave']==1),]
@@ -30,15 +31,56 @@ df_str$ID_pnTTC<-as.factor(df_str$ID_pnTTC)
 
 model<-gam(value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re'),data=df_str)
 
-str_formula<-"value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re')"
-formula<-as.formula(str_formula)
-model<-gam(formula,data=df_str)
+#str_formula<-"value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re')"
+#formula<-as.formula(str_formula)
+#model<-gam(formula,data=df_str)
 
-formula_lm<-as.formula(str_formula_lm)
+#formula_lm<-as.formula(str_formula_lm)
 summary(model)
-summary.gam(model)$s.table
+#summary.gam(model)$s.table
 gam.check(model)
 
+
+## plotting results
+temp.data<-model$model
+#class(temp.data)
+smooth.cov<-'tanner_max'
+plot.df <- data.frame(x = seq(min(temp.data[smooth.cov]),
+                             max(temp.data[smooth.cov]),
+                             length.out=200))
+names(plot.df) <- smooth.cov
+for (i in names(temp.data)[-1]) {
+  if (i != smooth.cov) {
+    if (any(class(temp.data[i][,1])[1] == c("numeric", "integer","boolean"))) {
+      plot.df[, dim(plot.df)[2] + 1] <- mean(temp.data[i][,1])
+      names(plot.df)[dim(plot.df)[2]] <- i
+    }
+    else if (any(class(temp.data[i][,1])[1] == c("character", "factor","ordered"))) {
+      plot.df[, dim(plot.df)[2] + 1] <- temp.data[i][1,1]
+      names(plot.df)[dim(plot.df)[2]] <- i
+    }
+  }
+}
+
+for (i in 1:dim(plot.df)[2]) {
+  if (class(plot.df[,i])[1] == "ordered" |  class(plot.df[,i])[1] == "factor") {
+    warning("There are one or more factors in the model fit, please consider plotting by group since plot might be unprecise")
+  }
+}
+plot.df = cbind(plot.df, as.data.frame(predict.gam(model, plot.df, se.fit = TRUE)))
+
+plot <- (ggplot(data=plot.df, aes(x=plot.df[,1]))
+         + geom_line(aes(y=fit), size=1)
+         + geom_ribbon(data=plot.df, aes(ymax = fit+1.96*se.fit, ymin = fit-1.96*se.fit, linetype=NA), alpha = .2)
+         + geom_point(data = temp.data, aes(x=as_vector(temp.data[smooth.cov]), y=temp.data[,1]))
+         + ggtitle("GAMM model")
+         + ylab("Structural measure")
+         + xlab("Tanner stage")
+         + theme_light())
+
+
+
+## another way of plotting
 df_str<-df_str
 df_str$resid<-resid(model)
 df_str$predict<-predict(model)
