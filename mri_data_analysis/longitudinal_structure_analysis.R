@@ -54,7 +54,8 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),
 
 #str_mod <- "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
-str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
+#str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
+str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
