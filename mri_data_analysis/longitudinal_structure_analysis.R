@@ -147,5 +147,21 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     }
   }
   
+  df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
+  df_join$wave<-as.factor(df_join$wave)
+  df_join$measure<-as.factor(df_join$measure)
+  
+  # Calculate GAMM
+  print('Calculating GAMM.')
+  for (measure in list_measure){
+    df_join_measure<-df_join[df_join$measure==measure,]
+    list_roi<-unique(df_join_measure$roi)
+    list_roi<-list_roi[order(list_roi)]
+    for (roi in list_roi){
+      df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
+      mod.gamm<-gam(value ~ s(age) + s(tanner_max,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
+    }
+  }
+  
   
 }
