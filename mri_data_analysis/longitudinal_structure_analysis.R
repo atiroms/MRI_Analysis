@@ -37,19 +37,31 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                             list("key"="W2_T1QC_new_mild","value"=1),
 #                             list("key"="Sex","value"=1)))
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild","value"=1)))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild","value"=1)))
 
-str_mod <- "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="Sex","value"=2)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="Sex","value"=2)))
+
+subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),
+                             list("key"="Sex","value"=2)),
+                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),
+                             list("key"="Sex","value"=2)))
+
+#str_mod <- "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
+#str_mod <- "value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
+str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
 
-color<-"black"
+#color<-"black"
 #color<-"steelblue2"
-#color<-"lightcoral"
+color<-"lightcoral"
 
 #key_global_covar<-"BrainSegVolNotVent"
 #key_global_covar<-"eTIV"
@@ -69,7 +81,7 @@ library(ggplot2)
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
                     path_exp_=path_exp,
                     dir_in_=dir_in,
                     dir_out_=dir_out){
@@ -143,8 +155,9 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Calculate GAMM
   print('Calculating GAMM.')
-  df_out_term<-data.frame(matrix(nrow=0,ncol=8))
-  colnames(df_out_term)<-c("measure","roi","label_roi","term_smooth","F","p")
+  gam.control(maxit=1000)
+  df_out_term<-data.frame(matrix(nrow=0,ncol=9))
+  colnames(df_out_term)<-c("measure","roi","label_roi","term","F","t","p")
   for (measure in list_measure_){
     print(paste('Calculating measurements of ',measure,sep=''))
     df_join_measure<-df_join[df_join$measure==measure,]
@@ -158,8 +171,11 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       formula_gamm<-as.formula(str_mod_)
       mod_gamm<-gam(formula_gamm,data=df_join_measure_roi)
       s_table<-summary.gam(mod_gamm)$s.table
-      df_out_term_add<-data.frame(measure=measure,roi=roi,label_roi=label_roi,
-                             term_smooth=rownames(s_table),F=s_table[,'F'],p=s_table[,'p-value'])
+      p_table<-summary.gam(mod_gamm)$p.table
+      df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,
+                                        term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']),
+                             data.frame(measure=measure,roi=roi,label_roi=label_roi,
+                                        term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']))
       df_out_term<-rbind(df_out_term,df_out_term_add)
       for (covar in names(list_covar_)){
         plot<-plot_gamm(mod_gamm,covar,color_)
