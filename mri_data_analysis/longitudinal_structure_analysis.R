@@ -23,21 +23,33 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                  "age"=list("1"="W1_Age_at_MRI",
                             "2"="W2_Age_at_MRI",
                             "label"="Age"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Full",
+#                               "2"="W2_Tanner_Full",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"))
+
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild","value"=1),
+#                             list("key"="Sex","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild","value"=1),
+#                             list("key"="Sex","value"=1)))
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild","value"=1),
-                             list("key"="Sex","value"=2)),
+                             list("key"="W1_T1QC_new_mild","value"=1)),
                     "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild","value"=1),
-                             list("key"="Sex","value"=2)))
-str_mod <- "value ~ s(age) + s(tanner,k=5) + s(ID_pnTTC,bs='re')"
+                             list("key"="W2_T1QC_new_mild","value"=1)))
+
+str_mod <- "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
 
-#color<-"black"
+color<-"black"
 #color<-"steelblue2"
-color<-"lightcoral"
+#color<-"lightcoral"
 
 #key_global_covar<-"BrainSegVolNotVent"
 #key_global_covar<-"eTIV"
@@ -150,13 +162,12 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                              term_smooth=rownames(s_table),F=s_table[,'F'],p=s_table[,'p-value'])
       df_out_term<-rbind(df_out_term,df_out_term_add)
       for (covar in names(list_covar_)){
-        plot<-plot_gamm(mod_gamm,covar)
+        plot<-plot_gamm(mod_gamm,covar,color_)
         label_covar<-list_covar_[[covar]][["label"]]
         plot<-(plot
                + ggtitle(paste('GAMM ',label_roi,sep=''))
                + xlab(label_covar)
                + ylab(capitalize(measure))
-               + aes(colour=color_,fill=color_)
                + theme(legend.position = "none"))
         ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
                path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)

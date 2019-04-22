@@ -20,7 +20,7 @@ library(purrr)
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(mod_gamm,covar_x){
+plot_gamm<-function(mod_gamm,covar_x,color){
   df_src <- mod_gamm$model
   df_plot <- data.frame(x = seq(min(df_src[covar_x]),
                                 max(df_src[covar_x]),
@@ -47,17 +47,19 @@ plot_gamm<-function(mod_gamm,covar_x){
   df_plot = cbind(df_plot, as.data.frame(predict.gam(mod_gamm, df_plot, se.fit = TRUE)))
   
   plot <- (ggplot(data=df_plot, aes(x=df_plot[,1]))
-           + geom_line(aes(y=fit), size=1)
+           + geom_line(aes(y=fit),
+                       color=color,size=1)
            + geom_ribbon(data=df_plot, aes(ymax = fit+1.96*se.fit,
                                            ymin = fit-1.96*se.fit,
-                                           linetype=NA), alpha = .2)
+                                           linetype=NA),
+                         fill=color,alpha = .3)
            + geom_point(data = df_src, aes(x=as_vector(df_src[covar_x]),
-                                           y=df_src[,1],
-                                           size=1,alpha=.1))
+                                           y=df_src[,1]),
+                        color=color, fill=color,size=3,alpha=.3)
            + geom_path(data = df_src, aes(x=as_vector(df_src[covar_x]),
                                           y=df_src[,1],
                                           group=as_vector(df_src["ID_pnTTC"])),
-                                          size=0.5,alpha=.2)
+                       color=color,size=0.5,alpha=.2)
            #+ ggtitle("GAMM model")
            #+ ylab("Structural measure")
            #+ xlab("Tanner stage")
