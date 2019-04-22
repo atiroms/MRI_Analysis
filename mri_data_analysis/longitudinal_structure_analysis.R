@@ -14,30 +14,33 @@ dir_out <-"03_gamm"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
+
 #list_measure <-c("volume","thickness","area")
 list_measure <-"volume"
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max"),
+                               "2"="W2_Tanner_Max",
+                               "label"="Tanner stage"),
                  "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI"))
-#list_covar<-list("tanner"=list("1"="W1_Tanner_Full",
-#                               "2"="W2_Tanner_Full"),
-#                 "age"=list("1"="W1_Age_at_MRI",
-#                            "2"="W2_Age_at_MRI"))
+                            "2"="W2_Age_at_MRI",
+                            "label"="Age"))
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                              list("key"="W1_T1QC_new_mild","value"=1),
-                             list("key"="Sex","value"=1)),
+                             list("key"="Sex","value"=2)),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild","value"=1),
-                             list("key"="Sex","value"=1)))
+                             list("key"="Sex","value"=2)))
+str_mod <- "value ~ s(age) + s(tanner,k=5) + s(ID_pnTTC,bs='re')"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
 
-#key_global_covar<-"BrainSegVolNotVent"
-key_global_covar<-"eTIV"
+#color<-"black"
+#color<-"steelblue2"
+color<-"lightcoral"
 
+#key_global_covar<-"BrainSegVolNotVent"
+#key_global_covar<-"eTIV"
 
 
 #**************************************************
@@ -92,19 +95,10 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-file_input_=file_input
-list_wave_=list_wave
-list_measure_=list_measure
-list_str_group_=list_str_group
-key_global_covar_=key_global_covar
-
-
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
                    list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
-                   key_global_covar_=key_global_covar
+                   str_mod_=str_mod,
+                   color_=color
                    ){
   print("Starting gamm_str().")
   nullobj<-func_createdirs(paths_,copy_log=T)
@@ -137,32 +131,40 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Calculate GAMM
   print('Calculating GAMM.')
-  df_out<-data.frame(matrix(nrow=0,ncol=8))
-  colnames(df_out)<-c("measure","roi","label_roi","term_smooth","F","p")
-  for (measure in list_measure){
+  df_out_term<-data.frame(matrix(nrow=0,ncol=8))
+  colnames(df_out_term)<-c("measure","roi","label_roi","term_smooth","F","p")
+  for (measure in list_measure_){
+    print(paste('Calculating measurements of ',measure,sep=''))
     df_join_measure<-df_join[df_join$measure==measure,]
-    list_roi<-unique(df_join_measure$roi)
+    list_roi<-as.character(unique(df_join_measure$roi))
     list_roi<-list_roi[order(list_roi)]
     for (roi in list_roi){
-      label_roi<-dict_roi[dict_roi$id==id,'label']
+      label_roi<-as.character(dict_roi[dict_roi$id==roi,'label'])
+      print(paste('Calculating ',roi,' = ',label_roi,sep=''))
       df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
-      mod_gamm<-gam(value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
+      #mod_gamm<-gam(value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
+      formula_gamm<-as.formula(str_mod_)
+      mod_gamm<-gam(formula_gamm,data=df_join_measure_roi)
       s_table<-summary.gam(mod_gamm)$s.table
-      df_out_add<-data.frame(measure=measure,roi=roi,label_roi=label_roi,
+      df_out_term_add<-data.frame(measure=measure,roi=roi,label_roi=label_roi,
                              term_smooth=rownames(s_table),F=s_table[,'F'],p=s_table[,'p-value'])
-      df_out<-rbind(df_out,df_out_add)
-      plot<-plot_gamm(mod_gamm,'tanner')
-      plot<-(plot
-             + ggtitle('GAMM model')
-             + xlab('Tanner stage')
-             + ylab(measure))
-      ggsave(paste("fc_heatmap_",atlas,"_",sprintf("%05d", id_subj),".eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
-             path=file.path(paths$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+      df_out_term<-rbind(df_out_term,df_out_term_add)
+      for (covar in names(list_covar_)){
+        plot<-plot_gamm(mod_gamm,covar)
+        label_covar<-list_covar_[[covar]][["label"]]
+        plot<-(plot
+               + ggtitle(paste('GAMM ',label_roi,sep=''))
+               + xlab(label_covar)
+               + ylab(capitalize(measure))
+               + aes(colour=color_,fill=color_)
+               + theme(legend.position = "none"))
+        ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
+               path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+      }
     }
   }
-  
-  df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
-  df_join$wave<-as.factor(df_join$wave)
-  df_join$measure<-as.factor(df_join$measure)
-  
+  rownames(df_out_term)<-NULL
+  print('Saving results.')
+  write.csv(df_out_term, file.path(paths_$output,"output","gamm.csv"),row.names = F)
+  print('Finished gamm_str().')
 }

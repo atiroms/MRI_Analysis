@@ -22,7 +22,6 @@ library(purrr)
 
 plot_gamm<-function(mod_gamm,covar_x){
   df_src <- mod_gamm$model
-  covar_x <-'tanner_max'
   df_plot <- data.frame(x = seq(min(df_src[covar_x]),
                                 max(df_src[covar_x]),
                                 length.out=200))
@@ -45,17 +44,25 @@ plot_gamm<-function(mod_gamm,covar_x){
   #    warning("There are one or more factors in the model fit, please consider plotting by group since plot might be unprecise")
   #  }
   #}
-  df_plot = cbind(df_plot, as.data.frame(predict.gam(model, df_plot, se.fit = TRUE)))
+  df_plot = cbind(df_plot, as.data.frame(predict.gam(mod_gamm, df_plot, se.fit = TRUE)))
   
   plot <- (ggplot(data=df_plot, aes(x=df_plot[,1]))
            + geom_line(aes(y=fit), size=1)
-           + geom_ribbon(data=df_plot, aes(ymax = fit+1.96*se.fit, ymin = fit-1.96*se.fit, linetype=NA), alpha = .2)
-           + geom_point(data = df_src, aes(x=as_vector(df_src[covar_x]), y=df_src[,1]))
+           + geom_ribbon(data=df_plot, aes(ymax = fit+1.96*se.fit,
+                                           ymin = fit-1.96*se.fit,
+                                           linetype=NA), alpha = .2)
+           + geom_point(data = df_src, aes(x=as_vector(df_src[covar_x]),
+                                           y=df_src[,1],
+                                           size=1,alpha=.1))
+           + geom_path(data = df_src, aes(x=as_vector(df_src[covar_x]),
+                                          y=df_src[,1],
+                                          group=as_vector(df_src["ID_pnTTC"])),
+                                          size=0.5,alpha=.2)
            #+ ggtitle("GAMM model")
            #+ ylab("Structural measure")
            #+ xlab("Tanner stage")
-           + theme_light())
-           + theme(plot.title = element_text(hjust = 0.5))
+           + theme_light()
+           + theme(plot.title = element_text(hjust = 0.5)))
   return(plot)
 }
 
