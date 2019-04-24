@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(itsadug)
 library(ggrepel)
-library(voxel)
+#library(voxel)
 library(purrr)
 
 
@@ -19,23 +19,55 @@ df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData
 df_str<-df_str[which(df_str['measure']=='volume'),]
 df_str_w1<-df_str[which(df_str['wave']==1),]
 df_str_w2<-df_str[which(df_str['wave']==2),]
-df_str_w1<-left_join(df_str_w1,df_clinical[,c('ID_pnTTC','W1_Age_at_MRI','W1_Tanner_Max')],by='ID_pnTTC')
-df_str_w2<-left_join(df_str_w2,df_clinical[,c('ID_pnTTC','W2_Age_at_MRI','W2_Tanner_Max')],by='ID_pnTTC')
+df_str_w1<-left_join(df_str_w1,df_clinical[,c('ID_pnTTC','Sex','W1_Age_at_MRI','W1_Tanner_Max')],by='ID_pnTTC')
+df_str_w2<-left_join(df_str_w2,df_clinical[,c('ID_pnTTC','Sex','W2_Age_at_MRI','W2_Tanner_Max')],by='ID_pnTTC')
+colnames(df_str_w1)[which(colnames(df_str_w1)=='Sex')]<-'sex'
 colnames(df_str_w1)[which(colnames(df_str_w1)=='W1_Age_at_MRI')]<-'age'
-colnames(df_str_w1)[which(colnames(df_str_w1)=='W1_Tanner_Max')]<-'tanner_max'
+colnames(df_str_w1)[which(colnames(df_str_w1)=='W1_Tanner_Max')]<-'tanner'
+colnames(df_str_w2)[which(colnames(df_str_w2)=='Sex')]<-'sex'
 colnames(df_str_w2)[which(colnames(df_str_w2)=='W2_Age_at_MRI')]<-'age'
-colnames(df_str_w2)[which(colnames(df_str_w2)=='W2_Tanner_Max')]<-'tanner_max'
+colnames(df_str_w2)[which(colnames(df_str_w2)=='W2_Tanner_Max')]<-'tanner'
 
 df_str<-rbind(df_str_w1,df_str_w2)
 
 df_str<-df_str[which(df_str['roi']=='dk_01001'),]
-df_str<-df_str[which(!is.na(df_str['tanner_max'])),]
+df_str<-df_str[which(!is.na(df_str['tanner'])),]
 df_str$ID_pnTTC<-as.factor(df_str$ID_pnTTC)
+df_str$sex<-as.factor(df_str$sex)
 
-#model<-gam(value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re'),data=df_str)
-#model<-gam(value ~ s(age) + s(tanner_max) + s(ID_pnTTC,bs='re'),data=df_str)
-model<-gam(value ~ age + tanner_max + s(ID_pnTTC,bs='re'),data=df_str)
-model2<-gam(value ~ age*tanner_max + s(ID_pnTTC,bs='re'),data=df_str)
+for (i in seq(nrow(df_str))){
+  if (df_str[i,'sex']==1){
+    df_str[i,'tanner_male']<-df_str[i,'tanner']
+    df_str[i,'male']<-1
+    df_str[i,'female']<-0
+  }else if (df_str[i,'sex']==2){
+    df_str[i,'tanner_female']<-df_str[i,'tanner']
+    df_str[i,'male']<-0
+    df_str[i,'female']<-1
+  }
+}
+
+#model<-gam(value ~ s(age) + s(tanner,k=5) + s(ID_pnTTC,bs='re'),data=df_str)
+#model<-gam(value ~ s(age) + s(tanner) + s(ID_pnTTC,bs='re'),data=df_str)
+model<-gam(value ~ age + tanner + s(ID_pnTTC,bs='re'),data=df_str)
+model2<-gam(value ~ age*tanner + s(ID_pnTTC,bs='re'),data=df_str)
+
+#model3<-gam(value ~ age + tanner_male + tanner_female + age:tanner_male + age:tanner_female + s(ID_pnTTC,bs='re'),data=df_str,na.action =na.pass)
+#model3<-gam(value ~ age + tanner_male + tanner_female  + s(ID_pnTTC,bs='re'),data=df_str,na.action=na.exclude)
+model3<-gam(value ~ s(age) + s(tanner,k=5,by=sex) + s(ID_pnTTC,bs='re'),data=df_str)
+summary(model3)
+
+#model4<-gam(value ~ s(age) + s(tanner,k=5):male + s(tanner,k=5):female + s(ID_pnTTC,bs='re'),data=df_str)
+#summary(model4)
+
+model5<-gam(value ~ s(age) + tanner:male + tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
+model6<-gam(value ~ s(age) + tanner:sex + s(ID_pnTTC,bs='re'),data=df_str)
+
+model7<-gam(value ~ age + tanner:male + tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
+model8<-gam(value ~ age + tanner:male + age:tanner:male + tanner:female + age:tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
+
+#model4<-gam(value ~ age + tanner + s(ID_pnTTC,bs='re'),data=df_str)
+#model5<-gam(value ~ age + s(tanner,k=2) + s(ID_pnTTC,bs='re'),data=df_str)
 
 anova(model,model2,test="F")
 AIC(model,model2)

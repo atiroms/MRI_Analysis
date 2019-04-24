@@ -29,6 +29,15 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                 "age"=list("1"="W1_Age_at_MRI",
 #                            "2"="W2_Age_at_MRI",
 #                            "label"="Age"))
+list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+                               "2"="W2_Tanner_Max",
+                               "label"="Tanner stage"),
+                 "age"=list("1"="W1_Age_at_MRI",
+                            "2"="W2_Age_at_MRI",
+                            "label"="Age"),
+                 "sex"=list("1"="Sex",
+                            "2"="Sex",
+                            "label"="Sex"))
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild","value"=1),
@@ -37,32 +46,33 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                             list("key"="W2_T1QC_new_mild","value"=1),
 #                             list("key"="Sex","value"=1)))
 
-#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-#                             list("key"="W1_T1QC_new_mild","value"=1)),
-#                    "2"=list(list("key"="W2_T1QC","value"=1),
-#                             list("key"="W2_T1QC_new_mild","value"=1)))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+                             list("key"="W1_T1QC_new_mild","value"=1)),
+                    "2"=list(list("key"="W2_T1QC","value"=1),
+                             list("key"="W2_T1QC_new_mild","value"=1)))
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="Sex","value"=2)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="Sex","value"=2)))
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),
-                             list("key"="Sex","value"=2)),
-                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),
-                             list("key"="Sex","value"=2)))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),
+#                             list("key"="Sex","value"=2)),
+#                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),
+#                             list("key"="Sex","value"=2)))
 
 #str_mod <- "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
-str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
+#str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
+str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
 
-#color<-"black"
+color<-"black"
 #color<-"steelblue2"
-color<-"lightcoral"
+#color<-"lightcoral"
 
 #key_global_covar<-"BrainSegVolNotVent"
 #key_global_covar<-"eTIV"
@@ -120,6 +130,17 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
+paths_=paths
+subset_subj_=subset_subj
+list_covar_=list_covar
+file_input_=file_input
+list_wave_=list_wave
+list_measure_=list_measure
+list_str_group_=list_str_group
+str_mod_=str_mod
+color_=color
+
+
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
                    list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
                    str_mod_=str_mod,
@@ -150,13 +171,14 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   # Join clinical and structural data frames
   print('Joining clinical and structural data.')
   df_join<-inner_join(df_str_subset,df_clin_subset,by=c('ID_pnTTC','wave'))
-  df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
-  df_join$wave<-as.factor(df_join$wave)
-  df_join$measure<-as.factor(df_join$measure)
+  for (key in c('ID_pnTTC','wave','sex','measure')){
+    if (key %in% colnames(df_join)){
+      df_join[,key]<-as.factor(df_join[,key])
+    }
+  }
   
   # Calculate GAMM
   print('Calculating GAMM.')
-  gam.control(maxit=1000)
   df_out_term<-data.frame(matrix(nrow=0,ncol=9))
   colnames(df_out_term)<-c("measure","roi","label_roi","term","F","t","p")
   for (measure in list_measure_){
