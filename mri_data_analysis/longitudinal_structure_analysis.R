@@ -17,12 +17,12 @@ list_wave <- c(1,2)
 
 #list_measure <-c("volume","thickness","area")
 list_measure <-"volume"
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max",
-                               "label"="Tanner stage"),
-                 "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI",
-                            "label"="Age"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+#                               "2"="W2_Tanner_Max",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"))
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Full",
 #                               "2"="W2_Tanner_Full",
 #                               "label"="Tanner stage"),
@@ -65,7 +65,8 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #str_mod <- "value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
-str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
+#str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
+str_mod <- "value ~ age + tanner:sex age:tanner:sex + s(ID_pnTTC,bs='re')"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
@@ -193,23 +194,25 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       #mod_gamm<-gam(value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
       formula_gamm<-as.formula(str_mod_)
       mod_gamm<-gam(formula_gamm,data=df_join_measure_roi)
-      s_table<-summary.gam(mod_gamm)$s.table
       p_table<-summary.gam(mod_gamm)$p.table
+      s_table<-summary.gam(mod_gamm)$s.table
       df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,
-                                        term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']),
+                                        term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
                              data.frame(measure=measure,roi=roi,label_roi=label_roi,
-                                        term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']))
+                                        term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
       df_out_term<-rbind(df_out_term,df_out_term_add)
       for (covar in names(list_covar_)){
-        plot<-plot_gamm(mod_gamm,covar,color_)
-        label_covar<-list_covar_[[covar]][["label"]]
-        plot<-(plot
-               + ggtitle(paste('GAMM ',label_roi,sep=''))
-               + xlab(label_covar)
-               + ylab(capitalize(measure))
-               + theme(legend.position = "none"))
-        ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
-               path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+        if(any(class(df_join[[covar]])==c('numeric','integer','boolean'))){
+          plot<-plot_gamm(mod_gamm,covar,color_)
+          label_covar<-list_covar_[[covar]][["label"]]
+          plot<-(plot
+                 + ggtitle(paste('GAMM ',label_roi,sep=''))
+                 + xlab(label_covar)
+                 + ylab(capitalize(measure))
+                 + theme(legend.position = "none"))
+          ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
+                 path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+        }
       }
     }
   }
