@@ -7,11 +7,11 @@ library(voxel)
 library(purrr)
 
 
-#df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-#df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
-df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+#df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+#df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
 #df_str<-read.csv("C:/Users/NICT_WS/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
 #df_clinical<-read.csv("C:/Users/NICT_WS/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
@@ -34,8 +34,12 @@ df_str$ID_pnTTC<-as.factor(df_str$ID_pnTTC)
 
 #model<-gam(value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re'),data=df_str)
 #model<-gam(value ~ s(age) + s(tanner_max) + s(ID_pnTTC,bs='re'),data=df_str)
-#model<-gam(value ~ age + tanner_max + s(ID_pnTTC,bs='re'),data=df_str)
-model<-gam(value ~ age*tanner_max + s(ID_pnTTC,bs='re'),data=df_str)
+model<-gam(value ~ age + tanner_max + s(ID_pnTTC,bs='re'),data=df_str)
+model2<-gam(value ~ age*tanner_max + s(ID_pnTTC,bs='re'),data=df_str)
+
+anova(model,model2,test="F")
+AIC(model,model2)
+step(model2)
 
 #str_formula<-"value ~ s(age) + s(tanner_max,k=5) + s(ID_pnTTC,bs='re')"
 #formula<-as.formula(str_formula)
