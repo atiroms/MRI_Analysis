@@ -66,7 +66,37 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
-str_mod <- "value ~ age + tanner:sex age:tanner:sex + s(ID_pnTTC,bs='re')"
+str_mod <- "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')"
+
+list_graph <- list("1"=list("title"="Age effect",
+                            "smooth"=list("Male"=list("key"="sex","value"=1,
+                                                      "color"="steelblue2","alpha"=1),
+                                          "Female"=list("key"="sex","value"=2,
+                                                        "color"="lightcoral","alpha"=1)),
+                            "point"=list("key"="sex")
+                                
+                            ),
+                   "2"=list("title"="Tanner stage effect",
+                            "prediction"=list("Male"=list("key"="sex","value"=1,
+                                                          "color"="steelblue2","alpha"=1),
+                                              "Female"=list("key"="sex","value"=2,
+                                                            "color"="lightcoral","alpha"=1))
+                            ),
+                   "3"=list("title"="Age-Tanner stage interaction",
+                            "prediction"=list("Male TS = 1"=list("key"="tanner","value"=1,
+                                                                 "color"="Steelblue2","alpha"=0.6),
+                                              "Male TS = 3"=list("key"="tanner","value"=3,
+                                                                 "color"="steelblue2","alpha"=0.8),
+                                              "Male TS = 5"=list("key"="tanner","value"=5,
+                                                                 "color"="steelblue2","alpha"=1),
+                                              "Female TS = 1"=list("key"="tanner","value"=1,
+                                                                   "color"="lightcoral","alpha"=0.6),
+                                              "Female TS = 3"=list("key"="tanner","value"=3,
+                                                                   "color"="lightcoral","alpha"=0.8),
+                                              "Female TS = 5"=list("key"="tanner","value"=5,
+                                                                   "color"="lightcoral","alpha"=1))
+                            )
+                   )
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
