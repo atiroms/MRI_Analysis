@@ -66,7 +66,8 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
-str_mod <- "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')"
+list_mod <- list("age + tanner:sex"="value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
+                 "age + tanner:sex + age:tanner:sex"="value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
 
 list_graph <- list("1"=list("title"="Age effect",
                             "smooth"=list("Male"=list("key"="sex","value"=1,
@@ -168,13 +169,13 @@ file_input_=file_input
 list_wave_=list_wave
 list_measure_=list_measure
 list_str_group_=list_str_group
-str_mod_=str_mod
+list_mod_=list_mod
 color_=color
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
                    list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
-                   str_mod_=str_mod,
+                   list_mod_=list_mod,
                    color_=color
                    ){
   print("Starting gamm_str().")
@@ -210,8 +211,8 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Calculate GAMM
   print('Calculating GAMM.')
-  df_out_term<-data.frame(matrix(nrow=0,ncol=9))
-  colnames(df_out_term)<-c("measure","roi","label_roi","term","F","t","p")
+  df_out_term<-data.frame(matrix(nrow=0,ncol=10))
+  colnames(df_out_term)<-c("measure","roi","label_roi","model","term","F","t","p")
   for (measure in list_measure_){
     print(paste('Calculating measurements of ',measure,sep=''))
     df_join_measure<-df_join[df_join$measure==measure,]
@@ -221,28 +222,28 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       label_roi<-as.character(dict_roi[dict_roi$id==roi,'label'])
       print(paste('Calculating ',roi,' = ',label_roi,sep=''))
       df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
-      #mod_gamm<-gam(value ~ s(age) + s(tanner,k=3) + s(ID_pnTTC,bs='re'),data=df_join_measure_roi)
-      formula_gamm<-as.formula(str_mod_)
-      mod_gamm<-gam(formula_gamm,data=df_join_measure_roi)
-      p_table<-summary.gam(mod_gamm)$p.table
-      s_table<-summary.gam(mod_gamm)$s.table
-      df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,
-                                        term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                             data.frame(measure=measure,roi=roi,label_roi=label_roi,
-                                        term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
-      df_out_term<-rbind(df_out_term,df_out_term_add)
-      for (covar in names(list_covar_)){
-        if(any(class(df_join[[covar]])==c('numeric','integer','boolean'))){
-          plot<-plot_gamm(mod_gamm,covar,color_)
-          label_covar<-list_covar_[[covar]][["label"]]
-          plot<-(plot
-                 + ggtitle(paste('GAMM ',label_roi,sep=''))
-                 + xlab(label_covar)
-                 + ylab(capitalize(measure))
-                 + theme(legend.position = "none"))
-          ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
-                 path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
-        }
+      for (mod in names(list_mod_)){
+        mod_gamm<-gam(as.formula(list_mod_[[mod]]),data=df_join_measure_roi)
+        p_table<-summary.gam(mod_gamm)$p.table
+        s_table<-summary.gam(mod_gamm)$s.table
+        df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,
+                                          term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                               data.frame(measure=measure,roi=roi,label_roi=label_roi,
+                                          term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
+        df_out_term<-rbind(df_out_term,df_out_term_add)
+        #for (covar in names(list_covar_)){
+        #  if(any(class(df_join[[covar]])==c('numeric','integer','boolean'))){
+        #    plot<-plot_gamm(mod_gamm,covar,color_)
+        #    label_covar<-list_covar_[[covar]][["label"]]
+        #    plot<-(plot
+        #           + ggtitle(paste('GAMM ',label_roi,sep=''))
+        #           + xlab(label_covar)
+        #           + ylab(capitalize(measure))
+        #           + theme(legend.position = "none"))
+        #    ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
+        #           path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+        #  }
+        #}
       }
     }
   }
