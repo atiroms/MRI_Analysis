@@ -69,35 +69,44 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 list_mod <- list("age + tanner:sex"="value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
                  "age + tanner:sex + age:tanner:sex"="value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
 
-list_graph <- list("1"=list("title"="Age effect",
-                            "smooth"=list("Male"=list("key"="sex","value"=1,
-                                                      "color"="steelblue2","alpha"=1),
-                                          "Female"=list("key"="sex","value"=2,
-                                                        "color"="lightcoral","alpha"=1)),
-                            "point"=list("key"="sex")
-                                
-                            ),
-                   "2"=list("title"="Tanner stage effect",
-                            "prediction"=list("Male"=list("key"="sex","value"=1,
-                                                          "color"="steelblue2","alpha"=1),
-                                              "Female"=list("key"="sex","value"=2,
-                                                            "color"="lightcoral","alpha"=1))
-                            ),
-                   "3"=list("title"="Age-Tanner stage interaction",
-                            "prediction"=list("Male TS = 1"=list("key"="tanner","value"=1,
-                                                                 "color"="Steelblue2","alpha"=0.6),
-                                              "Male TS = 3"=list("key"="tanner","value"=3,
-                                                                 "color"="steelblue2","alpha"=0.8),
-                                              "Male TS = 5"=list("key"="tanner","value"=5,
-                                                                 "color"="steelblue2","alpha"=1),
-                                              "Female TS = 1"=list("key"="tanner","value"=1,
-                                                                   "color"="lightcoral","alpha"=0.6),
-                                              "Female TS = 3"=list("key"="tanner","value"=3,
-                                                                   "color"="lightcoral","alpha"=0.8),
-                                              "Female TS = 5"=list("key"="tanner","value"=5,
-                                                                   "color"="lightcoral","alpha"=1))
-                            )
-                   )
+list_graph <- list("age + tanner:sex"=
+                     list("1"=list("title"="Age effect",
+                                   "smooth"=list("Male"=list("key"="sex","value"=1,
+                                                             "color"="steelblue2","alpha"=1),
+                                                 "Female"=list("key"="sex","value"=2,
+                                                               "color"="lightcoral","alpha"=1)),
+                                   "point"=list("key"="sex")),
+                          "2"=list("title"="Tanner stage effect",
+                                   "smooth"=list("Male"=list("key"="sex","value"=1,
+                                                             "color"="steelblue2","alpha"=1),
+                                                 "Female"=list("key"="sex","value"=2,
+                                                                   "color"="lightcoral","alpha"=1)))),
+                   "age + tanner:sex + age:tanner:sexx"=
+                     list("1"=list("title"="Age effect",
+                                   "smooth"=list("Male"=list("key"="sex","value"=1,
+                                                             "color"="steelblue2","alpha"=1),
+                                                 "Female"=list("key"="sex","value"=2,
+                                                               "color"="lightcoral","alpha"=1)),
+                                   "point"=list("key"="sex")),
+                          "2"=list("title"="Tanner stage effect",
+                                   "smooth"=list("Male"=list("key"="sex","value"=1,
+                                                             "color"="steelblue2","alpha"=1),
+                                                 "Female"=list("key"="sex","value"=2,
+                                                               "color"="lightcoral","alpha"=1))),
+                          "3"=list("title"="Age-Tanner stage interaction",
+                                   "smooth"=list("Male TS = 1"=list("key"="tanner","value"=1,
+                                                                    "color"="Steelblue2","alpha"=0.6),
+                                                 "Male TS = 3"=list("key"="tanner","value"=3,
+                                                                    "color"="steelblue2","alpha"=0.8),
+                                                 "Male TS = 5"=list("key"="tanner","value"=5,
+                                                                    "color"="steelblue2","alpha"=1),
+                                                 "Female TS = 1"=list("key"="tanner","value"=1,
+                                                                      "color"="lightcoral","alpha"=0.6),
+                                                 "Female TS = 3"=list("key"="tanner","value"=3,
+                                                                      "color"="lightcoral","alpha"=0.8),
+                                                 "Female TS = 5"=list("key"="tanner","value"=5,
+                                                                      "color"="lightcoral","alpha"=1)))))
+
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
@@ -211,8 +220,10 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Calculate GAMM
   print('Calculating GAMM.')
-  df_out_term<-data.frame(matrix(nrow=0,ncol=10))
+  df_out_term<-data.frame(matrix(nrow=0,ncol=8))
   colnames(df_out_term)<-c("measure","roi","label_roi","model","term","F","t","p")
+  df_out_model<-data.frame(matrix(nrow=0,ncol=5))
+  colnames(df_out_model)<-c("measure","roi","label_roi","F","p")
   for (measure in list_measure_){
     print(paste('Calculating measurements of ',measure,sep=''))
     df_join_measure<-df_join[df_join$measure==measure,]
@@ -222,13 +233,14 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       label_roi<-as.character(dict_roi[dict_roi$id==roi,'label'])
       print(paste('Calculating ',roi,' = ',label_roi,sep=''))
       df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
+      mod_gamm<-list()
       for (mod in names(list_mod_)){
-        mod_gamm<-gam(as.formula(list_mod_[[mod]]),data=df_join_measure_roi)
-        p_table<-summary.gam(mod_gamm)$p.table
-        s_table<-summary.gam(mod_gamm)$s.table
-        df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,
+        mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join_measure_roi)
+        p_table<-summary.gam(mod_gamm[[mod]])$p.table
+        s_table<-summary.gam(mod_gamm[[mod]])$s.table
+        df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,model=mod,
                                           term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                               data.frame(measure=measure,roi=roi,label_roi=label_roi,
+                               data.frame(measure=measure,roi=roi,label_roi=label_roi,model=mod,
                                           term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
         df_out_term<-rbind(df_out_term,df_out_term_add)
         #for (covar in names(list_covar_)){
@@ -245,10 +257,18 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
         #  }
         #}
       }
+      # compare models
+      if (length(list_mod_)==2){
+        anova_mod<-anova(mod_gamm[[1]],mod_gamm[[2]],test="F")
+        df_out_model[dim(df_out_model)[1]+1,]<-c(measure,roi,label_roi,anova_mod[2,"F"],anova_mod[2,"Pr(>F)"])
+      }
     }
   }
-  rownames(df_out_term)<-NULL
   print('Saving results.')
+  rownames(df_out_term)<-NULL
   write.csv(df_out_term, file.path(paths_$output,"output","gamm.csv"),row.names = F)
+  if (length(list_mod_)==2){
+    write.csv(df_out_model,file.path(paths_$output,"output","anova.csv"),row.names = F)
+  }
   print('Finished gamm_str().')
 }
