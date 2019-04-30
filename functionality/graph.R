@@ -20,33 +20,43 @@ library(purrr)
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(mod_gamm,covar_x,color){
+plot_gamm<-function(mod_gamm,spec_graph){
+#plot_gamm<-function(mod_gamm,covar_x,color){
   df_src <- mod_gamm$model
-  df_plot <- data.frame(x = seq(min(df_src[covar_x]),
-                                max(df_src[covar_x]),
-                                length.out=200))
-  names(df_plot) <- covar_x
-  for (i in names(df_src)[-1]) {
-    if (i != covar_x) {
-      if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
-        df_plot[, dim(df_plot)[2] + 1] <- mean(df_src[i][,1])
-        names(df_plot)[dim(df_plot)[2]] <- i
-      }
-      else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
-        df_plot[, dim(df_plot)[2] + 1] <- df_src[i][1,1]
-        names(df_plot)[dim(df_plot)[2]] <- i
+  
+  for (name_smooth in names(spec_graph[["smooth"]])){
+    df_smooth <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
+                                    max(df_src[spec_graph[["x_axis"]]]),
+                                    length.out=200))
+    names(df_smooth) <- spec_graph[["x_axis"]]
+    for (i in names(df_src)[-1]) {
+      if (i != spec_graph[["x_axis"]]) {
+        if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
+          df_smooth[, dim(df_smooth)[2] + 1] <- mean(df_src[i][,1])
+          names(df_smooth)[dim(df_smooth)[2]] <- i
+        }
+        else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
+          df_smooth[, dim(df_smooth)[2] + 1] <- df_src[i][1,1]
+          names(df_smooth)[dim(df_smooth)[2]] <- i
+        }
       }
     }
+    spec_smooth<-spec_graph[["smooth"]][[name_smooth]]
+    if (!is.null(spec_smooth[["fix"]])){
+      for (var in names(spec_smooth[["fix"]])){
+        assign(var,spec_smooth[["fix"]][[var]])
+      }
+    }
+    spec_smooth<-
   }
-  
   #for (i in 1:dim(df_plot)[2]) {
   #  if (class(df_plot[,i])[1] == "ordered" |  class(df_plot[,i])[1] == "factor") {
   #    warning("There are one or more factors in the model fit, please consider plotting by group since plot might be unprecise")
   #  }
   #}
-  df_plot = cbind(df_plot, as.data.frame(predict.gam(mod_gamm, df_plot, se.fit = TRUE)))
+  df_smooth = cbind(df_smooth, as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
   
-  plot <- (ggplot(data=df_plot, aes(x=df_plot[,1]))
+  plot <- (ggplot(data=df_smooth, aes(x=df_smooth[,1]))
            + geom_line(aes(y=fit),
                        color=color,size=1)
            + geom_ribbon(data=df_plot, aes(ymax = fit+1.96*se.fit,

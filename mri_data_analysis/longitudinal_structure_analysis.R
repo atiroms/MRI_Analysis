@@ -66,46 +66,64 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
-list_mod <- list("age + tanner:sex"="value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
-                 "age + tanner:sex + age:tanner:sex"="value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
+list_mod <- list("age + tanner:sex"=
+                   "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
+                 "age + tanner:sex + age:tanner:sex"=
+                   "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
 
 list_graph <- list("age + tanner:sex"=
                      list("1"=list("title"="Age effect",
-                                   "smooth"=list("Male"=list("key"="sex","value"=1,
-                                                             "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("key"="sex","value"=2,
-                                                               "color"="lightcoral","alpha"=1)),
-                                   "point"=list("key"="sex")),
+                                   "x_axis"="age",
+                                   "smooth"=list("All"=list("fix"=NULL,
+                                                            "color"="black","alpha"=1)),
+                                   "point"=list("Male"=list("subset"=list("sex"=1),
+                                                            "color"="steelblue2","alpha"=1),
+                                                "Female"=list("subset"=list("sex"=2),
+                                                              "color"="lightcoral","alpha"=1))),
                           "2"=list("title"="Tanner stage effect",
-                                   "smooth"=list("Male"=list("key"="sex","value"=1,
+                                   "x_axis"="tanner",
+                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                              "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("key"="sex","value"=2,
-                                                                   "color"="lightcoral","alpha"=1)))),
-                   "age + tanner:sex + age:tanner:sexx"=
+                                                 "Female"=list("fix"=list("sex"=2),
+                                                               "color"="lightcoral","alpha"=1)),
+                                   "point"=list("Male"=list("subset"=list("sex"=1),
+                                                            "color"="steelblue2","alpha"=1),
+                                                "Female"=list("subset"=list("sex"=2),
+                                                              "color"="lightcoral","alpha"=1)))),
+                   "age + tanner:sex + age:tanner:sex"=
                      list("1"=list("title"="Age effect",
-                                   "smooth"=list("Male"=list("key"="sex","value"=1,
-                                                             "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("key"="sex","value"=2,
-                                                               "color"="lightcoral","alpha"=1)),
-                                   "point"=list("key"="sex")),
+                                   "x_axis"="age",
+                                   "smooth"=list("All"=list("fix"=NULL,
+                                                             "color"="black","alpha"=1)),
+                                   "point"=list("Male"=list("subset"=list("sex"=1),
+                                                            "color"="steelblue2","alpha"=1),
+                                                "Female"=list("subset"=list("sex"=2),
+                                                              "color"="lightcoral","alpha"=1))),
                           "2"=list("title"="Tanner stage effect",
-                                   "smooth"=list("Male"=list("key"="sex","value"=1,
+                                   "x_axis"="tanner",
+                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                              "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("key"="sex","value"=2,
-                                                               "color"="lightcoral","alpha"=1))),
+                                                 "Female"=list("fix"=list("sex"=2),
+                                                               "color"="lightcoral","alpha"=1)),
+                                   "point"=list("Male"=list("subset"=list("sex"=1),
+                                                            "color"="steelblue2","alpha"=1),
+                                                "Female"=list("subset"=list("sex"=2),
+                                                              "color"="lightcoral","alpha"=1))),
                           "3"=list("title"="Age-Tanner stage interaction",
-                                   "smooth"=list("Male TS = 1"=list("key"="tanner","value"=1,
+                                   "x_axis"="age",
+                                   "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
                                                                     "color"="Steelblue2","alpha"=0.6),
-                                                 "Male TS = 3"=list("key"="tanner","value"=3,
+                                                 "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
                                                                     "color"="steelblue2","alpha"=0.8),
-                                                 "Male TS = 5"=list("key"="tanner","value"=5,
+                                                 "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
                                                                     "color"="steelblue2","alpha"=1),
-                                                 "Female TS = 1"=list("key"="tanner","value"=1,
+                                                 "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
                                                                       "color"="lightcoral","alpha"=0.6),
-                                                 "Female TS = 3"=list("key"="tanner","value"=3,
+                                                 "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
                                                                       "color"="lightcoral","alpha"=0.8),
-                                                 "Female TS = 5"=list("key"="tanner","value"=5,
-                                                                      "color"="lightcoral","alpha"=1)))))
+                                                 "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
+                                                                      "color"="lightcoral","alpha"=1)),
+                                   "point"=NULL)))
 
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
@@ -179,12 +197,13 @@ list_wave_=list_wave
 list_measure_=list_measure
 list_str_group_=list_str_group
 list_mod_=list_mod
+list_graph_=list_graph
 color_=color
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
                    list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
-                   list_mod_=list_mod,
+                   list_mod_=list_mod,list_graph_=list_graph,
                    color_=color
                    ){
   print("Starting gamm_str().")
@@ -195,7 +214,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   df_clin<-func_clinical_data_long(paths_,list_wave_)
   data_subset_clin<-func_subset_clin(df_clin,
                                      list_wave_,list_measure_,subset_subj_,
-                                     list_covar,
+                                     list_covar_,
                                      rem_na_clin=T)
   df_clin_subset<-data_subset_clin$df_clin
   
@@ -243,6 +262,11 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                                data.frame(measure=measure,roi=roi,label_roi=label_roi,model=mod,
                                           term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
         df_out_term<-rbind(df_out_term,df_out_term_add)
+        list_graph_mod<-list_graph_[[mod]]
+        for (idx_graph in names(list_graph_mod)){
+          plot<-plot_gamm(mod_gamm,list_graph_mod[[idx_graph]])
+        }
+        
         #for (covar in names(list_covar_)){
         #  if(any(class(df_join[[covar]])==c('numeric','integer','boolean'))){
         #    plot<-plot_gamm(mod_gamm,covar,color_)
