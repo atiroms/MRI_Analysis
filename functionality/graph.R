@@ -24,57 +24,98 @@ plot_gamm<-function(mod_gamm,spec_graph){
 #plot_gamm<-function(mod_gamm,covar_x,color){
   df_src <- mod_gamm$model
   
-  for (name_smooth in names(spec_graph[["smooth"]])){
-    df_smooth <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
-                                    max(df_src[spec_graph[["x_axis"]]]),
-                                    length.out=200))
-    names(df_smooth) <- spec_graph[["x_axis"]]
-    for (i in names(df_src)[-1]) {
-      if (i != spec_graph[["x_axis"]]) {
-        if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
-          df_smooth[, dim(df_smooth)[2] + 1] <- mean(df_src[i][,1])
-          names(df_smooth)[dim(df_smooth)[2]] <- i
-        }
-        else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
-          df_smooth[, dim(df_smooth)[2] + 1] <- df_src[i][1,1]
-          names(df_smooth)[dim(df_smooth)[2]] <- i
+  plot<-ggplot()
+  # add prediction line + ribbon to plot
+  if (!is.null(spec_graph[["smooth"]])){
+    df_smooth<-list()
+    for (name_smooth in names(spec_graph[["smooth"]])){
+      spec_smooth<-spec_graph[["smooth"]][[name_smooth]]
+      df_smooth[[name_smooth]] <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
+                                                     max(df_src[spec_graph[["x_axis"]]]),
+                                                     length.out=200))
+      names(df_smooth[[name_smooth]]) <- spec_graph[["x_axis"]]
+      for (i in names(df_src)[-1]) {
+        if (i != spec_graph[["x_axis"]]) {
+          if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
+            df_smooth[[name_smooth]][, dim(df_smooth[[name_smooth]])[2] + 1] <- mean(df_src[i][,1])
+            names(df_smooth[[name_smooth]])[dim(df_smooth[[name_smooth]])[2]] <- i
+          }
+          else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
+            df_smooth[[name_smooth]][, dim(df_smooth[[name_smooth]])[2] + 1] <- df_src[i][1,1]
+            names(df_smooth[[name_smooth]])[dim(df_smooth[[name_smooth]])[2]] <- i
+          }
         }
       }
-    }
-    spec_smooth<-spec_graph[["smooth"]][[name_smooth]]
-    if (!is.null(spec_smooth[["fix"]])){
-      for (var in names(spec_smooth[["fix"]])){
-        assign(var,spec_smooth[["fix"]][[var]])
+      if (!is.null(spec_smooth[["fix"]])){
+        for (var in names(spec_smooth[["fix"]])){
+          df_smooth[[name_smooth]][[var]]<-spec_smooth[["fix"]][[var]]
+        }
       }
+      df_smooth[[name_smooth]] = cbind(df_smooth[[name_smooth]],
+                                       as.data.frame(predict.gam(mod_gamm, df_smooth[[name_smooth]], se.fit = TRUE)))
+      plot <- (plot
+               + geom_line(data=df_smooth[[name_smooth]],
+                           aes(x=df_smooth[[name_smooth]][,1],y=fit),
+                           color=spec_smooth[["color"]],size=1,alpha=spec_smooth[["alpha"]])
+               + geom_ribbon(data=df_smooth[[name_smooth]], 
+                             aes(x=df_smooth[[name_smooth]][,1],ymax = fit+1.96*se.fit,ymin = fit-1.96*se.fit,linetype=NA),
+                             fill=spec_smooth[["color"]],alpha = 0.3*spec_smooth[["alpha"]]))
     }
-    spec_smooth<-
   }
+  
+  # add point + path to plot
+  if (!is.null(spec_graph[["point"]])){
+    df_point<-list()
+    for (name_point in names(spec_graph[["point"]])){
+      spec_point<-spec_graph[["point"]][[name_point]]
+      df_point[[name_point]]<-df_src
+      for (var_subset in names(spec_point[["subset"]])){
+        df_point[[name_point]]<-df_point[[name_point]][df_point[[name_point]][[var_subset]]==spec_point[["subset"]][[var_subset]],]
+      }
+      plot <- (plot
+               #+ geom_point(data = df_point, aes(x=df_point[[spec_graph[["x_axis"]]]],
+               + geom_point(aes(x=df_point[[name_point]][[spec_graph[["x_axis"]]]],
+                                y=df_point[[name_point]][,1]),
+                            color=spec_point[["color"]],fill=spec_point[["color"]],size=3,alpha=0.3*spec_point[["alpha"]])
+               + geom_path(aes(x=df_point[[name_point]][[spec_graph[["x_axis"]]]],
+                               y=df_point[[name_point]][,1],
+                               group=df_point[[name_point]][["ID_pnTTC"]]),
+                           color=spec_point[["color"]],size=0.5,alpha=0.2*spec_point[["alpha"]]))
+    }
+  }
+  
+  # add themes
+  plot <- (plot
+           + theme_light()
+           + theme(plot.title = element_text(hjust = 0.5)))
+  
   #for (i in 1:dim(df_plot)[2]) {
   #  if (class(df_plot[,i])[1] == "ordered" |  class(df_plot[,i])[1] == "factor") {
   #    warning("There are one or more factors in the model fit, please consider plotting by group since plot might be unprecise")
   #  }
   #}
-  df_smooth = cbind(df_smooth, as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
+  #df_smooth = cbind(df_smooth, as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
   
-  plot <- (ggplot(data=df_smooth, aes(x=df_smooth[,1]))
-           + geom_line(aes(y=fit),
-                       color=color,size=1)
-           + geom_ribbon(data=df_plot, aes(ymax = fit+1.96*se.fit,
-                                           ymin = fit-1.96*se.fit,
-                                           linetype=NA),
-                         fill=color,alpha = .3)
-           + geom_point(data = df_src, aes(x=as_vector(df_src[covar_x]),
-                                           y=df_src[,1]),
-                        color=color, fill=color,size=3,alpha=.3)
-           + geom_path(data = df_src, aes(x=as_vector(df_src[covar_x]),
-                                          y=df_src[,1],
-                                          group=as_vector(df_src["ID_pnTTC"])),
-                       color=color,size=0.5,alpha=.2)
-           #+ ggtitle("GAMM model")
-           #+ ylab("Structural measure")
-           #+ xlab("Tanner stage")
-           + theme_light()
-           + theme(plot.title = element_text(hjust = 0.5)))
+  #plot <- (ggplot(data=df_smooth, aes(x=df_smooth[,1]))
+  #         + geom_line(aes(y=fit),
+  #                     color=color,size=1)
+  #         + geom_ribbon(data=df_smooth, aes(ymax = fit+1.96*se.fit,
+  #                                         ymin = fit-1.96*se.fit,
+  #                                         linetype=NA),
+  #                       fill=color,alpha = .3)
+  #         + geom_point(data = df_src, aes(x=as_vector(df_src[covar_x]),
+  #                                         y=df_src[,1]),
+  #                      color=color, fill=color,size=3,alpha=.3)
+  #         + geom_path(data = df_src, aes(x=as_vector(df_src[covar_x]),
+  #                                        y=df_src[,1],
+  #                                        group=as_vector(df_src["ID_pnTTC"])),
+  #                     color=color,size=0.5,alpha=.2)
+  #         #+ ggtitle("GAMM model")
+  #         #+ ylab("Structural measure")
+  #         #+ xlab("Tanner stage")
+  #         + theme_light()
+  #         + theme(plot.title = element_text(hjust = 0.5)))
+  
   return(plot)
 }
 

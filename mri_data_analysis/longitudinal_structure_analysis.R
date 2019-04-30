@@ -264,7 +264,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
         df_out_term<-rbind(df_out_term,df_out_term_add)
         list_graph_mod<-list_graph_[[mod]]
         for (idx_graph in names(list_graph_mod)){
-          plot<-plot_gamm(mod_gamm,list_graph_mod[[idx_graph]])
+          plot<-plot_gamm(mod_gamm[[mod]],list_graph_mod[[idx_graph]])
         }
         
         #for (covar in names(list_covar_)){
