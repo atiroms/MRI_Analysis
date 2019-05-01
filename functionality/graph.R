@@ -63,8 +63,8 @@ plot_gamm<-function(mod_gamm,spec_graph){
                          aes(x=df_smooth[,1],y=fit),
                          color=df_smooth[["color"]],size=1,alpha=df_smooth[["alpha"]])
              + geom_ribbon(data=df_smooth, 
-                           aes(x=df_smooth[,1],ymax = fit+1.96*se.fit,ymin = fit-1.96*se.fit,linetype=NA),
-                           fill=df_smooth[["color"]],alpha = 0.3*df_smooth[["alpha"]]))
+                           aes(x=df_smooth[,1],ymax = fit+1.96*se.fit,ymin = fit-1.96*se.fit,
+                               linetype=NA,fill=df_smooth[["color"]],alpha = 0.3*df_smooth[["alpha"]])))
   }
   
   # add point + path to plot
