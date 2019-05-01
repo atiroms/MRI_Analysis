@@ -66,13 +66,13 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
-list_mod <- list("age + tanner:sex"=
+list_mod <- list("a+t:s"=
                    "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
-                 "age + tanner:sex + age:tanner:sex"=
+                 "a+t:s+a:t:s"=
                    "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
 
-list_graph <- list("age + tanner:sex"=
-                     list("1"=list("title"="Age effect",
+list_graph <- list("a+t:s"=
+                     list("a"=list("title"="Age effect",
                                    "x_axis"="age",
                                    "smooth"=list("All"=list("fix"=NULL,
                                                             "color"="black","alpha"=1)),
@@ -80,18 +80,18 @@ list_graph <- list("age + tanner:sex"=
                                                             "color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),
                                                               "color"="lightcoral","alpha"=1))),
-                          "2"=list("title"="Tanner stage effect",
-                                   "x_axis"="tanner",
-                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                             "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("fix"=list("sex"=2),
-                                                               "color"="lightcoral","alpha"=1)),
-                                   "point"=list("Male"=list("subset"=list("sex"=1),
-                                                            "color"="steelblue2","alpha"=1),
-                                                "Female"=list("subset"=list("sex"=2),
-                                                              "color"="lightcoral","alpha"=1)))),
-                   "age + tanner:sex + age:tanner:sex"=
-                     list("1"=list("title"="Age effect",
+                          "t:s"=list("title"="Tanner stage effect",
+                                     "x_axis"="tanner",
+                                     "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                               "color"="steelblue2","alpha"=1),
+                                                   "Female"=list("fix"=list("sex"=2),
+                                                                 "color"="lightcoral","alpha"=1)),
+                                     "point"=list("Male"=list("subset"=list("sex"=1),
+                                                              "color"="steelblue2","alpha"=1),
+                                                  "Female"=list("subset"=list("sex"=2),
+                                                                "color"="lightcoral","alpha"=1)))),
+                   "a+t:s+a:t:s"=
+                     list("a"=list("title"="Age effect",
                                    "x_axis"="age",
                                    "smooth"=list("All"=list("fix"=NULL,
                                                              "color"="black","alpha"=1)),
@@ -99,31 +99,31 @@ list_graph <- list("age + tanner:sex"=
                                                             "color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),
                                                               "color"="lightcoral","alpha"=1))),
-                          "2"=list("title"="Tanner stage effect",
-                                   "x_axis"="tanner",
-                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                             "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("fix"=list("sex"=2),
-                                                               "color"="lightcoral","alpha"=1)),
-                                   "point"=list("Male"=list("subset"=list("sex"=1),
-                                                            "color"="steelblue2","alpha"=1),
-                                                "Female"=list("subset"=list("sex"=2),
-                                                              "color"="lightcoral","alpha"=1))),
-                          "3"=list("title"="Age-Tanner stage interaction",
-                                   "x_axis"="age",
-                                   "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
-                                                                    "color"="Steelblue2","alpha"=0.6),
-                                                 "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
-                                                                    "color"="steelblue2","alpha"=0.8),
-                                                 "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
-                                                                    "color"="steelblue2","alpha"=1),
-                                                 "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
-                                                                      "color"="lightcoral","alpha"=0.6),
-                                                 "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
-                                                                      "color"="lightcoral","alpha"=0.8),
-                                                 "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
-                                                                      "color"="lightcoral","alpha"=1)),
-                                   "point"=NULL)))
+                          "t:s"=list("title"="Tanner stage effect",
+                                     "x_axis"="tanner",
+                                     "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                               "color"="steelblue2","alpha"=1),
+                                                   "Female"=list("fix"=list("sex"=2),
+                                                                 "color"="lightcoral","alpha"=1)),
+                                     "point"=list("Male"=list("subset"=list("sex"=1),
+                                                              "color"="steelblue2","alpha"=1),
+                                                  "Female"=list("subset"=list("sex"=2),
+                                                                "color"="lightcoral","alpha"=1))),
+                          "a:t:s"=list("title"="Age-Tanner stage interaction",
+                                       "x_axis"="age",
+                                       "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
+                                                                        "color"="Steelblue2","alpha"=0.6),
+                                                     "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
+                                                                        "color"="steelblue2","alpha"=0.8),
+                                                     "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
+                                                                        "color"="steelblue2","alpha"=1),
+                                                     "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
+                                                                          "color"="lightcoral","alpha"=0.6),
+                                                     "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
+                                                                          "color"="lightcoral","alpha"=0.8),
+                                                     "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
+                                                                          "color"="lightcoral","alpha"=1)),
+                                       "point"=NULL)))
 
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
@@ -265,6 +265,17 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
         list_graph_mod<-list_graph_[[mod]]
         for (idx_graph in names(list_graph_mod)){
           plot<-plot_gamm(mod_gamm[[mod]],list_graph_mod[[idx_graph]])
+          axis_x<-list_graph_mod[[idx_graph]][["x_axis"]]
+          label_x<-list_covar_[[axis_x]][["label"]]
+          plot<-(plot
+                 + ggtitle(paste(list_graph_mod[[idx_graph]][["title"]],label_roi,sep=' '))
+                 + xlab(label_x)
+                 + ylab(capitalize(measure))
+                 + theme(legend.position = "none"))
+          filename_plot<-paste("gamm_",measure,"_",roi,"_",mod,"_",idx_graph,".eps",sep="")
+          ggsave(filename_plot,plot=plot,device=cairo_ps,
+                 path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+          
         }
         
         #for (covar in names(list_covar_)){
