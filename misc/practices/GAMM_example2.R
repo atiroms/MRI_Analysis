@@ -70,6 +70,7 @@ model9<-gam(value ~ age + tanner:male + age:tanner:male + tanner:female + age:ta
 #model4<-gam(value ~ age + tanner + s(ID_pnTTC,bs='re'),data=df_str)
 #model5<-gam(value ~ age + s(tanner,k=2) + s(ID_pnTTC,bs='re'),data=df_str)
 
+anova.gam(model6,model7,test="F")
 anova(model6,model7,test="F")
 AIC(model,model2)
 step(model2)

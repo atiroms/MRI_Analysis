@@ -21,7 +21,6 @@ library(purrr)
 # modified from voxel/plotGAM
 
 plot_gamm<-function(mod_gamm,spec_graph){
-#plot_gamm<-function(mod_gamm,covar_x,color){
   df_src <- mod_gamm$model
   
   plot<-ggplot()
@@ -52,59 +51,19 @@ plot_gamm<-function(mod_gamm,spec_graph){
       }
       df_smooth <- cbind(df_smooth,
                          as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
-      #df_smooth_series$name_series<-name_smooth
-      #df_smooth_series$color<-spec_smooth[["color"]]
-      #df_smooth_series$alpha<-spec_smooth[["alpha"]]
-      #df_smooth<-rbind(df_smooth,df_smooth_series)
+      plot <- (plot
+               + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
+                           color=spec_smooth[["color"]],size=0.5,alpha=spec_smooth[["alpha"]]))
+      if (spec_smooth[["ribbon"]]){
+        plot <- (plot
+                 + geom_ribbon(aes(x=!!df_smooth[,1],
+                                   ymax = !!df_smooth[["fit"]]+1.96*!!df_smooth[["se.fit"]],
+                                   ymin = !!df_smooth[["fit"]]-1.96*!!df_smooth[["se.fit"]],
+                                   linetype=NA),
+                               fill=spec_smooth[["color"]],alpha = 0.2*spec_smooth[["alpha"]]))
+      }
     }
-    plot <- (plot
-             + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
-                         color=spec_smooth[["color"]],size=1,alpha=spec_smooth[["alpha"]])
-             + geom_ribbon(aes(x=!!df_smooth[,1],
-                               ymax = !!df_smooth[["fit"]]+1.96*!!df_smooth[["se.fit"]],
-                               ymin = !!df_smooth[["fit"]]-1.96*!!df_smooth[["se.fit"]]),
-                           linetype=NA,fill=spec_smooth[["color"]],alpha = 0.3*spec_smooth[["alpha"]]))
   }
-  #if (!is.null(spec_graph[["smooth"]])){
-  #  df_smooth<-data.frame()
-  #  for (name_smooth in names(spec_graph[["smooth"]])){
-  #    spec_smooth<-spec_graph[["smooth"]][[name_smooth]]
-  #    df_smooth_series <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
-  #                                           max(df_src[spec_graph[["x_axis"]]]),
-  #                                           length.out=200))
-  #    names(df_smooth_series) <- spec_graph[["x_axis"]]
-  #    for (i in names(df_src)[-1]) {
-  #      if (i != spec_graph[["x_axis"]]) {
-  #        if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
-  #          df_smooth_series[, dim(df_smooth_series)[2] + 1] <- mean(df_src[i][,1])
-  #          names(df_smooth_series)[dim(df_smooth_series)[2]] <- i
-  #        }
-  #        else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
-  #          df_smooth_series[, dim(df_smooth_series)[2] + 1] <- df_src[i][1,1]
-  #          names(df_smooth_series)[dim(df_smooth_series)[2]] <- i
-  #        }
-  #      }
-  #    }
-  #    if (!is.null(spec_smooth[["fix"]])){
-  #      for (var in names(spec_smooth[["fix"]])){
-  #        df_smooth_series[[var]]<-spec_smooth[["fix"]][[var]]
-  #      }
-  #    }
-  #    df_smooth_series <- cbind(df_smooth_series,
-  #                             as.data.frame(predict.gam(mod_gamm, df_smooth_series, se.fit = TRUE)))
-  #    df_smooth_series$name_series<-name_smooth
-  #    df_smooth_series$color<-spec_smooth[["color"]]
-  #    df_smooth_series$alpha<-spec_smooth[["alpha"]]
-  #    df_smooth<-rbind(df_smooth,df_smooth_series)
-  #  }
-  #  plot <- (plot
-  #           + geom_line(data=df_smooth,
-  #                       aes(x=df_smooth[,1],y=fit),
-  #                       color=df_smooth[["color"]],size=1,alpha=df_smooth[["alpha"]])
-  #           + geom_ribbon(data=df_smooth, 
-  #                         aes(x=df_smooth[,1],ymax = fit+1.96*se.fit,ymin = fit-1.96*se.fit,
-  #                             linetype=NA,fill=df_smooth[["color"]],alpha = 0.3*df_smooth[["alpha"]])))
-  #}
   
   # add point + path to plot
   if (!is.null(spec_graph[["point"]])){
@@ -123,17 +82,18 @@ plot_gamm<-function(mod_gamm,spec_graph){
     plot <- (plot
              + geom_point(aes(x=df_point[[spec_graph[["x_axis"]]]],
                               y=df_point[,1]),
-                          color=df_point[["color"]],fill=df_point[["color"]],size=3,alpha=0.3*df_point[["alpha"]])
+                          color=df_point[["color"]],shape=1,size=2,alpha=0.6*df_point[["alpha"]])
              + geom_path(aes(x=df_point[[spec_graph[["x_axis"]]]],
                              y=df_point[,1],
                              group=df_point[["ID_pnTTC"]]),
-                         color=df_point[["color"]],size=0.5,alpha=0.2*df_point[["alpha"]]))
+                         color=df_point[["color"]],size=0.3,alpha=0.3*df_point[["alpha"]],linetype="dashed"))
   }
   
   # add themes
   plot <- (plot
            + theme_light()
-           + theme(plot.title = element_text(hjust = 0.5)))
+           + theme(plot.title = element_text(hjust = 0.5),
+                   legend.position = c("top","left")))
   
   return(plot)
 }

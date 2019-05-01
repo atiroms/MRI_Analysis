@@ -15,8 +15,8 @@ file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 
-#list_measure <-c("volume","thickness","area")
-list_measure <-"volume"
+list_measure <-c("volume","thickness","area")
+#list_measure <-"volume"
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                               "2"="W2_Tanner_Max",
 #                               "label"="Tanner stage"),
@@ -75,7 +75,7 @@ list_graph <- list("a+ts"=
                      list("a"=list("title"="Age effect",
                                    "x_axis"="age",
                                    "smooth"=list("All"=list("fix"=NULL,
-                                                            "color"="black","alpha"=1)),
+                                                            "color"="gray50","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),
                                                             "color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),
@@ -83,9 +83,9 @@ list_graph <- list("a+ts"=
                           "ts"=list("title"="Tanner stage effect",
                                     "x_axis"="tanner",
                                     "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                              "color"="steelblue2","alpha"=1),
+                                                              "color"="steelblue2","alpha"=1,"ribbon"=T),
                                                   "Female"=list("fix"=list("sex"=2),
-                                                                "color"="lightcoral","alpha"=1)),
+                                                                "color"="lightcoral","alpha"=1,"ribbon"=T)),
                                     "point"=list("Male"=list("subset"=list("sex"=1),
                                                              "color"="steelblue2","alpha"=1),
                                                  "Female"=list("subset"=list("sex"=2),
@@ -94,7 +94,7 @@ list_graph <- list("a+ts"=
                      list("a"=list("title"="Age effect",
                                    "x_axis"="age",
                                    "smooth"=list("All"=list("fix"=NULL,
-                                                             "color"="black","alpha"=1)),
+                                                             "color"="gray50","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),
                                                             "color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),
@@ -102,9 +102,9 @@ list_graph <- list("a+ts"=
                           "ts"=list("title"="Tanner stage effect",
                                     "x_axis"="tanner",
                                     "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                              "color"="steelblue2","alpha"=1),
+                                                              "color"="steelblue2","alpha"=1,"ribbon"=T),
                                                   "Female"=list("fix"=list("sex"=2),
-                                                                "color"="lightcoral","alpha"=1)),
+                                                                "color"="lightcoral","alpha"=1,"ribbon"=T)),
                                     "point"=list("Male"=list("subset"=list("sex"=1),
                                                              "color"="steelblue2","alpha"=1),
                                                  "Female"=list("subset"=list("sex"=2),
@@ -112,29 +112,22 @@ list_graph <- list("a+ts"=
                           "ats"=list("title"="Age-Tanner stage interaction",
                                      "x_axis"="age",
                                      "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
-                                                                      "color"="Steelblue2","alpha"=0.6),
+                                                                      "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
                                                    "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
-                                                                      "color"="steelblue2","alpha"=0.8),
+                                                                      "color"="steelblue2","alpha"=0.7,"ribbon"=F),
                                                    "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
-                                                                      "color"="steelblue2","alpha"=1),
+                                                                      "color"="steelblue2","alpha"=1,"ribbon"=F),
                                                    "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
-                                                                        "color"="lightcoral","alpha"=0.6),
+                                                                        "color"="lightcoral","alpha"=0.4,"ribbon"=F),
                                                    "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
-                                                                        "color"="lightcoral","alpha"=0.8),
+                                                                        "color"="lightcoral","alpha"=0.7,"ribbon"=F),
                                                    "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
-                                                                        "color"="lightcoral","alpha"=1)),
+                                                                        "color"="lightcoral","alpha"=1,"ribbon"=F)),
                                      "point"=NULL)))
 
-
-#list_str_group<-c("cortex","subcortex","white matter","global","misc")
-list_str_group<-"subcortex"
-
-color<-"black"
-#color<-"steelblue2"
-#color<-"lightcoral"
-
-#key_global_covar<-"BrainSegVolNotVent"
-#key_global_covar<-"eTIV"
+list_str_group<-c("cortex","subcortex","white matter","global","misc")
+#list_str_group<-"subcortex"
+#list_str_group<-c("global","misc")
 
 
 #**************************************************
@@ -189,16 +182,16 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-file_input_=file_input
-list_wave_=list_wave
-list_measure_=list_measure
-list_str_group_=list_str_group
-list_mod_=list_mod
-list_graph_=list_graph
-color_=color
+#paths_=paths
+#subset_subj_=subset_subj
+#list_covar_=list_covar
+#file_input_=file_input
+#list_wave_=list_wave
+#list_measure_=list_measure
+#list_str_group_=list_str_group
+#list_mod_=list_mod
+#list_graph_=list_graph
+#color_=color
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
@@ -277,24 +270,10 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                  path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
           
         }
-        
-        #for (covar in names(list_covar_)){
-        #  if(any(class(df_join[[covar]])==c('numeric','integer','boolean'))){
-        #    plot<-plot_gamm(mod_gamm,covar,color_)
-        #    label_covar<-list_covar_[[covar]][["label"]]
-        #    plot<-(plot
-        #           + ggtitle(paste('GAMM ',label_roi,sep=''))
-        #           + xlab(label_covar)
-        #           + ylab(capitalize(measure))
-        #           + theme(legend.position = "none"))
-        #    ggsave(paste("gamm_",measure,"_",roi,"_",covar,".eps",sep=""),plot=plot,device=cairo_ps,
-        #           path=file.path(paths$output,"output"),dpi=300,height=5,width=5,limitsize=F)
-        #  }
-        #}
       }
       # compare models
       if (length(list_mod_)==2){
-        anova_mod<-anova(mod_gamm[[1]],mod_gamm[[2]],test="F")
+        anova_mod<-anova.gam(mod_gamm[[1]],mod_gamm[[2]],test="F")
         df_out_model[dim(df_out_model)[1]+1,]<-c(measure,roi,label_roi,anova_mod[2,"F"],anova_mod[2,"Pr(>F)"])
       }
     }
