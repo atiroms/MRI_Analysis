@@ -27,45 +27,84 @@ plot_gamm<-function(mod_gamm,spec_graph){
   plot<-ggplot()
   # add prediction line + ribbon to plot
   if (!is.null(spec_graph[["smooth"]])){
-    df_smooth<-data.frame()
     for (name_smooth in names(spec_graph[["smooth"]])){
       spec_smooth<-spec_graph[["smooth"]][[name_smooth]]
-      df_smooth_series <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
-                                             max(df_src[spec_graph[["x_axis"]]]),
-                                             length.out=200))
-      names(df_smooth_series) <- spec_graph[["x_axis"]]
+      df_smooth <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
+                                      max(df_src[spec_graph[["x_axis"]]]),
+                                      length.out=200))
+      names(df_smooth) <- spec_graph[["x_axis"]]
       for (i in names(df_src)[-1]) {
         if (i != spec_graph[["x_axis"]]) {
           if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
-            df_smooth_series[, dim(df_smooth_series)[2] + 1] <- mean(df_src[i][,1])
-            names(df_smooth_series)[dim(df_smooth_series)[2]] <- i
+            df_smooth[, dim(df_smooth)[2] + 1] <- mean(df_src[i][,1])
+            names(df_smooth)[dim(df_smooth)[2]] <- i
           }
           else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
-            df_smooth_series[, dim(df_smooth_series)[2] + 1] <- df_src[i][1,1]
-            names(df_smooth_series)[dim(df_smooth_series)[2]] <- i
+            df_smooth[, dim(df_smooth)[2] + 1] <- df_src[i][1,1]
+            names(df_smooth)[dim(df_smooth)[2]] <- i
           }
         }
       }
       if (!is.null(spec_smooth[["fix"]])){
         for (var in names(spec_smooth[["fix"]])){
-          df_smooth_series[[var]]<-spec_smooth[["fix"]][[var]]
+          df_smooth[[var]]<-spec_smooth[["fix"]][[var]]
         }
       }
-      df_smooth_series <- cbind(df_smooth_series,
-                               as.data.frame(predict.gam(mod_gamm, df_smooth_series, se.fit = TRUE)))
-      df_smooth_series$name_series<-name_smooth
-      df_smooth_series$color<-spec_smooth[["color"]]
-      df_smooth_series$alpha<-spec_smooth[["alpha"]]
-      df_smooth<-rbind(df_smooth,df_smooth_series)
+      df_smooth <- cbind(df_smooth,
+                         as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
+      #df_smooth_series$name_series<-name_smooth
+      #df_smooth_series$color<-spec_smooth[["color"]]
+      #df_smooth_series$alpha<-spec_smooth[["alpha"]]
+      #df_smooth<-rbind(df_smooth,df_smooth_series)
     }
     plot <- (plot
-             + geom_line(data=df_smooth,
-                         aes(x=df_smooth[,1],y=fit),
-                         color=df_smooth[["color"]],size=1,alpha=df_smooth[["alpha"]])
-             + geom_ribbon(data=df_smooth, 
-                           aes(x=df_smooth[,1],ymax = fit+1.96*se.fit,ymin = fit-1.96*se.fit,
-                               linetype=NA,fill=df_smooth[["color"]],alpha = 0.3*df_smooth[["alpha"]])))
+             + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
+                         color=spec_smooth[["color"]],size=1,alpha=spec_smooth[["alpha"]])
+             + geom_ribbon(aes(x=!!df_smooth[,1],
+                               ymax = !!df_smooth[["fit"]]+1.96*!!df_smooth[["se.fit"]],
+                               ymin = !!df_smooth[["fit"]]-1.96*!!df_smooth[["se.fit"]]),
+                           linetype=NA,fill=spec_smooth[["color"]],alpha = 0.3*spec_smooth[["alpha"]]))
   }
+  #if (!is.null(spec_graph[["smooth"]])){
+  #  df_smooth<-data.frame()
+  #  for (name_smooth in names(spec_graph[["smooth"]])){
+  #    spec_smooth<-spec_graph[["smooth"]][[name_smooth]]
+  #    df_smooth_series <- data.frame(x = seq(min(df_src[spec_graph[["x_axis"]]]),
+  #                                           max(df_src[spec_graph[["x_axis"]]]),
+  #                                           length.out=200))
+  #    names(df_smooth_series) <- spec_graph[["x_axis"]]
+  #    for (i in names(df_src)[-1]) {
+  #      if (i != spec_graph[["x_axis"]]) {
+  #        if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
+  #          df_smooth_series[, dim(df_smooth_series)[2] + 1] <- mean(df_src[i][,1])
+  #          names(df_smooth_series)[dim(df_smooth_series)[2]] <- i
+  #        }
+  #        else if (any(class(df_src[i][,1])[1] == c("character", "factor","ordered"))) {
+  #          df_smooth_series[, dim(df_smooth_series)[2] + 1] <- df_src[i][1,1]
+  #          names(df_smooth_series)[dim(df_smooth_series)[2]] <- i
+  #        }
+  #      }
+  #    }
+  #    if (!is.null(spec_smooth[["fix"]])){
+  #      for (var in names(spec_smooth[["fix"]])){
+  #        df_smooth_series[[var]]<-spec_smooth[["fix"]][[var]]
+  #      }
+  #    }
+  #    df_smooth_series <- cbind(df_smooth_series,
+  #                             as.data.frame(predict.gam(mod_gamm, df_smooth_series, se.fit = TRUE)))
+  #    df_smooth_series$name_series<-name_smooth
+  #    df_smooth_series$color<-spec_smooth[["color"]]
+  #    df_smooth_series$alpha<-spec_smooth[["alpha"]]
+  #    df_smooth<-rbind(df_smooth,df_smooth_series)
+  #  }
+  #  plot <- (plot
+  #           + geom_line(data=df_smooth,
+  #                       aes(x=df_smooth[,1],y=fit),
+  #                       color=df_smooth[["color"]],size=1,alpha=df_smooth[["alpha"]])
+  #           + geom_ribbon(data=df_smooth, 
+  #                         aes(x=df_smooth[,1],ymax = fit+1.96*se.fit,ymin = fit-1.96*se.fit,
+  #                             linetype=NA,fill=df_smooth[["color"]],alpha = 0.3*df_smooth[["alpha"]])))
+  #}
   
   # add point + path to plot
   if (!is.null(spec_graph[["point"]])){
