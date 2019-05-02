@@ -10,7 +10,7 @@
 
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
-dir_out <-"04_gamm_test"
+dir_out <-"03_gamm"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
