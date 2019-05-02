@@ -10,7 +10,7 @@
 
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
-dir_out <-"03_gamm"
+dir_out <-"04_gamm_test"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
@@ -66,16 +66,22 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #str_mod <- "value ~ age + tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age*tanner + s(ID_pnTTC,bs='re')"
 #str_mod <- "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')"
-list_mod <- list("a+ts"=
-                   "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
-                 "a+ts+ats"=
-                   "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
+#list_mod <- list("a+ts"=
+#                   "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
+#                 "a+ts+ats"=
+#                   "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
+list_mod <- list("s+a+ts"=
+                   "value ~ sex + age + tanner:sex + s(ID_pnTTC,bs='re')",
+                 "s+a+ts+ats"=
+                   "value ~ sex + age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
 
-list_graph <- list("a+ts"=
+list_graph <- list("s+a+ts"=
                      list("a"=list("title"="Age effect",
                                    "x_axis"="age",
-                                   "smooth"=list("All"=list("fix"=NULL,
-                                                            "color"="gray50","alpha"=1,"ribbon"=T)),
+                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                             "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                 "Female"=list("fix"=list("sex"=2),
+                                                               "color"="lightcoral","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),
                                                             "color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),
@@ -90,11 +96,13 @@ list_graph <- list("a+ts"=
                                                              "color"="steelblue2","alpha"=1),
                                                  "Female"=list("subset"=list("sex"=2),
                                                                "color"="lightcoral","alpha"=1)))),
-                   "a+ts+ats"=
+                   "s+a+ts+ats"=
                      list("a"=list("title"="Age effect",
                                    "x_axis"="age",
-                                   "smooth"=list("All"=list("fix"=NULL,
-                                                             "color"="gray50","alpha"=1,"ribbon"=T)),
+                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                             "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                 "Female"=list("fix"=list("sex"=2),
+                                                               "color"="lightcoral","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),
                                                             "color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),
