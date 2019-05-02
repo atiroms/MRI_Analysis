@@ -242,7 +242,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   df_out_term<-data.frame(matrix(nrow=0,ncol=9))
   colnames(df_out_term)<-c("measure","roi","label_roi","group_roi","model","term","F","t","p")
   df_out_model<-data.frame(matrix(nrow=0,ncol=6))
-  colnames(df_out_model)<-c("measure","roi","label_roi","F","p")
+  colnames(df_out_model)<-c("measure","roi","label_roi","group_roi","F","p")
   for (measure in list_measure_){
     print(paste('Calculating measurements of ',measure,sep=''))
     df_join_measure<-df_join[df_join$measure==measure,]
