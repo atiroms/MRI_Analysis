@@ -49,8 +49,10 @@ plot_gamm<-function(mod_gamm,spec_graph){
           df_smooth[[var]]<-spec_smooth[["fix"]][[var]]
         }
       }
+      #df_smooth <- cbind(df_smooth,
+      #                   as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
       df_smooth <- cbind(df_smooth,
-                         as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
+                         as.data.frame(predict.gam(mod_gamm, df_smooth, exclude="s(ID_pnTTC)",se.fit = TRUE)))
       plot <- (plot
                + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
                            color=spec_smooth[["color"]],size=0.5,alpha=spec_smooth[["alpha"]]))

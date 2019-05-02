@@ -133,9 +133,10 @@ list_graph <- list("s+a+ts"=
                                                                         "color"="lightcoral","alpha"=1,"ribbon"=F)),
                                      "point"=NULL)))
 
-list_str_group<-c("cortex","subcortex","white matter","global","misc")
+#list_str_group<-c("cortex","subcortex","white matter","global","misc")
 #list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
+list_str_group<-c("cortex","subcortex")
 
 
 #**************************************************
@@ -199,13 +200,11 @@ source(file.path(paths$script,"functionality/graph.R"))
 #list_str_group_=list_str_group
 #list_mod_=list_mod
 #list_graph_=list_graph
-#color_=color
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
                    list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
-                   list_mod_=list_mod,list_graph_=list_graph,
-                   color_=color
+                   list_mod_=list_mod,list_graph_=list_graph
                    ){
   print("Starting gamm_str().")
   nullobj<-func_createdirs(paths_,copy_log=T)
@@ -240,9 +239,9 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Calculate GAMM
   print('Calculating GAMM.')
-  df_out_term<-data.frame(matrix(nrow=0,ncol=8))
-  colnames(df_out_term)<-c("measure","roi","label_roi","model","term","F","t","p")
-  df_out_model<-data.frame(matrix(nrow=0,ncol=5))
+  df_out_term<-data.frame(matrix(nrow=0,ncol=9))
+  colnames(df_out_term)<-c("measure","roi","label_roi","group_roi","model","term","F","t","p")
+  df_out_model<-data.frame(matrix(nrow=0,ncol=6))
   colnames(df_out_model)<-c("measure","roi","label_roi","F","p")
   for (measure in list_measure_){
     print(paste('Calculating measurements of ',measure,sep=''))
@@ -251,6 +250,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     list_roi<-list_roi[order(list_roi)]
     for (roi in list_roi){
       label_roi<-as.character(dict_roi[dict_roi$id==roi,'label'])
+      group_roi<-as.character(dict_roi[dict_roi$id==roi,'group'])
       print(paste('Calculating ',roi,' = ',label_roi,sep=''))
       df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
       mod_gamm<-list()
@@ -258,9 +258,9 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
         mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join_measure_roi)
         p_table<-summary.gam(mod_gamm[[mod]])$p.table
         s_table<-summary.gam(mod_gamm[[mod]])$s.table
-        df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,model=mod,
+        df_out_term_add<-rbind(data.frame(measure=measure,roi=roi,label_roi=label_roi,group_roi=group_roi,model=mod,
                                           term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                               data.frame(measure=measure,roi=roi,label_roi=label_roi,model=mod,
+                               data.frame(measure=measure,roi=roi,label_roi=label_roi,group_roi=group_roi,model=mod,
                                           term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
         df_out_term<-rbind(df_out_term,df_out_term_add)
         list_graph_mod<-list_graph_[[mod]]
@@ -282,7 +282,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       # compare models
       if (length(list_mod_)==2){
         anova_mod<-anova.gam(mod_gamm[[1]],mod_gamm[[2]],test="F")
-        df_out_model[dim(df_out_model)[1]+1,]<-c(measure,roi,label_roi,anova_mod[2,"F"],anova_mod[2,"Pr(>F)"])
+        df_out_model[dim(df_out_model)[1]+1,]<-c(measure,roi,label_roi,group_roi,anova_mod[2,"F"],anova_mod[2,"Pr(>F)"])
       }
     }
   }
