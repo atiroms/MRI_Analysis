@@ -84,11 +84,11 @@ plot_gamm<-function(mod_gamm,spec_graph){
     plot <- (plot
              + geom_point(aes(x=df_point[[spec_graph[["x_axis"]]]],
                               y=df_point[,1]),
-                          color=df_point[["color"]],shape=1,size=2,alpha=0.6*df_point[["alpha"]])
+                          color=df_point[["color"]],shape=1,size=2,alpha=0.4*df_point[["alpha"]])
              + geom_path(aes(x=df_point[[spec_graph[["x_axis"]]]],
                              y=df_point[,1],
                              group=df_point[["ID_pnTTC"]]),
-                         color=df_point[["color"]],size=0.3,alpha=0.3*df_point[["alpha"]],linetype="dashed"))
+                         color=df_point[["color"]],size=0.3,alpha=0.2*df_point[["alpha"]],linetype="dashed"))
   }
   
   # add themes

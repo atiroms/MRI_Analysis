@@ -131,12 +131,15 @@ list_graph <- list("s+a+ts"=
                                                                         "color"="lightcoral","alpha"=0.7,"ribbon"=F),
                                                    "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
                                                                         "color"="lightcoral","alpha"=1,"ribbon"=F)),
-                                     "point"=NULL)))
+                                     "point"=list("Male"=list("subset"=list("sex"=1),
+                                                              "color"="steelblue2","alpha"=1),
+                                                  "Female"=list("subset"=list("sex"=2),
+                                                                "color"="lightcoral","alpha"=1)))))
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 #list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
-list_str_group<-c("cortex","subcortex")
+list_str_group<-c("cortex","subcortex","global")
 
 
 #**************************************************
