@@ -10,13 +10,19 @@
 
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
-dir_out <-"03_gamm"
+dir_out <-"04_gamm_test"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 
-list_measure <-c("volume","thickness","area")
-#list_measure <-"volume"
+#list_measure <-c("volume","thickness","area")
+list_measure <-"volume"
+
+#list_str_group<-c("cortex","subcortex","white matter","global","misc")
+list_str_group<-"subcortex"
+#list_str_group<-c("global","misc")
+#list_str_group<-c("cortex","subcortex","global")
+
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                               "2"="W2_Tanner_Max",
 #                               "label"="Tanner stage"),
@@ -38,6 +44,7 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                  "sex"=list("1"="Sex",
                             "2"="Sex",
                             "label"="Sex"))
+
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild","value"=1),
@@ -74,6 +81,10 @@ list_mod <- list("s+a+ts"=
                    "value ~ sex + age + tanner:sex + s(ID_pnTTC,bs='re')",
                  "s+a+ts+ats"=
                    "value ~ sex + age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
+#list_mod <- list("s+a+ts"=
+#                   "value ~ sex + age + poly(tanner,2):sex + s(ID_pnTTC,bs='re')",
+#                 "s+a+ts+ats"=
+#                   "value ~ sex + age + poly(tanner,2):sex + age:poly(tanner,2):sex + s(ID_pnTTC,bs='re')")
 
 list_graph <- list("s+a+ts"=
                      list("a"=list("title"="Age effect",
@@ -136,11 +147,6 @@ list_graph <- list("s+a+ts"=
                                                   "Female"=list("subset"=list("sex"=2),
                                                                 "color"="lightcoral","alpha"=1)))))
 
-#list_str_group<-c("cortex","subcortex","white matter","global","misc")
-#list_str_group<-"subcortex"
-#list_str_group<-c("global","misc")
-list_str_group<-c("cortex","subcortex","global")
-
 
 #**************************************************
 # Libraries =======================================
@@ -194,15 +200,15 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-#paths_=paths
-#subset_subj_=subset_subj
-#list_covar_=list_covar
-#file_input_=file_input
-#list_wave_=list_wave
-#list_measure_=list_measure
-#list_str_group_=list_str_group
-#list_mod_=list_mod
-#list_graph_=list_graph
+paths_=paths
+subset_subj_=subset_subj
+list_covar_=list_covar
+file_input_=file_input
+list_wave_=list_wave
+list_measure_=list_measure
+list_str_group_=list_str_group
+list_mod_=list_mod
+list_graph_=list_graph
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
