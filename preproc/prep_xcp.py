@@ -491,8 +491,8 @@ class MultiExtractQuality():
 
 class PostXCP():
     def __init__(self,
-        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/43_c1_1_xcp_acompcor',
-        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/45_c1_1_nii_acompcor'
+        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/43_c1_2_xcp_acompcor',
+        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/45_c1_2_nii_acompcor'
         ):
 
         print('Starting PostXCP().')
