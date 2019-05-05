@@ -279,14 +279,15 @@ class MultiPrepXCP():
 ##################################################
 # CONN preparation
 
-class PickupUnzip():
+class PrepCONN():
     def __init__(self,
-        path_input='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/31_xcpout_aroma',
-        path_output='D:/atiroms/MRI/pnTTC/pnTTC1_rsfMRI_C/33_conn_aroma',
-        path_file_clinical='D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB_W1_T1QC_new_mild_rsfMRIexist_motionQC3.csv'
+        path_input='C:/Users/NICT_WS/MRI/pnTTC/Preproc/46_c2_nii_acompcor',
+        path_output='C:/Users/NICT_WS/MRI/pnTTC/Preproc/50_c2_conn',
+        file_id='id_W2_T1QC_T1QC_new_mild_rsfMRIexist_motionQC3.csv',
+        session='ses-02'
         ):
 
-        print('Starting pick-up and unzipping of .nii.gz data.')
+        print('Starting PrepCONN().')
 
         # Create experiment folder
         print('Starting to create experiment folder.')
@@ -305,15 +306,19 @@ class PickupUnzip():
         shutil.copytree(path_log_in,path_log_out)
         print('Finished copying log folder.')
 
-        print('Starting to load clinical data.')        
-        df_clinical=pd.read_csv(path_file_clinical,encoding='cp932')
-        print('Finished loading clinical data.')
+        print('Starting to load id file.')        
+        with open(os.path.join(path_log_out,file_id), 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+
+        print('Finished loading id file.')
 
         print('Starting to pick-up and unzip image data.')
-        for id_subj in df_clinical.loc[:,'ID_pnTTC']:
+        for id_subj in list_id:
             name_file_input='sub-'+str(id_subj).zfill(5)+'_img_sm6Std.nii.gz'
-            path_file_input=os.path.join(path_input,'output','norm',name_file_input)
-            name_file_output='sub-'+str(id_subj).zfill(5)+'_img_sm6Std.nii'
+            path_file_input=os.path.join(path_input,'output',name_file_input)
+            name_file_output=session+'_sub-'+str(id_subj).zfill(5)+'.nii'
             path_file_output=os.path.join(path_output,'input',name_file_output)
             with gzip.open(path_file_input, 'rb') as img_in:
                 with open(path_file_output, 'wb') as img_out:
@@ -321,7 +326,7 @@ class PickupUnzip():
             print('Finished pick-up and unzipping for subject:'+ str(id_subj))
         print('Finished pick-up and unzipping image data.')
 
-        print('Finished.')
+        print('Finished PrepCONN().')
 
 
 ##################################################
