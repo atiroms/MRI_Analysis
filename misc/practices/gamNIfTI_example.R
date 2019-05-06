@@ -3,13 +3,14 @@ library(mgcv)
 library(oro.nifti)
 
 
-path_exp<-"C:/Users/atiro/Dropbox/Temp/5sub_corr"
+#path_exp<-"C:/Users/atiro/Dropbox/Temp/5sub_corr"
+path_exp<-"D:/atiroms/Dropbox/Temp/5sub_corr"
 #list_path_src<-NULL
 list_path_src<-list.files(file.path(path_exp,'input'))
 list_path_src<-file.path(path_exp,'input',list_path_src)
 
 #img_mask<-file.path(path_exp,'mask','mni_icbm152_brainmask_tal_nlin_asym_09c.nii')
-img_mask<-file.path(path_exp,'mask','rmni_icbm152_brainmask_tal_nlin_asym_09c.nii')
+img_mask<-file.path(path_exp,'mask','mni_icbm152_brain_resample_mask_tal_nlin_asym_09c.nii')
 img_mask<-readNIfTI(img_mask)
 img_mask<-img_mask>0
 #img_mask<-file.path(path_exp,'mask','output.nii')
