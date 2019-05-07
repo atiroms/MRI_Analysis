@@ -88,7 +88,7 @@ class PostCONN():
     def __init__(self,
         path_src='D:/MRI/pnTTC/Preproc/50_c2_conn',
         path_dst='D:/MRI/pnTTC/Preproc/53_gamm',
-        file_id_subj='id_W1_T1QC_T1QC_new_mild_rsfMRIexist_motionQC3.csv',
+        file_id_subj='id_W2_T1QC_T1QC_new_mild_rsfMRIexist_motionQC3.csv',
         session='ses-02'
         ):
 
