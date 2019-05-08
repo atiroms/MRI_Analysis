@@ -10,8 +10,9 @@
 
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
-dir_out <-"03_gamm"
+#dir_out <-"03_gamm"
 #dir_out <-"04_gamm_subcortex"
+dir_out <-"05_gamm_subcortex_smooth"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
@@ -19,8 +20,8 @@ list_wave <- c(1,2)
 #list_measure <-c("volume","thickness","area")
 list_measure <-"volume"
 
-list_str_group<-c("cortex","subcortex","white matter","global","misc")
-#list_str_group<-"subcortex"
+#list_str_group<-c("cortex","subcortex","white matter","global","misc")
+list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
@@ -98,9 +99,9 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                   "value ~ poly(age,2) + sex + sex:poly(tanner,2) + sex:poly(age,2):poly(tanner,2) + s(ID_pnTTC,bs='re')")
 
 list_mod <- list("a+s+st"=
-                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by='sex') + s(ID_pnTTC,bs='re')",
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
                  "a+s+st+sat"=
-                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by='sex') + ti(age,tanner,by='sex') + s(ID_pnTTC,bs='re')")
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + ti(age,tanner,by=sex) + s(ID_pnTTC,bs='re')")
 
 list_graph <-list("a"=list("title"="Age effect",
                            "x_axis"="age",
