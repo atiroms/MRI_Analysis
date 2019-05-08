@@ -10,7 +10,7 @@
 
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
-dir_out <-"04_gamm_test"
+dir_out <-"04_gamm_subcortex"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
@@ -290,7 +290,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     }
   }
   print('Saving results.')
-  rownames(df_out_term)<-rownmes(df_out_model)<-NULL
+  rownames(df_out_term)<-rownames(df_out_model)<-NULL
   write.csv(df_out_term, file.path(paths_$output,"output","gamm.csv"),row.names = F)
   write.csv(df_out_model,file.path(paths_$output,"output","aic.csv"),row.names = F)
   print('Finished gamm_str().')
