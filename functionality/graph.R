@@ -20,8 +20,9 @@ library(purrr)
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(mod_gamm,spec_graph){
-  df_src <- mod_gamm$model
+plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
+  #df_src <- mod_gamm$model
+  df_src <- df_join_measure_roi[c("value",names(mod_gamm$var.summary))]
   
   plot<-ggplot()
   # add prediction line + ribbon to plot
@@ -32,7 +33,7 @@ plot_gamm<-function(mod_gamm,spec_graph){
                                       max(df_src[spec_graph[["x_axis"]]]),
                                       length.out=200))
       names(df_smooth) <- spec_graph[["x_axis"]]
-      for (i in names(df_src)[-1]) {
+      for (i in names(df_src)) {
         if (i != spec_graph[["x_axis"]]) {
           if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
             df_smooth[, dim(df_smooth)[2] + 1] <- mean(df_src[i][,1])
