@@ -90,66 +90,44 @@ list_mod <- list("s+a+ts"=
                  "s+a+ts+ats"=
                    "value ~ sex + poly(age,2) + poly(tanner,2):sex + poly(age,2):poly(tanner,2):sex + s(ID_pnTTC,bs='re')")
 
-list_graph <- list("s+a+ts"=
-                     list("a"=list("title"="Age effect",
-                                   "x_axis"="age",
-                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                             "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                 "Female"=list("fix"=list("sex"=2),
-                                                               "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                   "point"=list("Male"=list("subset"=list("sex"=1),
-                                                            "color"="steelblue2","alpha"=1),
-                                                "Female"=list("subset"=list("sex"=2),
-                                                              "color"="lightcoral","alpha"=1))),
-                          "ts"=list("title"="Tanner stage effect",
-                                    "x_axis"="tanner",
-                                    "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                              "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                  "Female"=list("fix"=list("sex"=2),
-                                                                "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                    "point"=list("Male"=list("subset"=list("sex"=1),
-                                                             "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("subset"=list("sex"=2),
-                                                               "color"="lightcoral","alpha"=1)))),
-                   "s+a+ts+ats"=
-                     list("a"=list("title"="Age effect",
-                                   "x_axis"="age",
-                                   "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                             "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                 "Female"=list("fix"=list("sex"=2),
-                                                               "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                   "point"=list("Male"=list("subset"=list("sex"=1),
-                                                            "color"="steelblue2","alpha"=1),
-                                                "Female"=list("subset"=list("sex"=2),
-                                                              "color"="lightcoral","alpha"=1))),
-                          "ts"=list("title"="Tanner stage effect",
-                                    "x_axis"="tanner",
-                                    "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                              "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                  "Female"=list("fix"=list("sex"=2),
-                                                                "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                    "point"=list("Male"=list("subset"=list("sex"=1),
-                                                             "color"="steelblue2","alpha"=1),
-                                                 "Female"=list("subset"=list("sex"=2),
-                                                               "color"="lightcoral","alpha"=1))),
-                          "ats"=list("title"="Age-Tanner stage interaction",
-                                     "x_axis"="age",
-                                     "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
-                                                                      "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
-                                                   "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
-                                                                      "color"="steelblue2","alpha"=0.7,"ribbon"=F),
-                                                   "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
-                                                                      "color"="steelblue2","alpha"=1,"ribbon"=F),
-                                                   "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
-                                                                        "color"="lightcoral","alpha"=0.4,"ribbon"=F),
-                                                   "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
-                                                                        "color"="lightcoral","alpha"=0.7,"ribbon"=F),
-                                                   "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
-                                                                        "color"="lightcoral","alpha"=1,"ribbon"=F)),
-                                     "point"=list("Male"=list("subset"=list("sex"=1),
-                                                              "color"="steelblue2","alpha"=1),
-                                                  "Female"=list("subset"=list("sex"=2),
-                                                                "color"="lightcoral","alpha"=1)))))
+list_graph <-list("a"=list("title"="Age effect",
+                           "x_axis"="age",
+                           "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                         "Female"=list("fix"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                           "point"=list("Male"=list("subset"=list("sex"=1),
+                                                    "color"="steelblue2","alpha"=1),
+                                        "Female"=list("subset"=list("sex"=2),
+                                                      "color"="lightcoral","alpha"=1))),
+                  "ts"=list("title"="Tanner stage effect",
+                            "x_axis"="tanner",
+                            "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                          "Female"=list("fix"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                            "point"=list("Male"=list("subset"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1),
+                                         "Female"=list("subset"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1))),
+                  "ats"=list("title"="Age-Tanner stage interaction",
+                             "x_axis"="age",
+                             "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
+                                                              "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
+                                           "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
+                                                              "color"="steelblue2","alpha"=0.7,"ribbon"=F),
+                                           "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
+                                                              "color"="steelblue2","alpha"=1,"ribbon"=F),
+                                           "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
+                                                                "color"="lightcoral","alpha"=0.4,"ribbon"=F),
+                                           "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
+                                                                "color"="lightcoral","alpha"=0.7,"ribbon"=F),
+                                           "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
+                                                                "color"="lightcoral","alpha"=1,"ribbon"=F)),
+                             "point"=list("Male"=list("subset"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1),
+                                          "Female"=list("subset"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1))))
 
 
 #**************************************************
@@ -204,15 +182,15 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-file_input_=file_input
-list_wave_=list_wave
-list_measure_=list_measure
-list_str_group_=list_str_group
-list_mod_=list_mod
-list_graph_=list_graph
+#paths_=paths
+#subset_subj_=subset_subj
+#list_covar_=list_covar
+#file_input_=file_input
+#list_wave_=list_wave
+#list_measure_=list_measure
+#list_str_group_=list_str_group
+#list_mod_=list_mod
+#list_graph_=list_graph
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
@@ -276,15 +254,14 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                                data.frame(measure=measure,roi=roi,label_roi=label_roi,group_roi=group_roi,model=mod,
                                           term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
         df_out_term<-rbind(df_out_term,df_out_term_add)
-        list_graph_mod<-list_graph_[[mod]]
-        for (idx_graph in names(list_graph_mod)){
+        for (idx_graph in names(list_graph_)){
           plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
                           df_join_measure_roi,
-                          spec_graph=list_graph_mod[[idx_graph]])
-          axis_x<-list_graph_mod[[idx_graph]][["x_axis"]]
+                          spec_graph=list_graph_[[idx_graph]])
+          axis_x<-list_graph_[[idx_graph]][["x_axis"]]
           label_x<-list_covar_[[axis_x]][["label"]]
           plot<-(plot
-                 + ggtitle(paste(list_graph_mod[[idx_graph]][["title"]],label_roi,sep=' '))
+                 + ggtitle(paste(list_graph_[[idx_graph]][["title"]],label_roi,sep=' '))
                  + xlab(label_x)
                  + ylab(capitalize(measure))
                  + theme(legend.position = "none"))
