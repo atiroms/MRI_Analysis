@@ -12,16 +12,16 @@ path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
 #dir_out <-"03_gamm"
 #dir_out <-"04_gamm_subcortex"
-dir_out <-"05_gamm_subcortex_smooth"
+dir_out <-"06_gamm_smooth"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 
-#list_measure <-c("volume","thickness","area")
-list_measure <-"volume"
+list_measure <-c("volume","thickness","area")
+#list_measure <-"volume"
 
-#list_str_group<-c("cortex","subcortex","white matter","global","misc")
-list_str_group<-"subcortex"
+list_str_group<-c("cortex","subcortex","white matter","global","misc")
+#list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
