@@ -7,11 +7,11 @@ library(ggrepel)
 library(purrr)
 
 
-#df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-#df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+df_str<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
-df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
-df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
+#df_str<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
+#df_clinical<-read.csv("D:/atiroms/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
 
 #df_str<-read.csv("C:/Users/NICT_WS/Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS/01_extract/output/fs_measure.csv")
 #df_clinical<-read.csv("C:/Users/NICT_WS/Dropbox/MRI/pnTTC/Puberty/Stats/CommonData/CSUB.csv")
@@ -51,6 +51,8 @@ for (i in seq(nrow(df_str))){
 #model<-gam(value ~ s(age) + s(tanner) + s(ID_pnTTC,bs='re'),data=df_str)
 #model<-gam(value ~ age + tanner + s(ID_pnTTC,bs='re'),data=df_str)
 #model2<-gam(value ~ age*tanner + s(ID_pnTTC,bs='re'),data=df_str)
+
+model<-gam(value ~ s(age,k=3) + s(tanner,k=3,by=sex) +ti(tanner,age,by=sex)+ s(ID_pnTTC,bs='re'),data=df_str)
 
 #model3<-gam(value ~ age + tanner_male + tanner_female + age:tanner_male + age:tanner_female + s(ID_pnTTC,bs='re'),data=df_str,na.action =na.pass)
 #model3<-gam(value ~ age + tanner_male + tanner_female  + s(ID_pnTTC,bs='re'),data=df_str,na.action=na.exclude)
