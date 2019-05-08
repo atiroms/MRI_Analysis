@@ -10,16 +10,16 @@
 
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
-dir_out <-"04_gamm_subcortex"
+dir_out <-"03_gamm"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 
-#list_measure <-c("volume","thickness","area")
-list_measure <-"volume"
+list_measure <-c("volume","thickness","area")
+#list_measure <-"volume"
 
-#list_str_group<-c("cortex","subcortex","white matter","global","misc")
-list_str_group<-"subcortex"
+list_str_group<-c("cortex","subcortex","white matter","global","misc")
+#list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
@@ -185,15 +185,15 @@ source(file.path(paths$script,"functionality/graph.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-file_input_=file_input
-list_wave_=list_wave
-list_measure_=list_measure
-list_str_group_=list_str_group
-list_mod_=list_mod
-list_graph_=list_graph
+#paths_=paths
+#subset_subj_=subset_subj
+#list_covar_=list_covar
+#file_input_=file_input
+#list_wave_=list_wave
+#list_measure_=list_measure
+#list_str_group_=list_str_group
+#list_mod_=list_mod
+#list_graph_=list_graph
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
