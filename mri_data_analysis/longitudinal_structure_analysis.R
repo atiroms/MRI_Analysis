@@ -98,13 +98,13 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                 "a2+s+st2+sa2t2"=
 #                   "value ~ poly(age,2) + sex + sex:poly(tanner,2) + sex:poly(age,2):poly(tanner,2) + s(ID_pnTTC,bs='re')")
 
-#list_mod <- list("a+s+st"=
-#                   "value ~ s(age,k=3) + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
-#                 "a+s+st+sat"=
-#                   "value ~ s(age,k=3) + s(tanner,k=3,by=sex) + ti(age,tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
-
 list_mod <- list("a+s+st"=
-                   "value ~ s(age,k=3) + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
+                 "a+s+st+sat"=
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + ti(age,tanner,k=2,by=sex) + s(ID_pnTTC,bs='re')")
+
+#list_mod <- list("a+s+st"=
+#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
 
 list_graph <-list("a"=list("title"="Age effect",
                            "x_axis"="age",
