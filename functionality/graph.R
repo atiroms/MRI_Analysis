@@ -20,8 +20,9 @@ library(purrr)
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(mod_gamm,spec_graph){
-  df_src <- mod_gamm$model
+plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
+  #df_src <- mod_gamm$model
+  df_src <- df_join_measure_roi[c("value",names(mod_gamm$var.summary))]
   
   plot<-ggplot()
   # add prediction line + ribbon to plot
@@ -32,7 +33,7 @@ plot_gamm<-function(mod_gamm,spec_graph){
                                       max(df_src[spec_graph[["x_axis"]]]),
                                       length.out=200))
       names(df_smooth) <- spec_graph[["x_axis"]]
-      for (i in names(df_src)[-1]) {
+      for (i in names(df_src)) {
         if (i != spec_graph[["x_axis"]]) {
           if (any(class(df_src[i][,1])[1] == c("numeric", "integer","boolean"))) {
             df_smooth[, dim(df_smooth)[2] + 1] <- mean(df_src[i][,1])
@@ -49,8 +50,10 @@ plot_gamm<-function(mod_gamm,spec_graph){
           df_smooth[[var]]<-spec_smooth[["fix"]][[var]]
         }
       }
+      #df_smooth <- cbind(df_smooth,
+      #                   as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
       df_smooth <- cbind(df_smooth,
-                         as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
+                         as.data.frame(predict.gam(mod_gamm, df_smooth, exclude="s(ID_pnTTC)",se.fit = TRUE)))
       plot <- (plot
                + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
                            color=spec_smooth[["color"]],size=0.5,alpha=spec_smooth[["alpha"]]))
@@ -82,11 +85,11 @@ plot_gamm<-function(mod_gamm,spec_graph){
     plot <- (plot
              + geom_point(aes(x=df_point[[spec_graph[["x_axis"]]]],
                               y=df_point[,1]),
-                          color=df_point[["color"]],shape=1,size=2,alpha=0.6*df_point[["alpha"]])
+                          color=df_point[["color"]],shape=1,size=2,alpha=0.4*df_point[["alpha"]])
              + geom_path(aes(x=df_point[[spec_graph[["x_axis"]]]],
                              y=df_point[,1],
                              group=df_point[["ID_pnTTC"]]),
-                         color=df_point[["color"]],size=0.3,alpha=0.3*df_point[["alpha"]],linetype="dashed"))
+                         color=df_point[["color"]],size=0.3,alpha=0.2*df_point[["alpha"]],linetype="dashed"))
   }
   
   # add themes

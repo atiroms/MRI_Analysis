@@ -64,8 +64,10 @@ for (i in seq(nrow(df_str))){
 model6<-gam(value ~ age + tanner:sex + s(ID_pnTTC,bs='re'),data=df_str)
 model7<-gam(value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re'),data=df_str)
 
-model8<-gam(value ~ age + tanner:male + tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
-model9<-gam(value ~ age + tanner:male + age:tanner:male + tanner:female + age:tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
+model8<-gam(value ~ age + poly(tanner,2):sex + s(ID_pnTTC,bs='re'),data=df_str)
+
+#model8<-gam(value ~ age + tanner:male + tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
+#model9<-gam(value ~ age + tanner:male + age:tanner:male + tanner:female + age:tanner:female + s(ID_pnTTC,bs='re'),data=df_str)
 
 #model4<-gam(value ~ age + tanner + s(ID_pnTTC,bs='re'),data=df_str)
 #model5<-gam(value ~ age + s(tanner,k=2) + s(ID_pnTTC,bs='re'),data=df_str)

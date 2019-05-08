@@ -35,8 +35,8 @@ class ExtractMotion():
     def __init__(self,
         #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
         #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
-        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/26_2_fmriprep',
-        path_output='/media/veracrypt1/MRI/pnTTC/Preproc/27_2_motion',
+        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/42_c2_2_fmriprep',
+        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/48_c2_2_motion',
         ses='ses-02'
         ):
 
