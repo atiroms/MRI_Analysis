@@ -11,12 +11,13 @@
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
 dir_out <-"03_gamm"
+#dir_out <-"04_gamm_subcortex"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 
-list_measure <-c("volume","thickness","area")
-#list_measure <-"volume"
+#list_measure <-c("volume","thickness","area")
+list_measure <-"volume"
 
 list_str_group<-c("cortex","subcortex","white matter","global","misc")
 #list_str_group<-"subcortex"
@@ -44,7 +45,6 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                  "sex"=list("1"="Sex",
                             "2"="Sex",
                             "label"="Sex"))
-
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild","value"=1),
@@ -80,7 +80,7 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                   "value ~ sex + age + poly(tanner,2):sex + s(ID_pnTTC,bs='re')",
 #                 "s+a+ts+ats"=
 #                   "value ~ sex + age + poly(tanner,2):sex + age:poly(tanner,2):sex + s(ID_pnTTC,bs='re')")
-list_mod <- list("a+s+ts"=
+list_mod <- list("a+s+st"=
                    "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')",
                  "a+s+st+sat"=
                    "value ~ age + sex + sex:tanner + sex:age:tanner + s(ID_pnTTC,bs='re')",
@@ -88,6 +88,10 @@ list_mod <- list("a+s+ts"=
                    "value ~ age + sex + sex:poly(tanner,2) + s(ID_pnTTC,bs='re')",
                  "a+s+st2+sat2"=
                    "value ~ age + sex + sex:poly(tanner,2) + sex:age:poly(tanner,2) + s(ID_pnTTC,bs='re')",
+                 "a2+s+st"=
+                   "value ~ poly(age,2) + sex + sex:tanner + s(ID_pnTTC,bs='re')",
+                 "a2+s+st+sa2t"=
+                   "value ~ poly(age,2) + sex + sex:tanner + sex:poly(age,2):tanner + s(ID_pnTTC,bs='re')",
                  "a2+s+st2"=
                    "value ~ poly(age,2) + sex + sex:poly(tanner,2) + s(ID_pnTTC,bs='re')",
                  "a2+s+st2+sa2t2"=
