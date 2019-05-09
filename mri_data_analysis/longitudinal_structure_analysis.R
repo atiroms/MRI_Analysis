@@ -11,8 +11,9 @@
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
 dir_in <-"01_extract"
 #dir_out <-"03_gamm"
-dir_out <-"07_gamm_subcortex_re"
-#dir_out <-"06_gamm_smooth"
+dir_out <-"06_gamm_smooth"
+#dir_out <-"08_gamm_subcortex_male"
+#dir_out <-"10_gamm_subcortex_female_misc"
 file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
@@ -21,9 +22,9 @@ list_wave <- c(1,2)
 list_measure <-"volume"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
-list_str_group<-"subcortex"
+#list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
-#list_str_group<-c("cortex","subcortex","global")
+list_str_group<-c("cortex","subcortex","global")
 
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                               "2"="W2_Tanner_Max",
@@ -37,6 +38,16 @@ list_str_group<-"subcortex"
 #                 "age"=list("1"="W1_Age_at_MRI",
 #                            "2"="W2_Age_at_MRI",
 #                            "label"="Age"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+#                               "2"="W2_Tanner_Max",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"),
+#                 "sex"=list("1"="Sex",
+#                            "2"="Sex",
+#                            "label"="Sex"))
+
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                                "2"="W2_Tanner_Max",
                                "label"="Tanner stage"),
@@ -54,33 +65,18 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                             list("key"="W2_T1QC_new_mild","value"=1),
 #                             list("key"="Sex","value"=1)))
 
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild","value"=1),
+#                             list("key"="Sex","value"=2)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild","value"=1),
+#                             list("key"="Sex","value"=2)))
+
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                              list("key"="W1_T1QC_new_mild","value"=1)),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild","value"=1)))
 
-#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-#                             list("key"="Sex","value"=2)),
-#                    "2"=list(list("key"="W2_T1QC","value"=1),
-#                             list("key"="Sex","value"=2)))
-
-#subset_subj <- list("1"=list(list("key"="W1_T1QC_new_mild","value"=1),
-#                             list("key"="Sex","value"=2)),
-#                    "2"=list(list("key"="W2_T1QC_new_mild","value"=1),
-#                             list("key"="Sex","value"=2)))
-
-#list_mod <- list("a+ts"=
-#                   "value ~ age + tanner:sex + s(ID_pnTTC,bs='re')",
-#                 "a+ts+ats"=
-#                   "value ~ age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
-#list_mod <- list("s+a+ts"=
-#                   "value ~ sex + age + tanner:sex + s(ID_pnTTC,bs='re')",
-#                 "s+a+ts+ats"=
-#                   "value ~ sex + age + tanner:sex + age:tanner:sex + s(ID_pnTTC,bs='re')")
-#list_mod <- list("s+a+ts"=
-#                   "value ~ sex + age + poly(tanner,2):sex + s(ID_pnTTC,bs='re')",
-#                 "s+a+ts+ats"=
-#                   "value ~ sex + age + poly(tanner,2):sex + age:poly(tanner,2):sex + s(ID_pnTTC,bs='re')")
 #list_mod <- list("a+s+st"=
 #                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')",
 #                 "a+s+st+sat"=
@@ -98,13 +94,19 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                 "a2+s+st2+sa2t2"=
 #                   "value ~ poly(age,2) + sex + sex:poly(tanner,2) + sex:poly(age,2):poly(tanner,2) + s(ID_pnTTC,bs='re')")
 
-list_mod <- list("a+s+st"=
-                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
-                 "a+s+st+sat"=
-                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + ti(age,tanner,k=2,by=sex) + s(ID_pnTTC,bs='re')")
-
 #list_mod <- list("a+s+st"=
-#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
+#                 "a+s+st+sat"=
+#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + ti(age,tanner,k=2,by=sex) + s(ID_pnTTC,bs='re')")
+
+list_mod <- list("a+s+st"=
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+
+#list_mod <- list("a+t"=
+#                   "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')")
+
+#list_mod <- list("a+t"=
+#                   "value ~ s(age,k=3) + s(tanner,k=3)")
 
 list_graph <-list("a"=list("title"="Age effect",
                            "x_axis"="age",
@@ -144,6 +146,33 @@ list_graph <-list("a"=list("title"="Age effect",
                                                       "color"="steelblue2","alpha"=1),
                                           "Female"=list("subset"=list("sex"=2),
                                                         "color"="lightcoral","alpha"=1))))
+
+#list_graph <-list("a"=list("title"="Age effect",
+#                           "x_axis"="age",
+#                           "smooth"=list("Male"=list("fix"=list("sex"=1),
+#                                                     "color"="steelblue2","alpha"=1,"ribbon"=T)),
+#                           "point"=list("Male"=list("subset"=NULL,
+#                                                    "color"="steelblue2","alpha"=1))),
+#                  "t"=list("title"="Tanner stage effect",
+#                           "x_axis"="tanner",
+#                           "smooth"=list("Male"=list("fix"=list("sex"=1),
+#                                                     "color"="steelblue2","alpha"=1,"ribbon"=T)),
+#                           "point"=list("Male"=list("subset"=NULL,
+#                                                    "color"="steelblue2","alpha"=1))))
+
+#list_graph <-list("a"=list("title"="Age effect",
+#                           "x_axis"="age",
+#                           "smooth"=list("Female"=list("fix"=list("sex"=2),
+#                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                           "point"=list("Female"=list("subset"=NULL,
+#                                                      "color"="lightcoral","alpha"=1))),
+#                  "t"=list("title"="Tanner stage effect",
+#                           "x_axis"="tanner",
+#                           "smooth"=list("Female"=list("fix"=list("sex"=2),
+#                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                           "point"=list("Female"=list("subset"=NULL,
+#                                                       "color"="lightcoral","alpha"=1))))
+
 
 
 #**************************************************
@@ -295,6 +324,9 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       # compare AICs of models
       df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
       df_out_model<-rbind(df_out_model,df_out_model_add)
+      rownames(df_out_term)<-rownames(df_out_model)<-NULL
+      write.csv(df_out_term, file.path(paths_$output,"output","gamm.csv"),row.names = F)
+      write.csv(df_out_model,file.path(paths_$output,"output","aic.csv"),row.names = F)
       # compare models
       #if (length(list_mod_)==2){
       #  anova_mod<-anova.gam(list_mod_gamm[[1]],list_mod_gamm[[2]],test="F")
@@ -302,9 +334,9 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       #}
     }
   }
-  print('Saving results.')
-  rownames(df_out_term)<-rownames(df_out_model)<-NULL
-  write.csv(df_out_term, file.path(paths_$output,"output","gamm.csv"),row.names = F)
-  write.csv(df_out_model,file.path(paths_$output,"output","aic.csv"),row.names = F)
+  #print('Saving results.')
+  #rownames(df_out_term)<-rownames(df_out_model)<-NULL
+  #write.csv(df_out_term, file.path(paths_$output,"output","gamm.csv"),row.names = F)
+  #write.csv(df_out_model,file.path(paths_$output,"output","aic.csv"),row.names = F)
   print('Finished gamm_str().')
 }
