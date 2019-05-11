@@ -13,8 +13,8 @@
 path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc"
 path_out <- "/media/veracrypt2/MRI/pnTTC/Preproc"
 
-dir_in <-"44_c2_1_xcp_acompcor"
-dir_out<-"52_c2_1_ts"
+dir_in <-"44_c2_2_xcp_acompcor"
+dir_out<-"52_c2_2_ts"
 
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
