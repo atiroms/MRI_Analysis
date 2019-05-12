@@ -12,26 +12,16 @@
 list_covar<-c("W1_Tanner_Max","W1_Age_at_MRI")
 
 # parameters for fc_corr()
-#path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP"
-path_exp <- "DropBox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
-#dir_in <- c("13_fc_temp","14_fc_t1w","15_fc_temponly","17_fc_36p_2mm",
-#            "18_fc_36p_native","19_fc_aroma_2mm","20_fc_acompcor_2mm")
-#dir_in <- c("17_fc_36p_2mm","19_fc_aroma_2mm","20_fc_acompcor_2mm")
-#dir_out <- "22_fc_corr"
-#dir_out <- "23_fc_corr_heatmap"
-#dir_in <- "25_fc_acompcor_2mm"
-#dir_out <- "26_glm_fc_acompcor"
-#dir_out <- "27_glm_fc_acompcor2"
-dir_in<-"28_fc_acompcor"
-dir_out<-"29_glm_fc_acompcor"
+path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+#path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-#dir_in <- "07_fc_acompcor"
-#dir_out <- "11_glm_fc_acompcor"
-subset_subj <- list(list("column"="W1_5sub","value"=1))
+dir_in<-"54_fc_acompcor"
+dir_out<-"55_gta_bin"
+#subset_subj <- list(list("column"="W1_5sub","value"=1))
 #subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-c("aal116")
+#list_atlas<-"aal116"
 
 thr_pvalue <- 0.05
 
@@ -92,7 +82,7 @@ source(file.path(paths$script,"functionality/gta_function.R"))
 
 edges2igraph<-function(df_conn,df_edge,list_node,dict_roi){
   edges<-data.frame(matrix(ncol=3,nrow=dim(df_edge)[1]))
-  edges[,1:2]<-connections[,c("from","to")]
+  edges[,1:2]<-df_edge[,c("from","to")]
   for (i in 1:dim(df_edge)[1]){
     edges[i,3]<-as.numeric(df_conn[intersect(which(df_conn$from==df_edge[i,"from"]),
                                              which(df_conn$to==df_edge[i,"to"])),"r"])
@@ -100,7 +90,7 @@ edges2igraph<-function(df_conn,df_edge,list_node,dict_roi){
   colnames(edges)<-c("from","to","weight")
   nodes<-data.frame(id=list_node)
   for (i in seq(length(list_node))){
-    nodes[i,"label"]<-dict_roi[dict_roi$id==nodes[i,"id"],"label"]
+    nodes[i,"label"]<-as.character(dict_roi[dict_roi$id==as.character(nodes[i,"id"]),"label"])
   }
   output <- graph.data.frame(d = edges, vertices = nodes, directed = F)
   return(output)
@@ -121,6 +111,7 @@ subset_edge<-function(input_igraph, input_cost,n_node,n_edge){
 
 # Calculate binary graph metrics
 gta_bin_metrics<-function(input_igraph){
+  node<-names(V(input_igraph))
   metrics<-data.frame(matrix(nrow=0,ncol=3))
   colnames(metrics)<-c("node","metric","value")
   ## graph-level metrics
@@ -146,13 +137,13 @@ gta_bin_metrics<-function(input_igraph){
   
   ## node-level metrics
   # degree centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="degree centrality",
+  metrics<-rbind(metrics,cbind(node=node,metric="degree centrality",
                                value=centr_degree(input_igraph)$res))
   # betweenness centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="betweenness centrality",
+  metrics<-rbind(metrics,cbind(node=node,metric="betweenness centrality",
                                value=centr_betw(input_igraph)$res))
   # eigenvector centrality
-  metrics<-rbind(metrics,cbind(node=rois,metric="eigenvector centrality",
+  metrics<-rbind(metrics,cbind(node=node,metric="eigenvector centrality",
                                value=eigen_centrality(input_igraph)$vector))
   
   rownames(metrics)<-NULL
@@ -160,49 +151,78 @@ gta_bin_metrics<-function(input_igraph){
 }
 
 
-gta_bin<-function(paths_=paths, subjset_subj_=subset_subj,list_cost_=list_cost){
+gta_bin<-function(paths_=paths,
+                  list_atlas_=list_atlas,
+                  list_cost_=list_cost){
   print("Starting to calculate binary GTA.")
-  data_clinical<-func_clinical_data(paths_,subset_subj_)
+  #data_clinical<-func_clinical_data(paths_,subset_subj_)
   nullobj<-func_createdirs(paths_)
-  df_conn<-read.csv(file.path(paths_$output,"output",file_conn))
-  df_edge<-df_edge[which(df_edge$ID_pnTTC==df_edge[1,"ID_pnTTC"]),c("from","to")]
-  n_edge<-dim(df_edge)[1]
-  list_node<-unique(c(unique(df_edge$from),unique(df_edge$to)))
-  list_node<-list_node[order(list_node)]
-  n_node<-length(list_node)
   dict_roi<-func_dict_roi(paths_)
-  df_output<-data.frame()
-  for (id_subj in data_clinical$list_id_subj){
-    print(paste("  Calculating subject: ",as.character(id_subj),sep=""))
-    df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
-    igraph_subj<-edges2igraph(df_conn=df_conn_subj,df_edge=df_edge,list_node=list_node,dict_roi=dict_roi)
-    
-    df_metric_subj<-data.frame()
-    for (cost in list_cost_){
-      igraph_subj_subset<-subset_edge(igraph_subj,cost,n_node,n_edge)
-      E(igraph_subj_subset)$weight<-1
-      metrics<-gta_bin_metrics(igraph_subj_subset)
-      metrics<-cbind(cost=cost,metrics)
-      df_metric_subj<-rbind(df_metric_subj,metrics)
-    }
-    df_metric_subj$value<-as.numeric(df_metric_subj$value)
-    df_metric<-df_metric_subj[which(df_metric_subj$cost==list_cost[1]),c("node","metric")]
-    average<-data.frame()
-    for (i in seq(dim(df_metric[1]))){
-      average<-rbind(average,
-                     cbind(cost="average",node=as.character(df_metric[i,"node"]),
-                           metric=as.character(df_metric[i,"metric"]),
-                           value=mean(df_metric_subj[intersect(which(df_metric_subj$node==df_metric[i,"node"]),
-                                                               which(df_metric_subj$metric==df_metric[i,"metric"])),"value"])))
-    }
-    df_metric_subj<-rbind(df_metric_subj,average)
-    rownames(df_metric_subj)<-NULL
-    df_metric_subj<-cbind(ID_pnTTC=id_subj,df_metric_subj)
-    df_output<-rbind(df_output,df_metric_subj)
-  }
-  write.csv(df_output,file.path(paths_$output,"output","gta_bin.csv"))
-  print("Finished calculating binary GTA.")
   
+  for (atlas in list_atlas_){
+    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
+    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    n_edge<-dim(df_edge)[1]
+    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
+    list_node<-list_node[order(list_node)]
+    n_node<-length(list_node)
+    list_ses_exist <- sort(unique(df_conn$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_conn_ses<-df_conn[df_conn$ses==ses,]
+      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
+    }
+    #df_dst<-data.frame()
+    list_file_tmp<-NULL
+    for (ses in list_ses_exist){
+      for (id_subj in list_id_subj_exist[[ses]]){
+      #for (id_subj in list_id_subj_exist[[ses]][c(1,2)]){
+        print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
+        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
+        igraph_subj<-edges2igraph(df_conn=df_conn_subj,df_edge=df_edge,list_node=list_node,dict_roi=dict_roi)
+        
+        df_metric_subj<-data.frame()
+        for (cost in list_cost_){
+          igraph_subj_subset<-subset_edge(igraph_subj,cost,n_node,n_edge)
+          E(igraph_subj_subset)$weight<-1
+          metrics<-gta_bin_metrics(igraph_subj_subset)
+          metrics<-cbind(cost=cost,metrics)
+          df_metric_subj<-rbind(df_metric_subj,metrics)
+        }
+        df_metric_subj$value<-as.numeric(df_metric_subj$value)
+        df_metric<-df_metric_subj[which(df_metric_subj$cost==list_cost_[1]),c("node","metric")]
+        average<-data.frame()
+        for (i in seq(dim(df_metric)[1])){
+          average<-rbind(average,
+                         cbind(cost="average",node=as.character(df_metric[i,"node"]),
+                               metric=as.character(df_metric[i,"metric"]),
+                               value=mean(df_metric_subj[intersect(which(df_metric_subj$node==df_metric[i,"node"]),
+                                                                   which(df_metric_subj$metric==df_metric[i,"metric"])),"value"])))
+        }
+        df_metric_subj<-rbind(df_metric_subj,average)
+        rownames(df_metric_subj)<-NULL
+        df_metric_subj<-cbind(ses=ses,ID_pnTTC=id_subj,df_metric_subj)
+        file_metric_tmp<-paste("TMP_atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d",id_subj),"_gta_bin.csv",sep="")
+        path_file_metric_tmp<-file.path(paths_$output,"output",file_metric_tmp)
+        write.csv(df_metric_subj,path_file_metric_tmp,row.names=F)
+        list_file_tmp<-c(list_file_tmp,path_file_metric_tmp)
+        #df_dst<-rbind(df_dst,df_metric_subj)
+      }
+    }
+    df_dst<-data.frame()
+    for (path_file_metric_tmp in list_file_tmp){
+      df_tmp<-read.csv(path_file_metric_tmp)
+      df_dst<-rbind(df_dst,df_tmp)
+      file.remove(path_file_metric_tmp)
+      print(paste("Finished binding: ",path_file_metric_tmp,sep=""))
+    }
+    file_dst<-paste("atl-",atlas,"_gta_bin.csv")
+    write.csv(df_dst,file.path(paths_$output,"output",file_dst))
+  }
+  print("Finished calculating binary GTA.")
 }
 
 
@@ -253,7 +273,8 @@ WeightedMetric<-function(input_igraph){
 }
 
 
-gta_weight<-function(absolute=T,threshold=NA){
+gta_weight<-function(absolute=T,
+                     threshold=NA){
   dirname<-ExpDir("GTA")
   #  output_binary<-data.frame()
   for (i in 1:n_subject){

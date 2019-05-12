@@ -94,11 +94,13 @@ func_data_timeseries<-function(paths__,atlas_=atlas){
                                                    list_id_roi)])
   list_ses_exist <- sort(unique(df_timeseries$ses))
   list_id_subj_exist<-list()
+  n_subj_exist<-NULL
   for (ses in list_ses_exist){
     df_timeseries_ses<-df_timeseries[df_timeseries$ses==ses,]
     list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_timeseries_ses$ID_pnTTC))
+    n_subj_exist<-c(n_subj_exist,length(list_id_subj_exist[[as.character(ses)]]))
   }
-  n_subj_exist <- length(list_id_subj_exist)
+  #n_subj_exist <- length(list_id_subj_exist)
   list_ses_exist <- sort(unique(df_timeseries$ses))
   output <- list("df_timeseries"=df_timeseries,"list_id_roi"=list_id_roi,
                  "dict_roi"=dict_roi,"n_roi"=n_roi,
@@ -133,7 +135,7 @@ fc<-function(paths_=paths,
         df_fc_flat<-data_fc$cor_flat
         df_fc_flat<-cbind(ses=ses,ID_pnTTC=id_subj,df_fc_flat)
         colnames(df_fc_flat)<-c("ses","ID_pnTTC","from","to","r","p")
-        file_tmp<-paste("TMP_atl-",atlas,"_ses-",ses,"_sub-",sprintf("%05d", id_subj),"_fc.csv",sep="")
+        file_tmp<-paste("TMP_atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d", id_subj),"_fc.csv",sep="")
         path_file_tmp<-file.path(paths_$output,"output",file_tmp)
         list_path_tmp<-c(list_path_tmp,path_file_tmp)
         write.csv(df_fc_flat,path_file_tmp,row.names=F)
@@ -155,7 +157,7 @@ fc<-function(paths_=paths,
         fig_fc_heatmap<-fig_fc_heatmap + ggtitle(paste(sprintf("%05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))+ theme(plot.title = element_text(hjust = 0.5))
         
         # Save heatmap plot
-        ggsave(paste("atl-",atlas,"_ses-",ses,"_sub-",sprintf("%05d", id_subj),"_fc.eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d", id_subj),"_fc.eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
         
         print(paste("Finished Wave: ",as.character(ses),", Subject: ",as.character(id_subj),sep=""))
@@ -172,6 +174,7 @@ fc<-function(paths_=paths,
     }
     colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p")
     write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
+    df_fc_stack<-NULL
     print("Finished saving all subject results.")
     print(paste("Finished calculating for atlas: ",atlas, sep=""))
   }
