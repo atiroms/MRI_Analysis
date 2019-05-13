@@ -192,7 +192,7 @@ gta_bin<-function(paths_=paths,
           metrics<-cbind(cost=cost,metrics)
           df_metric_subj<-rbind(df_metric_subj,metrics)
         }
-        df_metric_subj$value<-as.numeric(df_metric_subj$value)
+        df_metric_subj$value<-as.numeric.factor(df_metric_subj$value)
         df_metric<-df_metric_subj[which(df_metric_subj$cost==list_cost_[1]),c("node","metric")]
         average<-data.frame()
         for (i in seq(dim(df_metric)[1])){
