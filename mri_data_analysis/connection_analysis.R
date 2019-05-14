@@ -160,6 +160,7 @@ gta_bin<-function(paths_=paths,
   dict_roi<-func_dict_roi(paths_)
   
   for (atlas in list_atlas_){
+    print(paste("Calculate atlas: ",atlas,sep=""))
     file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
     df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
@@ -219,8 +220,8 @@ gta_bin<-function(paths_=paths,
       file.remove(path_file_metric_tmp)
       print(paste("Finished binding: ",path_file_metric_tmp,sep=""))
     }
-    file_dst<-paste("atl-",atlas,"_gta_bin.csv")
-    write.csv(df_dst,file.path(paths_$output,"output",file_dst))
+    file_dst<-paste("atl-",atlas,"_gta_bin.csv",sep="")
+    write.csv(df_dst,file.path(paths_$output,"output",file_dst),row.names=F)
   }
   print("Finished calculating binary GTA.")
 }
