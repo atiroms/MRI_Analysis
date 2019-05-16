@@ -20,12 +20,11 @@ dir_out<-"55_gta_bin"
 #subset_subj <- list(list("column"="W1_5sub","value"=1))
 #subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"schaefer400"
 
 thr_pvalue <- 0.05
 
-#cost<-seq(0.04,0.25,0.01)
 list_cost<-seq(0.15,0.40,0.01)
 
 
