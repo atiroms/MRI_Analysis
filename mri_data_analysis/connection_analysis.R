@@ -8,22 +8,17 @@
 #**************************************************
 # Parameters ======================================
 #**************************************************
-# parameters for glm_fc()
-list_covar<-c("W1_Tanner_Max","W1_Age_at_MRI")
-
-# parameters for fc_corr()
+# parameters for gta_bin()
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"54_fc_acompcor"
 dir_out<-"55_gta_bin"
-#subset_subj <- list(list("column"="W1_5sub","value"=1))
-#subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"schaefer400"
 
-thr_pvalue <- 0.05
+#thr_pvalue <- 0.05
 
 list_cost<-seq(0.15,0.40,0.01)
 
@@ -72,7 +67,6 @@ source(file.path(paths$script,"functionality/function.R"))
 source(file.path(paths$script,"functionality/glm_function.R"))
 source(file.path(paths$script,"functionality/graph.R"))
 source(file.path(paths$script,"functionality/gta_function.R"))
-
 
 
 #**************************************************
