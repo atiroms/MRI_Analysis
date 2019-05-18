@@ -16,6 +16,13 @@ dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
 dir_out<-"57_gta_weight"
 
+list_wave <- c(1,2)
+
+subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
+                    "2"=list(list("key"="W2_T1QC","value"=1),
+                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
@@ -278,15 +285,27 @@ atlas<-list_atlas_[1]
 
 ses<-list_ses_exist[1]
 
-id_subj<-list_id_subj_exist[[ses]][1]
+#id_subj<-list_id_subj_exist[[ses]][1]
+id_subj<-31
 
 gta_weight<-function(absolute=T,
                      threshold=NA,
                      paths_=paths,
-                     list_atlas_=list_atlas){
+                     list_atlas_=list_atlas,
+                     list_wave_=list_wave,
+                     subset_subj_=subset_subj){
   print("Starting gta_weight().")
   nullobj<-func_createdirs(paths_)
   dict_roi<-func_dict_roi(paths_)
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  df_clin<-func_clinical_data_long(paths_,list_wave_)
+  data_subset_clin<-func_subset_clin(df_clin,
+                                     list_wave_,subset_subj_,
+                                     list_covar=NULL,
+                                     rem_na_clin=T)
+  df_clin_subset<-data_subset_clin$df_clin
 
   for (atlas in list_atlas_){
     print(paste("Calculate atlas: ",atlas,sep=""))
@@ -302,7 +321,10 @@ gta_weight<-function(absolute=T,
     list_id_subj_exist<-list()
     for (ses in list_ses_exist){
       df_conn_ses<-df_conn[df_conn$ses==ses,]
-      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
+      id_subj_exist<-unique(df_conn_ses$ID_pnTTC)
+      id_subj_subset<-df_clin_subset[df_clin_subset$wave==ses,"ID_pnTTC"]
+      id_subj_exist<-intersect(id_subj_exist,id_subj_subset)
+      list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist)
     }
     #df_dst<-data.frame()
     list_file_tmp<-NULL
@@ -316,6 +338,7 @@ gta_weight<-function(absolute=T,
         if (absolute){
           E(igraph_subj)$weight<-abs(E(igraph_subj)$weight)
         }
+        E(igraph_subj)$weight[is.na(E(igraph_subj)$weight)]<-0
         df_metric_subj<-WeightedMetric(igraph_subj)
         df_metric_subj$value<-as.numeric.factor(df_metric_subj$value)
         rownames(df_metric_subj)<-NULL

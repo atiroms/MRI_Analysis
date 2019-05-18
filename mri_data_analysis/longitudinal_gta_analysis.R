@@ -19,9 +19,9 @@ dir_dst<-"56_gamm_gta"
 list_wave <- c(1,2)
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild","value"=1)),
+                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
                     "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild","value"=1)))
+                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
@@ -151,7 +151,7 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   print('Loading clinical data.')
   df_clin<-func_clinical_data_long(paths_,list_wave_)
   data_subset_clin<-func_subset_clin(df_clin,
-                                     list_wave_,list_measure_,subset_subj_,
+                                     list_wave_,subset_subj_,
                                      list_covar_,
                                      rem_na_clin=T)
   df_clin_subset<-data_subset_clin$df_clin

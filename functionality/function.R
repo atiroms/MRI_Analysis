@@ -97,7 +97,7 @@ func_clinical_data_long<-function(paths,
 # used for longitudinal analysis (GAMM)
 
 func_subset_clin<-function(df_clin,
-                           list_wave,list_measure,subset_subj,
+                           list_wave,subset_subj,
                            list_covar,
                            rem_na_clin
                            ){
@@ -146,20 +146,22 @@ func_subset_clin<-function(df_clin,
     id_exist_intersect<-df_clin_exist_wave$ID_pnTTC
     print(paste('Source clinical data ',as.character(length(id_exist_intersect)),sep=''))
     list_id_exist_wave<-list('src'=id_exist_intersect)
-    for (id_covar in seq(length(list_covar))){
-      name_covar_src<-list_covar[[id_covar]][[str_wave]]
-      name_covar_dst<-names(list_covar)[id_covar]
-      df_clin_exist_wave_add<-df_clin_subset[df_clin_subset$wave==wave,name_covar_src,drop=F]
-      colnames(df_clin_exist_wave_add)<-name_covar_dst
-      df_clin_exist_wave<-cbind(df_clin_exist_wave,df_clin_exist_wave_add)
-      id_exist<-df_clin_exist_wave[!is.na(df_clin_exist_wave[name_covar_dst]),'ID_pnTTC']
-      id_exist_intersect<-intersect(id_exist_intersect,id_exist)
-      print(paste(as.character(length(id_exist)),' subjects with ',name_covar_src,sep=''))
-      id_exist<-list(id_exist)
-      names(id_exist)<-name_covar_dst
-      list_id_exist_wave<-c(list_id_exist_wave,id_exist)
+    if (length(list_covar)>0){
+      for (id_covar in seq(length(list_covar))){
+        name_covar_src<-list_covar[[id_covar]][[str_wave]]
+        name_covar_dst<-names(list_covar)[id_covar]
+        df_clin_exist_wave_add<-df_clin_subset[df_clin_subset$wave==wave,name_covar_src,drop=F]
+        colnames(df_clin_exist_wave_add)<-name_covar_dst
+        df_clin_exist_wave<-cbind(df_clin_exist_wave,df_clin_exist_wave_add)
+        id_exist<-df_clin_exist_wave[!is.na(df_clin_exist_wave[name_covar_dst]),'ID_pnTTC']
+        id_exist_intersect<-intersect(id_exist_intersect,id_exist)
+        print(paste(as.character(length(id_exist)),' subjects with ',name_covar_src,sep=''))
+        id_exist<-list(id_exist)
+        names(id_exist)<-name_covar_dst
+        list_id_exist_wave<-c(list_id_exist_wave,id_exist)
+      }
+      print(paste(as.character(length(id_exist_intersect)),' subjects with all convariates existing.',sep=''))
     }
-    print(paste(as.character(length(id_exist_intersect)),' subjects with all convariates existing.',sep=''))
     if (rem_na_clin){
       n_subj_pre<-nrow(df_clin_exist_wave)
       df_clin_exist_wave<-df_clin_exist_wave[df_clin_exist_wave$ID_pnTTC %in% id_exist_intersect,]
