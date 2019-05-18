@@ -8,19 +8,23 @@
 #**************************************************
 # Parameters ======================================
 #**************************************************
-# parameters for gta_bin()
+# parameters for gta_bin() and gta_weight()
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"54_fc_acompcor"
-dir_out<-"55_gta_bin"
+#dir_out<-"55_gta_bin"
+dir_out<-"57_gta_weight"
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
 
 #thr_pvalue <- 0.05
 
 list_cost<-seq(0.15,0.40,0.01)
+absolute<-T
+threshold<-NA
 
 
 #**************************************************
@@ -216,7 +220,7 @@ gta_bin<-function(paths_=paths,
     file_dst<-paste("atl-",atlas,"_gta_bin.csv",sep="")
     write.csv(df_dst,file.path(paths_$output,"output",file_dst),row.names=F)
   }
-  print("Finished calculating binary GTA.")
+  print("Finished gta_bin().")
 }
 
 
@@ -226,23 +230,22 @@ gta_bin<-function(paths_=paths,
 
 # add metric to output list in weighted GTA
 AddMetric<-function(input){
-  output<-data.frame(matrix(nrow=0,ncol=4))
+  output<-data.frame(matrix(nrow=0,ncol=3))
   if (!is.null(input$graph)){
-    output_add<-cbind(node="graph",node_label=NA,metric=input$name[[1]],value=input$graph)
+    output_add<-cbind(node="graph",metric=input$name[[1]],value=input$graph)
     output<-rbind(output,output_add)
   }
   if (!is.null(input$node)){
     output_add<-cbind(node=names(input$node),
-                      node_label=ConvertID(names(input$node),roi_data,"ID_long","label_proper"),
                       metric=input$name[[1]],value=input$node)
     output<-rbind(output,output_add)
   }
-  colnames(output)<-c("node","node_label","metric","value")
+  colnames(output)<-c("node","metric","value")
   return(output)
 }
 
 WeightedMetric<-function(input_igraph){
-  metrics<-data.frame(matrix(nrow=0,ncol=4))
+  metrics<-data.frame(matrix(nrow=0,ncol=3))
   distance<-WeightedDistance(input_igraph)$distance
   
   metrics<-rbind(metrics,AddMetric(WeightedCharPath(input_distance=distance)))
@@ -261,52 +264,80 @@ WeightedMetric<-function(input_igraph){
   metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedAssortativityCoef(input = input_igraph)))
   
-  colnames(metrics)<-c("node","node_label","metric","value")
+  colnames(metrics)<-c("node","metric","value")
   rownames(metrics)<-NULL
   return(metrics)
 }
 
 
+absolute=T
+threshold=NA
+paths_=paths
+list_atlas_=list_atlas
+atlas<-list_atlas_[1]
+
+ses<-list_ses_exist[1]
+
+id_subj<-list_id_subj_exist[[ses]][1]
+
 gta_weight<-function(absolute=T,
-                     threshold=NA){
-  dirname<-ExpDir("GTA")
-  #  output_binary<-data.frame()
-  for (i in 1:n_subject){
-    print(paste("Calculating subject No.",i,", ID_pnTTC:",subject_id[i]))
-    Sys.sleep(0.01)
-    flush.console()
-    subject_graph<-edges2igraph(connection_data[which(connection_data$ID_pnTTC==subject_id[i]),])
-    #    subject_metric_binary<-ItrCost(subject_graph)
-    #    output_binary<-rbind(output_binary,
-    #                         cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_binary)),
-    #                               subject_metric_binary))
-    if (absolute){
-      E(subject_graph)$weight<-abs(E(subject_graph)$weight)
+                     threshold=NA,
+                     paths_=paths,
+                     list_atlas_=list_atlas){
+  print("Starting gta_weight().")
+  nullobj<-func_createdirs(paths_)
+  dict_roi<-func_dict_roi(paths_)
+
+  for (atlas in list_atlas_){
+    print(paste("Calculate atlas: ",atlas,sep=""))
+    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
+    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    n_edge<-dim(df_edge)[1]
+    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
+    list_node<-list_node[order(list_node)]
+    n_node<-length(list_node)
+    list_ses_exist <- sort(unique(df_conn$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_conn_ses<-df_conn[df_conn$ses==ses,]
+      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
     }
-    subject_metric_weighted<-WeightedMetric(subject_graph)
-    output_weighted_add<-cbind(ID_pnTTC=rep(subject_id[i],nrow(subject_metric_weighted)),
-                               subject_metric_weighted)
-    write.csv(output_weighted_add, file.path(dirname,sprintf("GTA_weighted_%05d.csv",i)),row.names=F)
+    #df_dst<-data.frame()
+    list_file_tmp<-NULL
+    for (ses in list_ses_exist){
+      for (id_subj in list_id_subj_exist[[ses]]){
+        #for (id_subj in list_id_subj_exist[[ses]][c(1,2)]){
+        print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
+        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
+        igraph_subj<-edges2igraph(df_conn=df_conn_subj,df_edge=df_edge,list_node=list_node,dict_roi=dict_roi)
+        if (absolute){
+          E(igraph_subj)$weight<-abs(E(igraph_subj)$weight)
+        }
+        df_metric_subj<-WeightedMetric(igraph_subj)
+        df_metric_subj$value<-as.numeric.factor(df_metric_subj$value)
+        rownames(df_metric_subj)<-NULL
+        df_metric_subj<-cbind(ses=ses,ID_pnTTC=id_subj,df_metric_subj)
+        file_metric_tmp<-paste("TMP_atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d",id_subj),"_gta_weight.csv",sep="")
+        path_file_metric_tmp<-file.path(paths_$output,"output",file_metric_tmp)
+        write.csv(df_metric_subj,path_file_metric_tmp,row.names=F)
+        list_file_tmp<-c(list_file_tmp,path_file_metric_tmp)
+        #df_dst<-rbind(df_dst,df_metric_subj)
+      }
+    }
+    df_dst<-data.frame()
+    for (path_file_metric_tmp in list_file_tmp){
+      df_tmp<-read.csv(path_file_metric_tmp)
+      df_dst<-rbind(df_dst,df_tmp)
+      file.remove(path_file_metric_tmp)
+      print(paste("Finished binding: ",path_file_metric_tmp,sep=""))
+    }
+    file_dst<-paste("atl-",atlas,"_gta_weight.csv",sep="")
+    write.csv(df_dst,file.path(paths_$output,"output",file_dst),row.names=F)
   }
-  output_weighted<-data.frame()
-  for (i in 1:n_subject){
-    output_weighted_add<-read.csv(file.path(dirname,sprintf("GTA_weighted_%05d.csv",i)))
-    output_weighted<-rbind(output_weighted,output_weighted_add)
-  }
-  
-  #  write.csv(output_binary, file.path(dirname,"GTA_binary.csv"),row.names=F)
-  write.csv(output_weighted, file.path(dirname,"GTA_weighted.csv"),row.names=F)
-  #  output<-list(output_binary,output_weighted)
-  #  names(output)<-c("Binary","Weighted")
-  glm<-CommonGLM(output_weighted,covariate_label,global_covariate=F,dirname=dirname,"GLM_GTA.csv")
-  output_weighted_tidy<-output_weighted[,c("ID_pnTTC","node","metric","value")]
-  li<-CommonLI(output_weighted_tidy,"node",dirname,"LI_GTA.csv")
-  li_tidy<-li[,c("ID_pnTTC","node","metric","L_ROI_ID","R_ROI_ID","Laterality_Index")]
-  colnames(li_tidy)[6]<-"value"
-  glm_li<-CommonGLM(li_tidy,covariate_label,global_covariate=F,dirname=dirname,"GLM_LI_GTA.csv")
-  output<-list(output_weighted,glm,li,glm_li)
-  names(output)<-c("Weighted_GTA","GLM_of_GTA","LI_of_GTA","GLM_of_LI_of_GTA")
-  return(output)
+  print("Finished gta_weight().")
 }
 
 

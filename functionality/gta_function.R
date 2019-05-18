@@ -14,7 +14,7 @@ library(igraph)
 # Basic functions =================================
 #**************************************************
 iGraph2Nodes<-function(input){
-  nodes<-data.frame(node=V(input)$name,label_proper=V(input)$label_proper)
+  nodes<-data.frame(node=V(input)$name)
   return(nodes)
 }
 
