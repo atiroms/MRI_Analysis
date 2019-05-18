@@ -20,8 +20,8 @@ dir_out<-"55_gta_bin"
 #subset_subj <- list(list("column"="W1_5sub","value"=1))
 #subset_subj <- list(list("column"="W1_5sub","value"=1),list("column"="Sex","value"=1))
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"schaefer400"
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"schaefer400"
 
 thr_pvalue <- 0.05
 
