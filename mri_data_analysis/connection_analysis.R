@@ -26,7 +26,7 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
-
+list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
 
 list_cost<-seq(0.15,0.40,0.01)
