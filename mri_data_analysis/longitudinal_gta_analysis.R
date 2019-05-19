@@ -36,8 +36,14 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                             "2"="Sex",
                             "label"="Sex"))
 
-list_mod <- list("a+s+st"=
-                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+list_mod <- list("additive"=
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex)",
+                 "additive_mixed"=
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
+                 "linear"=
+                   "value ~ age + sex + sex:tanner",
+                 "linear_mixed"=
+                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')")
 
 list_plot<-list("a"=list("title"="Age effect",
                          "x_axis"="age",
@@ -130,14 +136,14 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # GAMM function ===================================
 #**************************************************
-#paths_=paths
-#subset_subj_=subset_subj
-#list_covar_=list_covar
-#list_wave_=list_wave
-#list_mod_=list_mod
-#list_plot_=list_plot
-#list_atlas_=list_atlas
-#atlas=list_atlas_[1]
+paths_=paths
+subset_subj_=subset_subj
+list_covar_=list_covar
+list_wave_=list_wave
+list_mod_=list_mod
+list_plot_=list_plot
+list_atlas_=list_atlas
+atlas=list_atlas_[1]
 
 gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                    list_wave_=list_wave,
@@ -220,13 +226,15 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
           df_out_model_add<-data.frame()
           for (mod in names(list_mod_)){
             list_mod_gamm[[mod]]<-try(gam(as.formula(list_mod_[[mod]]),data=df_join_cost_node_metric),silent=T)
-            if(class(list_mod_gamm[[mod]])!="try-error"){
+            if(class(list_mod_gamm[[mod]])[[1]]!="try-error"){
               p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
               s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
-              df_out_term_add<-rbind(data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
-                                                term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                                     data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
-                                                term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
+              if (!is.null(s_table)){
+                df_out_term_add<-rbind(data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
+                                                  term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                                       data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
+                                                  term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
+              }
               df_out_term<-rbind(df_out_term,df_out_term_add)
               df_out_model_add<-rbind(df_out_model_add,
                                       data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
@@ -234,7 +242,7 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
               
               for (idx_plot in names(list_plot_)){
                 plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
-                                df_join_cost_node_metric,
+                                df_join_measure_roi=df_join_cost_node_metric,
                                 spec_graph=list_plot_[[idx_plot]])
                 axis_x<-list_plot_[[idx_plot]][["x_axis"]]
                 label_x<-list_covar_[[axis_x]][["label"]]
