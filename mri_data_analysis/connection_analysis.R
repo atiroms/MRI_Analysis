@@ -262,7 +262,7 @@ WeightedMetric<-function(input_igraph){
   metrics<-rbind(metrics,AddMetric(WeightedGlobalEfficiency(input_distance = distance)))
   metrics<-rbind(metrics,AddMetric(WeightedClustCoef(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedTransitivity(input = input_igraph)))
-  metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
+  #metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedModularity(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedClosenessCentrality(input_distance = distance)))
