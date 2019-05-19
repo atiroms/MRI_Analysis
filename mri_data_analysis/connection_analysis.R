@@ -256,7 +256,7 @@ WeightedMetric<-function(input_igraph){
   distance<-WeightedDistance(input_igraph)$distance
   
   metrics<-rbind(metrics,AddMetric(WeightedCharPath(input_distance=distance)))
-  metrics<-rbind(metrics,AddMetric(WeightedEccentricity(input_distance = distance)))
+  #metrics<-rbind(metrics,AddMetric(WeightedEccentricity(input_distance = distance)))
   metrics<-rbind(metrics,AddMetric(WeightedRadius(input_distance = distance)))
   metrics<-rbind(metrics,AddMetric(WeightedDiameter(input_distance = distance)))
   metrics<-rbind(metrics,AddMetric(WeightedGlobalEfficiency(input_distance = distance)))
@@ -264,11 +264,11 @@ WeightedMetric<-function(input_igraph){
   metrics<-rbind(metrics,AddMetric(WeightedTransitivity(input = input_igraph)))
   #metrics<-rbind(metrics,AddMetric(WeightedLocalEfficiency(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedModularity(input = input_igraph)))
-  metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
-  metrics<-rbind(metrics,AddMetric(WeightedClosenessCentrality(input_distance = distance)))
-  metrics<-rbind(metrics,AddMetric(WeightedBetweennessCentrality(input = input_igraph)))
-  metrics<-rbind(metrics,AddMetric(WeightedEigenvectorCentrality(input = input_igraph)))
-  metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
+  #metrics<-rbind(metrics,AddMetric(WeightedStrength(input = input_igraph)))
+  m#etrics<-rbind(metrics,AddMetric(WeightedClosenessCentrality(input_distance = distance)))
+  #metrics<-rbind(metrics,AddMetric(WeightedBetweennessCentrality(input = input_igraph)))
+  #metrics<-rbind(metrics,AddMetric(WeightedEigenvectorCentrality(input = input_igraph)))
+  #metrics<-rbind(metrics,AddMetric(WeightedNeighborDegree(input = input_igraph)))
   metrics<-rbind(metrics,AddMetric(WeightedAssortativityCoef(input = input_igraph)))
   
   colnames(metrics)<-c("node","metric","value")
