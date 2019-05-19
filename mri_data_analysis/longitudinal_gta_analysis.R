@@ -13,8 +13,8 @@
 path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_src<-"55_gta_bin"
-dir_dst<-"56_gamm_gta_bin"
+dir_src<-"57_gta_weight"
+dir_dst<-"58_gamm_gta_weight"
 
 list_wave <- c(1,2)
 
@@ -23,8 +23,8 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"aal116"
 
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                                "2"="W2_Tanner_Max",
@@ -130,15 +130,14 @@ source(file.path(paths$script,"functionality/graph.R"))
 #**************************************************
 # GAMM function ===================================
 #**************************************************
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-list_wave_=list_wave
-list_mod_=list_mod
-list_plot_=list_plot
-list_atlas_=list_atlas
-atlas=list_atlas_[1]
-
+#paths_=paths
+#subset_subj_=subset_subj
+#list_covar_=list_covar
+#list_wave_=list_wave
+#list_mod_=list_mod
+#list_plot_=list_plot
+#list_atlas_=list_atlas
+#atlas=list_atlas_[1]
 
 gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                    list_wave_=list_wave,
@@ -162,7 +161,7 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     print(paste('Calculating atlas: ',atlas,sep=''))
     # Load GTA data
     print('Loading GTA data.')
-    file_src<-paste("atl-",atlas,"_gta_bin.csv",sep="")
+    file_src<-paste("atl-",atlas,"_gta_weight.csv",sep="")
     df_gta<-read.csv(file.path(paths_$input,"output",file_src))
     colnames(df_gta)[colnames(df_gta)=="ses"]<-"wave"
     df_gta$value[which(is.nan(df_gta$value))]<-0
@@ -197,7 +196,11 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     #list_cost<-c("average",list_cost[list_cost!="average"])
     list_cost<-"average"
     for (cost in list_cost){
-      df_join_cost<-df_join[df_join$cost==cost,]
+      if ("cost" %in% colnames(df_join)){
+        df_join_cost<-df_join[df_join$cost==cost,]
+      }else{
+        df_join_cost<-df_join
+      }
       print(paste('Calculating cost ',cost,sep=''))
       for (node in list_node){
         if (node=="graph"){
