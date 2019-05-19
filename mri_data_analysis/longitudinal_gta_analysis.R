@@ -14,7 +14,7 @@ path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_src<-"55_gta_bin"
-dir_dst<-"56_gamm_gta"
+dir_dst<-"56_gamm_gta_bin"
 
 list_wave <- c(1,2)
 
@@ -216,38 +216,42 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
           list_mod_gamm<-list()
           df_out_model_add<-data.frame()
           for (mod in names(list_mod_)){
-            list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join_cost_node_metric)
-            p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
-            s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
-            df_out_term_add<-rbind(data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
-                                              term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                                   data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
-                                              term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
-            df_out_term<-rbind(df_out_term,df_out_term_add)
-            df_out_model_add<-rbind(df_out_model_add,
-                                    data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
-                                               aic=list_mod_gamm[[mod]]$aic,aic_best_among_models=0))
-            
-            for (idx_plot in names(list_plot_)){
-              plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
-                              df_join_cost_node_metric,
-                              spec_graph=list_plot_[[idx_plot]])
-              axis_x<-list_plot_[[idx_plot]][["x_axis"]]
-              label_x<-list_covar_[[axis_x]][["label"]]
-              plot<-(plot
-                     + ggtitle(paste(list_plot_[[idx_plot]][["title"]],label_node,sep=' '))
-                     + xlab(label_x)
-                     + ylab(capitalize(metric))
-                     + theme(legend.position = "none"))
-              filename_plot<-paste("atl-",atlas,"_cost-",cost,"_node-",node,"_metric-",metric,"_mod-",mod,"_plt-",idx_plot,"_gamm.eps",sep="")
-              ggsave(filename_plot,plot=plot,device=cairo_ps,
-                     path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+            list_mod_gamm[[mod]]<-try(gam(as.formula(list_mod_[[mod]]),data=df_join_cost_node_metric),silent=T)
+            if(class(list_mod_gamm[[mod]])!="try-error"){
+              p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
+              s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
+              df_out_term_add<-rbind(data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
+                                                term=rownames(p_table),F=NA,t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                                     data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
+                                                term=rownames(s_table),F=s_table[,'F'],t=NA,p=s_table[,'p-value']))
+              df_out_term<-rbind(df_out_term,df_out_term_add)
+              df_out_model_add<-rbind(df_out_model_add,
+                                      data.frame(cost=cost,node=node,label_node=label_node,group_node=group_node,metric=metric,model=mod,
+                                                 aic=list_mod_gamm[[mod]]$aic,aic_best_among_models=0))
               
+              for (idx_plot in names(list_plot_)){
+                plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
+                                df_join_cost_node_metric,
+                                spec_graph=list_plot_[[idx_plot]])
+                axis_x<-list_plot_[[idx_plot]][["x_axis"]]
+                label_x<-list_covar_[[axis_x]][["label"]]
+                plot<-(plot
+                       + ggtitle(paste(list_plot_[[idx_plot]][["title"]],label_node,sep=' '))
+                       + xlab(label_x)
+                       + ylab(capitalize(metric))
+                       + theme(legend.position = "none"))
+                filename_plot<-paste("atl-",atlas,"_cost-",cost,"_node-",node,"_metric-",metric,"_mod-",mod,"_plt-",idx_plot,"_gamm.eps",sep="")
+                ggsave(filename_plot,plot=plot,device=cairo_ps,
+                       path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+                
+              }
             }
           }
           # compare AICs of models
-          df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
-          df_out_model<-rbind(df_out_model,df_out_model_add)
+          if (length(df_out_model_add)>0){
+            df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
+            df_out_model<-rbind(df_out_model,df_out_model_add)
+          }
           rownames(df_out_term)<-rownames(df_out_model)<-NULL
           fileprefix_out<-paste("atl-",atlas,"_gamm.csv",sep="")
           write.csv(df_out_term, file.path(paths_$output,"output",paste("atl-",atlas,"_gamm.csv",sep="")),row.names = F)
