@@ -24,7 +24,8 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+#list_atlas<-"aal116"
+list_atlas<-"glasser360"
 
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                                "2"="W2_Tanner_Max",
