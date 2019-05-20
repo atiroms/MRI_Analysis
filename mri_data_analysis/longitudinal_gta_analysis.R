@@ -64,25 +64,26 @@ list_plot<-list("a"=list("title"="Age effect",
                           "point"=list("Male"=list("subset"=list("sex"=1),
                                                    "color"="steelblue2","alpha"=1),
                                        "Female"=list("subset"=list("sex"=2),
-                                                     "color"="lightcoral","alpha"=1))),
-                "sat"=list("title"="Age-Tanner stage interaction",
-                           "x_axis"="age",
-                           "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
-                                                            "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
-                                         "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
-                                                            "color"="steelblue2","alpha"=0.7,"ribbon"=F),
-                                         "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
-                                                            "color"="steelblue2","alpha"=1,"ribbon"=F),
-                                         "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
-                                                              "color"="lightcoral","alpha"=0.4,"ribbon"=F),
-                                         "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
-                                                              "color"="lightcoral","alpha"=0.7,"ribbon"=F),
-                                         "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
-                                                              "color"="lightcoral","alpha"=1,"ribbon"=F)),
-                           "point"=list("Male"=list("subset"=list("sex"=1),
-                                                    "color"="steelblue2","alpha"=1),
-                                        "Female"=list("subset"=list("sex"=2),
-                                                      "color"="lightcoral","alpha"=1))))
+                                                     "color"="lightcoral","alpha"=1))))
+                #"sat"=list("title"="Age-Tanner stage interaction",
+                #           "x_axis"="age",
+                #           "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
+                #                                            "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
+                #                         "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
+                #                                            "color"="steelblue2","alpha"=0.7,"ribbon"=F),
+                #                         "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
+                #                                            "color"="steelblue2","alpha"=1,"ribbon"=F),
+                #                         "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
+                #                                              "color"="lightcoral","alpha"=0.4,"ribbon"=F),
+                #                         "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
+                #                                              "color"="lightcoral","alpha"=0.7,"ribbon"=F),
+                #                         "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
+                #                                              "color"="lightcoral","alpha"=1,"ribbon"=F)),
+                #           "point"=list("Male"=list("subset"=list("sex"=1),
+                #                                    "color"="steelblue2","alpha"=1),
+                #                        "Female"=list("subset"=list("sex"=2),
+                #                                      "color"="lightcoral","alpha"=1)))
+                #)
 
 
 #**************************************************
@@ -247,7 +248,7 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                 axis_x<-list_plot_[[idx_plot]][["x_axis"]]
                 label_x<-list_covar_[[axis_x]][["label"]]
                 plot<-(plot
-                       + ggtitle(paste(list_plot_[[idx_plot]][["title"]],label_node,sep=' '))
+                       + ggtitle(paste(list_plot_[[idx_plot]][["title"]],":",label_node,sep=' '))
                        + xlab(label_x)
                        + ylab(capitalize(metric))
                        + theme(legend.position = "none"))
