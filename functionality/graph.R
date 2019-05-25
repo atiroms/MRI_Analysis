@@ -22,7 +22,13 @@ library(purrr)
 
 plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
   #df_src <- mod_gamm$model
-  df_src <- df_join_measure_roi[c("value",names(mod_gamm$var.summary))]
+  key_df_src<-c("value",names(mod_gamm$var.summary))
+  if ("ID_pnTTC" %in% key_df_src){
+    key_df_src<-key_df_src
+  }else{
+    key_df_src<-c(key_df_src, "ID_pnTTC")
+  }
+  df_src <- df_join_measure_roi[key_df_src]
   
   plot<-ggplot()
   # add prediction line + ribbon to plot
