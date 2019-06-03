@@ -22,8 +22,10 @@ shutil.copyfileobj = _copyfileobj_patched
 
 class Collect():
     def __init__(self,
-        path_src='C:/Users/atiro/Dropbox/temp/BIDS',
-        path_dst='C:/Users/atiro/Dropbox/temp/collect',
+        #path_src='C:/Users/atiro/Dropbox/temp/BIDS',
+        #path_dst='C:/Users/atiro/Dropbox/temp/collect',
+        path_src='/Volumes/MRI_Ext1/smorita/MRI_img/pnTTC/preproc/37_c1_bids',
+        path_dst='/Volumes/MRI_Ext1/smorita/MRI_img/pnTTC/preproc/54_c1_acpc',
         list_subdir_src=['ses-01/anat']
         #list_subdir_src=['ses-01/anat','ses-01/fmap']
     ):
