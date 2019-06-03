@@ -84,8 +84,10 @@ class Collect():
 
 class Spread():
     def __init__(self,
-        path_src='C:/Users/atiro/Dropbox/temp/collect',
-        path_dst='C:/Users/atiro/Dropbox/temp/BIDS',
+        #path_src='C:/Users/atiro/Dropbox/temp/collect',
+        #path_dst='C:/Users/atiro/Dropbox/temp/BIDS',
+        path_src='D:/atiroms/Dropbox/temp/collect',
+        path_dst='D:/atiroms/Dropbox/temp/BIDS',
         list_subdir_src=['ses-01/anat']
         #list_subdir_src=['ses-01/anat','ses-01/fmap']
     ):
@@ -110,6 +112,17 @@ class Spread():
 
         for subdir in list_subdir_src:
             print('Spreading from subdirectory: ' + subdir)
-            
-
+            list_file_src=os.listdir(os.path.join(path_src,'output',subdir))
+            list_file_src.sort()
+            for file_src in list_file_src:
+                if file_src[-8:]=='_T1w.nii':
+                    dir_sub=file_src[:9]
+                    dir_ses=file_src[10:16]
+                    path_file_src=os.path.join(path_src,'output',subdir,file_src)
+                    path_file_dst=os.path.join(path_dst,'output',dir_sub,dir_ses,'anat',file_src+'.gz')
+                    os.remove(path_file_dst)
+                    with open(path_file_src, 'rb') as img_src:
+                        with gzip.open(path_file_dst, 'wb') as img_dst:
+                            shutil.copyfileobj(img_src, img_dst)
+                    print('Replaced: '+file_src+'.gz')
         print('Finished Spread()')
