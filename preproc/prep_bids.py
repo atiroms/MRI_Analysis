@@ -24,12 +24,12 @@ class Collect():
     def __init__(self,
         #path_src='C:/Users/atiro/Dropbox/temp/BIDS',
         #path_dst='C:/Users/atiro/Dropbox/temp/collect',
-        path_src='C:/Users/NICT_WS/Dropbox/temp/37_c1_bids',
-        path_dst='C:/Users/NICT_WS/Dropbox/temp/54_c1_acpc',
-        #path_src='C:/Users/NICT_WS/Dropbox/temp/38_c2_bids',
-        #path_dst='C:/Users/NICT_WS/Dropbox/temp/55_c2_acpc',
-        list_subdir_src=['ses-01/anat']
-        #list_subdir_src=['ses-02/anat']
+        #path_src='C:/Users/NICT_WS/Dropbox/temp/37_c1_bids',
+        #path_dst='C:/Users/NICT_WS/Dropbox/temp/54_c1_acpc',
+        path_src='C:/Users/NICT_WS/Dropbox/temp/38_c2_bids',
+        path_dst='C:/Users/NICT_WS/Dropbox/temp/55_c2_acpc',
+        #list_subdir_src=['ses-01/anat']
+        list_subdir_src=['ses-02/anat']
         #list_subdir_src=['ses-01/anat','ses-01/fmap']
     ):
 
