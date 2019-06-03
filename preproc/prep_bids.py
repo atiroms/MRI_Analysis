@@ -24,9 +24,12 @@ class Collect():
     def __init__(self,
         #path_src='C:/Users/atiro/Dropbox/temp/BIDS',
         #path_dst='C:/Users/atiro/Dropbox/temp/collect',
-        path_src='/Volumes/MRI_Ext1/smorita/MRI_img/pnTTC/preproc/37_c1_bids',
-        path_dst='/Volumes/MRI_Ext1/smorita/MRI_img/pnTTC/preproc/54_c1_acpc',
+        path_src='C:/Users/NICT_WS/Dropbox/temp/37_c1_bids',
+        path_dst='C:/Users/NICT_WS/Dropbox/temp/54_c1_acpc',
+        #path_src='C:/Users/NICT_WS/Dropbox/temp/38_c2_bids',
+        #path_dst='C:/Users/NICT_WS/Dropbox/temp/55_c2_acpc',
         list_subdir_src=['ses-01/anat']
+        #list_subdir_src=['ses-02/anat']
         #list_subdir_src=['ses-01/anat','ses-01/fmap']
     ):
 
@@ -86,9 +89,12 @@ class Spread():
     def __init__(self,
         #path_src='C:/Users/atiro/Dropbox/temp/collect',
         #path_dst='C:/Users/atiro/Dropbox/temp/BIDS',
-        path_src='D:/atiroms/Dropbox/temp/collect',
-        path_dst='D:/atiroms/Dropbox/temp/BIDS',
+        path_src='C:/Users/NICT_WS/Dropbox/temp/54_c1_acpc',
+        path_dst='C:/Users/NICT_WS/Dropbox/temp/56_c1_bids',
+        #path_src='C:/Users/NICT_WS/Dropbox/temp/55_c2_acpc',
+        #path_dst='C:/Users/NICT_WS/Dropbox/temp/57_c2_bids',
         list_subdir_src=['ses-01/anat']
+        #list_subdir_src=['ses-02/anat']
         #list_subdir_src=['ses-01/anat','ses-01/fmap']
     ):
 
