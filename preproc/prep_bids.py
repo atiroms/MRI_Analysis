@@ -89,12 +89,12 @@ class Spread():
     def __init__(self,
         #path_src='C:/Users/atiro/Dropbox/temp/collect',
         #path_dst='C:/Users/atiro/Dropbox/temp/BIDS',
-        path_src='C:/Users/NICT_WS/Dropbox/temp/54_c1_acpc',
-        path_dst='C:/Users/NICT_WS/Dropbox/temp/56_c1_bids',
-        #path_src='C:/Users/NICT_WS/Dropbox/temp/55_c2_acpc',
-        #path_dst='C:/Users/NICT_WS/Dropbox/temp/57_c2_bids',
-        list_subdir_src=['ses-01/anat']
-        #list_subdir_src=['ses-02/anat']
+        #path_src='C:/Users/NICT_WS/Dropbox/temp/54_c1_acpc',
+        #path_dst='C:/Users/NICT_WS/Dropbox/temp/56_c1_bids',
+        path_src='C:/Users/NICT_WS/Dropbox/temp/55_c2_acpc',
+        path_dst='C:/Users/NICT_WS/Dropbox/temp/57_c2_bids',
+        #list_subdir_src=['ses-01/anat']
+        list_subdir_src=['ses-02/anat']
         #list_subdir_src=['ses-01/anat','ses-01/fmap']
     ):
 
@@ -110,11 +110,11 @@ class Spread():
         print('Finished creating output folder.')
 
         # Copy log folder
-        print('Starting to copy log folder.')
-        path_log_src=os.path.join(path_src,'log')
-        path_log_dst=os.path.join(path_dst,'log')
-        shutil.copytree(path_log_src,path_log_dst)
-        print('Finished copying log folder.')
+        #print('Starting to copy log folder.')
+        #path_log_src=os.path.join(path_src,'log')
+        #path_log_dst=os.path.join(path_dst,'log')
+        #shutil.copytree(path_log_src,path_log_dst)
+        #print('Finished copying log folder.')
 
         for subdir in list_subdir_src:
             print('Spreading from subdirectory: ' + subdir)
