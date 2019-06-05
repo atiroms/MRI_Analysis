@@ -4,7 +4,9 @@
 
 import os
 import math
+import numpy as np
 import pandas as pd
+import shutil
 
 
 ##################################################
@@ -156,49 +158,72 @@ class SaveListID():
 class GenerateScript():
     def __init__(self,
         list_id,
-        path_src=''
-        path_dst=''
-        
-        script=['SUBJECTS_DIR={path_src}/output',
-                'cd $SUBJECTS_DIR',
-                'recon-all -i {path_dst}/output/CSUB-{id_sub}C-{id_ses}.nii -subject {id_sub} -all -qcache'],
+        path_src='',
+        path_dst='',
+        id_ses=0,
+        head_script='SUBJECTS_DIR={path_src}/output\ncd $SUBJECTS_DIR\n',
+        script='recon-all -i {path_dst}/output/sub-{id_sub}_ses-{id_ses}_T1w.nii -subject {id_sub} -all -qcache',
         connector=' ; '
         ):
-        self.output=head
-        for i in list_id:
-
-            script=text[0] + str(i).zfill(5) + text[1] + str(i).zfill(5) + text[2]
-            self.output=self.output + script
-            if i != list_id[-1]:
+        self.output=head_script
+        for id_subj in list_id:
+            id_sub=str(id_subj).zfill(5)
+            id_ses=str(id_ses).zfill(2)
+            script_subj=script
+            script_subj=script_subj.replace('{path_src}',path_dst).replace('{path_dst}',path_dst)
+            script_subj=script_subj.replace('{id_sub}',id_sub).replace('{id_ses}',id_ses)
+            self.output=self.output+script_subj
+            if id_subj != list_id[-1]:
                 self.output=self.output + connector
 
 
 ##################################################
-# generate scripts for manual multiprocessing
+# Generate FreeSurfer scripts for multiprocessing
 ##################################################
 
-class GenerateMultiScript():
+class PrepFS():
     def __init__(self,
-        path_file_id,
-        #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script',
-        #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_recon_t1qcout.sh',
-        path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/16_recon_t1qcout.sh',
+        file_id='id_fs.csv',
+        path_src='',
+        path_dst='',
+        id_ses=1,
+        file_script='freesurfer_mp.sh',
         n_proc=28
         ):
 
+        print('Starting PrepFS()')
+
+        # Create output folder
+        print('Starting to create output folder.')
+        list_path_mkdir=[]
+        list_path_mkdir.append(path_dst)
+        list_path_mkdir.append(os.path.join(path_dst,'output'))
+        for p in list_path_mkdir:
+            if not os.path.exists(p):
+                os.makedirs(p)
+        print('Finished creating output folder.')
+
+        # Copy log folder
+        print('Starting to copy log folder.')
+        path_log_src=os.path.join(path_src,'log')
+        path_log_dst=os.path.join(path_dst,'log')
+        shutil.copytree(path_log_src,path_log_dst)
+        print('Finished copying log folder.')
+
         # Create ID list
-        with open(path_file_id, 'r') as list_id:
+        with open(os.path.join(path_dst,'log',file_id), 'r') as list_id:
             list_id=list_id.readlines()
             list_id=[int(x.strip('\n')) for x in list_id]
             list_id.sort()
+        print('Number of subjects: '+str(len(list_id)))
 
         # Create list of ID lists
         n_subj=len(list_id)
         n_subj_per_proc=int(np.ceil(n_subj/n_proc))
         n_proc_floor=n_proc*n_subj_per_proc-n_subj
         n_proc_ceil=n_proc-n_proc_floor
-        print('  '+str(n_subj)+' total subs, '+str(n_proc)+' total procs, '+str(n_proc_ceil)+' procs with '
-              +str(n_subj_per_proc)+' subs, '+str(n_proc_floor)+' procs with '+ str(n_subj_per_proc-1)+' subs.')
+        print('Multiprocessing: '+str(n_subj)+' total subs, '+str(n_proc)+' total procs: '+str(n_proc_ceil)+' procs x '
+              +str(n_subj_per_proc)+' subs, '+str(n_proc_floor)+' procs x '+ str(n_subj_per_proc-1)+' subs.')
         list_list_id=[]
         for id_proc in range(n_proc):
             if id_proc<n_proc_ceil:
@@ -208,17 +233,17 @@ class GenerateMultiScript():
                                             (n_subj_per_proc*n_proc_ceil+(id_proc-n_proc_ceil+1)*(n_subj_per_proc-1))])
         
         # Create multiple scripts
-        scriput_out=''
+        script_out=''
         for id_proc in range(n_proc):
             list_id=list_list_id[id_proc]
             str_id_proc=str(id_proc+1).zfill(2)
             script_proc_head='# Process No. '+ str_id_proc + '\n'
-            script_proc=GenerateScript(list_id=list_id).output
+            script_proc=GenerateScript(list_id=list_id,path_src=path_src,path_dst=path_dst,id_ses=id_ses).output
             script_proc_tail='\n\n'
             script_proc=script_proc_head+script_proc+script_proc_tail
             script_out=script_out+script_proc
 
-        file=open(path_file_out,'w')
+        file=open(os.path.join(path_dst,'log'),'w')
         file.write(script_out)
         file.close()
 
@@ -226,8 +251,9 @@ class GenerateMultiScript():
 ##################################################
 # generate multiple scripts for remaining subjects
 ##################################################
+# !No longer used!
 
-class RemainingScript():
-    def __init__(self):
-        list_diff=list(set(ReadID().output)-set(ScanFSFolder().output))
-        GenerateMultiScript(list_diff)
+#class RemainingScript():
+#    def __init__(self):
+#        list_diff=list(set(ReadID().output)-set(ScanFSFolder().output))
+#        GenerateMultiScript(list_diff)
