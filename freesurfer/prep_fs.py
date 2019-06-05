@@ -161,16 +161,16 @@ class GenerateScript():
         path_src='',
         path_dst='',
         id_ses=0,
-        head_script='SUBJECTS_DIR={path_src}/output\ncd $SUBJECTS_DIR\n',
-        script='recon-all -i {path_dst}/output/sub-{id_sub}_ses-{id_ses}_T1w.nii -subject {id_sub} -all -qcache',
+        head_script='SUBJECTS_DIR={path_dst}/output\ncd $SUBJECTS_DIR\n',
+        script='recon-all -i {path_src}/output/sub-{id_sub}_ses-{id_ses}_T1w.nii -subject {id_sub} -all -qcache',
         connector=' ; '
         ):
-        self.output=head_script
+        self.output=head_script.replace('{path_dst}',path_dst)
         for id_subj in list_id:
             id_sub=str(id_subj).zfill(5)
             id_ses=str(id_ses).zfill(2)
             script_subj=script
-            script_subj=script_subj.replace('{path_src}',path_dst).replace('{path_dst}',path_dst)
+            script_subj=script_subj.replace('{path_src}',path_src).replace('{path_dst}',path_dst)
             script_subj=script_subj.replace('{id_sub}',id_sub).replace('{id_ses}',id_ses)
             self.output=self.output+script_subj
             if id_subj != list_id[-1]:
@@ -183,11 +183,11 @@ class GenerateScript():
 
 class PrepFS():
     def __init__(self,
-        file_id='id_fs.csv',
-        path_src='',
-        path_dst='',
-        id_ses=1,
-        file_script='freesurfer_mp.sh',
+        file_id='20_id_c2_fs.csv',
+        path_src='/media/veracrypt1/MRI/pnTTC/c2_struc/freesurfer/20_nii',
+        path_dst='/media/veracrypt1/MRI/pnTTC/c2_struc/freesurfer/21_recon',
+        id_ses=2,
+        file_script='20_fs_mp.sh',
         n_proc=28
         ):
 
@@ -243,9 +243,10 @@ class PrepFS():
             script_proc=script_proc_head+script_proc+script_proc_tail
             script_out=script_out+script_proc
 
-        file=open(os.path.join(path_dst,'log'),'w')
+        file=open(os.path.join(path_dst,'log',file_script),'w')
         file.write(script_out)
         file.close()
+        print('Finished PrepFS()')
 
 
 ##################################################
