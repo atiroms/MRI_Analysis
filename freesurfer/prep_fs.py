@@ -156,26 +156,17 @@ class SaveListID():
 class GenerateScript():
     def __init__(self,
         list_id,
-        #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/output\ncd $SUBJECTS_DIR\n',
-        head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/output\ncd $SUBJECTS_DIR\n',
-        #head='SUBJECTS_DIR=/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/15_recon\ncd $SUBJECTS_DIR\n',
-        #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/06_qc/CSUB-',
-        #      'C-01.nii -subject ',
-        #      ' -all -qcache'],
-        #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/14_qc/CSUB-',
-        #      'C-02.nii.gz -subject ',
-        #      ' -all -qcache'],
-        #text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/04_nii/CSUB-',
-        #      'C-01.nii -subject ',
-        #      ' -all -qcache'],
-        text=['recon-all -i /media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/13_nii.gz_unite/CSUB-',
-              'C-02.nii.gz -subject ',
-              ' -all -qcache'],
+        path_src=''
+        path_dst=''
+        
+        script=['SUBJECTS_DIR={path_src}/output',
+                'cd $SUBJECTS_DIR',
+                'recon-all -i {path_dst}/output/CSUB-{id_sub}C-{id_ses}.nii -subject {id_sub} -all -qcache'],
         connector=' ; '
         ):
-
         self.output=head
         for i in list_id:
+
             script=text[0] + str(i).zfill(5) + text[1] + str(i).zfill(5) + text[2]
             self.output=self.output + script
             if i != list_id[-1]:
@@ -188,25 +179,47 @@ class GenerateScript():
 
 class GenerateMultiScript():
     def __init__(self,
-        list_id,
+        path_file_id,
         #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/script',
         #path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/10.1_recon_t1qcout/log/10.1_recon_t1qcout.sh',
         path_file_out='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/16_recon_t1qcout/log/16_recon_t1qcout.sh',
-        n_scripts=19
+        n_proc=28
         ):
 
-        len_list=len(list_id)
-        len_script=math.ceil(len_list/n_scripts)
-        len_remaining=len_list
-        output=''
-        for i in range(n_scripts):
-            list_script=list_id[(i*len_script):((i+1)*len_script)]
-            output=output + GenerateScript(list_id=list_script).output + '\n\n'
-            len_remaining=len_list-len_script
-            if len_remaining<1:
-                break
+        # Create ID list
+        with open(path_file_id, 'r') as list_id:
+            list_id=list_id.readlines()
+            list_id=[int(x.strip('\n')) for x in list_id]
+            list_id.sort()
+
+        # Create list of ID lists
+        n_subj=len(list_id)
+        n_subj_per_proc=int(np.ceil(n_subj/n_proc))
+        n_proc_floor=n_proc*n_subj_per_proc-n_subj
+        n_proc_ceil=n_proc-n_proc_floor
+        print('  '+str(n_subj)+' total subs, '+str(n_proc)+' total procs, '+str(n_proc_ceil)+' procs with '
+              +str(n_subj_per_proc)+' subs, '+str(n_proc_floor)+' procs with '+ str(n_subj_per_proc-1)+' subs.')
+        list_list_id=[]
+        for id_proc in range(n_proc):
+            if id_proc<n_proc_ceil:
+                list_list_id.append(list_id[(id_proc*n_subj_per_proc):((id_proc+1)*n_subj_per_proc)])
+            else:
+                list_list_id.append(list_id[(n_subj_per_proc*n_proc_ceil+(id_proc-n_proc_ceil)*(n_subj_per_proc-1)):
+                                            (n_subj_per_proc*n_proc_ceil+(id_proc-n_proc_ceil+1)*(n_subj_per_proc-1))])
+        
+        # Create multiple scripts
+        scriput_out=''
+        for id_proc in range(n_proc):
+            list_id=list_list_id[id_proc]
+            str_id_proc=str(id_proc+1).zfill(2)
+            script_proc_head='# Process No. '+ str_id_proc + '\n'
+            script_proc=GenerateScript(list_id=list_id).output
+            script_proc_tail='\n\n'
+            script_proc=script_proc_head+script_proc+script_proc_tail
+            script_out=script_out+script_proc
+
         file=open(path_file_out,'w')
-        file.write(output)
+        file.write(script_out)
         file.close()
 
 
