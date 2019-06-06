@@ -73,7 +73,7 @@ class Pickup():
                 file_img='sub-'+str(id_subj).zfill(5)+'_ses-'+str(ses).zfill(2)+'_T1w.nii'
                 path_file_src=os.path.join(path_src,'output','ses-'+str(ses).zfill(2),file_img)
                 path_file_dst=os.path.join(path_dst,'output','ses-'+str(ses).zfill(2),file_img)
-                shutil.copyfileobj(path_file_src,path_file_dst)
+                shutil.copy(path_file_src,path_file_dst)
                 print('Finished copying file: '+file_img)
         print('Finished copying nifti files.')
 
