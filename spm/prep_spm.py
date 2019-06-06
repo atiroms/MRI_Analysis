@@ -25,10 +25,10 @@ shutil.copyfileobj = _copyfileobj_patched
 
 class Pickup():
     def __init__(self,
-        path_src='',
-        path_dst='',
+        path_src='D:/MRI/pnTTC/c1c2_struc/spm/00_acpc',
+        path_dst='D:/MRI/pnTTC/c1c2_struc/spm/01_t1qc',
         list_ses=[1,2],
-        list_file_id=['','']
+        list_file_id=['id_ses-01_t1qc.csv','id_ses-02_t1qc.csv']
         ):
 
         print('Starting Pickup()')
