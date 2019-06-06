@@ -152,7 +152,7 @@ class SaveListID():
 
 
 ##################################################
-# generate script from ID file
+# generate script from ID list
 ##################################################
 
 class GenerateScript():
