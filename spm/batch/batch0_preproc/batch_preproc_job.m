@@ -1,5 +1,5 @@
 %-----------------------------------------------------------------------
-% Job saved on 08-Jun-2019 22:31:10 by cfg_util (rev $Rev: 6942 $)
+% Job saved on 11-Jun-2019 09:14:56 by cfg_util (rev $Rev: 6942 $)
 % spm SPM - SPM12 (7219)
 % cfg_basicio BasicIO - Unknown
 %-----------------------------------------------------------------------
@@ -515,7 +515,11 @@ matlabbatch{4}.spm.tools.masking{1}.makeavg.innames(1) = cfg_dep('Normalise to M
 matlabbatch{4}.spm.tools.masking{1}.makeavg.avgexpr = 'mean(X)';
 matlabbatch{4}.spm.tools.masking{1}.makeavg.outname = 'average.nii';
 matlabbatch{4}.spm.tools.masking{1}.makeavg.outdir = {'D:\MRI\pnTTC\c1c2_struc\spm\02_spm\output'};
-matlabbatch{5}.spm.util.tvol.matfiles(1) = cfg_dep('Segment: Seg Params', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','param', '()',{':'}));
-matlabbatch{5}.spm.util.tvol.tmax = 3;
-matlabbatch{5}.spm.util.tvol.mask = {'C:\Users\NICT_WS\Documents\MATLAB\toolbox\spm12\tpm\mask_ICV.nii,1'};
-matlabbatch{5}.spm.util.tvol.outf = 'tissue_volumes.csv';
+matlabbatch{5}.spm.tools.masking{1}.optthr.inname = '<UNDEFINED>';
+matlabbatch{5}.spm.tools.masking{1}.optthr.optfunc = '@opt_thr_corr';
+matlabbatch{5}.spm.tools.masking{1}.optthr.outname = 'average_optthr.nii';
+matlabbatch{5}.spm.tools.masking{1}.optthr.outdir = {''};
+matlabbatch{6}.spm.util.tvol.matfiles(1) = cfg_dep('Segment: Seg Params', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','param', '()',{':'}));
+matlabbatch{6}.spm.util.tvol.tmax = 3;
+matlabbatch{6}.spm.util.tvol.mask = {'C:\Users\NICT_WS\Documents\MATLAB\toolbox\spm12\tpm\mask_ICV.nii,1'};
+matlabbatch{6}.spm.util.tvol.outf = 'tissue_volumes.csv';
