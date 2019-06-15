@@ -345,7 +345,7 @@ class PrepFmriprep():
         path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/21_recon',
         #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/60_c1_fmriprep',
         path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
-        #path_file_fslicense='/usr/local/freesurfer/license.txt',
+        path_file_fslicense='/usr/local/freesurfer/license.txt',
         #file_id='id_c1_t1exist_rsfmriexist.csv'
         file_id='id_c2_t1exist_rsfmriexist.csv'
         ):

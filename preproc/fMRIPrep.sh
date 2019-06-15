@@ -211,3 +211,10 @@ singularity run --cleanenv -B /media/veracrypt2/MRI/pnTTC/Preproc/42_c2_1_fmripr
 
 # 42_c2_2
 singularity run --cleanenv -B /media/veracrypt2/MRI/pnTTC/Preproc/42_c2_2_fmriprep:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=6 && echo -e "Subject: Automatic Notification\n\nAutomatic notification of analysis completion.\n\nAnalysis: 42_c2_2_fmriprep\nStart time: 20190424_0900" | sendmail atirom.umusus@gmail.com
+
+## re-run on ac-pc coregistered data
+# c1
+singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/60_c1_fmriprep:${HOME}/data /data/applications/fmriprep-140.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+# c2
+singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep:${HOME}/data /data/applications/fmriprep-140.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --use-aroma --output-space T1w template --bold2t1w-dof=6
