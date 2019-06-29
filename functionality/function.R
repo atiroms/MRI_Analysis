@@ -232,7 +232,10 @@ func_cor<-function(input){
                           cor$P[i,j])
     }
   }
-  output<-list("cor"=cor, "cor_flat"=cor_flat)
+  mean_cor<-mean(cor$r)
+  sd_cor<-sd(cor$r)
+  cor_flat$z_r<-(as.numeric(cor_flat$r)-mean_cor)/sd_cor
+  output<-list("cor"=cor, "r"=cor$r,"cor_flat"=cor_flat)
   return(output)
 }
 

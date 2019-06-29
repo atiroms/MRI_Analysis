@@ -11,15 +11,15 @@
 #**************************************************
 
 # parameters for fc()
-path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in <-"53_ts_acompcor"
 dir_out <-"54_fc_acompcor"
 
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"aal116"
 
 #subset_roi  <- c("Uncertain","Default mode","Sensory/somatomotor Hand",
 #                 "Sensory/somatomotor Mouth","Fronto-parietal Task Control",
@@ -41,7 +41,7 @@ library(ggplot2)
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
                     path_exp_=path_exp,
                     dir_in_=dir_in,
                     dir_out_=dir_out){
@@ -55,7 +55,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"Dropbox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_common <- file.path(path_root,"Dropbox/MRI_img/pnTTC/puberty/common")
   path_in     <- file.path(path_root,path_exp_,dir_in_)
   path_out    <- file.path(path_root,path_exp_,dir_out_)
   output <- list("script"=path_script,"input"=path_in,"output"=path_out,
@@ -126,7 +126,7 @@ fc<-function(paths_=paths,
     
     #df_fc_stack<-data.frame()
     list_path_tmp<-NULL
-    for (ses in data_timeseries$list_ses){
+    for (ses in data_timeseries$list_ses_exist){
       for (id_subj in data_timeseries$list_id_subj_exist[[as.character(ses)]]){
         df_timeseries_ses_subj<-data_timeseries$df_timeseries[which(data_timeseries$df_timeseries$ID_pnTTC==id_subj),]
         df_timeseries_ses_subj<-df_timeseries_ses_subj[which(df_timeseries_ses_subj$ses==ses),c(-1,-2,-3)]
@@ -134,7 +134,7 @@ fc<-function(paths_=paths,
         
         df_fc_flat<-data_fc$cor_flat
         df_fc_flat<-cbind(ses=ses,ID_pnTTC=id_subj,df_fc_flat)
-        colnames(df_fc_flat)<-c("ses","ID_pnTTC","from","to","r","p")
+        colnames(df_fc_flat)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
         file_tmp<-paste("TMP_atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d", id_subj),"_fc.csv",sep="")
         path_file_tmp<-file.path(paths_$output,"output",file_tmp)
         list_path_tmp<-c(list_path_tmp,path_file_tmp)
@@ -172,14 +172,13 @@ fc<-function(paths_=paths,
       file.remove(path_tmp)
       print(paste("Finished binding: ",path_tmp,sep=""))
     }
-    colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p")
+    colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
     write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
     df_fc_stack<-NULL
     print("Finished saving all subject results.")
     print(paste("Finished calculating for atlas: ",atlas, sep=""))
   }
   print("Finished calculating all FCs.")
-  return(df_fc_stack)
 }
 
 
