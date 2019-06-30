@@ -81,6 +81,54 @@ source(file.path(paths$script,"functionality/gta_function.R"))
 
 
 #**************************************************
+# Fingerprinting ==================================
+#**************************************************
+fingerprint<-function(paths_=paths,
+                      list_atlas_=list_atlas,
+                      list_wave_=list_wave,
+                      subset_subj_=subset_subj){
+  print("Starting to fingerprint calculation.")
+  nullobj<-func_createdirs(paths_)
+  dict_roi<-func_dict_roi(paths_)
+  for (atlas in list_atlas_){
+    print(paste("Calculate atlas: ",atlas,sep=""))
+    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
+    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    n_edge<-dim(df_edge)[1]
+    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
+    list_node<-list_node[order(list_node)]
+    n_node<-length(list_node)
+    list_ses_exist <- sort(unique(df_conn$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_conn_ses<-df_conn[df_conn$ses==ses,]
+      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
+    }
+
+    df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
+    df_list_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_list_ses_subj)<-c("ses","ID_pnTTC")
+    #list_file_tmp<-NULL
+    for (ses in list_ses_exist){
+      for (id_subj in list_id_subj_exist[[ses]]){
+        print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
+        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
+        df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
+        df_list_ses_subj<-rbind(df_list_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+      }
+    }
+    colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+    rownames(df_conn_cbind)<-NULL
+    data_fingerprint<-func_cor(input=df_conn_cbind)
+    
+  }
+}
+
+
+#**************************************************
 # GTA functionalities =============================
 #**************************************************
 
