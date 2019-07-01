@@ -89,7 +89,6 @@ fingerprint<-function(paths_=paths,
                       subset_subj_=subset_subj){
   print("Starting fingerprint calculation.")
   nullobj<-func_createdirs(paths_)
-  dict_roi<-func_dict_roi(paths_)
   for (atlas in list_atlas_){
     print(paste("Calculate atlas: ",atlas,sep=""))
     file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
