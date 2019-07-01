@@ -9,12 +9,12 @@
 # Parameters ======================================
 #**************************************************
 # parameters for gta_bin() and gta_weight()
-path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
-dir_out<-"57_gta_weight"
+dir_out<-"55_fingerprint"
 
 list_wave <- c(1,2)
 
@@ -23,10 +23,10 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
-list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
 
 list_cost<-seq(0.15,0.40,0.01)
@@ -87,7 +87,7 @@ fingerprint<-function(paths_=paths,
                       list_atlas_=list_atlas,
                       list_wave_=list_wave,
                       subset_subj_=subset_subj){
-  print("Starting to fingerprint calculation.")
+  print("Starting fingerprint calculation.")
   nullobj<-func_createdirs(paths_)
   dict_roi<-func_dict_roi(paths_)
   for (atlas in list_atlas_){
@@ -113,7 +113,7 @@ fingerprint<-function(paths_=paths,
     #list_file_tmp<-NULL
     for (ses in list_ses_exist){
       for (id_subj in list_id_subj_exist[[ses]]){
-        print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        #print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
         df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
         df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
         df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
@@ -122,9 +122,22 @@ fingerprint<-function(paths_=paths,
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
-    data_fingerprint<-func_cor(input=df_conn_cbind)
-    
+    print("Starting to calculate correlation coefficients between fingerprints.")
+    df_fingerprint<-func_cor(input=df_conn_cbind)$cor_flat
+    print("Finished calculating correlation coefficients between fingerprints.")
+    df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
+    for (i in seq(dim(df_fingerprint)[1])){
+      from_id<-df_fingerprint[[i,"from"]]
+      to_id<-df_fingerprint[[i,"to"]]
+      df_fingerprint[[i,"from_ses"]]<-df_list_ses_subj[[from_id,"ses"]]
+      df_fingerprint[[i,"from_ID_pnTTC"]]<-df_list_ses_subj[[from_id,"ID_pnTTC"]]
+      df_fingerprint[[i,"to_ses"]]<-df_list_ses_subj[[to_id,"ses"]]
+      df_fingerprint[[i,"to_ID_pnTTC"]]<-df_list_ses_subj[[to_id,"ID_pnTTC"]]
+    }
+    df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+    write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
   }
+  print("Finished fingerprint calculation")
 }
 
 
