@@ -150,9 +150,9 @@ class XCPScript():
 
 class PrepXCP():
     def __init__(self,
-        skip_fmriprep_copy=False,
+        skip_fmriprep_copy=True,
         skip_fmriprep_moveanat=False,
-        n_proc=28,
+        n_proc=20,
         path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/60_c1_fmriprep',
         path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/64_c1_xcp_acompcor',
         file_id='60_id_c1_t1exist_rsfmriexist.csv',
