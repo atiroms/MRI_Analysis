@@ -14,7 +14,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
-dir_out<-"55_fingerprint"
+#dir_out<-"55_fingerprint"
+dir_out<-"56_pca_fc"
 
 list_wave <- c(1,2)
 
@@ -32,9 +33,6 @@ list_atlas<-"aal116"
 list_cost<-seq(0.15,0.40,0.01)
 absolute<-T
 threshold<-NA
-
-# parameters for PCA calculation
-n_component<-20
 
 
 #**************************************************
@@ -162,12 +160,12 @@ pca_fc<-function(paths_=paths,
     df_fac_var<-data.frame(data_pca$var$coord)
     df_fac_var<-cbind(df_edge,df_fac_var)
     colnames(df_fac_var)<-c("from","to",sprintf("dim_%02d",1:ncp_estimate))
-    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_factor.csv",sep="")))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_factor.csv",sep="")),row.names=F)
     
     df_fac_indiv<-data.frame(data_pca$ind$coord)
     df_fac_indiv<-cbind(df_list_ses_subj,df_fac_indiv)
     colnames(df_fac_indiv)<-c("ses","ID_pnTTC",sprintf("dim_%02d",1:ncp_estimate))
-    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")),row.names=F)
     
     df_var_accounted<-data.frame(data_pca$eig)
     colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
@@ -176,19 +174,16 @@ pca_fc<-function(paths_=paths,
     df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
     df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
     rownames(df_var_accounted)<-NULL
-    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")),row.names=F)
     
     print("Finished calculating PCA of FC")
     
     # Plot PCA results
-    #df_fac_indiv_plot<-df_fac_indiv[c(-1,-2)]
-    #rownames(df_fac_indiv_plot)<-paste(as.character(df_fac_indiv$ID_pnTTC),as.character(df_fac_indiv$ses),sep="_")
-    #plot_ca(input_fac_indiv=df_fac_indiv_plot)
-    
     df_fac_indiv_plot<-df_fac_indiv
     df_fac_indiv_plot$ses<-as.factor(df_fac_indiv_plot$ses)
     df_fac_indiv_plot$ID_pnTTC<-as.factor(df_fac_indiv_plot$ID_pnTTC)
     
+    print("Sarting to save PCA of FC")
     for (i in 1:(ncp_estimate-1)){
       df_fac_indiv_plot_subset<-df_fac_indiv_plot[,c("ses","ID_pnTTC",sprintf("dim_%02d",i),sprintf("dim_%02d",i+1))]
       colnames(df_fac_indiv_plot_subset)<-c("ses","ID_pnTTC","x","y")
@@ -196,7 +191,7 @@ pca_fc<-function(paths_=paths,
              + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
              + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
              + geom_point(size=2)
-             + geom_text_repel(size=2)
+             #+ geom_text_repel(size=2)
              + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
              + ggtitle("PCA of FC")
              + xlab(sprintf("dimension %02d",i))
@@ -208,6 +203,7 @@ pca_fc<-function(paths_=paths,
              path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       
     }
+    print("Finished saving PCA of FC")
   }
 }
 

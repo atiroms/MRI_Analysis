@@ -117,6 +117,7 @@ func_subset_clin<-function(df_clin,
       key_subset<-cond_subset$key
       value_subset<-cond_subset$value
       id_meet_cond<-df_clin_wave[df_clin_wave[key_subset]==value_subset,'ID_pnTTC']
+      id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
       print(paste(as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
       id_meet_cond<-list(id_meet_cond)
