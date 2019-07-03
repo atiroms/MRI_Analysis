@@ -46,6 +46,7 @@ library(igraph)
 library(qgraph)
 library(FactoMineR)
 library(missMDA)
+library(ggrepel)
 
 
 #**************************************************
@@ -145,35 +146,69 @@ pca_fc<-function(paths_=paths,
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
     
+    # Ppreparation of PCA calculation
+    # transpose
+    df_conn<-t(df_conn_cbind)
+    print("Estimating PCA dimension.")
+    # estimate number of dimensions
+    ncp_estimate<-estim_ncpPCA(df_conn,ncp.max=100)$ncp
+    print(paste("PCA dimension: ",as.character(ncp_estimate),sep=""))
+    # impute data
+    df_conn<-imputePCA(df_conn,ncp=ncp_estimate)$completeObs
+    
     # PCA calculation
     print("Starting to calculate PCA of FC.")
-    data_pca<-PCA(df_conn_cbind,scale.unit = TRUE, ncp = n_component, graph = FALSE)
-    factor_variable<-data.frame(data_pca$var$coord)
-    print("Finished calculating PCA of FC.")
+    data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = ncp_estimate, graph = FALSE)
+    df_fac_var<-data.frame(data_pca$var$coord)
+    df_fac_var<-cbind(df_edge,df_fac_var)
+    colnames(df_fac_var)<-c("from","to",sprintf("dim_%02d",1:ncp_estimate))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_factor.csv",sep="")))
+    
+    df_fac_indiv<-data.frame(data_pca$ind$coord)
+    df_fac_indiv<-cbind(df_list_ses_subj,df_fac_indiv)
+    colnames(df_fac_indiv)<-c("ses","ID_pnTTC",sprintf("dim_%02d",1:ncp_estimate))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")))
+    
+    df_var_accounted<-data.frame(data_pca$eig)
+    colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
+    df_var_accounted$var_accounted<-df_var_accounted$var_accounted/100
+    df_var_accounted$cumul_var_accounted<-df_var_accounted$cumul_var_accounted/100
+    df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
+    df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
+    rownames(df_var_accounted)<-NULL
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")))
+    
+    print("Finished calculating PCA of FC")
+    
+    # Plot PCA results
+    #df_fac_indiv_plot<-df_fac_indiv[c(-1,-2)]
+    #rownames(df_fac_indiv_plot)<-paste(as.character(df_fac_indiv$ID_pnTTC),as.character(df_fac_indiv$ses),sep="_")
+    #plot_ca(input_fac_indiv=df_fac_indiv_plot)
+    
+    df_fac_indiv_plot<-df_fac_indiv
+    df_fac_indiv_plot$ses<-as.factor(df_fac_indiv_plot$ses)
+    df_fac_indiv_plot$ID_pnTTC<-as.factor(df_fac_indiv_plot$ID_pnTTC)
+    
+    for (i in 1:(ncp_estimate-1)){
+      df_fac_indiv_plot_subset<-df_fac_indiv_plot[,c("ses","ID_pnTTC",sprintf("dim_%02d",i),sprintf("dim_%02d",i+1))]
+      colnames(df_fac_indiv_plot_subset)<-c("ses","ID_pnTTC","x","y")
+      plot<-(ggplot(df_fac_indiv_plot_subset)
+             + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
+             + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
+             + geom_point(size=2)
+             + geom_text_repel(size=2)
+             + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
+             + ggtitle("PCA of FC")
+             + xlab(sprintf("dimension %02d",i))
+             + ylab(sprintf("dimension %02d",i+1))
+             + theme_light()
+             + theme(plot.title = element_text(hjust = 0.5))
+            )
+      ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",i),"-",sprintf("%02d",i+1),"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+      
+    }
   }
-  
-  
-  dirname<-ExpDir("PCA_FC")
-  data<-connection_data[-1]
-  indexcolumn<-connection_data[1]
-  data<-data.matrix(data)
-  pca <-PCA(data,scale.unit = TRUE, ncp = n_components, graph = FALSE)
-  varfactor<-data.frame(pca$var$coord)
-  varfactor<-cbind(connections,ConvertID(connections_matrix[,1],roiid_data,input_roiid_type,"label_proper"),ConvertID(connections_matrix[,2],roiid_data,input_roiid_type,"label_proper"),varfactor)
-  colnames(varfactor)<-c("ROI_ID","ROI_proper",sprintf("Dim_%02d",1:n_components))
-  rownames(varfactor)<-NULL
-  indfactor<-data.frame(pca$ind$coord)
-  colnames(indfactor)<-sprintf("Dim_%02d",1:n_components)
-  #  pairs(indfactor)
-  indfactor<-cbind(indexcolumn,indfactor)
-  varianceaccounted<-pca$eig
-  
-  write.csv(varfactor, file.path(dirname,"VariableFactor.csv"),row.names=F)
-  write.csv(indfactor, file.path(dirname,"IndividualFactor.csv"),row.names=F)
-  write.csv(varianceaccounted, file.path(dirname,"VarianceAccounted.csv"))
-  ComponentClinicalCorr(indfactor[-1],dirname)
-  graph<-ComponentPlot(indfactor[-1],"PCA")
-  return(list(varfactor,indfactor,varianceaccounted,graph))
 }
 
 
