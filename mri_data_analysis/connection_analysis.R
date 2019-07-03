@@ -33,6 +33,9 @@ list_cost<-seq(0.15,0.40,0.01)
 absolute<-T
 threshold<-NA
 
+# parameters for PCA calculation
+n_component<-20
+
 
 #**************************************************
 # Libraries =======================================
@@ -41,6 +44,8 @@ library(ggplot2)
 library(GGally)
 library(igraph)
 library(qgraph)
+library(FactoMineR)
+library(missMDA)
 
 
 #**************************************************
@@ -78,6 +83,98 @@ source(file.path(paths$script,"functionality/function.R"))
 source(file.path(paths$script,"functionality/glm_function.R"))
 source(file.path(paths$script,"functionality/graph.R"))
 source(file.path(paths$script,"functionality/gta_function.R"))
+
+
+
+#**************************************************
+# Principal component analysis of FC ==============
+#**************************************************
+pca_fc<-function(paths_=paths,
+                 list_atlas_=list_atlas,
+                 list_wave_=list_wave,
+                 subset_subj_=subset_subj){
+  print("Starting PCA of FC calculation.")
+  nullobj<-func_createdirs(paths_)
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  df_clin<-func_clinical_data_long(paths_,list_wave_)
+  data_subset_clin<-func_subset_clin(df_clin,
+                                     list_wave_,subset_subj_,
+                                     list_covar=NULL,
+                                     rem_na_clin=T)
+  df_clin_subset<-data_subset_clin$df_clin
+  
+  for (atlas in list_atlas_){
+    # load and examine FC data
+    print(paste("Loding FC for atlas: ",atlas,sep=""))
+    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
+    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to")]
+    n_edge<-dim(df_edge)[1]
+    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
+    list_node<-list_node[order(list_node)]
+    n_node<-length(list_node)
+    
+    # create list of subjects who meet subsetting condition and whose data exist
+    list_ses_exist <- sort(unique(df_conn$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_conn_ses<-df_conn[df_conn$ses==ses,]
+      id_subj_exist<-unique(df_conn_ses$ID_pnTTC)
+      id_subj_subset<-df_clin_subset[df_clin_subset$wave==ses,"ID_pnTTC"]
+      id_subj_exist<-intersect(id_subj_exist,id_subj_subset)
+      list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist)
+    }
+    
+    # cbind FC data as input for PCA function
+    df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
+    df_list_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_list_ses_subj)<-c("ses","ID_pnTTC")
+    #list_file_tmp<-NULL
+    for (ses in list_ses_exist){
+      for (id_subj in list_id_subj_exist[[ses]]){
+        #print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
+        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
+        df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
+        df_list_ses_subj<-rbind(df_list_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+      }
+    }
+    colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+    rownames(df_conn_cbind)<-NULL
+    
+    # PCA calculation
+    print("Starting to calculate PCA of FC.")
+    data_pca<-PCA(df_conn_cbind,scale.unit = TRUE, ncp = n_component, graph = FALSE)
+    factor_variable<-data.frame(data_pca$var$coord)
+    print("Finished calculating PCA of FC.")
+  }
+  
+  
+  dirname<-ExpDir("PCA_FC")
+  data<-connection_data[-1]
+  indexcolumn<-connection_data[1]
+  data<-data.matrix(data)
+  pca <-PCA(data,scale.unit = TRUE, ncp = n_components, graph = FALSE)
+  varfactor<-data.frame(pca$var$coord)
+  varfactor<-cbind(connections,ConvertID(connections_matrix[,1],roiid_data,input_roiid_type,"label_proper"),ConvertID(connections_matrix[,2],roiid_data,input_roiid_type,"label_proper"),varfactor)
+  colnames(varfactor)<-c("ROI_ID","ROI_proper",sprintf("Dim_%02d",1:n_components))
+  rownames(varfactor)<-NULL
+  indfactor<-data.frame(pca$ind$coord)
+  colnames(indfactor)<-sprintf("Dim_%02d",1:n_components)
+  #  pairs(indfactor)
+  indfactor<-cbind(indexcolumn,indfactor)
+  varianceaccounted<-pca$eig
+  
+  write.csv(varfactor, file.path(dirname,"VariableFactor.csv"),row.names=F)
+  write.csv(indfactor, file.path(dirname,"IndividualFactor.csv"),row.names=F)
+  write.csv(varianceaccounted, file.path(dirname,"VarianceAccounted.csv"))
+  ComponentClinicalCorr(indfactor[-1],dirname)
+  graph<-ComponentPlot(indfactor[-1],"PCA")
+  return(list(varfactor,indfactor,varianceaccounted,graph))
+}
 
 
 #**************************************************

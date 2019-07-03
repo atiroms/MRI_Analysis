@@ -227,9 +227,9 @@ func_cor<-function(input){
     for (j in (i+1):n_node){
       k<-k+1
       cor_flat[k,1:4]<-c(rownames(cor$r)[i],
-                          colnames(cor$r)[j],
-                          cor$r[i,j],
-                          cor$P[i,j])
+                         colnames(cor$r)[j],
+                         cor$r[i,j],
+                         cor$P[i,j])
     }
   }
   mean_cor<-mean(cor$r)
