@@ -342,10 +342,12 @@ class PrepFmriprep():
         skip_inputprep=False,
         #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/56_c1_bids',
         path_bids='/media/veracrypt1/MRI_img/pnTTC/test3/preproc/37_c1_bids',
+        #path_bids='/media/veracrypt1/MRI_img/pnTTC/test3/preproc/56_c1_bids',
         #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c1_struc/freesurfer/21_recon',
         path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/test3/c1_struc/freesurfer/12_recon_t1exist',
+        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/test3/c1_struc/freesurfer/21_recon',
         #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
-        path_out='/media/veracrypt2/MRI_img/pnTTC/test3/01_fmriprep',
+        path_out='/media/veracrypt1/MRI_img/pnTTC/test3/03_fmriprep',
         path_file_fslicense='/usr/local/freesurfer/license.txt',
         #file_id='67_id_c1_t1exist_rsfmriexist.csv'
         file_id='id_3.csv'
