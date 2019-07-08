@@ -184,14 +184,14 @@ class Folder2File():
     def __init__(self,
         #path_from='C:/Users/atiroms/Downloads/MRI_output',
         #path_to='C:/Users/atiroms/Downloads/MRI_output2'
-        path_from='C:/Users/atiroms/Downloads/MRIConvert',
-        path_to='C:/Users/atiroms/Downloads/MR7_QC'
+        path_from='D:/MRI_img/qc/MR7/20190629/nii',
+        path_to='D:/MRI_img/qc/MR7/20190629/nii_rename'
         ):
 
-        list_file=glob.glob(path_from + '/*/output.nii')
+        list_file=glob.glob(path_from + '/*/*/*.nii')
         for path in list_file:
             name_subfolder=path.split('\\')[1]
-            file_from=path_from + '/' + name_subfolder + '/output.nii'
+            file_from=path
             file_to=path_to + '/'+ name_subfolder + '.nii'
             shutil.copy(file_from, file_to)
             print('Converted file: '+ file_from + '.')

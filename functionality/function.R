@@ -117,6 +117,7 @@ func_subset_clin<-function(df_clin,
       key_subset<-cond_subset$key
       value_subset<-cond_subset$value
       id_meet_cond<-df_clin_wave[df_clin_wave[key_subset]==value_subset,'ID_pnTTC']
+      id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
       print(paste(as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
       id_meet_cond<-list(id_meet_cond)
@@ -227,12 +228,15 @@ func_cor<-function(input){
     for (j in (i+1):n_node){
       k<-k+1
       cor_flat[k,1:4]<-c(rownames(cor$r)[i],
-                          colnames(cor$r)[j],
-                          cor$r[i,j],
-                          cor$P[i,j])
+                         colnames(cor$r)[j],
+                         cor$r[i,j],
+                         cor$P[i,j])
     }
   }
-  output<-list("cor"=cor, "cor_flat"=cor_flat)
+  mean_cor<-mean(cor$r)
+  sd_cor<-sd(cor$r)
+  cor_flat$z_r<-(as.numeric(cor_flat$r)-mean_cor)/sd_cor
+  output<-list("cor"=cor, "r"=cor$r,"cor_flat"=cor_flat)
   return(output)
 }
 

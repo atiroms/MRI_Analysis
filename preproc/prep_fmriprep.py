@@ -339,33 +339,23 @@ class Fs2Fmriprep():
 
 class PrepFmriprep():
     def __init__(self,
-        #path_bids='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/32_heudiconv',
-        #path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/53_bids_fmap',
-        #path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/39_heudiconv',
-        path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/37_c1_bids',
-        #path_bids='/media/veracrypt1/MRI/pnTTC/Preproc/38_c2_bids',
-        #path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/pnTTC1_T1_C_FS_10_recon',
-        #path_freesurfer='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/pnTTC1_T1_C_FS_10_recon',
-        path_freesurfer='/media/veracrypt1/MRI/pnTTC/pnTTC1_T1_C/FS/12_recon_t1exist',
-        #path_freesurfer='/media/veracrypt1/MRI/pnTTC/pnTTC2_T1_C/FS/17_recon',
-        #path_out='C:/Users/atiro/Dropbox/Temp/Preproc/test_1sub/40_fieldmap',
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/54_prep_fmriprep',
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/test_1sub/41_prep_fmriprep',
-        path_out='/media/veracrypt1/MRI/pnTTC/Preproc/39_c1_1_prep_fmriprep',
-        #path_out='/media/veracrypt1/MRI/pnTTC/Preproc/40_c2_2_prep_fmriprep',
+        skip_inputprep=True,
+        path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/56_c1_bids',
+        #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/57_c2_bids',
+        path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c1_struc/freesurfer/21_recon',
+        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/21_recon',
+        path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
         path_file_fslicense='/usr/local/freesurfer/license.txt',
-        #file_id='id_5sub.csv'
-        #file_id='id_1sub.csv'
-        file_id='id_W1_T1QC_new_mild_rsfMRIexist_1.csv'
-        #file_id='id_W1_T1QC_new_mild_rsfMRIexist_2.csv'
-        #file_id='id_W2_T1QC_new_mild_rsfMRIexist_1.csv'
-        #file_id='id_W2_T1QC_new_mild_rsfMRIexist_2.csv'
+        #file_id='id_c1_t1exist_rsfmriexist.csv'
+        file_id='67_id_c1_t1exist_rsfmriexist.csv'
         ):
         
         print('Starting PrepFmriprep()')
-        _=PhaseDiff(path_in=path_bids,path_out=path_out)
-        _=EditJson(path_exp=path_out)
-        _=SubsetBIDS(path_exp=os.path.join(path_out,'input'),
+        if not skip_inputprep:
+            _=PhaseDiff(path_in=path_bids,path_out=path_out)
+            _=EditJson(path_exp=path_out)
+            _=SubsetBIDS(path_exp=os.path.join(path_out,'input'),
                      path_file_id=os.path.join(path_out,'log',file_id)
                      )
         _=Fs2Fmriprep(path_in=os.path.join(path_freesurfer,'output'),

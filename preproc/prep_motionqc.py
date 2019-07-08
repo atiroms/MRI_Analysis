@@ -33,11 +33,11 @@ shutil.copyfileobj = _copyfileobj_patched
 
 class ExtractMotion():
     def __init__(self,
-        #path_input='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/35_fmriprep_latest_syn_templateout_2mm',
-        #path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/50_motion',
-        path_input='/media/veracrypt2/MRI/pnTTC/Preproc/42_c2_2_fmriprep',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/48_c2_2_motion',
-        ses='ses-02'
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/60_c1_fmriprep',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/62_c1_motion',
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/63_c2_motion',
+        ses='ses-01'
         ):
 
         print('Starting motion parameter extraction')

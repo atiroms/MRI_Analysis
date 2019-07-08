@@ -10,8 +10,8 @@
 # Parameters ======================================
 #**************************************************
 
-path_in <- "/media/veracrypt1/MRI/pnTTC/Preproc"
-path_out <- "/media/veracrypt2/MRI/pnTTC/Preproc"
+path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
 
 dir_in <-"43_c1_1_xcp_acompcor"
 dir_out<-"51_c1_1_ts"
@@ -42,7 +42,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"Dropbox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_common <- file.path(path_root,"Dropbox/MRI_img/pnTTC/puberty/common")
   path_in     <- file.path(path_in_,dir_in_)
   path_out    <- file.path(path_out_,dir_out_)
   output <- list("script"=path_script,"input"=path_in,"output"=path_out,"common"=path_common)

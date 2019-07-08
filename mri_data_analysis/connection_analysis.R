@@ -9,12 +9,13 @@
 # Parameters ======================================
 #**************************************************
 # parameters for gta_bin() and gta_weight()
-path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
-dir_out<-"57_gta_weight"
+#dir_out<-"55_fingerprint"
+dir_out<-"56_pca_fc"
 
 list_wave <- c(1,2)
 
@@ -23,10 +24,10 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
-list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
 
 list_cost<-seq(0.15,0.40,0.01)
@@ -41,12 +42,15 @@ library(ggplot2)
 library(GGally)
 library(igraph)
 library(qgraph)
+library(FactoMineR)
+library(missMDA)
+library(ggrepel)
 
 
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
                     path_exp_=path_exp,
                     dir_in_=dir_in,
                     dir_out_=dir_out){
@@ -60,7 +64,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
   path_in     <- file.path(path_root,path_exp_,dir_in_)
   path_out    <- file.path(path_root,path_exp_,dir_out_)
   output <- list("script"=path_script,"input"=path_in,"output"=path_out,
@@ -78,6 +82,190 @@ source(file.path(paths$script,"functionality/function.R"))
 source(file.path(paths$script,"functionality/glm_function.R"))
 source(file.path(paths$script,"functionality/graph.R"))
 source(file.path(paths$script,"functionality/gta_function.R"))
+
+
+
+#**************************************************
+# Principal component analysis of FC ==============
+#**************************************************
+pca_fc<-function(paths_=paths,
+                 list_atlas_=list_atlas,
+                 list_wave_=list_wave,
+                 subset_subj_=subset_subj){
+  print("Starting PCA of FC calculation.")
+  nullobj<-func_createdirs(paths_)
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  df_clin<-func_clinical_data_long(paths_,list_wave_)
+  data_subset_clin<-func_subset_clin(df_clin,
+                                     list_wave_,subset_subj_,
+                                     list_covar=NULL,
+                                     rem_na_clin=T)
+  df_clin_subset<-data_subset_clin$df_clin
+  
+  for (atlas in list_atlas_){
+    # load and examine FC data
+    print(paste("Loding FC for atlas: ",atlas,sep=""))
+    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
+    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to")]
+    n_edge<-dim(df_edge)[1]
+    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
+    list_node<-list_node[order(list_node)]
+    n_node<-length(list_node)
+    
+    # create list of subjects who meet subsetting condition and whose data exist
+    list_ses_exist <- sort(unique(df_conn$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_conn_ses<-df_conn[df_conn$ses==ses,]
+      id_subj_exist<-unique(df_conn_ses$ID_pnTTC)
+      id_subj_subset<-df_clin_subset[df_clin_subset$wave==ses,"ID_pnTTC"]
+      id_subj_exist<-intersect(id_subj_exist,id_subj_subset)
+      list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist)
+    }
+    
+    # cbind FC data as input for PCA function
+    df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
+    df_list_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_list_ses_subj)<-c("ses","ID_pnTTC")
+    #list_file_tmp<-NULL
+    for (ses in list_ses_exist){
+      for (id_subj in list_id_subj_exist[[ses]]){
+        #print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
+        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
+        df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
+        df_list_ses_subj<-rbind(df_list_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+      }
+    }
+    colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+    rownames(df_conn_cbind)<-NULL
+    
+    # Ppreparation of PCA calculation
+    # transpose
+    df_conn<-t(df_conn_cbind)
+    print("Estimating PCA dimension.")
+    # estimate number of dimensions
+    ncp_estimate<-estim_ncpPCA(df_conn,ncp.max=100)$ncp
+    print(paste("PCA dimension: ",as.character(ncp_estimate),sep=""))
+    # impute data
+    df_conn<-imputePCA(df_conn,ncp=ncp_estimate)$completeObs
+    
+    # PCA calculation
+    print("Starting to calculate PCA of FC.")
+    data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = ncp_estimate, graph = FALSE)
+    df_fac_var<-data.frame(data_pca$var$coord)
+    df_fac_var<-cbind(df_edge,df_fac_var)
+    colnames(df_fac_var)<-c("from","to",sprintf("dim_%02d",1:ncp_estimate))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_factor.csv",sep="")),row.names=F)
+    
+    df_fac_indiv<-data.frame(data_pca$ind$coord)
+    df_fac_indiv<-cbind(df_list_ses_subj,df_fac_indiv)
+    colnames(df_fac_indiv)<-c("ses","ID_pnTTC",sprintf("dim_%02d",1:ncp_estimate))
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")),row.names=F)
+    
+    df_var_accounted<-data.frame(data_pca$eig)
+    colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
+    df_var_accounted$var_accounted<-df_var_accounted$var_accounted/100
+    df_var_accounted$cumul_var_accounted<-df_var_accounted$cumul_var_accounted/100
+    df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
+    df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
+    rownames(df_var_accounted)<-NULL
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")),row.names=F)
+    
+    print("Finished calculating PCA of FC")
+    
+    # Plot PCA results
+    df_fac_indiv_plot<-df_fac_indiv
+    df_fac_indiv_plot$ses<-as.factor(df_fac_indiv_plot$ses)
+    df_fac_indiv_plot$ID_pnTTC<-as.factor(df_fac_indiv_plot$ID_pnTTC)
+    
+    print("Sarting to save PCA of FC")
+    for (i in 1:(ncp_estimate-1)){
+      df_fac_indiv_plot_subset<-df_fac_indiv_plot[,c("ses","ID_pnTTC",sprintf("dim_%02d",i),sprintf("dim_%02d",i+1))]
+      colnames(df_fac_indiv_plot_subset)<-c("ses","ID_pnTTC","x","y")
+      plot<-(ggplot(df_fac_indiv_plot_subset)
+             + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
+             + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
+             + geom_point(size=2)
+             #+ geom_text_repel(size=2)
+             + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
+             + ggtitle("PCA of FC")
+             + xlab(sprintf("dimension %02d",i))
+             + ylab(sprintf("dimension %02d",i+1))
+             + theme_light()
+             + theme(plot.title = element_text(hjust = 0.5))
+            )
+      ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",i),"-",sprintf("%02d",i+1),"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+      
+    }
+    print("Finished saving PCA of FC")
+  }
+}
+
+
+#**************************************************
+# Fingerprinting ==================================
+#**************************************************
+fingerprint<-function(paths_=paths,
+                      list_atlas_=list_atlas,
+                      list_wave_=list_wave,
+                      subset_subj_=subset_subj){
+  print("Starting fingerprint calculation.")
+  nullobj<-func_createdirs(paths_)
+  for (atlas in list_atlas_){
+    print(paste("Calculate atlas: ",atlas,sep=""))
+    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
+    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    n_edge<-dim(df_edge)[1]
+    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
+    list_node<-list_node[order(list_node)]
+    n_node<-length(list_node)
+    list_ses_exist <- sort(unique(df_conn$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_conn_ses<-df_conn[df_conn$ses==ses,]
+      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
+    }
+
+    df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
+    df_list_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_list_ses_subj)<-c("ses","ID_pnTTC")
+    #list_file_tmp<-NULL
+    for (ses in list_ses_exist){
+      for (id_subj in list_id_subj_exist[[ses]]){
+        #print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
+        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
+        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
+        df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
+        df_list_ses_subj<-rbind(df_list_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+      }
+    }
+    colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+    rownames(df_conn_cbind)<-NULL
+    print("Starting to calculate correlation coefficients between fingerprints.")
+    df_fingerprint<-func_cor(input=df_conn_cbind)$cor_flat
+    print("Finished calculating correlation coefficients between fingerprints.")
+    df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
+    for (i in seq(dim(df_fingerprint)[1])){
+      from_id<-df_fingerprint[[i,"from"]]
+      to_id<-df_fingerprint[[i,"to"]]
+      df_fingerprint[[i,"from_ses"]]<-df_list_ses_subj[[from_id,"ses"]]
+      df_fingerprint[[i,"from_ID_pnTTC"]]<-df_list_ses_subj[[from_id,"ID_pnTTC"]]
+      df_fingerprint[[i,"to_ses"]]<-df_list_ses_subj[[to_id,"ses"]]
+      df_fingerprint[[i,"to_ID_pnTTC"]]<-df_list_ses_subj[[to_id,"ID_pnTTC"]]
+    }
+    df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+    write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
+  }
+  print("Finished fingerprint calculation")
+}
 
 
 #**************************************************
@@ -276,17 +464,6 @@ WeightedMetric<-function(input_igraph){
   return(metrics)
 }
 
-
-absolute=T
-threshold=NA
-paths_=paths
-list_atlas_=list_atlas
-atlas<-list_atlas_[1]
-
-ses<-list_ses_exist[1]
-
-#id_subj<-list_id_subj_exist[[ses]][1]
-id_subj<-31
 
 gta_weight<-function(absolute=T,
                      threshold=NA,
