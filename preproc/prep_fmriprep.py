@@ -339,21 +339,23 @@ class Fs2Fmriprep():
 
 class PrepFmriprep():
     def __init__(self,
-        #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/56_c1_bids',
-        path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/57_c2_bids',
-        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c1_struc/freesurfer/21_recon',
-        path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/21_recon',
-        #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/60_c1_fmriprep',
-        path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
+        skip_inputprep=True,
+        path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/56_c1_bids',
+        #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/57_c2_bids',
+        path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c1_struc/freesurfer/21_recon',
+        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/21_recon',
+        path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
         path_file_fslicense='/usr/local/freesurfer/license.txt',
         #file_id='id_c1_t1exist_rsfmriexist.csv'
-        file_id='id_c2_t1exist_rsfmriexist.csv'
+        file_id='67_id_c1_t1exist_rsfmriexist.csv'
         ):
         
         print('Starting PrepFmriprep()')
-        _=PhaseDiff(path_in=path_bids,path_out=path_out)
-        _=EditJson(path_exp=path_out)
-        _=SubsetBIDS(path_exp=os.path.join(path_out,'input'),
+        if not skip_inputprep:
+            _=PhaseDiff(path_in=path_bids,path_out=path_out)
+            _=EditJson(path_exp=path_out)
+            _=SubsetBIDS(path_exp=os.path.join(path_out,'input'),
                      path_file_id=os.path.join(path_out,'log',file_id)
                      )
         _=Fs2Fmriprep(path_in=os.path.join(path_freesurfer,'output'),
