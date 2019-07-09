@@ -154,9 +154,9 @@ class PrepXCP():
         skip_fmriprep_moveanat=False,
         #n_proc=20,
         n_proc=3,
-        path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/test3/03_fmriprep',
+        path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/test3/04_fmriprep',
         #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/65_c2_xcp_acompcor',
-        path_exp='/media/veracrypt1/MRI_img/pnTTC/test3/23_xcp',
+        path_exp='/media/veracrypt1/MRI_img/pnTTC/test3/34_xcp',
         #file_id='61_id_c2_t1exist_rsfmriexist.csv',
         file_id='id_3.csv',
         ses='ses-01',
@@ -175,8 +175,8 @@ class PrepXCP():
         #file_design='fc-acompcor_fc_roiquant.dsn',
         #file_design='fc-prestats.dsn',
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
-        path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
-        #path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
+        #path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
+        path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
         script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
 
