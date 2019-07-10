@@ -340,17 +340,19 @@ class Fs2Fmriprep():
 class PrepFmriprep():
     def __init__(self,
         skip_inputprep=False,
-        #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/56_c1_bids',
-        #path_bids='/media/veracrypt1/MRI_img/pnTTC/test3/preproc/37_c1_bids',
-        path_bids='/media/veracrypt1/MRI_img/pnTTC/test3/preproc/56_c1_bids',
-        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c1_struc/freesurfer/21_recon',
-        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/test3/c1_struc/freesurfer/12_recon_t1exist',
-        path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/test3/c1_struc/freesurfer/21_recon',
-        #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
-        path_out='/media/veracrypt1/MRI_img/pnTTC/test3/04_fmriprep',
+
+        path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/37_c1_bids',
+        path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c1_struc/freesurfer/12_recon',
+        path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
         path_file_fslicense='/usr/local/freesurfer/license.txt',
-        #file_id='67_id_c1_t1exist_rsfmriexist.csv'
-        file_id='id_3.csv'
+        file_id='67_id_c1_t1exist_rsfmriexist.csv'
+        
+        #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/38_c2_bids',
+        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/17_recon',
+        #path_out='/media/veracrypt1/MRI_img/pnTTC/test3/68_c2_fmriprep',
+        #file_id='68_id_c2_t1exist_rsfmriexist.csv'
+
+        #file_id='id_3.csv'
         ):
         
         print('Starting PrepFmriprep()')
