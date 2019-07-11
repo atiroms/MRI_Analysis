@@ -178,6 +178,7 @@ func_subset_clin<-function(df_clin,
     list_id_exist<-c(list_id_exist,list_id_exist_wave)
   }
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
+  rownames(df_clin_exist)<-NULL
   
   output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)

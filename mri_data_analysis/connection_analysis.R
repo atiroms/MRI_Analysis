@@ -55,6 +55,7 @@ library(qgraph)
 library(FactoMineR)
 library(missMDA)
 library(ggrepel)
+library(colorRamps)
 
 
 #**************************************************
@@ -101,6 +102,7 @@ source(file.path(paths$script,"functionality/gta_function.R"))
 pca_fc<-function(paths_=paths,
                  list_atlas_=list_atlas,
                  list_wave_=list_wave,
+                 list_covar_=list_covar,
                  subset_subj_=subset_subj){
   print("Starting PCA of FC calculation.")
   nullobj<-func_createdirs(paths_)
@@ -110,9 +112,13 @@ pca_fc<-function(paths_=paths,
   df_clin<-func_clinical_data_long(paths_,list_wave_)
   data_subset_clin<-func_subset_clin(df_clin,
                                      list_wave_,subset_subj_,
-                                     list_covar=NULL,
-                                     rem_na_clin=T)
+                                     #list_covar=NULL,
+                                     list_covar=list_covar_,
+                                     #rem_na_clin=T
+                                     rem_na_clin=F
+                                     )
   df_clin_subset<-data_subset_clin$df_clin
+  colnames(df_clin_subset)[colnames(df_clin_subset)=="wave"]<-"ses"
   
   for (atlas in list_atlas_){
     # load and examine FC data
@@ -126,21 +132,21 @@ pca_fc<-function(paths_=paths,
     list_node<-list_node[order(list_node)]
     n_node<-length(list_node)
     
-    # create list of subjects who meet subsetting condition and whose data exist
+    # create list of subjects who meet subsetting condition and whose MRI data exist
     list_ses_exist <- sort(unique(df_conn$ses))
     list_id_subj_exist<-list()
     for (ses in list_ses_exist){
       df_conn_ses<-df_conn[df_conn$ses==ses,]
       id_subj_exist<-unique(df_conn_ses$ID_pnTTC)
-      id_subj_subset<-df_clin_subset[df_clin_subset$wave==ses,"ID_pnTTC"]
+      id_subj_subset<-df_clin_subset[df_clin_subset$ses==ses,"ID_pnTTC"]
       id_subj_exist<-intersect(id_subj_exist,id_subj_subset)
       list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist)
     }
     
     # cbind FC data as input for PCA function
     df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
-    df_list_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_list_ses_subj)<-c("ses","ID_pnTTC")
+    df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin_subset)))
+    colnames(df_clin_exist)<-colnames(df_clin_subset)
     #list_file_tmp<-NULL
     for (ses in list_ses_exist){
       for (id_subj in list_id_subj_exist[[ses]]){
@@ -148,7 +154,7 @@ pca_fc<-function(paths_=paths,
         df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
         df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
         df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
-        df_list_ses_subj<-rbind(df_list_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+        df_clin_exist<-rbind(df_clin_exist,df_clin_subset[df_clin_subset$ses==ses & df_clin_subset$ID_pnTTC==id_subj,])
       }
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
@@ -173,9 +179,9 @@ pca_fc<-function(paths_=paths,
     write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_factor.csv",sep="")),row.names=F)
     
     df_fac_indiv<-data.frame(data_pca$ind$coord)
-    df_fac_indiv<-cbind(df_list_ses_subj,df_fac_indiv)
-    colnames(df_fac_indiv)<-c("ses","ID_pnTTC",sprintf("dim_%02d",1:ncp_estimate))
-    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")),row.names=F)
+    df_fac_indiv<-cbind(df_clin_exist,df_fac_indiv)
+    colnames(df_fac_indiv)<-c(colnames(df_clin_exist),sprintf("dim_%02d",1:ncp_estimate))
+    write.csv(df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")),row.names=F)
     
     df_var_accounted<-data.frame(data_pca$eig)
     colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
@@ -184,7 +190,7 @@ pca_fc<-function(paths_=paths,
     df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
     df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
     rownames(df_var_accounted)<-NULL
-    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")),row.names=F)
+    write.csv(df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")),row.names=F)
     
     print("Finished calculating PCA of FC")
     
@@ -192,26 +198,29 @@ pca_fc<-function(paths_=paths,
     df_fac_indiv_plot<-df_fac_indiv
     df_fac_indiv_plot$ses<-as.factor(df_fac_indiv_plot$ses)
     df_fac_indiv_plot$ID_pnTTC<-as.factor(df_fac_indiv_plot$ID_pnTTC)
+    list_name_covar<-names(list_covar_)
     
     print("Sarting to save PCA of FC")
-    for (i in 1:(ncp_estimate-1)){
-      df_fac_indiv_plot_subset<-df_fac_indiv_plot[,c("ses","ID_pnTTC",sprintf("dim_%02d",i),sprintf("dim_%02d",i+1))]
-      colnames(df_fac_indiv_plot_subset)<-c("ses","ID_pnTTC","x","y")
-      plot<-(ggplot(df_fac_indiv_plot_subset)
-             + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
-             + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
-             + geom_point(size=2)
-             #+ geom_text_repel(size=2)
-             + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
-             + ggtitle("PCA of FC")
-             + xlab(sprintf("dimension %02d",i))
-             + ylab(sprintf("dimension %02d",i+1))
-             + theme_light()
-             + theme(plot.title = element_text(hjust = 0.5))
-            )
-      ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",i),"-",sprintf("%02d",i+1),"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
-      
+    for (i_dim in 1:(ncp_estimate-1)){
+      for (name_covar in list_name_covar){
+        df_fac_indiv_plot_subset<-df_fac_indiv_plot[,c("ses","ID_pnTTC",name_covar,sprintf("dim_%02d",i_dim),sprintf("dim_%02d",i_dim+1))]
+        colnames(df_fac_indiv_plot_subset)<-c("ses","ID_pnTTC","color","x","y")
+        plot<-(ggplot(df_fac_indiv_plot_subset)
+               + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
+               + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
+               + geom_point(size=2,aes(color=color))
+               + scale_color_gradientn(colors = matlab.like2(100),name=name_covar)
+               #+ geom_text_repel(size=2)
+               + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
+               + ggtitle("PCA of FC")
+               + xlab(sprintf("dimension %02d",i_dim))
+               + ylab(sprintf("dimension %02d",i_dim+1))
+               + theme_light()
+               + theme(plot.title = element_text(hjust = 0.5))
+              )
+        ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",i_dim),"-",sprintf("%02d",i_dim+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+               path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+      }
     }
     print("Finished saving PCA of FC")
   }
