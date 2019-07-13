@@ -13,7 +13,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"55_fingerprint"
 #dir_out<-"55_gta_bin"
-dir_out<-"56_fp_identification"
+dir_out<-"58_fp_identification"
 
 #list_wave <- c(1,2)
 
@@ -27,7 +27,8 @@ list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
-n_permutation<-1000
+#n_permutation<-1000
+n_permutation<-100
 
 
 #**************************************************
@@ -104,13 +105,17 @@ fp_identify<-function(paths_=paths,
         list_id_subj_exist_twice<-c(list_id_subj_exist_twice,id_subj)
       }
     }
-    print(paste("Nuber of subjects with two sessions: ",as.character(length(list_id_subj_exist_twice)),sep=""))
+    n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
+    print(paste("Nuber of subjects with two sessions: ",as.character(n_id_subj_exist_twice),sep=""))
     df_fp_exist_twice<-df_fp[is.element(df_fp$from_ID_pnTTC,list_id_subj_exist_twice),]
     df_fp_exist_twice<-df_fp_exist_twice[is.element(df_fp_exist_twice$to_ID_pnTTC,list_id_subj_exist_twice),]
     df_fp_exist_twice<-df_fp_exist_twice[(df_fp_exist_twice$from_ses==1 & df_fp_exist_twice$to_ses==2),]
 
     df_ident<-data.frame(target=list_id_subj_exist_twice)
-    df_ident["1_targeted"]<-df_ident["2_targeted"]<-0
+    df_ident["1_targeted_identification"]<-0
+    df_ident["1_targeted_rank"]<-NA
+    df_ident["2_targeted_identification"]<-0
+    df_ident["2_targeted_rank"]<-NA
     
     df_perm<-data.frame(matrix(nrow=n_permutation_,ncol=3))
     colnames(df_perm)<-c("id_perm","1_n_ident","2_n_ident")
@@ -127,16 +132,16 @@ fp_identify<-function(paths_=paths,
       }
       for (id_subj in list_id_subj_exist_twice){
         df_fp_subset<-df_fp_pool[df_fp_pool$target_ID_pnTTC==id_subj,]
-        if(all(is.na(df_fp_subset$r))){
-          id_subj_max<-0
+        list_id_subj_ordered<-df_fp_subset[order(df_fp_subset$r,decreasing = TRUE,na.last=NA),'pool_ID_pnTTC']
+        if (id_subj %in% list_id_subj_ordered){
+          rank_similarity<-which(list_id_subj_ordered==id_subj)
         }else{
-          id_subj_max<-df_fp_subset[which.max(df_fp_subset$r),"pool_ID_pnTTC"]
+          rank_similarity<-NA
         }
-        if(id_subj_max==id_subj){
-          if(ses==1){
-            df_ident[df_ident$target==id_subj,"1_targeted"]<-1
-          }else{
-            df_ident[df_ident$target==id_subj,"2_targeted"]<-1
+        df_ident[df_ident$target==id_subj,paste(as.character(ses),"_targeted_rank",sep='')]<-rank_similarity
+        if (!is.na(rank_similarity)){
+          if (rank_similarity==1){
+            df_ident[df_ident$target==id_subj,paste(as.character(ses),"_targeted_identification",sep='')]<-1
           }
         }
       }
@@ -149,30 +154,29 @@ fp_identify<-function(paths_=paths,
         n_identified<-0
         for (id_subj in list_id_subj_exist_twice){
           df_fp_rand<-df_fp_rand[df_fp_rand$target_ID_pnTTC==id_subj,]
-          if(all(is.na(df_fp_rand$r))){
-            id_subj_max<-0
+          list_id_subj_ordered<-df_fp_subset[order(df_fp_subset$r,decreasing = TRUE,na.last=NA),'pool_ID_pnTTC']
+          if (id_subj %in% list_id_subj_ordered){
+            rank_similarity<-which(list_id_subj_ordered==id_subj)
           }else{
-            id_subj_max<-df_fp_rand[which.max(df_fp_rand$r),"rand_ID_pnTTC"]
+            rank_similarity<-NA
           }
-          if(id_subj_max==id_subj){
-            n_dentified<-n_identified+1
+          if (!is.na(rank_similarity)){
+            if (rank_similarity==1){
+              n_dentified<-n_identified+1
+            }
           }
         }
-        if(ses==1){
-          df_perm[i,"1_n_ident"]<-n_identified
-        }else{
-          df_perm[i,"2_n_ident"]<-n_identified
-        }
+        df_perm[i,paste(as.character(ses),'_n_ident',sep='')]<-n_identified
         print(paste("Iteration: ",as.character(i),", subjects identified: ",as.character(n_identified),sep=""))
       }
     }
     write.csv(df_ident,file.path(paths_$output,"output",paste("atl-",atlas,"_identification.csv",sep="")),row.names=F)
-    print(paste("Number of session 2 subjects identified from session 1 target: ",as.character(sum(df_ident["1_targeted"])),sep=""))
-    print(paste("Number of session 1 subjects identified from session 2 target: ",as.character(sum(df_ident["2_targeted"])),sep=""))
+    print(paste("Number of session 2 subjects identified from session 1 target: ",as.character(sum(df_ident["1_targeted_identification"])),sep=""))
+    print(paste("Number of session 1 subjects identified from session 2 target: ",as.character(sum(df_ident["2_targeted_identification"])),sep=""))
     write.csv(df_perm,file.path(paths_$output,"output",paste("atl-",atlas,"_permutation.csv",sep="")),row.names=F)
-    p_perm_1<-sum(df_perm["1_n_ident"]>sum(df_ident["1_targeted"]))/n_permutation_
+    p_perm_1<-sum(df_perm["1_n_ident"]>sum(df_ident["1_targeted_identification"]))/n_permutation_
     print(paste("p value from permutation 1: ",as.character(p_perm_1)))
-    p_perm_2<-sum(df_perm["2_n_ident"]>sum(df_ident["2_targeted"]))/n_permutation_
+    p_perm_2<-sum(df_perm["2_n_ident"]>sum(df_ident["2_targeted_identification"]))/n_permutation_
     print(paste("p value from permutation 2: ",as.character(p_perm_2)))
   }
 }
