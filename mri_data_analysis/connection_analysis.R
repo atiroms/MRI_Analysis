@@ -15,7 +15,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
 #dir_out<-"55_fingerprint"
-dir_out<-"56_pca_fc"
+dir_out<-"59_pca_fc"
 
 list_wave <- c(1,2)
 
@@ -109,27 +109,18 @@ pca_fc<-function(paths_=paths,
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
-  df_clin<-func_clinical_data_long(paths_,list_wave_)
-  data_subset_clin<-func_subset_clin(df_clin,
-                                     list_wave_,subset_subj_,
-                                     #list_covar=NULL,
-                                     list_covar=list_covar_,
-                                     #rem_na_clin=T
-                                     rem_na_clin=F
-                                     )
-  df_clin_subset<-data_subset_clin$df_clin
-  colnames(df_clin_subset)[colnames(df_clin_subset)=="wave"]<-"ses"
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar_,rem_na_clin=F)
+  df_clin<-data_clin$df_clin
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   
   for (atlas in list_atlas_){
     # load and examine FC data
-    print(paste("Loding FC for atlas: ",atlas,sep=""))
-    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
-    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    print(paste("Loding FC of atlas: ",atlas,sep=""))
+    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to")]
     n_edge<-dim(df_edge)[1]
-    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
-    list_node<-list_node[order(list_node)]
+    list_node<-sort(unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to)))))
     n_node<-length(list_node)
     
     # create list of subjects who meet subsetting condition and whose MRI data exist
@@ -138,36 +129,34 @@ pca_fc<-function(paths_=paths,
     for (ses in list_ses_exist){
       df_conn_ses<-df_conn[df_conn$ses==ses,]
       id_subj_exist<-unique(df_conn_ses$ID_pnTTC)
-      id_subj_subset<-df_clin_subset[df_clin_subset$ses==ses,"ID_pnTTC"]
+      id_subj_subset<-df_clin[df_clin$ses==ses,"ID_pnTTC"]
       id_subj_exist<-intersect(id_subj_exist,id_subj_subset)
       list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist)
     }
     
-    # cbind FC data as input for PCA function
+    # cbind FC data (Fisher-z transform of FC) as input for PCA function
     df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
-    df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin_subset)))
-    colnames(df_clin_exist)<-colnames(df_clin_subset)
-    #list_file_tmp<-NULL
+    df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
+    colnames(df_clin_exist)<-colnames(df_clin)
     for (ses in list_ses_exist){
       for (id_subj in list_id_subj_exist[[ses]]){
-        #print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
         df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
         df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
         df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
-        df_clin_exist<-rbind(df_clin_exist,df_clin_subset[df_clin_subset$ses==ses & df_clin_subset$ID_pnTTC==id_subj,])
+        df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ses==ses & df_clin$ID_pnTTC==id_subj,])
       }
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
     
     # Ppreparation of PCA calculation
-    # transpose
+    # Transpose (rows >> data for each subject/session, columns >> data for each edge)
     df_conn<-t(df_conn_cbind)
+    # Estimate number of dimensions
     print("Estimating PCA dimension.")
-    # estimate number of dimensions
-    ncp_estimate<-estim_ncpPCA(df_conn,ncp.max=100)$ncp
+    ncp_estimate<-estim_ncpPCA(df_conn,ncp.max=ncol(df_conn))$ncp
     print(paste("PCA dimension: ",as.character(ncp_estimate),sep=""))
-    # impute data
+    # Ismpute data
     df_conn<-imputePCA(df_conn,ncp=ncp_estimate)$completeObs
     
     # PCA calculation
@@ -176,12 +165,12 @@ pca_fc<-function(paths_=paths,
     df_fac_var<-data.frame(data_pca$var$coord)
     df_fac_var<-cbind(df_edge,df_fac_var)
     colnames(df_fac_var)<-c("from","to",sprintf("dim_%02d",1:ncp_estimate))
-    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_factor.csv",sep="")),row.names=F)
+    write.csv(df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable_factor.csv",sep="")),row.names=F)
     
     df_fac_indiv<-data.frame(data_pca$ind$coord)
     df_fac_indiv<-cbind(df_clin_exist,df_fac_indiv)
     colnames(df_fac_indiv)<-c(colnames(df_clin_exist),sprintf("dim_%02d",1:ncp_estimate))
-    write.csv(df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_individual_factor.csv",sep="")),row.names=F)
+    write.csv(df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_individual_factor.csv",sep="")),row.names=F)
     
     df_var_accounted<-data.frame(data_pca$eig)
     colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
@@ -190,7 +179,7 @@ pca_fc<-function(paths_=paths,
     df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
     df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
     rownames(df_var_accounted)<-NULL
-    write.csv(df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_variance_accounted.csv",sep="")),row.names=F)
+    write.csv(df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variance_accounted.csv",sep="")),row.names=F)
     
     print("Finished calculating PCA of FC")
     
@@ -238,8 +227,7 @@ fingerprint<-function(paths_=paths,
   nullobj<-func_createdirs(paths_)
   for (atlas in list_atlas_){
     print(paste("Calculate atlas: ",atlas,sep=""))
-    file_conn<-paste("atl-",atlas,"_fc.csv",sep="")
-    df_conn<-read.csv(file.path(paths_$input,"output",file_conn))
+    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     n_edge<-dim(df_edge)[1]
@@ -254,8 +242,8 @@ fingerprint<-function(paths_=paths,
     }
 
     df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
-    df_list_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_list_ses_subj)<-c("ses","ID_pnTTC")
+    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
     #list_file_tmp<-NULL
     for (ses in list_ses_exist){
       for (id_subj in list_id_subj_exist[[ses]]){
@@ -263,7 +251,7 @@ fingerprint<-function(paths_=paths,
         df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
         df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
         df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
-        df_list_ses_subj<-rbind(df_list_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+        df_ses_subj<-rbind(df_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
       }
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
@@ -275,15 +263,15 @@ fingerprint<-function(paths_=paths,
     for (i in seq(dim(df_fingerprint)[1])){
       from_id<-df_fingerprint[[i,"from"]]
       to_id<-df_fingerprint[[i,"to"]]
-      df_fingerprint[[i,"from_ses"]]<-df_list_ses_subj[[from_id,"ses"]]
-      df_fingerprint[[i,"from_ID_pnTTC"]]<-df_list_ses_subj[[from_id,"ID_pnTTC"]]
-      df_fingerprint[[i,"to_ses"]]<-df_list_ses_subj[[to_id,"ses"]]
-      df_fingerprint[[i,"to_ID_pnTTC"]]<-df_list_ses_subj[[to_id,"ID_pnTTC"]]
+      df_fingerprint[[i,"from_ses"]]<-df_ses_subj[[from_id,"ses"]]
+      df_fingerprint[[i,"from_ID_pnTTC"]]<-df_ses_subj[[from_id,"ID_pnTTC"]]
+      df_fingerprint[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
+      df_fingerprint[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
     }
     df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
     write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
   }
-  print("Finished fingerprint calculation")
+  print("Finished fingerprint calculation.")
 }
 
 

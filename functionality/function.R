@@ -76,32 +76,24 @@ func_clinical_data<-function(paths,
 #**************************************************
 func_clinical_data_long<-function(paths,
                                   list_wave,
+                                  subset_subj,
+                                  list_covar,
+                                  rem_na_clin,
                                   file_clin= "CSUB.csv"
                                   ){
   df_src <- read.csv(file.path(paths$common,file_clin))
-  df_dst <- data.frame(matrix(nrow=0,ncol=ncol(df_src)+1))
+  df_clin_long <- data.frame(matrix(nrow=0,ncol=ncol(df_src)+1))
   for (wave in list_wave){
     df_tmp<-df_src['ID_pnTTC']
     df_tmp$wave<-rep(wave,nrow(df_tmp))
     df_tmp<-cbind(df_tmp,df_src[,colnames(df_src)!='ID_pnTTC'])
-    df_dst<-rbind(df_dst,df_tmp)
+    df_clin_long<-rbind(df_clin_long,df_tmp)
   }
-  colnames(df_dst)<-c('ID_pnTTC','wave',colnames(df_src)[colnames(df_src)!='ID_pnTTC'])
-  return(df_dst)
-}
-
-
-#**************************************************
-# Subset clinical data  ===========================
-#**************************************************
-# used for longitudinal analysis (GAMM)
-
-func_subset_clin<-function(df_clin,
-                           list_wave,subset_subj,
-                           list_covar,
-                           rem_na_clin
-                           ){
-  df_clin_subset<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
+  colnames(df_clin_long)<-c('ID_pnTTC','wave',colnames(df_src)[colnames(df_src)!='ID_pnTTC'])
+  #return(df_clin_long)
+  
+  
+  df_clin_subset<-data.frame(matrix(nrow=0,ncol=ncol(df_clin_long)))
   
   # Subset clinical data according to subsetting condition
   print('Subsetting clinical data frame according to specified condition.')
@@ -109,7 +101,7 @@ func_subset_clin<-function(df_clin,
   for (wave in list_wave){
     str_wave<-as.character(wave)
     print(paste('Checking wave ',str_wave,sep=''))
-    df_clin_wave<-df_clin[df_clin['wave']==wave,]
+    df_clin_wave<-df_clin_long[df_clin_long['wave']==wave,]
     print(paste('Source clinical data ',as.character(nrow(df_clin_wave)),sep=''))
     id_intersect<-df_clin_wave[,'ID_pnTTC']
     list_id_subset_wave<-list("src"=id_intersect)
@@ -133,7 +125,7 @@ func_subset_clin<-function(df_clin,
     names(list_id_subset_wave)<-str_wave
     list_id_subset<-c(list_id_subset,list_id_subset_wave)
   }
-  colnames(df_clin_subset)<-colnames(df_clin)
+  colnames(df_clin_subset)<-colnames(df_clin_long)
   
   # Subset unused columns of clinical data
   # Subset clinical data with missing covariate value
@@ -145,7 +137,7 @@ func_subset_clin<-function(df_clin,
     print(paste('Checking wave ',str_wave,sep=''))
     df_clin_exist_wave<-df_clin_subset[df_clin_subset$wave==wave,c('ID_pnTTC','wave')]
     id_exist_intersect<-df_clin_exist_wave$ID_pnTTC
-    print(paste('Source clinical data ',as.character(length(id_exist_intersect)),sep=''))
+    print(paste(as.character(length(id_exist_intersect)),' source clinical data identified.',sep=''))
     list_id_exist_wave<-list('src'=id_exist_intersect)
     if (length(list_covar)>0){
       for (id_covar in seq(length(list_covar))){
@@ -156,20 +148,21 @@ func_subset_clin<-function(df_clin,
         df_clin_exist_wave<-cbind(df_clin_exist_wave,df_clin_exist_wave_add)
         id_exist<-df_clin_exist_wave[!is.na(df_clin_exist_wave[name_covar_dst]),'ID_pnTTC']
         id_exist_intersect<-intersect(id_exist_intersect,id_exist)
-        print(paste(as.character(length(id_exist)),' subjects with ',name_covar_src,sep=''))
+        print(paste(as.character(length(id_exist)),' subjects with non-NA values of covariate: ',name_covar_src,sep=''))
         id_exist<-list(id_exist)
         names(id_exist)<-name_covar_dst
         list_id_exist_wave<-c(list_id_exist_wave,id_exist)
       }
-      print(paste(as.character(length(id_exist_intersect)),' subjects with all convariates existing.',sep=''))
+      print(paste(as.character(length(id_exist_intersect)),' subjects with non-NA values of all convariates.',sep=''))
     }
+    n_subj_pre<-nrow(df_clin_exist_wave)
     if (rem_na_clin){
-      n_subj_pre<-nrow(df_clin_exist_wave)
       df_clin_exist_wave<-df_clin_exist_wave[df_clin_exist_wave$ID_pnTTC %in% id_exist_intersect,]
       n_subj_deleted<-n_subj_pre-nrow(df_clin_exist_wave)
-      print(paste('Deleted ',as.character(n_subj_deleted),' subjects with missing covariate.',sep=''))
+      print(paste(as.character(n_subj_deleted),' subjects with NA values in any covariates deleted.',sep=''))
     }else{
-      print('Did not delete subjects with missing covariate.')
+      n_subj_na<-n_subj_pre-nrow(df_clin_exist_wave[df_clin_exist_wave$ID_pnTTC %in% id_exist_intersect,])
+      print(paste(as.character(n_subj_na),' subjects with NA values in any covariates, but NOT deleted.',sep=''))
     }
     list_id_exist_wave<-c(list_id_exist_wave,list('intersect'=id_exist_intersect))
     df_clin_exist<-rbind(df_clin_exist,df_clin_exist_wave)
