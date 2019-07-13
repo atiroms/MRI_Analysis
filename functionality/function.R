@@ -236,6 +236,51 @@ func_cor<-function(input){
 
 
 #**************************************************
+# General PCA calculation =========================
+#**************************************************
+func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
+  # Estimate number of dimensions
+  print("Estimating PCA dimension.")
+  ncp_estimate<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+  print(paste("PCA dimension: ",as.character(ncp_estimate),sep=""))
+  # Ismpute data
+  df_conn<-imputePCA(df_src,ncp=ncp_estimate)$completeObs
+  
+  # PCA calculation
+  print("Starting to calculate PCA of FC.")
+  data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = ncp_estimate, graph = FALSE)
+  
+  df_fac_var<-data.frame(data_pca$var$coord)
+  if(!is.null(df_var)){
+    df_fac_var<-cbind(df_var,df_fac_var)
+    colnames(df_fac_var)<-c(colnames(df_var),sprintf("dim_%02d",1:ncp_estimate))
+  }else{
+    colnames(df_fac_var)<-sprintf("dim_%02d",1:ncp_estimate)
+  }
+  rownames(df_fac_var)<-NULL
+  
+  df_fac_indiv<-data.frame(data_pca$ind$coord)
+  if(!is.null(df_indiv)){
+    df_fac_indiv<-cbind(df_indiv,df_fac_indiv)
+    colnames(df_fac_indiv)<-c(colnames(df_indiv),sprintf("dim_%02d",1:ncp_estimate))
+  }else{
+    colnames(df_fac_indiv)<-sprintf("dim_%02d",1:ncp_estimate)
+  }
+  rownames(df_fac_indiv)<-NULL
+  
+  df_var_accounted<-data.frame(data_pca$eig)
+  colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
+  df_var_accounted$var_accounted<-df_var_accounted$var_accounted/100
+  df_var_accounted$cumul_var_accounted<-df_var_accounted$cumul_var_accounted/100
+  df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
+  df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
+  rownames(df_var_accounted)<-NULL
+  
+  return(list('df_fac_var'=df_fac_var,'df_fac_indiv'=df_fac_indiv,'df_var_accounted'=df_var_accounted,'n_dim'=ncp_estimate))
+}
+
+
+#**************************************************
 # Multiple comparison correction of p values ======
 #**************************************************
 
