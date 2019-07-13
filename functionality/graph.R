@@ -19,8 +19,40 @@ library(purrr)
 # Plot PCA/ICA result =============================
 #**************************************************
 
-plot_ca<-function(input_fac_indiv,ncp){
-  
+plot_ca<-function(df_src,list_name_covar,n_dim){
+  df_plot<-df_src
+  df_plot$ses<-as.factor(df_plot$ses)
+  df_plot$ID_pnTTC<-as.factor(df_plot$ID_pnTTC)
+  list_plot<-list()
+  for (i_dim in 1:(n_dim-1)){
+    list_plot_dim<-list()
+    for (name_covar in list_name_covar){
+      df_plot_subset<-df_plot[,c("ses","ID_pnTTC",name_covar,sprintf("dim_%02d",i_dim),sprintf("dim_%02d",i_dim+1))]
+      colnames(df_plot_subset)<-c("ses","ID_pnTTC","color","x","y")
+      plot<-(ggplot(df_plot_subset)
+             + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
+             + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
+             + geom_point(size=2,aes(color=color))
+             + scale_color_gradientn(colors = matlab.like2(100),name=name_covar)
+             #+ geom_text_repel(size=2)
+             + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
+             #+ ggtitle("PCA of FC")
+             + xlab(sprintf("Dimension %02d",i_dim))
+             + ylab(sprintf("Dimension %02d",i_dim+1))
+             + theme_light()
+             + theme(plot.title = element_text(hjust = 0.5))
+      )
+      list_plot_dim_covar<-list(plot)
+      names(list_plot_dim_covar)<-name_covar
+      list_plot_dim<-c(list_plot_dim,list_plot_dim_covar)
+      #ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",i_dim),"-",sprintf("%02d",i_dim+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+      #       path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+    }
+    list_plot_dim<-list(list_plot_dim)
+    names(list_plot_dim)<-as.character(i_dim)
+    list_plot<-c(list_plot,list_plot_dim)
+  }
+  return(list_plot)
 }
 
 

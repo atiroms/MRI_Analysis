@@ -247,7 +247,6 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
   df_conn<-imputePCA(df_src,ncp=ncp_estimate)$completeObs
   
   # PCA calculation
-  print("Starting to calculate PCA of FC.")
   data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = ncp_estimate, graph = FALSE)
   
   df_fac_var<-data.frame(data_pca$var$coord)

@@ -104,7 +104,7 @@ pca_fc<-function(paths_=paths,
                  list_wave_=list_wave,
                  list_covar_=list_covar,
                  subset_subj_=subset_subj){
-  print("Starting PCA of FC calculation.")
+  print("Starting pca_fc().")
   nullobj<-func_createdirs(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
@@ -149,46 +149,31 @@ pca_fc<-function(paths_=paths,
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
     
+    # Calculate PCA of FC
+    print("Starting to calculate PCA of FC.")
     # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
     df_conn<-t(df_conn_cbind)
-    
     data_pca<-func_pca(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist)
     write.csv(data_pca$df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable_factor.csv",sep="")),row.names=F)
     write.csv(data_pca$df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_individual_factor.csv",sep="")),row.names=F)
     write.csv(data_pca$df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variance_accounted.csv",sep="")),row.names=F)
-    
     print("Finished calculating PCA of FC")
     
     # Plot PCA results
-    df_fac_indiv_plot<-df_fac_indiv
-    df_fac_indiv_plot$ses<-as.factor(df_fac_indiv_plot$ses)
-    df_fac_indiv_plot$ID_pnTTC<-as.factor(df_fac_indiv_plot$ID_pnTTC)
-    list_name_covar<-names(list_covar_)
-    
-    print("Sarting to plot PCA of FC")
-    for (i_dim in 1:(ncp_estimate-1)){
-      for (name_covar in list_name_covar){
-        df_fac_indiv_plot_subset<-df_fac_indiv_plot[,c("ses","ID_pnTTC",name_covar,sprintf("dim_%02d",i_dim),sprintf("dim_%02d",i_dim+1))]
-        colnames(df_fac_indiv_plot_subset)<-c("ses","ID_pnTTC","color","x","y")
-        plot<-(ggplot(df_fac_indiv_plot_subset)
-               + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
-               + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
-               + geom_point(size=2,aes(color=color))
-               + scale_color_gradientn(colors = matlab.like2(100),name=name_covar)
-               #+ geom_text_repel(size=2)
-               + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
-               + ggtitle("PCA of FC")
-               + xlab(sprintf("dimension %02d",i_dim))
-               + ylab(sprintf("dimension %02d",i_dim+1))
-               + theme_light()
-               + theme(plot.title = element_text(hjust = 0.5))
-              )
-        ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",i_dim),"-",sprintf("%02d",i_dim+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+    print("Sarting to plot PCA of FC.")
+    list_plot_pca<-plot_ca(df_src=df_fac_indiv,list_name_covar=names(list_covar_),n_dim=data_pca$n_dim)
+    for (i_dim in names(list_plot_pca)){
+      for (name_covar in names(list_plot_pca[[i_dim]])){
+        plot<-list_plot_pca[[i_dim]][[name_covar]]
+        plot<-(plot
+               + ggtitle("PCA of FC"))
+        ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",as.numeric(i_dim)),"-",sprintf("%02d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
     print("Finished plotting PCA of FC")
   }
+  print("Finished pca_fc().")
 }
 
 
