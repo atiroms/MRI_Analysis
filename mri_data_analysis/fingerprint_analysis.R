@@ -22,8 +22,57 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
+list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+                               "2"="W2_Tanner_Max",
+                               "label"="Tanner stage"),
+                 "age"=list("1"="W1_Age_at_MRI",
+                            "2"="W2_Age_at_MRI",
+                            "label"="Age"),
+                 "sex"=list("1"="Sex",
+                            "2"="Sex",
+                            "label"="Sex"))
+
 list_mod <- list("a+s+st"=
                    "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+
+list_graph <-list("a"=list("title"="Age effect",
+                           "x_axis"="age",
+                           "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                         "Female"=list("fix"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                           "point"=list("Male"=list("subset"=list("sex"=1),
+                                                    "color"="steelblue2","alpha"=1),
+                                        "Female"=list("subset"=list("sex"=2),
+                                                      "color"="lightcoral","alpha"=1))),
+                  "st"=list("title"="Tanner stage effect",
+                            "x_axis"="tanner",
+                            "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                          "Female"=list("fix"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                            "point"=list("Male"=list("subset"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1),
+                                         "Female"=list("subset"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1))),
+                  "sat"=list("title"="Age-Tanner stage interaction",
+                             "x_axis"="age",
+                             "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
+                                                              "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
+                                           "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
+                                                              "color"="steelblue2","alpha"=0.7,"ribbon"=F),
+                                           "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
+                                                              "color"="steelblue2","alpha"=1,"ribbon"=F),
+                                           "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
+                                                                "color"="lightcoral","alpha"=0.4,"ribbon"=F),
+                                           "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
+                                                                "color"="lightcoral","alpha"=0.7,"ribbon"=F),
+                                           "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
+                                                                "color"="lightcoral","alpha"=1,"ribbon"=F)),
+                             "point"=list("Male"=list("subset"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1),
+                                          "Female"=list("subset"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1))))
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 list_atlas<-"aal116"
@@ -123,13 +172,80 @@ gamm_fp<-function(paths_=paths,
     print(paste(as.character(n_id_subj_exist_twice)," subjects with two sessions.",sep=""))
 
     # Create dataframe for GLM analysis
+    df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
+    for (id_subj in list_id_subj_exist_twice){
+      df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"cor_fp"]<-df_fp[df_fp$from_ID_pnTTC==id_subj &df_fp$to_ID_pnTTC==id_subj,"r"]
+    }
+    df_clin_1<-df_clin[df_clin(ses)==1 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("ID_pnTTC",names(list_covar))]
+    df_clin_2<-df_clin[df_clin(ses)==2 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("ID_pnTTC",names(list_covar))]
+    df_clin_diff<-df_clin_2-df_clin_1
+    df_clin_diff$ID_pnTTC<-list_id_subj_exist_twice
+    for (key in c('ID_pnTTC','sex')){
+      if (key %in% colnames(df_clin_1)){
+        df_clin_1[,key]<-as.factor(df_clin_1[,key])
+      }
+      if (key %in% colnames(df_clin_2)){
+        df_clin_2[,key]<-as.factor(df_clin_2[,key])
+      }
+      if (key %in% colnames(df_clin_diff)){
+        df_clin_diff[,key]<-as.factor(df_clin_diff[,key])
+      }
+    }
+    colnames(df_clin_1)<-c("ID_pnTTC",paste("ses1_",names(list_covar),sep=''))
+    colnames(df_clin_2)<-c("ID_pnTTC",paste("ses2_",names(list_covar),sep=''))
+    colnames(df_clin_diff)<-c("ID_pnTTC",paste("diff_",names(list_covar),sep=''))
+    df_join<-inner_join(df_cor_fp,df_clin_1,by="ID_pnTTC")
+    df_join<-inner_join(df_join,df_clin_2,by="ID_pnTTC")
+    df_join<-inner_join(df_join,df_clin_diff,by="ID_pnTTC")
     
-    
-    
+    # Calculate GAMM
+    print('Calculating GAMM.')
+    df_out_term<-data.frame(matrix(nrow=0,ncol=5))
+    colnames(df_out_term)<-c("model","term","F","t","p")
+    df_out_model<-data.frame(matrix(nrow=0,ncol=3))
+    colnames(df_out_model)<-c("model","aic","aic_best_among_models")
+    list_mod_gamm<-list()
+    df_out_model_add<-data.frame()
+    for (mod in names(list_mod_)){
+      list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join)
+      p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
+      s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
+      df_out_term_add<-rbind(data.frame(model=mod,term=rownames(p_table),F=NA,
+                                        t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                             data.frame(model=mod,term=rownames(s_table),F=s_table[,'F'],
+                                        t=NA,p=s_table[,'p-value']))
+      df_out_term<-rbind(df_out_term,df_out_term_add)
+      df_out_model_add<-rbind(df_out_model_add,
+                              data.frame(model=mod,aic=list_mod_gamm[[mod]]$aic,
+                                         aic_best_among_models=0))
+      
+      for (idx_graph in names(list_graph_)){
+        plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
+                        df_join,
+                        spec_graph=list_graph_[[idx_graph]])
+        axis_x<-list_graph_[[idx_graph]][["x_axis"]]
+        label_x<-list_covar_[[axis_x]][["label"]]
+        plot<-(plot
+               + ggtitle(paste(list_graph_[[idx_graph]][["title"]],label_roi,sep=' '))
+               + xlab(label_x)
+               + ylab("Fingerprint correlation")
+               + theme(legend.position = "none"))
+        filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plot-",idx_graph,"fp_gamm.eps",sep="")
+        ggsave(filename_plot,plot=plot,device=cairo_ps,
+               path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+        
+      }
+    }
+    # compare AICs of models
+    df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
+    df_out_model<-rbind(df_out_model,df_out_model_add)
+    rownames(df_out_term)<-rownames(df_out_model)<-NULL
+    write.csv(df_out_term, file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_fp_gamm.csv",sep="")),row.names = F)
+    write.csv(df_out_model,file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_fp_gamm_aic.csv",sep="")),row.names = F)
     
   }
-  
-  
 }
 
 
