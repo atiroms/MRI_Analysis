@@ -22,6 +22,9 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
+list_mod <- list("a+s+st"=
+                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
@@ -79,11 +82,53 @@ source(file.path(paths$script,"functionality/graph.R"))
 
 
 #**************************************************
-# GLM of Fingerprint ==============================
+# GAMM of Fingerprint ==============================
 #**************************************************
-glm_fp<-function(paths_=paths,
-                  list_atlas_=list_atlas
+gamm_fp<-function(paths_=paths,
+                  list_atlas_=list_atlas,
+                  list_wave_=list_wave,
+                  list_covar_=list_covar,
+                  subset_subj_=subset_subj
                   ){
+  print("Starting glm_fp().")
+  nullobj<-func_createdirs(paths_)
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
+                                     list_covar=list_covar_,rem_na_clin=F)
+  df_clin<-data_clin$df_clin
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  
+  for (atlas in list_atlas_){
+    # Load fingerprint data
+    print(paste("Loading atlas: ",atlas,sep=""))
+    df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")))
+    
+    # Create list of subjects who meet subsetting condition and whose MRI data exist
+    list_ses_exist <- sort(unique(c(df_fp$from_ses,df_fp$to_ses)))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      id_subj_exist_ses<-sort(unique(c(df_fp[df_fp$from_ses==ses,'from_ID_pnTTC'],
+                                       df_fp[df_fp$to_ses==ses,'to_ID_pnTTC'])))
+      id_subj_subset_ses<-df_clin[df_clin$ses==ses,"ID_pnTTC"]
+      id_subj_exist_ses<-intersect(id_subj_exist_ses,id_subj_subset_ses)
+      list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist_ses)
+    }
+    
+    # Identify those with longitudinal data
+    list_id_subj_exist_twice<-sort(intersect(list_id_subj_exist[["1"]],
+                                             list_id_subj_exist[["2"]]))
+    n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
+    print(paste(as.character(n_id_subj_exist_twice)," subjects with two sessions.",sep=""))
+
+    # Create dataframe for GLM analysis
+    
+    
+    
+    
+  }
+  
   
 }
 
@@ -177,7 +222,7 @@ identify_fp<-function(paths_=paths,
           }
         }
         df_perm[i,paste(as.character(ses),'_n_ident',sep='')]<-n_identified
-        print(paste("Iteration: ",as.character(i),", subjects identified: ",as.character(n_identified),sep=""))
+        #print(paste("Iteration: ",as.character(i),", subjects identified: ",as.character(n_identified),sep=""))
       }
     }
     df_ident[is.na(df_ident["1_targeted_identification"]),"1_targeted_identification"]<-0
