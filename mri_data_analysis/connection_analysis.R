@@ -193,7 +193,7 @@ fingerprint<-function(paths_=paths,
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     n_edge<-dim(df_edge)[1]
     list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
-    list_node<-list_node[order(list_node)]
+    list_node<-sort(list_node)
     n_node<-length(list_node)
     list_ses_exist <- sort(unique(df_conn$ses))
     list_id_subj_exist<-list()
