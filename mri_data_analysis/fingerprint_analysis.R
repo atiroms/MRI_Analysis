@@ -13,7 +13,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"55_fingerprint"
 #dir_out<-"55_gta_bin"
-dir_out<-"58_fp_identification"
+dir_out<-"60_gamm_fp"
 
 list_wave <- c(1,2)
 
@@ -32,8 +32,28 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                             "2"="Sex",
                             "label"="Sex"))
 
-list_mod <- list("a+s+st"=
-                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')")
+list_mod <- list("lin_diff_a"=
+                   "value ~ diff_age + sex",
+                 "lin_diff_t"=
+                   "value ~ ses1_sex + sex:diff_tanner",
+                 "lin_diff_at"=
+                   "value ~ diff_age + sex + sex:diff_tanner",
+                 "add_diff_a"=
+                   "value ~ s(diff_age,k=3) + sex",
+                 "add_diff_t"=
+                   "value ~ sex + s(diff_tanner,k=3,by=sex)",
+                 "add_diff_at"=
+                   "value ~ s(diff_age,k=3) + sex + s(diff_tanner,k=3,by=sex)"
+                 )
+
+#list_mod <- list("additive"=
+#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex)",
+#                 "additive_mixed"=
+#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
+#                 "linear"=
+#                   "value ~ age + sex + sex:tanner",
+#                 "linear_mixed"=
+#                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')")
 
 list_graph <-list("a"=list("title"="Age effect",
                            "x_axis"="age",
@@ -87,6 +107,7 @@ n_permutation<-100
 # Libraries =======================================
 #**************************************************
 library(dplyr)
+library(mgcv)
 #library(ggplot2)
 #library(GGally)
 #library(igraph)
@@ -137,6 +158,7 @@ gamm_fp<-function(paths_=paths,
                   list_atlas_=list_atlas,
                   list_wave_=list_wave,
                   list_covar_=list_covar,
+                  list_mod_=list_mod,
                   subset_subj_=subset_subj
                   ){
   print("Starting glm_fp().")
@@ -145,7 +167,7 @@ gamm_fp<-function(paths_=paths,
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
   data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
-                                     list_covar=list_covar_,rem_na_clin=F)
+                                     list_covar=list_covar_,rem_na_clin=T)
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   
@@ -171,32 +193,33 @@ gamm_fp<-function(paths_=paths,
     n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
     print(paste(as.character(n_id_subj_exist_twice)," subjects with two sessions.",sep=""))
 
-    # Create dataframe for GLM analysis
+    # Collect longitudinal fp correlation data
     df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
     for (id_subj in list_id_subj_exist_twice){
-      df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"cor_fp"]<-df_fp[df_fp$from_ID_pnTTC==id_subj &df_fp$to_ID_pnTTC==id_subj,"r"]
+      df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp[df_fp$from_ID_pnTTC==id_subj &df_fp$to_ID_pnTTC==id_subj,"r"]
     }
-    df_clin_1<-df_clin[df_clin(ses)==1 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("ID_pnTTC",names(list_covar))]
-    df_clin_2<-df_clin[df_clin(ses)==2 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("ID_pnTTC",names(list_covar))]
+    
+    # Subset those without longitudinal fp correlation
+    list_id_subj_exist_twice<-df_cor_fp[!is.na(df_cor_fp$value),"ID_pnTTC"]
+    df_cor_fp<-df_cor_fp[df_cor_fp$ID_pnTTC %in% list_id_subj_exist_twice,]
+    n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
+    print(paste(as.character(n_id_subj_exist_twice)," subjects with non-NA two sessions.",sep=""))
+    
+    # Create dataframe for GLM analysis
+    df_clin_left<-data.frame(ID_pnTTC=list_id_subj_exist_twice,
+                             sex=df_clin[df_clin$ID_pnTTC %in% list_id_subj_exist_twice & df_clin$ses==1,"sex"])
+    df_clin_1<-df_clin[df_clin$ses==1 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("age","tanner")]
+    df_clin_2<-df_clin[df_clin$ses==2 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("age","tanner")]
     df_clin_diff<-df_clin_2-df_clin_1
-    df_clin_diff$ID_pnTTC<-list_id_subj_exist_twice
-    for (key in c('ID_pnTTC','sex')){
-      if (key %in% colnames(df_clin_1)){
-        df_clin_1[,key]<-as.factor(df_clin_1[,key])
-      }
-      if (key %in% colnames(df_clin_2)){
-        df_clin_2[,key]<-as.factor(df_clin_2[,key])
-      }
-      if (key %in% colnames(df_clin_diff)){
-        df_clin_diff[,key]<-as.factor(df_clin_diff[,key])
-      }
-    }
-    colnames(df_clin_1)<-c("ID_pnTTC",paste("ses1_",names(list_covar),sep=''))
-    colnames(df_clin_2)<-c("ID_pnTTC",paste("ses2_",names(list_covar),sep=''))
-    colnames(df_clin_diff)<-c("ID_pnTTC",paste("diff_",names(list_covar),sep=''))
-    df_join<-inner_join(df_cor_fp,df_clin_1,by="ID_pnTTC")
-    df_join<-inner_join(df_join,df_clin_2,by="ID_pnTTC")
-    df_join<-inner_join(df_join,df_clin_diff,by="ID_pnTTC")
+    df_clin_mean<-(df_clin_1+df_clin_2)/2
+    colnames(df_clin_1)<-c(paste("ses1_",colnames(df_clin_1),sep=''))
+    colnames(df_clin_2)<-c(paste("ses2_",colnames(df_clin_2),sep=''))
+    colnames(df_clin_diff)<-c(paste("diff_",colnames(df_clin_diff),sep=''))
+    colnames(df_clin_mean)<-c(paste("mean_",colnames(df_clin_mean),sep=''))
+    df_join<-cbind(df_clin_left,df_clin_1,df_clin_2,df_clin_diff,df_clin_mean)
+    df_join<-inner_join(df_join,df_cor_fp,by="ID_pnTTC")
+    df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
+    df_join$sex<-as.factor(df_join$sex)
     
     # Calculate GAMM
     print('Calculating GAMM.')
@@ -209,11 +232,15 @@ gamm_fp<-function(paths_=paths,
     for (mod in names(list_mod_)){
       list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join)
       p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
-      s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
-      df_out_term_add<-rbind(data.frame(model=mod,term=rownames(p_table),F=NA,
-                                        t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                             data.frame(model=mod,term=rownames(s_table),F=s_table[,'F'],
-                                        t=NA,p=s_table[,'p-value']))
+      if (!is.null(summary.gam(list_mod_gamm[[mod]])$s.table)){
+        s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
+        df_out_term_add<-rbind(data.frame(model=mod,term=rownames(p_table),F=NA,
+                                          t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                               data.frame(model=mod,term=rownames(s_table),F=s_table[,'F'],
+                                          t=NA,p=s_table[,'p-value']))
+      }
+      df_out_term_add<-data.frame(model=mod,term=rownames(p_table),F=NA,
+                                  t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
       df_out_term<-rbind(df_out_term,df_out_term_add)
       df_out_model_add<-rbind(df_out_model_add,
                               data.frame(model=mod,aic=list_mod_gamm[[mod]]$aic,
@@ -230,7 +257,7 @@ gamm_fp<-function(paths_=paths,
                + xlab(label_x)
                + ylab("Fingerprint correlation")
                + theme(legend.position = "none"))
-        filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plot-",idx_graph,"fp_gamm.eps",sep="")
+        filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"fp_gamm.eps",sep="")
         ggsave(filename_plot,plot=plot,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
         
