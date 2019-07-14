@@ -161,7 +161,7 @@ pca_fc<-function(paths_=paths,
     
     # Plot PCA results
     print("Sarting to plot PCA of FC.")
-    list_plot_pca<-plot_ca(df_src=df_fac_indiv,list_name_covar=names(list_covar_),n_dim=data_pca$n_dim)
+    list_plot_pca<-plot_ca(df_src=data_pca$df_fac_indiv,list_name_covar=names(list_covar_),n_dim=data_pca$n_dim)
     for (i_dim in names(list_plot_pca)){
       for (name_covar in names(list_plot_pca[[i_dim]])){
         plot<-list_plot_pca[[i_dim]][[name_covar]]
