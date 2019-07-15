@@ -263,7 +263,8 @@ gamm_fp<-function(paths_=paths,
         
       }
     }
-    # compare AICs of models
+    
+    # Compare AICs of models
     df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
     df_out_model<-rbind(df_out_model,df_out_model_add)
     rownames(df_out_term)<-rownames(df_out_model)<-NULL
