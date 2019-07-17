@@ -71,6 +71,7 @@ func_clinical_data<-function(paths,
   return(output)
 }
 
+
 #**************************************************
 # Longitudinal clinical data loading ==============
 #**************************************************
@@ -102,7 +103,7 @@ func_clinical_data_long<-function(paths,
     str_wave<-as.character(wave)
     print(paste('Checking wave ',str_wave,sep=''))
     df_clin_wave<-df_clin_long[df_clin_long['wave']==wave,]
-    print(paste('Source clinical data ',as.character(nrow(df_clin_wave)),sep=''))
+    print(paste(as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
     id_intersect<-df_clin_wave[,'ID_pnTTC']
     list_id_subset_wave<-list("src"=id_intersect)
     for (cond_subset in subset_subj[[str_wave]]){
