@@ -225,3 +225,22 @@ singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/test_fmrip
 
 # fmriprep-140 on Ubuntu_1
 singularity run --cleanenv -B /media/veracrypt1/MRI_img/pnTTC/preproc/test_fmriprep_2:${HOME}/data /data/applications/fmriprep-140.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+## test on 3 subjects
+# 01
+singularity run --cleanenv -B /media/veracrypt1/MRI_img/pnTTC/test3/01_fmriprep:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+# 02
+singularity run --cleanenv -B /media/veracrypt1/MRI_img/pnTTC/test3/02_fmriprep:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+# 03
+singularity run --cleanenv -B /media/veracrypt1/MRI_img/pnTTC/test3/03_fmriprep:${HOME}/data /data/applications/fmriprep-140.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+# 04
+singularity run --cleanenv -B /media/veracrypt1/MRI_img/pnTTC/test3/04_fmriprep:${HOME}/data /data/applications/fmriprep-140.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+## 67_c1_fmriprep
+singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
+
+## 68_c2_fmriprep
+singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep:${HOME}/data /data/applications/fmriprep-132.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --template-resampling-grid='2mm' --ignore fieldmaps --use-syn-sdc --use-aroma --output-space T1w template --bold2t1w-dof=6
