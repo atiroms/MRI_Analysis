@@ -55,7 +55,7 @@ list_mod <- list("lin_diff_a"=
 #                 "linear_mixed"=
 #                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')")
 
-list_graph <-list("a"=list("title"="Age difference effect",
+list_graph <-list("a"=list("title"="Effect of age difference",
                            "x_axis"="diff_age",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -65,7 +65,7 @@ list_graph <-list("a"=list("title"="Age difference effect",
                                                     "color"="steelblue2","alpha"=1),
                                         "Female"=list("subset"=list("sex"=2),
                                                       "color"="lightcoral","alpha"=1))),
-                  "st"=list("title"="Tanner stage difference effect",
+                  "st"=list("title"="Effect of Tanner stage difference",
                             "x_axis"="diff_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -74,46 +74,26 @@ list_graph <-list("a"=list("title"="Age difference effect",
                             "point"=list("Male"=list("subset"=list("sex"=1),
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
-                                                       "color"="lightcoral","alpha"=1))))
+                                                       "color"="lightcoral","alpha"=1))),
+                  "sat"=list("title"="Age difference-Tanner stage difference interaction",
+                             "x_axis"="diff_age",
+                             "smooth"=list("Male delta TS = -1"=list("fix"=list("sex"=1,"diff_tanner"=-1),
+                                                              "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
+                                           "Male delta TS = 1"=list("fix"=list("sex"=1,"diff_tanner"=1),
+                                                              "color"="steelblue2","alpha"=0.7,"ribbon"=F),
+                                           "Male delta TS = 3"=list("fix"=list("sex"=1,"diff_tanner"=3),
+                                                              "color"="steelblue2","alpha"=1,"ribbon"=F),
+                                           "Female delta TS = -1"=list("fix"=list("sex"=2,"diff_tanner"=-1),
+                                                                "color"="lightcoral","alpha"=0.4,"ribbon"=F),
+                                           "Female delta TS = 1"=list("fix"=list("sex"=2,"diff_tanner"=1),
+                                                                "color"="lightcoral","alpha"=0.7,"ribbon"=F),
+                                           "Female delta TS = 3"=list("fix"=list("sex"=2,"diff_tanner"=3),
+                                                                "color"="lightcoral","alpha"=1,"ribbon"=F)),
+                             "point"=list("Male"=list("subset"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1),
+                                          "Female"=list("subset"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1))))
 
-#list_graph <-list("a"=list("title"="Age effect",
-#                           "x_axis"="age",
-#                           "smooth"=list("Male"=list("fix"=list("sex"=1),
-#                                                     "color"="steelblue2","alpha"=1,"ribbon"=T),
-#                                         "Female"=list("fix"=list("sex"=2),
-#                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
-#                           "point"=list("Male"=list("subset"=list("sex"=1),
-#                                                    "color"="steelblue2","alpha"=1),
-#                                        "Female"=list("subset"=list("sex"=2),
-#                                                      "color"="lightcoral","alpha"=1))),
-#                  "st"=list("title"="Tanner stage effect",
-#                            "x_axis"="tanner",
-#                            "smooth"=list("Male"=list("fix"=list("sex"=1),
-#                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
-#                                          "Female"=list("fix"=list("sex"=2),
-#                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
-#                            "point"=list("Male"=list("subset"=list("sex"=1),
-#                                                     "color"="steelblue2","alpha"=1),
-#                                         "Female"=list("subset"=list("sex"=2),
-#                                                       "color"="lightcoral","alpha"=1))),
-#                  "sat"=list("title"="Age-Tanner stage interaction",
-#                             "x_axis"="age",
-#                             "smooth"=list("Male TS = 1"=list("fix"=list("sex"=1,"tanner"=1),
-#                                                              "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
-#                                           "Male TS = 3"=list("fix"=list("sex"=1,"tanner"=3),
-#                                                              "color"="steelblue2","alpha"=0.7,"ribbon"=F),
-#                                           "Male TS = 5"=list("fix"=list("sex"=1,"tanner"=5),
-#                                                              "color"="steelblue2","alpha"=1,"ribbon"=F),
-#                                           "Female TS = 1"=list("fix"=list("sex"=2,"tanner"=1),
-#                                                                "color"="lightcoral","alpha"=0.4,"ribbon"=F),
-#                                           "Female TS = 3"=list("fix"=list("sex"=2,"tanner"=3),
-#                                                                "color"="lightcoral","alpha"=0.7,"ribbon"=F),
-#                                           "Female TS = 5"=list("fix"=list("sex"=2,"tanner"=5),
-#                                                                "color"="lightcoral","alpha"=1,"ribbon"=F)),
-#                             "point"=list("Male"=list("subset"=list("sex"=1),
-#                                                      "color"="steelblue2","alpha"=1),
-#                                          "Female"=list("subset"=list("sex"=2),
-#                                                        "color"="lightcoral","alpha"=1))))
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 list_atlas<-"aal116"
@@ -173,13 +153,15 @@ source(file.path(paths$script,"functionality/graph.R"))
 
 
 #**************************************************
-# GAMM of Fingerprint ==============================
+# GAMM of Fingerprint =============================
 #**************************************************
+
 gamm_fp<-function(paths_=paths,
                   list_atlas_=list_atlas,
                   list_wave_=list_wave,
                   list_covar_=list_covar,
                   list_mod_=list_mod,
+                  list_graph_=list_graph,
                   subset_subj_=subset_subj
                   ){
   print("Starting glm_fp().")
@@ -224,7 +206,7 @@ gamm_fp<-function(paths_=paths,
     list_id_subj_exist_twice<-df_cor_fp[!is.na(df_cor_fp$value),"ID_pnTTC"]
     df_cor_fp<-df_cor_fp[df_cor_fp$ID_pnTTC %in% list_id_subj_exist_twice,]
     n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
-    print(paste(as.character(n_id_subj_exist_twice)," subjects with non-NA two sessions.",sep=""))
+    print(paste(as.character(n_id_subj_exist_twice)," subjects with non-NA data for two sessions.",sep=""))
     
     # Create dataframe for GLM analysis
     df_clin_left<-data.frame(ID_pnTTC=list_id_subj_exist_twice,
@@ -253,6 +235,7 @@ gamm_fp<-function(paths_=paths,
     list_mod_gamm<-list()
     df_out_model_add<-data.frame()
     for (mod in names(list_mod_)){
+      print(paste("Calculating model: ", mod, sep=""))
       list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join)
       p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
       if (!is.null(summary.gam(list_mod_gamm[[mod]])$s.table)){
@@ -270,19 +253,29 @@ gamm_fp<-function(paths_=paths,
                                          aic_best_among_models=0))
       
       for (idx_graph in names(list_graph_)){
-        axis_x<-list_graph_[[idx_graph]][["x_axis"]]
-        plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
-                        df_join,
-                        spec_graph=list_graph_[[idx_graph]])
-        plot<-(plot
-               + ggtitle(paste(list_graph_[[idx_graph]][["title"]],label_roi,sep=' '))
-               + xlab(list_covar_[[axis_x]][["label"]])
-               + ylab("Fingerprint correlation")
-               + theme(legend.position = "none"))
-        filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"fp_gamm.eps",sep="")
-        ggsave(filename_plot,plot=plot,device=cairo_ps,
-               path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
-        
+        if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(list_mod_gamm[[mod]]$model)){
+          plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
+                          df_join,
+                          spec_graph=list_graph_[[idx_graph]])
+          axis_x<-list_graph_[[idx_graph]][["x_axis"]]
+          for (idx_prefix in list(c("",""),c("ses1_"," 1st wave"),c("ses2_"," 2nd wave"),
+                                  c("diff_"," difference"),c("mean_"," mean"))){
+            for (idx_covar in names(list_covar_)){
+              if (axis_x==paste(idx_prefix[1],idx_covar,sep="")){
+                label_x<-paste(list_covar_[[idx_covar]][["label"]],idx_prefix[2],sep='')
+              }
+            }
+          }
+          
+          plot<-(plot
+                 + ggtitle(list_graph_[[idx_graph]][["title"]])
+                 + xlab(label_x)
+                 + ylab("Fingerprint correlation")
+                 + theme(legend.position = "none"))
+          filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"_fp_gamm.eps",sep="")
+          ggsave(filename_plot,plot=plot,device=cairo_ps,
+                 path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+        }
       }
     }
     
@@ -296,6 +289,7 @@ gamm_fp<-function(paths_=paths,
                                      paste("atl-",atlas,"_fp_gamm_aic.csv",sep="")),row.names = F)
     
   }
+  print("Finished gamm_fp()")
 }
 
 
