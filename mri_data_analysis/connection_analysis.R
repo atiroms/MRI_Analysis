@@ -56,6 +56,7 @@ library(FactoMineR)
 library(missMDA)
 library(ggrepel)
 library(colorRamps)
+library(tidyverse)
 
 
 #**************************************************
@@ -182,12 +183,11 @@ pca_fc<-function(paths_=paths,
 #**************************************************
 fingerprint<-function(paths_=paths,
                       list_atlas_=list_atlas,
-                      list_wave_=list_wave,
                       subset_subj_=subset_subj){
-  print("Starting fingerprint calculation.")
+  print("Starting fingerprint().")
   nullobj<-func_createdirs(paths_)
   for (atlas in list_atlas_){
-    print(paste("Calculate atlas: ",atlas,sep=""))
+    print(paste("Calculating atlas: ",atlas,sep=""))
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
@@ -218,7 +218,8 @@ fingerprint<-function(paths_=paths,
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
     print("Starting to calculate correlation coefficients between fingerprints.")
-    df_fingerprint<-func_cor(input=df_conn_cbind)$cor_flat
+    data_fingerprint<-func_cor(input=df_conn_cbind)
+    df_fingerprint<-data_fingerprint$cor_flat
     print("Finished calculating correlation coefficients between fingerprints.")
     df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
     for (i in seq(dim(df_fingerprint)[1])){
@@ -231,8 +232,26 @@ fingerprint<-function(paths_=paths,
     }
     df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
     write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
+    
+    # Prepare dataframe for fingerprint correlation plot
+    df_fp_plot<-data.frame(data_fingerpirnt$cor)
+    list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$subj),as.characer(df_ses_subj$ses),sep="_")
+    colnames(df_fp_plot)<-list_name_subj_ses
+    df_fp_plot<-rownames_to_column(df_fp_plot,"row")
+    df_fp_plot$row<-list_name_subj_ses
+    
+    # Heatmap plot of fp correlation matrix
+    plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
+    plot_fp_heatmap<-(plot_fp_heatmap
+                      + ggtitle(paste(sprintf("Subject %05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))
+                      + theme(plot.title = element_text(hjust = 0.5)))
+    
+    # Save heatmap plot
+    ggsave(paste("atl-",atlas,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+           path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+    
   }
-  print("Finished fingerprint calculation.")
+  print("Finished fingerprint().")
 }
 
 
