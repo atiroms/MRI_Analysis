@@ -181,9 +181,9 @@ pca_fc<-function(paths_=paths,
 #**************************************************
 # Fingerprinting ==================================
 #**************************************************
-fingerprint<-function(paths_=paths,
-                      list_atlas_=list_atlas,
-                      subset_subj_=subset_subj){
+fp<-function(paths_=paths,
+             list_atlas_=list_atlas,
+             subset_subj_=subset_subj){
   print("Starting fingerprint().")
   nullobj<-func_createdirs(paths_)
   for (atlas in list_atlas_){
