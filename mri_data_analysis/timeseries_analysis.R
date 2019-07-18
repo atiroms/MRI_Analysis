@@ -135,7 +135,7 @@ fc<-function(paths_=paths,
         df_fc_flat<-data_fc$cor_flat
         df_fc_flat<-cbind(ses=ses,ID_pnTTC=id_subj,df_fc_flat)
         colnames(df_fc_flat)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
-        file_tmp<-paste("TMP_atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d", id_subj),"_fc.csv",sep="")
+        file_tmp<-paste("TMP_atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),"_fc.csv",sep="")
         path_file_tmp<-file.path(paths_$output,"output",file_tmp)
         list_path_tmp<-c(list_path_tmp,path_file_tmp)
         write.csv(df_fc_flat,path_file_tmp,row.names=F)

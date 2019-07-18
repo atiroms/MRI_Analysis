@@ -14,8 +14,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
-#dir_out<-"55_fingerprint"
-dir_out<-"59_pca_fc"
+dir_out<-"55_fingerprint"
+#dir_out<-"59_pca_fc"
 
 list_wave <- c(1,2)
 
@@ -234,8 +234,8 @@ fingerprint<-function(paths_=paths,
     write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
     
     # Prepare dataframe for fingerprint correlation plot
-    df_fp_plot<-data.frame(data_fingerpirnt$cor)
-    list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$subj),as.characer(df_ses_subj$ses),sep="_")
+    df_fp_plot<-data.frame(data_fingerprint$cor)
+    list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$ID_pnTTC),as.character(df_ses_subj$ses),sep="_")
     colnames(df_fp_plot)<-list_name_subj_ses
     df_fp_plot<-rownames_to_column(df_fp_plot,"row")
     df_fp_plot$row<-list_name_subj_ses
@@ -243,7 +243,8 @@ fingerprint<-function(paths_=paths,
     # Heatmap plot of fp correlation matrix
     plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
     plot_fp_heatmap<-(plot_fp_heatmap
-                      + ggtitle(paste(sprintf("Subject %05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))
+                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                      + ggtitle("Fingerprint correlation")
                       + theme(plot.title = element_text(hjust = 0.5)))
     
     # Save heatmap plot
