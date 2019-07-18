@@ -192,8 +192,7 @@ fingerprint<-function(paths_=paths,
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     n_edge<-dim(df_edge)[1]
-    list_node<-unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to))))
-    list_node<-sort(list_node)
+    list_node<-sort(unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to)))))
     n_node<-length(list_node)
     list_ses_exist <- sort(unique(df_conn$ses))
     list_id_subj_exist<-list()
@@ -217,10 +216,10 @@ fingerprint<-function(paths_=paths,
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
-    print("Starting to calculate correlation coefficients between fingerprints.")
+    print("Starting to calculate correlation of fingerprints.")
     data_fingerprint<-func_cor(input=df_conn_cbind)
     df_fingerprint<-data_fingerprint$cor_flat
-    print("Finished calculating correlation coefficients between fingerprints.")
+    print("Finished calculating correlation of fingerprints.")
     df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
     for (i in seq(dim(df_fingerprint)[1])){
       from_id<-df_fingerprint[[i,"from"]]
@@ -234,11 +233,9 @@ fingerprint<-function(paths_=paths,
     write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
     
     # Prepare dataframe for fingerprint correlation plot
-    df_fp_plot<-data.frame(data_fingerprint$cor)
+    df_fp_plot<-data_fingerprint$cor
     list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$ID_pnTTC),as.character(df_ses_subj$ses),sep="_")
-    colnames(df_fp_plot)<-list_name_subj_ses
-    df_fp_plot<-rownames_to_column(df_fp_plot,"row")
-    df_fp_plot$row<-list_name_subj_ses
+    colnames(df_fp_plot)<-rownames(df_fp_plot)<-list_name_subj_ses
     
     # Heatmap plot of fp correlation matrix
     plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
