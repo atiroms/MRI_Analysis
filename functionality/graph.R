@@ -155,23 +155,23 @@ plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
 #**************************************************
 # Plot correlation matrix in heatmap ==============
 #**************************************************
-cor_heatmap<-function(input){
-  input_tidy<-gather(input,column,r,2:ncol(input))
-  fig<-ggplot(input_tidy, aes(column, row)) +
-    geom_tile(aes(fill = r)) +
-    scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1)) +
-    scale_y_discrete(limits = rev(input$row)) +
-    scale_x_discrete(limits = input$row, position="top") +
-    #ggtitle(title) +
-    theme_light() +
-    theme(axis.text.x = element_text(size=700/ncol(input),angle = 90,vjust=0,hjust=0),
-          axis.text.y = element_text(size=700/ncol(input)),
-          axis.title=element_blank(),
-          panel.grid.major=element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.border = element_blank(),
-          panel.background = element_blank())
-    return(fig)
+plot_cor_heatmap<-function(input){
+  input_tidy<-rownames_to_column(input,"row")
+  input_tidy<-gather(input_tidy,key=column,value=r,2:ncol(input_tidy))
+  plot<-(ggplot(input_tidy, aes(column, row))
+         + geom_tile(aes(fill = r))
+         + scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1))
+         + scale_y_discrete(limits = rev(rownames(input)))
+         + scale_x_discrete(limits = colnames(input), position="top")
+         + theme_light()
+         + theme(axis.text.x = element_text(size=700/ncol(input),angle = 90,vjust=0,hjust=0),
+                 axis.text.y = element_text(size=700/ncol(input)),
+                 #axis.title=element_blank(),
+                 panel.grid.major=element_blank(),
+                 panel.grid.minor = element_blank(),
+                 panel.border = element_blank(),
+                 panel.background = element_blank()))
+    return(plot)
 }
 
 

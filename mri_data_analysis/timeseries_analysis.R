@@ -16,6 +16,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in <-"53_ts_acompcor"
 dir_out <-"54_fc_acompcor"
+#dir_out <-"56_fc_test"
 
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
@@ -117,11 +118,11 @@ func_data_timeseries<-function(paths__,atlas_=atlas){
 #**************************************************
 fc<-function(paths_=paths,
              list_atlas_=list_atlas){
-  print("Starting to calculate FC.")
+  print("Starting fc().")
   nullobj<-func_createdirs(paths_)
   
   for (atlas in list_atlas_){
-    print(paste("Starting to calculate for atlas: ",atlas,sep=""))
+    print(paste("Starting to calculate atlas: ",atlas,sep=""))
     data_timeseries<-func_data_timeseries(paths__=paths_,atlas_=atlas)
     
     #df_fc_stack<-data.frame()
@@ -135,29 +136,31 @@ fc<-function(paths_=paths,
         df_fc_flat<-data_fc$cor_flat
         df_fc_flat<-cbind(ses=ses,ID_pnTTC=id_subj,df_fc_flat)
         colnames(df_fc_flat)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
-        file_tmp<-paste("TMP_atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d", id_subj),"_fc.csv",sep="")
+        file_tmp<-paste("TMP_atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),"_fc.csv",sep="")
         path_file_tmp<-file.path(paths_$output,"output",file_tmp)
         list_path_tmp<-c(list_path_tmp,path_file_tmp)
         write.csv(df_fc_flat,path_file_tmp,row.names=F)
         #df_fc_stack<-rbind(df_fc_stack,cbind(ses=ses,ID_pnTTC=id_subj,df_fc_flat))
         
         # Convert 'id' to 'label' for heatmap plotting
-        df_fc_roilabel<-data.frame(data_fc$cor$r)
+        df_fc_roilabel<-data_fc$cor
         dict_roi<-data_timeseries$dict_roi
+        list_label_roi<-NULL
         for(i in seq(ncol(df_fc_roilabel))){
-          colnames(df_fc_roilabel)[i]<-as.character(dict_roi[which(dict_roi$id==colnames(df_fc_roilabel)[i]),"label"])
+          list_label_roi<-c(list_label_roi,as.character(dict_roi[which(dict_roi$id==colnames(df_fc_roilabel)[i]),"label"]))
         }
-        df_fc_roilabel<-rownames_to_column(df_fc_roilabel, "row")
-        for(i in seq(nrow(df_fc_roilabel))){
-          df_fc_roilabel$row[i]<-as.character(dict_roi[which(dict_roi$id==df_fc_roilabel$row[i]),"label"])
-        }
+        colnames(df_fc_roilabel)<-rownames(df_fc_roilabel)<-list_label_roi
         
         # Heatmap plot of FC correlation matrix
-        fig_fc_heatmap<-cor_heatmap(input=df_fc_roilabel)
-        fig_fc_heatmap<-fig_fc_heatmap + ggtitle(paste(sprintf("%05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))+ theme(plot.title = element_text(hjust = 0.5))
+        plot_fc_heatmap<-plot_cor_heatmap(input=df_fc_roilabel)
+        plot_fc_heatmap<-(plot_fc_heatmap
+                          + ggtitle(paste(sprintf("Subject %05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))
+                          + theme(plot.title = element_text(hjust = 0.5),
+                                  axis.title=element_blank()))
         
         # Save heatmap plot
-        ggsave(paste("atl-",atlas,"_ses-",sprintf("%02d",ses),"_sub-",sprintf("%05d", id_subj),"_fc.eps",sep=""),plot=fig_fc_heatmap,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),"_fc.eps",sep=""),
+               plot=plot_fc_heatmap,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
         
         print(paste("Finished Wave: ",as.character(ses),", Subject: ",as.character(id_subj),sep=""))
@@ -178,7 +181,7 @@ fc<-function(paths_=paths,
     print("Finished saving all subject results.")
     print(paste("Finished calculating for atlas: ",atlas, sep=""))
   }
-  print("Finished calculating all FCs.")
+  print("Finished fc().")
 }
 
 

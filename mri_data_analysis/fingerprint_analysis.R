@@ -13,7 +13,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"55_fingerprint"
 #dir_out<-"55_gta_bin"
-dir_out<-"60_gamm_fp"
+#dir_out<-"56_fp_identification"
+dir_out<-"57_gamm_fp"
 
 list_wave <- c(1,2)
 
@@ -335,7 +336,23 @@ identify_fp<-function(paths_=paths,
     print(paste(as.character(n_id_subj_exist_twice)," subjects with two sessions.",sep=""))
     df_fp_exist_twice<-df_fp[(df_fp$from_ID_pnTTC %in% list_id_subj_exist_twice) & (df_fp$to_ID_pnTTC %in% list_id_subj_exist_twice),]
     df_fp_exist_twice<-df_fp_exist_twice[(df_fp_exist_twice$from_ses==1 & df_fp_exist_twice$to_ses==2),]
-
+    
+    # Output subset with longitudinal data
+    write.csv(df_fp_exist_twice,file.path(paths_$output,"output",paste("atl-",atlas,"_fp_input_subset.csv",sep="")),row.names=F)
+    df_fp_exist_twice_plot<-df_fp_exist_twice[c('from_ID_pnTTC','to_ID_pnTTC','r')]
+    df_fp_exist_twice_plot<-spread(df_fp_exist_twice_plot,key=to_ID_pnTTC,value=r)
+    colnames(df_fp_exist_twice_plot)[-1]<-rownames(df_fp_exist_twice_plot)<-sprintf("%05d",df_fp_exist_twice_plot$from_ID_pnTTC)
+    df_fp_exist_twice_plot<-df_fp_exist_twice_plot[-1]
+    plot_fp_exist_twice<-plot_cor_heatmap(input=df_fp_exist_twice_plot)
+    plot_fp_exist_twice<-(plot_fp_exist_twice
+                          + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                          + ggtitle("Fingerprint correlation of two waves")
+                          + xlab("2nd wave")
+                          + ylab("1st wave")
+                          + theme(plot.title = element_text(hjust = 0.5)))
+    ggsave(paste("atl-",atlas,"_fp_identification.eps",sep=""),plot=plot_fp_exist_twice,device=cairo_ps,
+           path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+    
     # Calculate fingerprint identification
     df_ident<-data.frame("target"=list_id_subj_exist_twice)
     df_perm<-data.frame("id_perm"=seq(1,n_permutation_))
@@ -362,7 +379,6 @@ identify_fp<-function(paths_=paths,
         }
       }
       
-      print("Starting permutation test.")
       for (i in seq(1,n_permutation_)){
         df_rand<-data.frame(pool_ID_pnTTC=list_id_subj_exist_twice,rand_ID_pnTTC=sample(list_id_subj_exist_twice,length(list_id_subj_exist_twice)))
         df_fp_rand<-left_join(df_fp_subset,df_rand,by="pool_ID_pnTTC")
