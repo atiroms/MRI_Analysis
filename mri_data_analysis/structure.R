@@ -48,7 +48,7 @@ library(tidyr)
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
                     path_exp_=path_exp,
                     dir_in_=dir_in,
                     dir_out_=dir_out){
@@ -62,7 +62,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
   path_in     <- file.path(path_root,path_exp_,dir_in_)
   path_out    <- file.path(path_root,path_exp_,dir_out_)
   output <- list("script"=path_script,"input"=path_in,"output"=path_out,
@@ -76,9 +76,9 @@ paths<-func_path()
 #**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"functionality/function.R"))
-source(file.path(paths$script,"functionality/glm_function.R"))
-source(file.path(paths$script,"functionality/graph.R"))
+source(file.path(paths$script,"util/function.R"))
+source(file.path(paths$script,"util/glm_function.R"))
+source(file.path(paths$script,"util/plot.R"))
 #source(file.path(script_dir,"Functionalities/LI_Functions.R"))
 
 
