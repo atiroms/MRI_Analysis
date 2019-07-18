@@ -242,7 +242,8 @@ fingerprint<-function(paths_=paths,
     plot_fp_heatmap<-(plot_fp_heatmap
                       + scale_fill_gradientn(colors = matlab.like2(100),name="r")
                       + ggtitle("Fingerprint correlation")
-                      + theme(plot.title = element_text(hjust = 0.5)))
+                      + theme(plot.title = element_text(hjust = 0.5),
+                              axis.title=element_blank()))
     
     # Save heatmap plot
     ggsave(paste("atl-",atlas,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
