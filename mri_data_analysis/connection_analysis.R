@@ -14,8 +14,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"54_fc_acompcor"
 #dir_out<-"55_gta_bin"
-dir_out<-"55_fingerprint"
-#dir_out<-"59_pca_fc"
+#dir_out<-"55_fingerprint"
+dir_out<-"59_pca_fc"
 
 list_wave <- c(1,2)
 
