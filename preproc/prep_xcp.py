@@ -152,17 +152,22 @@ class PrepXCP():
     def __init__(self,
         skip_fmriprep_copy=False,
         skip_fmriprep_moveanat=False,
-        #n_proc=20,
-        n_proc=3,
-        path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/test3/03_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/65_c2_xcp_acompcor',
-        path_exp='/media/veracrypt1/MRI_img/pnTTC/test3/33_xcp',
-        #file_id='61_id_c2_t1exist_rsfmriexist.csv',
-        file_id='id_3.csv',
+        n_proc=20,
+
+        path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        file_id='67_id_c1_t1exist_rsfmriexist.csv',
         ses='ses-01',
+        suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
+        #file_id='68_id_c2_t1exist_rsfmriexist.csv',
+        #ses='ses-02',
+        #suffix_img='_ses-02_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
         #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
@@ -175,8 +180,8 @@ class PrepXCP():
         #file_design='fc-acompcor_fc_roiquant.dsn',
         #file_design='fc-prestats.dsn',
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
-        #path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
-        path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
+        path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
+        #path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
         script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
 
@@ -334,8 +339,10 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        path_input='/media/veracrypt1/MRI/pnTTC/Preproc/test_5sub/56_01_prestats',
-        path_output='/media/veracrypt2/MRI/pnTTC/Preproc/test_5sub/57_01_quality',
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/73_c1_quality',
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality',
         skip_mkdir=False,
         skip_copylog=False,
         filename_output='quality.csv'
