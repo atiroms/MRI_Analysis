@@ -11,10 +11,10 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in<-"55_fingerprint"
+dir_in<-"55_fp_acompcor"
 #dir_out<-"55_gta_bin"
 #dir_out<-"56_fp_identification"
-dir_out<-"57_gamm_fp"
+dir_out<-"58_gamfp_acompcor"
 
 list_wave <- c(1,2)
 
@@ -210,17 +210,10 @@ gamm_fp<-function(paths_=paths,
     print(paste(as.character(n_id_subj_exist_twice)," subjects with non-NA data for two sessions.",sep=""))
     
     # Create dataframe for GLM analysis
-    df_clin_left<-data.frame(ID_pnTTC=list_id_subj_exist_twice,
-                             sex=df_clin[df_clin$ID_pnTTC %in% list_id_subj_exist_twice & df_clin$ses==1,"sex"])
-    df_clin_1<-df_clin[df_clin$ses==1 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("age","tanner")]
-    df_clin_2<-df_clin[df_clin$ses==2 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("age","tanner")]
-    df_clin_diff<-df_clin_2-df_clin_1
-    df_clin_mean<-(df_clin_1+df_clin_2)/2
-    colnames(df_clin_1)<-c(paste("ses1_",colnames(df_clin_1),sep=''))
-    colnames(df_clin_2)<-c(paste("ses2_",colnames(df_clin_2),sep=''))
-    colnames(df_clin_diff)<-c(paste("diff_",colnames(df_clin_diff),sep=''))
-    colnames(df_clin_mean)<-c(paste("mean_",colnames(df_clin_mean),sep=''))
-    df_join<-cbind(df_clin_left,df_clin_1,df_clin_2,df_clin_diff,df_clin_mean)
+    df_join<-func_clinical_data_join(df_src=df_clin,
+                                     list_id_subj=list_id_subj_exist_twice,
+                                     list_covar=list_covar_)
+    
     df_join<-inner_join(df_join,df_cor_fp,by="ID_pnTTC")
     df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
     df_join$sex<-as.factor(df_join$sex)

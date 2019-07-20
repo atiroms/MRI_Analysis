@@ -34,7 +34,11 @@ func_createdirs<-function(paths,copy_log=T){
     }
   }
   if (copy_log){
-    file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+    if (file.exists(file.path(paths$input,"log"))){
+      file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+    }else{
+      print("Log folder does not exist.")
+    }
   }
 }
 
@@ -176,6 +180,53 @@ func_clinical_data_long<-function(paths,
   
   output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)
+}
+
+
+#**************************************************
+# Joining longitudinal clinical data ==============
+#**************************************************
+func_clinical_data_join<-function(df_src,list_id_subj,list_covar){
+  
+  # Classify covaiates to fixed values and unfixed values
+  list_covar_fix<-list_covar_change<-NULL
+  for (id_covar in names(list_covar)){
+    if (list_covar[[id_covar]][["1"]]==list_covar[[id_covar]][["2"]]){
+      list_covar_fix<-c(list_covar_fix,id_covar)
+    }else{
+      list_covar_change<-c(list_covar_change,id_covar)
+    }
+  }
+  
+  # Prepare fixed covariates
+  df_clin_fix<-data.frame(ID_pnTTC=list_id_subj)
+  for (id_covar in list_covar_fix){
+    df_clin_fix[[id_covar]]<-df_src[df_src$ID_pnTTC %in% list_id_subj & df_src$ses==1,id_covar]
+  }
+  
+  # Prepare unfixed values
+  df_clin_change<-list()
+  for (ses in c(1,2)){
+    df_clin_change_ses<-df_src[df_src$ses==ses & df_src$ID_pnTTC %in% list_id_subj, list_covar_change]
+    df_clin_change_ses<-list(df_clin_change_ses)
+    names(df_clin_change_ses)<-as.character(ses)
+    df_clin_change<-c(df_clin_change,df_clin_change_ses)
+  }
+  
+  # Calculate difference and mean
+  df_clin_diff<-df_clin_change[["2"]]-df_clin_change[["1"]]
+  df_clin_mean<-(df_clin_change[["1"]]+df_clin_change[["2"]])/2
+  
+  # Change column names
+  colnames(df_clin_change[["1"]])<-c(paste("ses1_",colnames(df_clin_change[["1"]]),sep=''))
+  colnames(df_clin_change[["2"]])<-c(paste("ses2_",colnames(df_clin_change[["2"]]),sep=''))
+  colnames(df_clin_diff)<-c(paste("diff_",colnames(df_clin_diff),sep=''))
+  colnames(df_clin_mean)<-c(paste("mean_",colnames(df_clin_mean),sep=''))
+  
+  # Join dataframes
+  df_join<-cbind(df_clin_fix,df_clin_change[["1"]],df_clin_change[["2"]],df_clin_diff,df_clin_mean)
+  
+  return(df_join)
 }
 
 
