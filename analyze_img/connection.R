@@ -90,10 +90,10 @@ paths<-func_path()
 #**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"functionality/function.R"))
-source(file.path(paths$script,"functionality/glm_function.R"))
-source(file.path(paths$script,"functionality/graph.R"))
-source(file.path(paths$script,"functionality/gta_function.R"))
+source(file.path(paths$script,"util/function.R"))
+source(file.path(paths$script,"util/glm_function.R"))
+source(file.path(paths$script,"util/plot.R"))
+source(file.path(paths$script,"util/gta_function.R"))
 
 
 
@@ -181,9 +181,9 @@ pca_fc<-function(paths_=paths,
 #**************************************************
 # Fingerprinting ==================================
 #**************************************************
-fingerprint<-function(paths_=paths,
-                      list_atlas_=list_atlas,
-                      subset_subj_=subset_subj){
+fp<-function(paths_=paths,
+             list_atlas_=list_atlas,
+             subset_subj_=subset_subj){
   print("Starting fingerprint().")
   nullobj<-func_createdirs(paths_)
   for (atlas in list_atlas_){

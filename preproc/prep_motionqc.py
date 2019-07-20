@@ -33,11 +33,12 @@ shutil.copyfileobj = _copyfileobj_patched
 
 class ExtractMotion():
     def __init__(self,
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/60_c1_fmriprep',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/62_c1_motion',
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/61_c2_fmriprep',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/63_c2_motion',
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/69_c1_motion',
         ses='ses-01'
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/70_c2_motion',
+        #ses='ses-02'
         ):
 
         print('Starting motion parameter extraction')
@@ -71,7 +72,8 @@ class ExtractMotion():
                                         'trans_z_max','rot_z_max',
                                         'trans_x_mean','rot_x_mean',
                                         'trans_y_mean','rot_y_mean',
-                                        'trans_z_mean','rot_z_mean'],
+                                        'trans_z_mean','rot_z_mean',
+                                        'max_max','thresh_1','thresh_2','thresh_3','thresh_4'],
                                index=range(max(list_sub)))
         df_motion.loc[:,'ID_pnTTC']=range(1,(max(list_sub)+1))
         for i in range(len(list_sub)):
@@ -81,12 +83,19 @@ class ExtractMotion():
             path_file_confound=os.path.join(path_input,'output','fmriprep',name_sub,ses,'func',path_file_confound)
             if os.path.exists(path_file_confound):
                 df_confound=pd.read_csv(path_file_confound,delimiter='\t')
+                list_max=[]
                 for j in ['trans','rot']:
                     for k in ['x','y','z']:
                         colname=j+'_'+k
                         ts=df_confound.loc[:,colname]
-                        df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max(abs(ts))
+                        max_abs=max(abs(ts))
+                        df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_max']=max_abs
+                        list_max.append(max_abs)
                         df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],colname+'_mean']=np.mean(ts)
+                max_max=max(list_max)
+                df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],'max_max']=max_max
+                for j in [1,2,3,4]:
+                    df_motion.loc[df_motion.loc[:,'ID_pnTTC']==list_sub[i],'thresh_'+str(j)]=int(max_max<j)
             else:
                 print('Confound file does not exist for subject: '+str(list_sub[i]))
         path_file_output=os.path.join(path_output,'output','motion.tsv')

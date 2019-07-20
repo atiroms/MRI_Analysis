@@ -11,12 +11,15 @@
 #**************************************************
 
 path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-path_out <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-dir_in <-"43_c1_1_xcp_acompcor"
-dir_out<-"51_c1_1_ts"
+dir_in <-"71_c1_xcp_acompcor"
+dir_out<-"75_c1_ts_acompcor"
 ses<-'ses-01'
 
+#dir_in <-"72_c2_xcp_acompcor"
+#dir_out<-"76_c2_ts_acompcor"
+#ses<-'ses-02'
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-c("aal116")
@@ -27,7 +30,7 @@ list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaef
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms""C:/Users/NICT_WS"),
                     path_in_=path_in,
                     path_out_=path_out,
                     dir_in_=dir_in,
@@ -62,9 +65,9 @@ source(file.path(paths$script,"functionality/function.R"))
 # Data extraction =================================
 #**************************************************
 extract_ts_per_atlas<-function(paths__,
-                                atlas,
-                                dict_roi
-                                ){
+                               atlas,
+                               dict_roi
+                               ){
   
   df_roi<-dict_roi[which(dict_roi$atlas==atlas),]
   list_id_roi<-as.character(df_roi$id)
@@ -86,7 +89,7 @@ extract_ts_per_atlas<-function(paths__,
     }
   }
   print(paste("Starting to save timeseries for atlas: ",atlas,sep=""))
-  write.csv(output, file.path(paths__$output,"output",paste("ts_",atlas,".csv",sep="")),row.names=F)
+  write.csv(output, file.path(paths__$output,"output",paste("atl-",atlas,"_ts.csv",sep="")),row.names=F)
   print(paste("Finished saving timeseries for atlas: ",atlas,sep=""))
   #print("Finished extracting all files.")
   #return(output)
@@ -95,7 +98,7 @@ extract_ts_per_atlas<-function(paths__,
 extract_xcp<-function(paths_=paths,
                       list_atlas_=list_atlas
                       ){
-  print("Starting to extract XCP results.")
+  print("Starting extract_xcp().")
   nullobj<-func_createdirs(paths_)
   dict_roi<-func_dict_roi(paths_)
   for (atlas in list_atlas_){
@@ -103,5 +106,34 @@ extract_xcp<-function(paths_=paths,
     extract_ts_per_atlas(paths__=paths_,atlas=atlas,dict_roi=dict_roi)
     print(paste("Finished extracting XCP results for atlas: ",atlas,sep=""))
   }
-  print("Finished extracting XCP results.")
+  print("Finished extract_xcp().")
+}
+
+
+#**************************************************
+# Combine timeseries data from 2 sessions =========
+#**************************************************
+
+combine_ts<-function(path_exp="P:/MRI_img/pnTTC/preproc",
+                     list_src=list(list("dir"="75_c1_ts_acompcor","ses"=1),
+                                   list("dir"="76_c2_ts_acompcor","ses"=2)),
+                     dir_dst="77_ts_acompcor",
+                     list_atlas_=list_atlas){
+
+  print("Starting combine_ts().")
+  for (atlas in list_atlas_){
+    print(paste("Calculating atlas: ",atlas,sep=""))
+    df_out<-data.frame()
+    for (src in list_src){
+      dir_src<-src$dir
+      path_file_in<-file.path(path_exp,dir_src,"output",paste("atl-",atlas,"_ts.csv",sep=""))
+      df_out_add<-read.csv(path_file_in)
+      df_out_add<-cbind(ses=src$ses,df_out_add)
+      df_out<-rbind(df_out,df_out_add)
+    }
+    file_out<-paste("atl-",atlas,"_ts.csv",sep="")
+    path_file_out<-file.path(path_exp,dir_dst,"output",file_out)
+    write.csv(df_out,path_file_out,row.names=F)
+  }
+  print("Finished combine_ts().")
 }
