@@ -121,9 +121,9 @@ paths<-func_path()
 #**************************************************
 source(file.path(paths$script,"util/function.R"))
 source(file.path(paths$script,"util/plot.R"))
-source(file.path(paths$script,"mri_data_analysis/timeseries.R"))
-source(file.path(paths$script,"mri_data_analysis/connection.R"))
-source(file.path(paths$script,"mri_data_analysis/fingerprint.R"))
+source(file.path(paths$script,"analyze_img/timeseries.R"))
+source(file.path(paths$script,"analyze_img/connection.R"))
+source(file.path(paths$script,"analyze_img/fingerprint.R"))
 
 
 #**************************************************
