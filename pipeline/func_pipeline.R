@@ -144,25 +144,25 @@ pipe_func<-function(paths_=paths,
   # Timeseries to functional connectivity
   id_dir_ts<-id_dir_ts_
   dir_in<-paste(as.character(id_dir_ts),"ts",suffix_dir_,sep='_')
-  id_dir_fc<-id_dir_fc+1
+  id_dir_fc<-id_dir_ts+1
   dir_out<-paste(as.character(id_dir_fc),"fc",suffix_dir_,sep='_')
-  paths<-func_path(dir_in_=dir_in,di_out_=dir_out)
+  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
   nullobj<-fc(paths_=paths,list_atlas_=list_atlas_)
   
   # Functional connetivity to fingerprint
   dir_in<-paste(as.character(id_dir_fc),"fc",suffix_dir_,sep='_')
   id_dir_fp<-id_dir_fc+1
   dir_out<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  paths<-func_path(dir_in_=dir_in,di_out_=dir_out)
+  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
   nullobj<-fp(paths_=paths,list_atlas_=list_atlas_,subset_subj_=subset_subj_)
   
   # Fingerprint to identification of fingerprints
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   id_dir_idfp<-id_dir_fp+1
   dir_out<-paste(as.character(id_dir_idfp),"idfp",suffix_dir_,sep='_')
-  paths<-func_path(dir_in_=dir_in,di_out_=dir_out)
+  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
   nullobj<-identify_fp(paths_=paths,list_atlas_=list_atlas_,
-                       list_wave_=list_wave_,list_covar_=list_covar_,
+                       list_wave_=list_wave_,
                        subset_subj_=subset_subj_,
                        n_permutation_=n_permutation_)
   
@@ -170,7 +170,7 @@ pipe_func<-function(paths_=paths,
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   id_dir_gamfp<-id_dir_fp+2
   dir_out<-paste(as.character(id_dir_gamfp),"gamfp",suffix_dir_,sep='_')
-  paths<-func_path(dir_in_=dir_in,di_out_=dir_out)
+  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
   nullobj<-gamm_fp(paths_=paths,list_atlas_=list_atlas_,
                    list_wave_=list_wave_,list_covar_=list_covar_,
                    list_mod_=list_mod_,list_graph_=list_graph_,
