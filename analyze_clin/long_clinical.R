@@ -15,10 +15,13 @@ dir_out<-"01_clin_plot"
 
 list_wave <- c(1,2)
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+
+subset_subj <- list("1"=list(),
+                    "2"=list())
 
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                                "2"="W2_Tanner_Max",
@@ -77,6 +80,7 @@ paths<-func_path()
 # Original library ================================
 #**************************************************
 source(file.path(paths$script,"util/function.R"))
+source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
@@ -113,10 +117,10 @@ plot_clin<-function(paths_=paths,
            + theme(plot.title = element_text(hjust = 0.5),legend.justification=c(0,1),
                    legend.position=c(0.05,0.95),legend.direction="horizontal",
                    panel.grid.minor=element_blank()))
-  ggsave("clin_long.eps",plot=plot,device=cairo_ps,
+  ggsave("tanner_age_path.eps",plot=plot,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=7,width=7,limitsize=F)
   plot<-list(plot)
-  names(plot)<-"plot_long"
+  names(plot)<-"tanner_age_path"
   list_plot<-c(list_plot,plot)
   
   # Bar plot
@@ -133,11 +137,43 @@ plot_clin<-function(paths_=paths,
              + theme_light()
              + theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1),
                      legend.position=c(0.95,0.95),panel.grid.major.x=element_blank()))
-    ggsave(paste("ses-",as.character(wave),"_bar.eps",sep=""),plot=plot,device=cairo_ps,
+    ggsave(paste("ses-",as.character(wave),"_tanner_bar.eps",sep=""),plot=plot,device=cairo_ps,
            path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
     plot<-list(plot)
-    names(plot)<-paste("ses-",as.character(wave),"_bar",sep="")
+    names(plot)<-paste("ses-",as.character(wave),"_tanner_bar",sep="")
     list_plot<-c(list_plot,plot)
+  }
+  
+  # Heatmap of Tanner counts
+  list_sex<-list("male"=1,"female"=2,"all"=c(1,2))
+  for (id_sex in names(list_sex)){
+    df_clin_sex<-df_clin[df_clin$sex %in% list_sex[[id_sex]],]
+    df_heatmap<-data.frame(matrix(ncol=5,nrow=5))
+    for (tanner_ses1 in seq(5)){
+      list_id_ses1<-df_clin_sex[df_clin_sex$wave==1 & df_clin_sex$tanner==tanner_ses1,"ID_pnTTC"]
+      list_id_ses1<-list_id_ses1[!is.na(list_id_ses1)]
+      for (tanner_ses2 in seq(5)){
+        list_id_ses2<-df_clin_sex[df_clin_sex$wave==2 & df_clin_sex$tanner==tanner_ses2,"ID_pnTTC"]
+        list_id_ses2<-list_id_ses2[!is.na(list_id_ses2)]
+        n_id_intersect<-length(intersect(list_id_ses1,list_id_ses2))
+        df_heatmap[tanner_ses1,tanner_ses2]<-n_id_intersect
+      }
+    }
+    colnames(df_heatmap)<-rownames(df_heatmap)<-as.character(seq(5))
+    plot<-plot_cor_heatmap(df_heatmap)
+    plot <- (plot
+             + scale_fill_gradientn(colors = matlab.like2(100),name="N")
+             + ggtitle("Tanner stage")
+             + xlab("2nd wave")
+             + ylab("1st wave")
+             + theme(plot.title = element_text(hjust = 0.5),
+                     axis.text.x = element_text(size=20,angle = 0,vjust=0,hjust=0.5),
+                     axis.text.y = element_text(size=20)))
+    ggsave(paste("sex-",id_sex,"_tanner_heatmap.eps",sep=""),plot=plot,device=cairo_ps,
+           path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+    plot<-list(plot)
+    list_plot<-c(list_plot,plot)
+    names(plot)<-paste("sex-",id_sex,"_tanner_heatmap",sep="")
   }
   
   print("Finished plot_clin().")
