@@ -95,10 +95,13 @@ plot_clin<-function(paths_=paths,
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
-  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar_,rem_na_clin=F)
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar_,rem_na_clin=T)
   df_clin<-data_clin$df_clin
   df_clin$sex=as.factor(df_clin$sex)
   df_clin$wave=as.factor(df_clin$wave)
+  
+  write.csv(df_clin,file.path(paths_$output,"output",
+                              paste("plot_src.csv",sep="")),row.names = F)
   
   list_plot<-list()
   
@@ -145,7 +148,7 @@ plot_clin<-function(paths_=paths,
   }
   
   # Heatmap of Tanner counts
-  list_sex<-list("male"=1,"female"=2,"all"=c(1,2))
+  list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
   for (id_sex in names(list_sex)){
     df_clin_sex<-df_clin[df_clin$sex %in% list_sex[[id_sex]],]
     df_heatmap<-data.frame(matrix(ncol=5,nrow=5))
@@ -160,6 +163,9 @@ plot_clin<-function(paths_=paths,
       }
     }
     colnames(df_heatmap)<-rownames(df_heatmap)<-as.character(seq(5))
+    write.csv(df_heatmap,file.path(paths_$output,"output",
+                                   paste("sex-",id_sex,"_tanner_heatmap.csv",sep="")))
+    
     plot<-plot_cor_heatmap(df_heatmap)
     plot <- (plot
              + scale_fill_gradientn(colors = matlab.like2(100),name="N")
