@@ -154,18 +154,18 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
-# GAMM of Fingerprint =============================
+# GAMM and ANCOVA of Fingerprint change ===========
 #**************************************************
 
-gamm_fp<-function(paths_=paths,
-                  list_atlas_=list_atlas,
-                  list_wave_=list_wave,
-                  list_covar_=list_covar,
-                  list_mod_=list_mod,
-                  list_graph_=list_graph,
-                  subset_subj_=subset_subj
-                  ){
-  print("Starting glm_fp().")
+glm_ancova_fp<-function(paths_=paths,
+                         list_atlas_=list_atlas,
+                         list_wave_=list_wave,
+                         list_covar_=list_covar,
+                         list_mod_=list_mod,
+                         list_graph_=list_graph,
+                         subset_subj_=subset_subj
+                         ){
+  print("Starting glm_ancova_fp().")
   nullobj<-func_createdirs(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
@@ -218,10 +218,10 @@ gamm_fp<-function(paths_=paths,
     df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
     df_join$sex<-as.factor(df_join$sex)
     write.csv(df_join,file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_gamm_src.csv",sep="")),row.names = F)
+                                     paste("atl-",atlas,"_fp_glm_ancova_src.csv",sep="")),row.names = F)
     
-    # Calculate GAMM
-    print('Calculating GAMM.')
+    # Calculate GLM
+    print('Calculating GLM.')
     df_out_term<-data.frame(matrix(nrow=0,ncol=5))
     colnames(df_out_term)<-c("model","term","F","t","p")
     df_out_model<-data.frame(matrix(nrow=0,ncol=3))
@@ -266,24 +266,28 @@ gamm_fp<-function(paths_=paths,
                  + xlab(label_x)
                  + ylab("Fingerprint correlation")
                  + theme(legend.position = "none"))
-          filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"_fp_gamm.eps",sep="")
+          filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
           ggsave(filename_plot,plot=plot,device=cairo_ps,
                  path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
         }
       }
     }
     
-    # Compare AICs of models
+    # Compare AICs of GLM models
     df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
     df_out_model<-rbind(df_out_model,df_out_model_add)
     rownames(df_out_term)<-rownames(df_out_model)<-NULL
     write.csv(df_out_term, file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_gamm.csv",sep="")),row.names = F)
+                                     paste("atl-",atlas,"_fp_glm.csv",sep="")),row.names = F)
     write.csv(df_out_model,file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_gamm_aic.csv",sep="")),row.names = F)
+                                     paste("atl-",atlas,"_fp_glm_aic.csv",sep="")),row.names = F)
+    
+    # Calculate ANCOVA
+    print('Calculating ANCOVA.')
+    
     
   }
-  print("Finished gamm_fp()")
+  print("Finished glm_ancova_fp()")
 }
 
 
