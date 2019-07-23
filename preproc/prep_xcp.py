@@ -155,7 +155,7 @@ class PrepXCP():
         n_proc=20,
 
         path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        path_exp='/media/veracrypt3/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
         file_id='67_id_c1_t1exist_rsfmriexist.csv',
         ses='ses-01',
         suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
