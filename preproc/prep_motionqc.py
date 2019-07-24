@@ -34,7 +34,7 @@ shutil.copyfileobj = _copyfileobj_patched
 class ExtractMotion():
     def __init__(self,
         path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/69_c1_motion',
+        path_output='/media/veracrypt3/MRI_img/pnTTC/preproc/69_c1_motion',
         ses='ses-01'
         #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/70_c2_motion',

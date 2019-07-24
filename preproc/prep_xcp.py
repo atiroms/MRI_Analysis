@@ -155,13 +155,25 @@ class PrepXCP():
         n_proc=20,
 
         path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        path_exp='/media/veracrypt3/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
         file_id='67_id_c1_t1exist_rsfmriexist.csv',
         ses='ses-01',
         suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
 
         #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
+        #file_id='68_id_c2_t1exist_rsfmriexist.csv',
+        #ses='ses-02',
+        #suffix_img='_ses-02_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/veracrypt3/MRI_img/pnTTC/preproc/78_c1_xcp_aroma',
+        #file_id='67_id_c1_t1exist_rsfmriexist.csv',
+        #ses='ses-01',
+        #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/82_c2_xcp_aroma',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-T1w_desc-preproc_bold.nii.gz',
@@ -339,10 +351,10 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/73_c1_quality',
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality',
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/73_c1_quality_acompcor',
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality_acompcor',
         skip_mkdir=False,
         skip_copylog=False,
         filename_output='quality.csv'
@@ -356,7 +368,6 @@ class ExtractQuality():
             list_paths_mkdir=[]
             list_paths_mkdir.append(path_output)
             list_paths_mkdir.append(os.path.join(path_output,'output'))
-            list_paths_mkdir.append(os.path.join(path_output,'output','quality'))
             for p in list_paths_mkdir:
                 if not os.path.exists(p):
                     os.makedirs(p)
@@ -383,7 +394,7 @@ class ExtractQuality():
         df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
         df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
         df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
-        path_file_output=os.path.join(path_output,'output','quality',filename_output)
+        path_file_output=os.path.join(path_output,'output',filename_output)
         df_quality_spaced.to_csv(path_file_output,index=False)
 
         print('Finished ExtractQuality().')

@@ -13,13 +13,13 @@
 path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-dir_in <-"71_c1_xcp_acompcor"
-dir_out<-"75_c1_ts_acompcor"
-ses<-'ses-01'
+#dir_in <-"71_c1_xcp_acompcor"
+#dir_out<-"75_c1_ts_acompcor"
+#ses<-'ses-01'
 
-#dir_in <-"72_c2_xcp_acompcor"
-#dir_out<-"76_c2_ts_acompcor"
-#ses<-'ses-02'
+dir_in <-"72_c2_xcp_acompcor"
+dir_out<-"76_c2_ts_acompcor"
+ses<-'ses-02'
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-c("aal116")
@@ -30,7 +30,7 @@ list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaef
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms""C:/Users/NICT_WS"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
                     path_in_=path_in,
                     path_out_=path_out,
                     dir_in_=dir_in,
@@ -58,7 +58,7 @@ paths<-func_path()
 #**************************************************
 # Function library ================================
 #**************************************************
-source(file.path(paths$script,"functionality/function.R"))
+source(file.path(paths$script,"util/function.R"))
 
 
 #**************************************************
