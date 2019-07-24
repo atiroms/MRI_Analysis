@@ -166,6 +166,18 @@ class PrepXCP():
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-T1w_desc-preproc_bold.nii.gz',
 
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/veracrypt3/MRI_img/pnTTC/preproc/78_c1_xcp_aroma',
+        #file_id='67_id_c1_t1exist_rsfmriexist.csv',
+        #ses='ses-01',
+        #suffix_img='_ses-01_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/82_c2_xcp_aroma',
+        #file_id='68_id_c2_t1exist_rsfmriexist.csv',
+        #ses='ses-02',
+        #suffix_img='_ses-02_task-rest_space-T1w_desc-preproc_bold.nii.gz',
+
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
