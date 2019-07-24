@@ -13,6 +13,9 @@
 path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
+#path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+#path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+
 #dir_in <-"71_c1_xcp_acompcor"
 #dir_out<-"75_c1_ts_acompcor"
 #ses<-'ses-01'
@@ -20,6 +23,14 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 dir_in <-"72_c2_xcp_acompcor"
 dir_out<-"76_c2_ts_acompcor"
 ses<-'ses-02'
+
+#dir_in <-"81_c1_xcp_acompcor"
+#dir_out<-"85_c1_ts_acompcor"
+#ses<-'ses-01'
+
+#dir_in <-"82_c2_xcp_acompcor"
+#dir_out<-"86_c2_ts_acompcor"
+#ses<-'ses-02'
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-c("aal116")

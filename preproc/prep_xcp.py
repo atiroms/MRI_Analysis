@@ -351,10 +351,17 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/73_c1_quality_acompcor',
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality_acompcor',
+        #path_input='/media/veracrypt3/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        #path_output='/media/veracrypt3/MRI_img/pnTTC/preproc/73_c1_quality_acompcor',
+        
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality_acompcor',
+        
+        path_input='/media/veracrypt3/MRI_img/pnTTC/preproc/81_c1_xcp_acompcor',
+        path_output='/media/veracrypt3/MRI_img/pnTTC/preproc/83_c1_quality_acompcor',
+        
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/82_c2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/84_c2_quality_acompcor',
         skip_mkdir=False,
         skip_copylog=False,
         filename_output='quality.csv'
