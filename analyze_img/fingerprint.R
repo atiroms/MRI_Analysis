@@ -110,6 +110,7 @@ n_permutation<-100
 #**************************************************
 library(dplyr)
 library(mgcv)
+library(rowr)
 #library(ggplot2)
 #library(GGally)
 #library(igraph)
@@ -284,8 +285,44 @@ glm_ancova_fp<-function(paths_=paths,
     
     # Calculate ANCOVA
     print('Calculating ANCOVA.')
-    
-    
+    df_join$long_tanner<-paste(as.chracter(df_join$ses1_tanner,
+                                           df_join$ses2_tanner,sep="_"))
+    df_join$long_tanner<-as.factor(df_join$long_tanner)
+    list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+    df_out<-data.frame(matrix(ncol=4,nrow=0))
+    colnames(df_out)<-c("sex","term","F","p")
+    for (id_sex in names(list_sex)){
+      print(paste("Calculating sex: ",id_sex,sep=''))
+      df_join_sex<-df_join[df_join$sex %in% list_sex[[id_sex]],]
+      df_heatmap<-data.frame(matrix(ncol=5,nrow=5))
+      df_id<-data.frame(matrix(ncol=0,nrow=0))
+      for (tanner_ses1 in seq(5)){
+        for (tanner_ses2 in seq(5)){
+          list_id_intersect<-df_join_sex[df_join_sex$ses1_tanner==tanner_ses1 $ df_join_sex$ses2_tanner==tanner_ses2,"ID_pnTTC"]
+          list_id_intersect<-sort(list_id_intersect[!is.na(list_id_intersect)])
+          n_id_intersect<-length(list_id_intersect)
+          df_heatmap[tanner_ses1,tanner_ses2]<-n_id_intersect
+          df_id<-cbind.fill(df_id,list_id_intersect)
+          colnames(df_id)[dim(df_id)[2]]<-paste(as.character(tanner_ses1),
+                                                as.character(tanner_ses2),sep="_")
+        }
+      }
+      colnames(df_heatmap)<-rownames(df_heatmap)<-as.character(seq(5))
+      df_id$init<-NULL
+      write.csv(df_heatmap,file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_sex-",
+                                           id_sex,"_tanner_heatmap.csv",sep="")))
+      write.csv(df_id,file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_sex-",
+                                           id_sex,"_tanner_id.csv",sep="")),row.names=F)
+      mod_ancova<-aov(value~long_tanner+age,data=df_join_sex)
+      df_ancova<-summary(mod_ancova)[[1]]
+      df_out_add<-data.frame(sex=id_sex,term=rownames(df_ancova),
+                             F=df_anova[,'F value'],p=df_anova[,'Pr(>F)'])
+      df_out<-rbind(df_out,df_out_add)
+    }
+    wirte.csv(df_out,file.path(paths_$output,"output",
+                               paste("atl-",atlas,"_ancova.csv",sep="")),row.names=F)
   }
   print("Finished glm_ancova_fp()")
 }

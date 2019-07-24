@@ -168,13 +168,13 @@ plot_clin<-function(paths_=paths,
     
     plot<-plot_cor_heatmap(df_heatmap)
     plot <- (plot
-             + scale_fill_gradientn(colors = matlab.like2(100),name="N")
+             + scale_fill_viridis(name="N")
              + ggtitle("Tanner stage")
              + xlab("2nd wave")
              + ylab("1st wave")
              + theme(plot.title = element_text(hjust = 0.5),
-                     axis.text.x = element_text(size=20,angle = 0,vjust=0,hjust=0.5),
-                     axis.text.y = element_text(size=20)))
+                     axis.text.x = element_text(size=8,angle = 0,vjust=0,hjust=0.5),
+                     axis.text.y = element_text(size=8)))
     ggsave(paste("sex-",id_sex,"_tanner_heatmap.eps",sep=""),plot=plot,device=cairo_ps,
            path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
     plot<-list(plot)

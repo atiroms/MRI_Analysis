@@ -4,9 +4,11 @@ library(multcomp)
 
 data("mtcars")
 head(mtcars)
+summary(mtcars)
 
 mtcars$am<-as.factor(mtcars$am)
 mtcars$vs<-as.factor(mtcars$vs)
+mtcars$gear<-as.factor(mtcars$gear)
 
 mod1<-lm(mpg~am*vs+hp,data=mtcars)
 summary(mod1)
@@ -39,3 +41,6 @@ summary(mod7)
 
 sum5<-summary(mod5)[[1]]
 sum6<-summary(mod6)[[1]]
+
+mod8<-aov(mpg~gear+hp,data=mtcars)
+sum8<-summary(mod8)[[1]]
