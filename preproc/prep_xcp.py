@@ -339,10 +339,10 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/73_c1_quality',
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality',
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/73_c1_quality_acompcor',
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality_acompcor',
         skip_mkdir=False,
         skip_copylog=False,
         filename_output='quality.csv'
@@ -356,7 +356,6 @@ class ExtractQuality():
             list_paths_mkdir=[]
             list_paths_mkdir.append(path_output)
             list_paths_mkdir.append(os.path.join(path_output,'output'))
-            list_paths_mkdir.append(os.path.join(path_output,'output','quality'))
             for p in list_paths_mkdir:
                 if not os.path.exists(p):
                     os.makedirs(p)
@@ -383,7 +382,7 @@ class ExtractQuality():
         df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
         df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
         df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
-        path_file_output=os.path.join(path_output,'output','quality',filename_output)
+        path_file_output=os.path.join(path_output,'output',filename_output)
         df_quality_spaced.to_csv(path_file_output,index=False)
 
         print('Finished ExtractQuality().')
