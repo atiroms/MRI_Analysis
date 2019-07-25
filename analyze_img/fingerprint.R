@@ -14,7 +14,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 dir_in<-"55_fp_acompcor"
 #dir_out<-"55_gta_bin"
 #dir_out<-"56_fp_identification"
-dir_out<-"58_gamfp_acompcor"
+dir_out<-"58_glm_ancova_acompcor"
 
 list_wave <- c(1,2)
 
@@ -158,6 +158,14 @@ source(file.path(paths$script,"util/plot.R"))
 # GAMM and ANCOVA of Fingerprint change ===========
 #**************************************************
 
+paths_=paths
+list_atlas_=list_atlas
+list_wave_=list_wave
+list_covar_=list_covar
+list_mod_=list_mod
+list_graph_=list_graph
+subset_subj_=subset_subj
+
 glm_ancova_fp<-function(paths_=paths,
                          list_atlas_=list_atlas,
                          list_wave_=list_wave,
@@ -288,8 +296,8 @@ glm_ancova_fp<-function(paths_=paths,
     
     # Calculate ANCOVA
     print('Calculating ANCOVA.')
-    df_join$long_tanner<-paste(as.chracter(df_join$ses1_tanner,
-                                           df_join$ses2_tanner,sep="_"))
+    df_join$long_tanner<-paste(as.character(df_join$ses1_tanner),
+                               as.character(df_join$ses2_tanner),sep="_")
     df_join$long_tanner<-as.factor(df_join$long_tanner)
     list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
 
@@ -300,12 +308,12 @@ glm_ancova_fp<-function(paths_=paths,
       df_id<-data.frame(matrix(ncol=0,nrow=0))
       for (tanner_ses1 in seq(5)){
         for (tanner_ses2 in seq(5)){
-          list_id_intersect<-df_join_sex[df_join_sex$ses1_tanner==tanner_ses1 $ df_join_sex$ses2_tanner==tanner_ses2,"ID_pnTTC"]
+          list_id_intersect<-df_join_sex[which(df_join_sex$ses1_tanner==tanner_ses1 & df_join_sex$ses2_tanner==tanner_ses2),"ID_pnTTC"]
           list_id_intersect<-sort(list_id_intersect[!is.na(list_id_intersect)])
           n_id_intersect<-length(list_id_intersect)
           df_heatmap[tanner_ses1,tanner_ses2]<-n_id_intersect
-          df_id<-cbind.fill(df_id,list_id_intersect)
-          colnames(df_id)[dim(df_id)[2]]<-paste(as.character(tanner_ses1),
+          df_id<-cbind.fill(df_id,list_id_intersect,fill=NA)
+          colnames(df_id)[dim(df_id)[2]]<-paste("tanner",as.character(tanner_ses1),
                                                 as.character(tanner_ses2),sep="_")
         }
       }
@@ -317,10 +325,10 @@ glm_ancova_fp<-function(paths_=paths,
       write.csv(df_id,file.path(paths_$output,"output",
                                      paste("atl-",atlas,"_sex-",
                                            id_sex,"_tanner_id.csv",sep="")),row.names=F)
-      mod_ancova<-aov(value~long_tanner+age,data=df_join_sex)
+      mod_ancova<-aov(value~long_tanner+diff_age,data=df_join_sex)
       df_ancova<-summary(mod_ancova)[[1]]
       df_out_ancova_add<-data.frame(atlas=atlas,sex=id_sex,test="ANCOVA",term=rownames(df_ancova),comparison=NA,
-                                    p=df_anova[,'Pr(>F)'],F=df_anova[,'F value'],diff=NA,ci_l=NA,ci_u=NA)
+                                    p=df_ancova[,'Pr(>F)'],F=df_ancova[,'F value'],diff=NA,ci_l=NA,ci_u=NA)
       df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
       
       # Calculate Tukey-Kramer
@@ -330,8 +338,8 @@ glm_ancova_fp<-function(paths_=paths,
       df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
     }
   }
-  wirte.csv(df_out_ancova,file.path(paths_$output,"output",
-                                    paste("atl-",atlas,"_ancova.csv",sep="")),row.names=F)
+  rownames(df_out_ancova)<-NULL
+  wirte.csv(df_out_ancova,file.path(paths_$output,"output","ancova.csv"),row.names=F)
   print("Finished glm_ancova_fp()")
 }
 
