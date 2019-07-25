@@ -10,26 +10,26 @@
 # Parameters ======================================
 #**************************************************
 
-path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-#path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
-#path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
 
-#dir_in <-"71_c1_xcp_acompcor"
-#dir_out<-"75_c1_ts_acompcor"
+dir_in <-"71_c1_xcp_acompcor"
+dir_out<-"75_c1_ts_acompcor"
+ses<-'ses-01'
+
+#dir_in <-"72_c2_xcp_acompcor"
+#dir_out<-"76_c2_ts_acompcor"
+#ses<-'ses-02'
+
+#dir_in <-"81_c1_xcp_aroma"
+#dir_out<-"85_c1_ts_aroma"
 #ses<-'ses-01'
 
-dir_in <-"72_c2_xcp_acompcor"
-dir_out<-"76_c2_ts_acompcor"
-ses<-'ses-02'
-
-#dir_in <-"81_c1_xcp_acompcor"
-#dir_out<-"85_c1_ts_acompcor"
-#ses<-'ses-01'
-
-#dir_in <-"82_c2_xcp_acompcor"
-#dir_out<-"86_c2_ts_acompcor"
+#dir_in <-"82_c2_xcp_aroma"
+#dir_out<-"86_c2_ts_aroma"
 #ses<-'ses-02'
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
@@ -129,6 +129,11 @@ combine_ts<-function(path_exp="P:/MRI_img/pnTTC/preproc",
                      list_src=list(list("dir"="75_c1_ts_acompcor","ses"=1),
                                    list("dir"="76_c2_ts_acompcor","ses"=2)),
                      dir_dst="77_ts_acompcor",
+                     
+                     #list_src=list(list("dir"="85_c1_ts_aroma","ses"=1),
+                     #              list("dir"="86_c2_ts_aroma","ses"=2)),
+                     #dir_dst="87_ts_aroma",
+                     
                      list_atlas_=list_atlas){
 
   print("Starting combine_ts().")
