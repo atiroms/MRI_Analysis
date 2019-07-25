@@ -155,7 +155,7 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
-# GAMM and ANCOVA of Fingerprint change ===========
+# GLM and ANCOVA of Fingerprint change ============
 #**************************************************
 
 paths_=paths
@@ -325,7 +325,11 @@ glm_ancova_fp<-function(paths_=paths,
       write.csv(df_id,file.path(paths_$output,"output",
                                      paste("atl-",atlas,"_sex-",
                                            id_sex,"_tanner_id.csv",sep="")),row.names=F)
-      mod_ancova<-aov(value~long_tanner+diff_age,data=df_join_sex)
+      if (id_sex=="all"){
+        mod_ancova<-aov(value~long_tanner+diff_age+sex,data=df_join_sex)
+      }else{
+        mod_ancova<-aov(value~long_tanner+diff_age,data=df_join_sex)
+      }
       df_ancova<-summary(mod_ancova)[[1]]
       df_out_ancova_add<-data.frame(atlas=atlas,sex=id_sex,test="ANCOVA",term=rownames(df_ancova),comparison=NA,
                                     p=df_ancova[,'Pr(>F)'],F=df_ancova[,'F value'],diff=NA,ci_l=NA,ci_u=NA)
@@ -339,7 +343,7 @@ glm_ancova_fp<-function(paths_=paths,
     }
   }
   rownames(df_out_ancova)<-NULL
-  wirte.csv(df_out_ancova,file.path(paths_$output,"output","ancova.csv"),row.names=F)
+  write.csv(df_out_ancova,file.path(paths_$output,"output","ancova.csv"),row.names=F)
   print("Finished glm_ancova_fp()")
 }
 
