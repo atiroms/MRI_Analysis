@@ -44,3 +44,7 @@ sum6<-summary(mod6)[[1]]
 
 mod8<-aov(mpg~gear+hp,data=mtcars)
 sum8<-summary(mod8)[[1]]
+posthoc8<-TukeyHSD(mod8,which='gear')[[1]]
+
+mod9<-aov(mpg~gear,data=mtcars)
+posthoc9<-TukeyHSD(mod9)

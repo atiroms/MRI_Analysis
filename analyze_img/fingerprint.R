@@ -176,6 +176,9 @@ glm_ancova_fp<-function(paths_=paths,
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   
+  df_out_ancova<-data.frame(matrix(ncol=10,nrow=0))
+  colnames(df_out_ancova)<-c("atlas","sex","test","term","comparison","p","F","diff","ci_l","ci_u")
+  
   for (atlas in list_atlas_){
     # Load fingerprint data
     print(paste("Loading atlas: ",atlas,sep=""))
@@ -289,8 +292,7 @@ glm_ancova_fp<-function(paths_=paths,
                                            df_join$ses2_tanner,sep="_"))
     df_join$long_tanner<-as.factor(df_join$long_tanner)
     list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
-    df_out<-data.frame(matrix(ncol=4,nrow=0))
-    colnames(df_out)<-c("sex","term","F","p")
+
     for (id_sex in names(list_sex)){
       print(paste("Calculating sex: ",id_sex,sep=''))
       df_join_sex<-df_join[df_join$sex %in% list_sex[[id_sex]],]
@@ -317,13 +319,19 @@ glm_ancova_fp<-function(paths_=paths,
                                            id_sex,"_tanner_id.csv",sep="")),row.names=F)
       mod_ancova<-aov(value~long_tanner+age,data=df_join_sex)
       df_ancova<-summary(mod_ancova)[[1]]
-      df_out_add<-data.frame(sex=id_sex,term=rownames(df_ancova),
-                             F=df_anova[,'F value'],p=df_anova[,'Pr(>F)'])
-      df_out<-rbind(df_out,df_out_add)
+      df_out_ancova_add<-data.frame(atlas=atlas,sex=id_sex,test="ANCOVA",term=rownames(df_ancova),comparison=NA,
+                                    p=df_anova[,'Pr(>F)'],F=df_anova[,'F value'],diff=NA,ci_l=NA,ci_u=NA)
+      df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
+      
+      # Calculate Tukey-Kramer
+      df_tc<-TukeyHSD(mod_ancova,which='long_tanner')[[1]]
+      df_out_ancova_add<-data.frame(atlas=atlas,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=rownames(df_tc),
+                                    p=df_tc[,'p adj'],F=NA,diff=df_tc[,'diff'],ci_l=df_tc[,'lwr'],ci_u=df_tc[,'upr'])
+      df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
     }
-    wirte.csv(df_out,file.path(paths_$output,"output",
-                               paste("atl-",atlas,"_ancova.csv",sep="")),row.names=F)
   }
+  wirte.csv(df_out_ancova,file.path(paths_$output,"output",
+                                    paste("atl-",atlas,"_ancova.csv",sep="")),row.names=F)
   print("Finished glm_ancova_fp()")
 }
 
