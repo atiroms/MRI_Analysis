@@ -10,15 +10,15 @@
 # Parameters ======================================
 #**************************************************
 
-#path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-#path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
-path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+#path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+#path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
 
-dir_in <-"71_c1_xcp_acompcor"
-dir_out<-"75_c1_ts_acompcor"
-ses<-'ses-01'
+#dir_in <-"71_c1_xcp_acompcor"
+#dir_out<-"75_c1_ts_acompcor"
+#ses<-'ses-01'
 
 #dir_in <-"72_c2_xcp_acompcor"
 #dir_out<-"76_c2_ts_acompcor"
@@ -31,6 +31,14 @@ ses<-'ses-01'
 #dir_in <-"82_c2_xcp_aroma"
 #dir_out<-"86_c2_ts_aroma"
 #ses<-'ses-02'
+
+#dir_in <-"91_c1_xcp_36p"
+#dir_out<-"95_c1_ts_36p"
+#ses<-'ses-01'
+
+dir_in <-"92_c2_xcp_36p"
+dir_out<-"96_c2_ts_36p"
+ses<-'ses-02'
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-c("aal116")
@@ -92,11 +100,15 @@ extract_ts_per_atlas<-function(paths__,
     for (id_subj in list_id_subj){
       file_input<-paste("sub-", sprintf("%05d", id_subj), "_",atlas,"_ts.1D", sep="")
       path_input<-file.path(dir_proc,paste("sub-",sprintf("%05d", id_subj),sep=""),"fcon",atlas,file_input)
-      ts_subj<-read.csv(path_input,header=F,sep=" ")
-      ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
-      colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
-      output<-rbind(output, ts_subj)
-      print(paste("Finished extracting atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
+      if (file.exists(path_input)){
+        ts_subj<-read.csv(path_input,header=F,sep=" ")
+        ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
+        colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
+        output<-rbind(output, ts_subj)
+        print(paste("Finished extracting atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
+      }else{
+        print(paste("Couled not find atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
+      }
     }
   }
   print(paste("Starting to save timeseries for atlas: ",atlas,sep=""))
