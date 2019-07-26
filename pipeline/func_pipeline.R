@@ -9,12 +9,12 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_ts<-53
+id_dir_ts<-101
 suffix_dir<-"acompcor"
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
-#n_permutation<-1000
-n_permutation<-100
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"aal116"
+n_permutation<-1000
+#n_permutation<-100
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                              list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
