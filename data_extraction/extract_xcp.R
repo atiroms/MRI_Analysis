@@ -125,7 +125,7 @@ extract_xcp<-function(paths_=paths,
 # Combine timeseries data from 2 sessions =========
 #**************************************************
 
-combine_ts<-function(path_exp="P:/MRI_img/pnTTC/preproc",
+combine_ts<-function(path_exp="D:/MRI_img/pnTTC/preproc",
                      list_src=list(list("dir"="75_c1_ts_acompcor","ses"=1),
                                    list("dir"="76_c2_ts_acompcor","ses"=2)),
                      dir_dst="77_ts_acompcor",
