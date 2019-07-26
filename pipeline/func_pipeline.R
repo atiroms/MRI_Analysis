@@ -5,9 +5,49 @@
 
 
 #**************************************************
-# Parameters ======================================
+# Create path list ================================
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+dir_in<-dir_out<-NULL
+
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
+                    path_exp_=path_exp,
+                    dir_in_=dir_in,
+                    dir_out_=dir_out){
+  path_root<-NA
+  for(p in list_path_root){
+    if(file.exists(p)){
+      path_root<-p
+    }
+  }
+  if(is.na(path_root)){
+    print("Error: root path could not be found.")
+  }
+  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
+  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
+  path_in     <- file.path(path_root,path_exp_,dir_in_)
+  path_out    <- file.path(path_root,path_exp_,dir_out_)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
+  return(output)
+}
+
+paths<-func_path()
+
+
+#**************************************************
+# Original library ================================
+#**************************************************
+source(file.path(paths$script,"util/function.R"))
+source(file.path(paths$script,"util/plot.R"))
+source(file.path(paths$script,"analyze_img/timeseries.R"))
+source(file.path(paths$script,"analyze_img/connection.R"))
+source(file.path(paths$script,"analyze_img/fingerprint.R"))
+
+
+#**************************************************
+# Parameters ======================================
+#**************************************************
 
 id_dir_ts<-101
 suffix_dir<-"acompcor"
@@ -80,50 +120,12 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                       "color"="steelblue2","alpha"=1),
                                           "Female"=list("subset"=list("sex"=2),
                                                         "color"="lightcoral","alpha"=1))))
-dir_in<-dir_out<-NULL
 
 
 #**************************************************
 # Libraries =======================================
 #**************************************************
 
-
-#**************************************************
-# Create path list ================================
-#**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
-  path_root<-NA
-  for(p in list_path_root){
-    if(file.exists(p)){
-      path_root<-p
-    }
-  }
-  if(is.na(path_root)){
-    print("Error: root path could not be found.")
-  }
-  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_in     <- file.path(path_root,path_exp_,dir_in_)
-  path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
-  return(output)
-}
-
-paths<-func_path()
-
-
-#**************************************************
-# Original library ================================
-#**************************************************
-source(file.path(paths$script,"util/function.R"))
-source(file.path(paths$script,"util/plot.R"))
-source(file.path(paths$script,"analyze_img/timeseries.R"))
-source(file.path(paths$script,"analyze_img/connection.R"))
-source(file.path(paths$script,"analyze_img/fingerprint.R"))
 
 
 #**************************************************
