@@ -11,10 +11,15 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in<-"55_fp_acompcor"
+#dir_in<-"103_fp_acompcor"
+#dir_out<-"105_fp_model_acompcor"
+
+dir_in<-"113_fp_aroma"
+dir_out<-"115_fp_model_aroma"
+
 #dir_out<-"55_gta_bin"
 #dir_out<-"56_fp_identification"
-dir_out<-"58_glm_ancova_acompcor"
+#dir_out<-"58_glm_ancova_acompcor"
 
 list_wave <- c(1,2)
 
@@ -96,13 +101,13 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                         "color"="lightcoral","alpha"=1))))
 
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
-#n_permutation<-1000
-n_permutation<-100
+n_permutation<-1000
+#n_permutation<-100
 
 
 #**************************************************
