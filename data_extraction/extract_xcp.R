@@ -10,15 +10,34 @@
 # Parameters ======================================
 #**************************************************
 
-path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-dir_in <-"71_c1_xcp_acompcor"
-dir_out<-"75_c1_ts_acompcor"
-ses<-'ses-01'
+path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+
+#dir_in <-"71_c1_xcp_acompcor"
+#dir_out<-"75_c1_ts_acompcor"
+#ses<-'ses-01'
 
 #dir_in <-"72_c2_xcp_acompcor"
 #dir_out<-"76_c2_ts_acompcor"
+#ses<-'ses-02'
+
+dir_in <-"81_c1_xcp_aroma"
+dir_out<-"85_c1_ts_aroma"
+ses<-'ses-01'
+
+#dir_in <-"82_c2_xcp_aroma"
+#dir_out<-"86_c2_ts_aroma"
+#ses<-'ses-02'
+
+#dir_in <-"91_c1_xcp_36p"
+#dir_out<-"95_c1_ts_36p"
+#ses<-'ses-01'
+
+#dir_in <-"92_c2_xcp_36p"
+#dir_out<-"96_c2_ts_36p"
 #ses<-'ses-02'
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
@@ -30,7 +49,7 @@ list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaef
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms""C:/Users/NICT_WS"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
                     path_in_=path_in,
                     path_out_=path_out,
                     dir_in_=dir_in,
@@ -58,7 +77,7 @@ paths<-func_path()
 #**************************************************
 # Function library ================================
 #**************************************************
-source(file.path(paths$script,"functionality/function.R"))
+source(file.path(paths$script,"util/function.R"))
 
 
 #**************************************************
@@ -81,11 +100,15 @@ extract_ts_per_atlas<-function(paths__,
     for (id_subj in list_id_subj){
       file_input<-paste("sub-", sprintf("%05d", id_subj), "_",atlas,"_ts.1D", sep="")
       path_input<-file.path(dir_proc,paste("sub-",sprintf("%05d", id_subj),sep=""),"fcon",atlas,file_input)
-      ts_subj<-read.csv(path_input,header=F,sep=" ")
-      ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
-      colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
-      output<-rbind(output, ts_subj)
-      print(paste("Finished extracting atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
+      if (file.exists(path_input)){
+        ts_subj<-read.csv(path_input,header=F,sep=" ")
+        ts_subj<-cbind(id_subj, seq(dim(ts_subj)[1]),ts_subj)
+        colnames(ts_subj)<- c("ID_pnTTC","timeframe",list_id_roi)
+        output<-rbind(output, ts_subj)
+        print(paste("Finished extracting atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
+      }else{
+        print(paste("Couled not find atlas: ",atlas, ", subject: ",as.character(id_subj),sep=""))
+      }
     }
   }
   print(paste("Starting to save timeseries for atlas: ",atlas,sep=""))
@@ -114,10 +137,19 @@ extract_xcp<-function(paths_=paths,
 # Combine timeseries data from 2 sessions =========
 #**************************************************
 
-combine_ts<-function(path_exp="P:/MRI_img/pnTTC/preproc",
-                     list_src=list(list("dir"="75_c1_ts_acompcor","ses"=1),
-                                   list("dir"="76_c2_ts_acompcor","ses"=2)),
-                     dir_dst="77_ts_acompcor",
+combine_ts<-function(path_exp="D:/MRI_img/pnTTC/preproc",
+                     #list_src=list(list("dir"="75_c1_ts_acompcor","ses"=1),
+                     #              list("dir"="76_c2_ts_acompcor","ses"=2)),
+                     #dir_dst="77_ts_acompcor",
+                     
+                     list_src=list(list("dir"="85_c1_ts_aroma","ses"=1),
+                                   list("dir"="86_c2_ts_aroma","ses"=2)),
+                     dir_dst="87_ts_aroma",
+                     
+                     #list_src=list(list("dir"="95_c1_ts_36p","ses"=1),
+                     #              list("dir"="96_c2_ts_36p","ses"=2)),
+                     #dir_dst="97_ts_36p",
+                     
                      list_atlas_=list_atlas){
 
   print("Starting combine_ts().")

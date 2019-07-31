@@ -11,10 +11,15 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in<-"55_fingerprint"
+#dir_in<-"103_fp_acompcor"
+#dir_out<-"105_fp_model_acompcor"
+
+dir_in<-"113_fp_aroma"
+dir_out<-"115_fp_model_aroma"
+
 #dir_out<-"55_gta_bin"
 #dir_out<-"56_fp_identification"
-dir_out<-"57_gamm_fp"
+#dir_out<-"58_glm_ancova_acompcor"
 
 list_wave <- c(1,2)
 
@@ -96,13 +101,13 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                         "color"="lightcoral","alpha"=1))))
 
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
-#n_permutation<-1000
-n_permutation<-100
+n_permutation<-1000
+#n_permutation<-100
 
 
 #**************************************************
@@ -110,6 +115,7 @@ n_permutation<-100
 #**************************************************
 library(dplyr)
 library(mgcv)
+library(rowr)
 #library(ggplot2)
 #library(GGally)
 #library(igraph)
@@ -154,18 +160,26 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
-# GAMM of Fingerprint =============================
+# GLM and ANCOVA of Fingerprint change ============
 #**************************************************
 
-gamm_fp<-function(paths_=paths,
-                  list_atlas_=list_atlas,
-                  list_wave_=list_wave,
-                  list_covar_=list_covar,
-                  list_mod_=list_mod,
-                  list_graph_=list_graph,
-                  subset_subj_=subset_subj
-                  ){
-  print("Starting glm_fp().")
+paths_=paths
+list_atlas_=list_atlas
+list_wave_=list_wave
+list_covar_=list_covar
+list_mod_=list_mod
+list_graph_=list_graph
+subset_subj_=subset_subj
+
+glm_ancova_fp<-function(paths_=paths,
+                         list_atlas_=list_atlas,
+                         list_wave_=list_wave,
+                         list_covar_=list_covar,
+                         list_mod_=list_mod,
+                         list_graph_=list_graph,
+                         subset_subj_=subset_subj
+                         ){
+  print("Starting glm_ancova_fp().")
   nullobj<-func_createdirs(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
@@ -174,6 +188,9 @@ gamm_fp<-function(paths_=paths,
                                      list_covar=list_covar_,rem_na_clin=T)
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  
+  df_out_ancova<-data.frame(matrix(ncol=10,nrow=0))
+  colnames(df_out_ancova)<-c("atlas","sex","test","term","comparison","p","F","diff","ci_l","ci_u")
   
   for (atlas in list_atlas_){
     # Load fingerprint data
@@ -210,25 +227,18 @@ gamm_fp<-function(paths_=paths,
     print(paste(as.character(n_id_subj_exist_twice)," subjects with non-NA data for two sessions.",sep=""))
     
     # Create dataframe for GLM analysis
-    df_clin_left<-data.frame(ID_pnTTC=list_id_subj_exist_twice,
-                             sex=df_clin[df_clin$ID_pnTTC %in% list_id_subj_exist_twice & df_clin$ses==1,"sex"])
-    df_clin_1<-df_clin[df_clin$ses==1 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("age","tanner")]
-    df_clin_2<-df_clin[df_clin$ses==2 & df_clin$ID_pnTTC %in% list_id_subj_exist_twice, c("age","tanner")]
-    df_clin_diff<-df_clin_2-df_clin_1
-    df_clin_mean<-(df_clin_1+df_clin_2)/2
-    colnames(df_clin_1)<-c(paste("ses1_",colnames(df_clin_1),sep=''))
-    colnames(df_clin_2)<-c(paste("ses2_",colnames(df_clin_2),sep=''))
-    colnames(df_clin_diff)<-c(paste("diff_",colnames(df_clin_diff),sep=''))
-    colnames(df_clin_mean)<-c(paste("mean_",colnames(df_clin_mean),sep=''))
-    df_join<-cbind(df_clin_left,df_clin_1,df_clin_2,df_clin_diff,df_clin_mean)
+    df_join<-func_clinical_data_join(df_src=df_clin,
+                                     list_id_subj=list_id_subj_exist_twice,
+                                     list_covar=list_covar_)
+    
     df_join<-inner_join(df_join,df_cor_fp,by="ID_pnTTC")
     df_join$ID_pnTTC<-as.factor(df_join$ID_pnTTC)
     df_join$sex<-as.factor(df_join$sex)
     write.csv(df_join,file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_gamm_src.csv",sep="")),row.names = F)
+                                     paste("atl-",atlas,"_fp_glm_ancova_src.csv",sep="")),row.names = F)
     
-    # Calculate GAMM
-    print('Calculating GAMM.')
+    # Calculate GLM
+    print('Calculating GLM.')
     df_out_term<-data.frame(matrix(nrow=0,ncol=5))
     colnames(df_out_term)<-c("model","term","F","t","p")
     df_out_model<-data.frame(matrix(nrow=0,ncol=3))
@@ -273,24 +283,73 @@ gamm_fp<-function(paths_=paths,
                  + xlab(label_x)
                  + ylab("Fingerprint correlation")
                  + theme(legend.position = "none"))
-          filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"_fp_gamm.eps",sep="")
+          filename_plot<-paste("atl-",atlas,"_mod-",mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
           ggsave(filename_plot,plot=plot,device=cairo_ps,
                  path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
         }
       }
     }
     
-    # Compare AICs of models
+    # Compare AICs of GLM models
     df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
     df_out_model<-rbind(df_out_model,df_out_model_add)
     rownames(df_out_term)<-rownames(df_out_model)<-NULL
     write.csv(df_out_term, file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_gamm.csv",sep="")),row.names = F)
+                                     paste("atl-",atlas,"_fp_glm.csv",sep="")),row.names = F)
     write.csv(df_out_model,file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_gamm_aic.csv",sep="")),row.names = F)
+                                     paste("atl-",atlas,"_fp_glm_aic.csv",sep="")),row.names = F)
     
+    # Calculate ANCOVA
+    print('Calculating ANCOVA.')
+    df_join$long_tanner<-paste(as.character(df_join$ses1_tanner),
+                               as.character(df_join$ses2_tanner),sep="_")
+    df_join$long_tanner<-as.factor(df_join$long_tanner)
+    list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+
+    for (id_sex in names(list_sex)){
+      print(paste("Calculating sex: ",id_sex,sep=''))
+      df_join_sex<-df_join[df_join$sex %in% list_sex[[id_sex]],]
+      df_heatmap<-data.frame(matrix(ncol=5,nrow=5))
+      df_id<-data.frame(matrix(ncol=0,nrow=0))
+      for (tanner_ses1 in seq(5)){
+        for (tanner_ses2 in seq(5)){
+          list_id_intersect<-df_join_sex[which(df_join_sex$ses1_tanner==tanner_ses1 & df_join_sex$ses2_tanner==tanner_ses2),"ID_pnTTC"]
+          list_id_intersect<-sort(list_id_intersect[!is.na(list_id_intersect)])
+          n_id_intersect<-length(list_id_intersect)
+          df_heatmap[tanner_ses1,tanner_ses2]<-n_id_intersect
+          df_id<-cbind.fill(df_id,list_id_intersect,fill=NA)
+          colnames(df_id)[dim(df_id)[2]]<-paste("tanner",as.character(tanner_ses1),
+                                                as.character(tanner_ses2),sep="_")
+        }
+      }
+      colnames(df_heatmap)<-rownames(df_heatmap)<-as.character(seq(5))
+      df_id$init<-NULL
+      write.csv(df_heatmap,file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_sex-",
+                                           id_sex,"_tanner_heatmap.csv",sep="")))
+      write.csv(df_id,file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_sex-",
+                                           id_sex,"_tanner_id.csv",sep="")),row.names=F)
+      if (id_sex=="all"){
+        mod_ancova<-aov(value~long_tanner+diff_age+sex,data=df_join_sex)
+      }else{
+        mod_ancova<-aov(value~long_tanner+diff_age,data=df_join_sex)
+      }
+      df_ancova<-summary(mod_ancova)[[1]]
+      df_out_ancova_add<-data.frame(atlas=atlas,sex=id_sex,test="ANCOVA",term=rownames(df_ancova),comparison=NA,
+                                    p=df_ancova[,'Pr(>F)'],F=df_ancova[,'F value'],diff=NA,ci_l=NA,ci_u=NA)
+      df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
+      
+      # Calculate Tukey-Kramer
+      df_tc<-TukeyHSD(mod_ancova,which='long_tanner')[[1]]
+      df_out_ancova_add<-data.frame(atlas=atlas,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=rownames(df_tc),
+                                    p=df_tc[,'p adj'],F=NA,diff=df_tc[,'diff'],ci_l=df_tc[,'lwr'],ci_u=df_tc[,'upr'])
+      df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
+    }
   }
-  print("Finished gamm_fp()")
+  rownames(df_out_ancova)<-NULL
+  write.csv(df_out_ancova,file.path(paths_$output,"output","ancova.csv"),row.names=F)
+  print("Finished glm_ancova_fp()")
 }
 
 

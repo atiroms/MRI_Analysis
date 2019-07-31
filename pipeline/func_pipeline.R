@@ -5,16 +5,66 @@
 
 
 #**************************************************
-# Parameters ======================================
+# Create path list ================================
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+dir_in<-dir_out<-NULL
 
-id_dir_ts<-53
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
+                    path_exp_=path_exp,
+                    dir_in_=dir_in,
+                    dir_out_=dir_out){
+  path_root<-NA
+  for(p in list_path_root){
+    if(file.exists(p)){
+      path_root<-p
+    }
+  }
+  if(is.na(path_root)){
+    print("Error: root path could not be found.")
+  }
+  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
+  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
+  path_in     <- file.path(path_root,path_exp_,dir_in_)
+  path_out    <- file.path(path_root,path_exp_,dir_out_)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
+  return(output)
+}
+
+paths<-func_path()
+
+
+#**************************************************
+# Original library ================================
+#**************************************************
+source(file.path(paths$script,"util/function.R"))
+source(file.path(paths$script,"util/plot.R"))
+source(file.path(paths$script,"analyze_img/timeseries.R"))
+source(file.path(paths$script,"analyze_img/connection.R"))
+source(file.path(paths$script,"analyze_img/fingerprint.R"))
+
+
+#**************************************************
+# Parameters ======================================
+#**************************************************
+
+id_dir_ts<-101
 suffix_dir<-"acompcor"
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
-#n_permutation<-1000
-n_permutation<-100
+
+#id_dir_ts<-111
+#suffix_dir<-"aroma"
+
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"aal116"
+#list_atlas<-"glasser360"
+#list_atlas<-"gordon333"
+#list_atlas<-"power264"
+#list_atlas<-"schaefer100"
+#list_atlas<-"schaefer200"
+#list_atlas<-"schaefer400"
+n_permutation<-1000
+#n_permutation<-100
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                              list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
@@ -80,50 +130,12 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                       "color"="steelblue2","alpha"=1),
                                           "Female"=list("subset"=list("sex"=2),
                                                         "color"="lightcoral","alpha"=1))))
-dir_in<-dir_out<-NULL
 
 
 #**************************************************
 # Libraries =======================================
 #**************************************************
 
-
-#**************************************************
-# Create path list ================================
-#**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
-  path_root<-NA
-  for(p in list_path_root){
-    if(file.exists(p)){
-      path_root<-p
-    }
-  }
-  if(is.na(path_root)){
-    print("Error: root path could not be found.")
-  }
-  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_in     <- file.path(path_root,path_exp_,dir_in_)
-  path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
-  return(output)
-}
-
-paths<-func_path()
-
-
-#**************************************************
-# Original library ================================
-#**************************************************
-source(file.path(paths$script,"util/function.R"))
-source(file.path(paths$script,"util/plot.R"))
-source(file.path(paths$script,"analyze_img/timeseries.R"))
-source(file.path(paths$script,"analyze_img/connection.R"))
-source(file.path(paths$script,"analyze_img/fingerprint.R"))
 
 
 #**************************************************
@@ -166,15 +178,15 @@ pipe_func<-function(paths_=paths,
                        subset_subj_=subset_subj_,
                        n_permutation_=n_permutation_)
   
-  # Fingerprint to GAMM of fingerprint
+  # Fingerprint to GLM / ANCOVA of fingerprint difference
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   id_dir_gamfp<-id_dir_fp+2
-  dir_out<-paste(as.character(id_dir_gamfp),"gamfp",suffix_dir_,sep='_')
+  dir_out<-paste(as.character(id_dir_gamfp),"fp_model",suffix_dir_,sep='_')
   paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  nullobj<-gamm_fp(paths_=paths,list_atlas_=list_atlas_,
-                   list_wave_=list_wave_,list_covar_=list_covar_,
-                   list_mod_=list_mod_,list_graph_=list_graph_,
-                   subset_subj_=subset_subj_)
+  nullobj<-glm_ancova_fp(paths_=paths,list_atlas_=list_atlas_,
+                         list_wave_=list_wave_,list_covar_=list_covar_,
+                         list_mod_=list_mod_,list_graph_=list_graph_,
+                         subset_subj_=subset_subj_)
   
   print('Finished pipe_func().')
   
