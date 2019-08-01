@@ -24,17 +24,17 @@ path_out <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
 #dir_out<-"76_c2_ts_acompcor"
 #ses<-'ses-02'
 
-dir_in <-"81_c1_xcp_aroma"
-dir_out<-"85_c1_ts_aroma"
-ses<-'ses-01'
+#dir_in <-"81_c1_xcp_aroma"
+#dir_out<-"85_c1_ts_aroma"
+#ses<-'ses-01'
 
 #dir_in <-"82_c2_xcp_aroma"
 #dir_out<-"86_c2_ts_aroma"
 #ses<-'ses-02'
 
-#dir_in <-"91_c1_xcp_36p"
-#dir_out<-"95_c1_ts_36p"
-#ses<-'ses-01'
+dir_in <-"91_c1_xcp_36p"
+dir_out<-"95_c1_ts_36p"
+ses<-'ses-01'
 
 #dir_in <-"92_c2_xcp_36p"
 #dir_out<-"96_c2_ts_36p"
