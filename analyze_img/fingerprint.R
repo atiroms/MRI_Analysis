@@ -11,11 +11,12 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-#dir_in<-"103_fp_acompcor"
+dir_in<-"103_fp_acompcor"
+dir_out<-"104_fp_id_acompcor"
 #dir_out<-"105_fp_model_acompcor"
 
-dir_in<-"113_fp_aroma"
-dir_out<-"115_fp_model_aroma"
+#dir_in<-"113_fp_aroma"
+#dir_out<-"115_fp_model_aroma"
 
 #dir_out<-"55_gta_bin"
 #dir_out<-"56_fp_identification"
@@ -171,14 +172,14 @@ list_mod_=list_mod
 list_graph_=list_graph
 subset_subj_=subset_subj
 
-glm_ancova_fp<-function(paths_=paths,
-                         list_atlas_=list_atlas,
-                         list_wave_=list_wave,
-                         list_covar_=list_covar,
-                         list_mod_=list_mod,
-                         list_graph_=list_graph,
-                         subset_subj_=subset_subj
-                         ){
+model_fp<-function(paths_=paths,
+                   list_atlas_=list_atlas,
+                   list_wave_=list_wave,
+                   list_covar_=list_covar,
+                   list_mod_=list_mod,
+                   list_graph_=list_graph,
+                   subset_subj_=subset_subj
+                   ){
   print("Starting glm_ancova_fp().")
   nullobj<-func_createdirs(paths_)
   
@@ -188,6 +189,11 @@ glm_ancova_fp<-function(paths_=paths,
                                      list_covar=list_covar_,rem_na_clin=T)
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  
+  df_out_lm<-data.frame(matrix(nrow=0,ncol=8))
+  colnames(df_out_lm)<-c("atlas","model","term","estimate","se","F","t","p")
+  df_out_aic<-data.frame(matrix(nrow=0,ncol=4))
+  colnames(df_out_aic)<-c("atlas","model","aic","aic_best_among_models")
   
   df_out_ancova<-data.frame(matrix(ncol=10,nrow=0))
   colnames(df_out_ancova)<-c("atlas","sex","test","term","comparison","p","F","diff","ci_l","ci_u")
@@ -239,29 +245,30 @@ glm_ancova_fp<-function(paths_=paths,
     
     # Calculate GLM
     print('Calculating GLM.')
-    df_out_term<-data.frame(matrix(nrow=0,ncol=5))
-    colnames(df_out_term)<-c("model","term","F","t","p")
-    df_out_model<-data.frame(matrix(nrow=0,ncol=3))
-    colnames(df_out_model)<-c("model","aic","aic_best_among_models")
     list_mod_gamm<-list()
-    df_out_model_add<-data.frame()
+    df_out_aic_atlas<-data.frame()
     for (mod in names(list_mod_)){
-      print(paste("Calculating model: ", mod, sep=""))
+      print(paste("GLM of model: ", mod, sep=""))
       list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join)
       p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
-      if (!is.null(summary.gam(list_mod_gamm[[mod]])$s.table)){
-        s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
-        df_out_term_add<-rbind(data.frame(model=mod,term=rownames(p_table),F=NA,
-                                          t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                               data.frame(model=mod,term=rownames(s_table),F=s_table[,'F'],
-                                          t=NA,p=s_table[,'p-value']))
-      }
-      df_out_term_add<-data.frame(model=mod,term=rownames(p_table),F=NA,
+      if (is.null(summary.gam(list_mod_gamm[[mod]])$s.table)){
+        df_out_lm_add<-data.frame(atlas=atlas,model=mod,term=rownames(p_table),
+                                  estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
                                   t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
-      df_out_term<-rbind(df_out_term,df_out_term_add)
-      df_out_model_add<-rbind(df_out_model_add,
-                              data.frame(model=mod,aic=list_mod_gamm[[mod]]$aic,
-                                         aic_best_among_models=0))
+        
+      }else{
+        s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
+        df_out_lm_add<-rbind(data.frame(atlas=atlas,model=mod,term=rownames(p_table),
+                                        estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                        t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                             data.frame(atlas=atlas,model=mod,term=rownames(s_table),
+                                        estimate=NA,se=NA,F=s_table[,'F'],
+                                        t=NA,p=s_table[,'p-value']))
+      }
+      df_out_lm<-rbind(df_out_lm,df_out_lm_add)
+      df_out_aic_atlas<-rbind(df_out_aic_atlas,
+                             data.frame(atlas=atlas,model=mod,aic=list_mod_gamm[[mod]]$aic,
+                                        aic_best_among_models=0))
       
       for (idx_graph in names(list_graph_)){
         if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(list_mod_gamm[[mod]]$model)){
@@ -291,13 +298,8 @@ glm_ancova_fp<-function(paths_=paths,
     }
     
     # Compare AICs of GLM models
-    df_out_model_add[which(df_out_model_add$aic==min(df_out_model_add$aic)),'aic_best_among_models']<-1
-    df_out_model<-rbind(df_out_model,df_out_model_add)
-    rownames(df_out_term)<-rownames(df_out_model)<-NULL
-    write.csv(df_out_term, file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_glm.csv",sep="")),row.names = F)
-    write.csv(df_out_model,file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_fp_glm_aic.csv",sep="")),row.names = F)
+    df_out_aic_atlas[which(df_out_aic_atlas$aic==min(df_out_aic_atlas$aic)),'aic_best_among_models']<-1
+    df_out_aic<-rbind(df_out_aic,df_out_aic_atlas)
     
     # Calculate ANCOVA
     print('Calculating ANCOVA.')
@@ -307,7 +309,7 @@ glm_ancova_fp<-function(paths_=paths,
     list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
 
     for (id_sex in names(list_sex)){
-      print(paste("Calculating sex: ",id_sex,sep=''))
+      print(paste("ANCOVA of sex: ",id_sex,sep=''))
       df_join_sex<-df_join[df_join$sex %in% list_sex[[id_sex]],]
       df_heatmap<-data.frame(matrix(ncol=5,nrow=5))
       df_id<-data.frame(matrix(ncol=0,nrow=0))
@@ -347,8 +349,10 @@ glm_ancova_fp<-function(paths_=paths,
       df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
     }
   }
-  rownames(df_out_ancova)<-NULL
-  write.csv(df_out_ancova,file.path(paths_$output,"output","ancova.csv"),row.names=F)
+  rownames(df_out_lm)<-rownames(df_out_aic)<-rownames(df_out_ancova)<-NULL
+  write.csv(df_out_lm, file.path(paths_$output,"output","fp_glm.csv"),row.names = F)
+  write.csv(df_out_aic,file.path(paths_$output,"output","fp_glm_aic.csv"),row.names = F)
+  write.csv(df_out_ancova,file.path(paths_$output,"output","fp_ancova.csv"),row.names=F)
   print("Finished glm_ancova_fp()")
 }
 
@@ -371,6 +375,12 @@ identify_fp<-function(paths_=paths,
   data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar=NULL,rem_na_clin=F)
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  
+  df_out_combined<-data.frame(matrix(nrow=0,ncol=11))
+  colnames(df_out_combined)<-c("atlas","n_subj","n_identified","proportion_identified",
+                               "n_identified_1_targeted","proportion_identified_1_targeted",
+                               "n_identified_2_targeted","proportion_identified_2_targeted",
+                               "p_permutation","p_permutation_1_targeted","p_permutation_2_targeted")
   
   for (atlas in list_atlas_){
     # Load fingerprint data
@@ -462,14 +472,30 @@ identify_fp<-function(paths_=paths,
     }
     df_ident[is.na(df_ident["1_targeted_identification"]),"1_targeted_identification"]<-0
     df_ident[is.na(df_ident["2_targeted_identification"]),"2_targeted_identification"]<-0
+    
+    n_subj<-length(list_id_subj_exist_twice)
+    n_id_1_tar<-sum(df_ident["1_targeted_identification"])
+    n_id_2_tar<-sum(df_ident["2_targeted_identification"])
+    n_id<-n_id_1_tar+n_id_2_tar
+    prop_id_1_tar<-n_id_1_tar/n_subj
+    prop_id_2_tar<-n_id_2_tar/n_subj
+    prop_id<-n_id/(n_subj*2)
+    p_perm_1_tar<-sum(df_perm["1_n_ident"]>sum(df_ident["1_targeted_identification"]))/n_permutation_
+    p_perm_2_tar<-sum(df_perm["2_n_ident"]>sum(df_ident["2_targeted_identification"]))/n_permutation_
+    p_perm<-(p_perm_1_tar+p_perm_2_tar)/2
+    
+    df_out_combined<-rbind(df_out_combined,
+                           data.frame(atlas=atlas,n_subj=n_subj,n_identified=n_id,proportion_identified=prop_id,
+                                      n_identified_1_targeted=n_id_1_tar,proportion_identifeid_1_targeted=prop_id_1_tar,
+                                      n_identified_2_targeted=n_id_2_tar,proportion_identified_2_targeted=prop_id_2_tar,
+                                      p_permutation=p_perm,
+                                      p_permutation_1_targeted=p_perm_1_tar,p_permutation_2_targeted=p_perm_2_tar))
+
     write.csv(df_ident,file.path(paths_$output,"output",paste("atl-",atlas,"_fp_identification.csv",sep="")),row.names=F)
     print(paste("Number of session 2 subjects identified from session 1 target: ",as.character(sum(df_ident["1_targeted_identification"])),sep=""))
     print(paste("Number of session 1 subjects identified from session 2 target: ",as.character(sum(df_ident["2_targeted_identification"])),sep=""))
     write.csv(df_perm,file.path(paths_$output,"output",paste("atl-",atlas,"_fp_permutation.csv",sep="")),row.names=F)
-    p_perm_1<-sum(df_perm["1_n_ident"]>sum(df_ident["1_targeted_identification"]))/n_permutation_
-    print(paste("p value from permutation 1: ",as.character(p_perm_1)))
-    p_perm_2<-sum(df_perm["2_n_ident"]>sum(df_ident["2_targeted_identification"]))/n_permutation_
-    print(paste("p value from permutation 2: ",as.character(p_perm_2)))
   }
+  write.csv(df_out_combined,file.path(paths_$output,"output","fp_identification_summary.csv"),row.names=F)
   print("Finished identify_fp().")
 }
