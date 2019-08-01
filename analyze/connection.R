@@ -57,6 +57,7 @@ library(missMDA)
 library(ggrepel)
 library(colorRamps)
 library(tidyverse)
+library(dplyr)
 
 
 #**************************************************
@@ -94,7 +95,6 @@ source(file.path(paths$script,"util/function.R"))
 source(file.path(paths$script,"util/glm_function.R"))
 source(file.path(paths$script,"util/plot.R"))
 source(file.path(paths$script,"util/gta_function.R"))
-
 
 
 #**************************************************
@@ -184,73 +184,105 @@ pca_fc<-function(paths_=paths,
 fp<-function(paths_=paths,
              list_atlas_=list_atlas,
              subset_subj_=subset_subj){
-  print("Starting fingerprint().")
+  print("Starting fp().")
   nullobj<-func_createdirs(paths_)
+  dict_roi<-func_dict_roi(paths_)
+  
   for (atlas in list_atlas_){
     print(paste("Calculating atlas: ",atlas,sep=""))
+    
+    # Load connection data
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     n_edge<-dim(df_edge)[1]
     list_node<-sort(unique(c(as.character(unique(df_edge$from)),as.character(unique(df_edge$to)))))
     n_node<-length(list_node)
+    
+    # Examine existing subject IDs and sessions in connection data
     list_ses_exist <- sort(unique(df_conn$ses))
     list_id_subj_exist<-list()
     for (ses in list_ses_exist){
       df_conn_ses<-df_conn[df_conn$ses==ses,]
       list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
     }
-
-    df_conn_cbind<-data.frame(matrix(nrow=n_edge,ncol=0))
-    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    #list_file_tmp<-NULL
-    for (ses in list_ses_exist){
-      for (id_subj in list_id_subj_exist[[ses]]){
-        #print(paste("Calculating Wave: ",as.character(ses), ", Subject: ",as.character(id_subj),sep=""))
-        df_conn_subj<-df_conn[which(df_conn$ID_pnTTC==id_subj),]
-        df_conn_subj<-df_conn_subj[which(df_conn_subj$ses==ses),]
-        df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
-        df_ses_subj<-rbind(df_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+    
+    # Add node subgroup column to df_edge
+    df_edge<-left_join(df_edge,dict_roi[,c("id","group")],by=c("from","id"))
+    colnames(df_edge)[colnames(df_edge)=="group"]<-"from_group"
+    df_edge<-left_join(df_edge,dict_roi[,c("id","group")],by=c("to","id"))
+    colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
+    list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
+    print(paste(as.character(length(list_group))," subgroups of ROIs found",sep=""))
+    
+    for (subgroup in c("all",list_group)){
+      print(paste("Calculating subnetwork: ",subgroup,sep=""))
+      # Create dataframe of edges within each subgroup
+      if (subgroup=="all"){
+        df_edge_group<-df_edge
+      }else{
+        df_edge_group<-df_edge[df_edge$from_group==subgroup & df_edge$to_group==subgroup,]
       }
+      n_edge_group<-dim(df_edge_group)[1]
+      list_node_group<-sort(unique(c(as.character(unique(df_edge_group$from)),
+                               as.character(unique(df_edge_group$to)))))
+      n_node_group<-length(list_node_group)
+      print(paste(as.character(n_node_group)," nodes in ",subgroup,sep=""))
+      
+      # Create combined dataframe of Z-transformed correlation coefficients
+      # Also create dataframe of sessions and subjects
+      df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
+      df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+      colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+      for (ses in list_ses_exist){
+        for (id_subj in list_id_subj_exist[[ses]]){
+          df_conn_subj<-df_conn[df_conn$ID_pnTTC==id_subj & df_conn$ses==ses,]
+          df_conn_subj<-df_conn_subj[df_conn_subj$from %in% list_node_group & df_conn_subj$to %in% list_node_group,]
+          df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
+          df_ses_subj<-rbind(df_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+        }
+      }
+      colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+      rownames(df_conn_cbind)<-NULL
+      
+      # Calculate correlation matrix
+      data_fingerprint<-func_cor(input=df_conn_cbind)
+      df_fingerprint<-data_fingerprint$cor_flat
+      
+      # Rename correlation matrix to sessions and subjects
+      df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
+      for (i in seq(dim(df_fingerprint)[1])){
+        from_id<-df_fingerprint[[i,"from"]]
+        to_id<-df_fingerprint[[i,"to"]]
+        df_fingerprint[[i,"from_ses"]]<-df_ses_subj[[from_id,"ses"]]
+        df_fingerprint[[i,"from_ID_pnTTC"]]<-df_ses_subj[[from_id,"ID_pnTTC"]]
+        df_fingerprint[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
+        df_fingerprint[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
+      }
+      df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+      
+      # Save fingerprint correlation
+      write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_grp-",subgroup,"_fp.csv",sep="")),row.names=F)
+      
+      # Prepare dataframe for fingerprint correlation plot
+      df_fp_plot<-data_fingerprint$cor
+      list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$ID_pnTTC),as.character(df_ses_subj$ses),sep="_")
+      colnames(df_fp_plot)<-rownames(df_fp_plot)<-list_name_subj_ses
+      
+      # Heatmap plot of fp correlation matrix
+      plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
+      plot_fp_heatmap<-(plot_fp_heatmap
+                        + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                        + ggtitle(paste("Fingerprint correlation,",atlas,subgroup,sep=" "))
+                        + theme(plot.title = element_text(hjust = 0.5),
+                                axis.title=element_blank()))
+      
+      # Save heatmap plot
+      ggsave(paste("atl-",atlas,"_grp-",subgroup,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
-    colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
-    rownames(df_conn_cbind)<-NULL
-    print("Starting to calculate correlation of fingerprints.")
-    data_fingerprint<-func_cor(input=df_conn_cbind)
-    df_fingerprint<-data_fingerprint$cor_flat
-    print("Finished calculating correlation of fingerprints.")
-    df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
-    for (i in seq(dim(df_fingerprint)[1])){
-      from_id<-df_fingerprint[[i,"from"]]
-      to_id<-df_fingerprint[[i,"to"]]
-      df_fingerprint[[i,"from_ses"]]<-df_ses_subj[[from_id,"ses"]]
-      df_fingerprint[[i,"from_ID_pnTTC"]]<-df_ses_subj[[from_id,"ID_pnTTC"]]
-      df_fingerprint[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
-      df_fingerprint[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
-    }
-    df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
-    write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")),row.names=F)
-    
-    # Prepare dataframe for fingerprint correlation plot
-    df_fp_plot<-data_fingerprint$cor
-    list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$ID_pnTTC),as.character(df_ses_subj$ses),sep="_")
-    colnames(df_fp_plot)<-rownames(df_fp_plot)<-list_name_subj_ses
-    
-    # Heatmap plot of fp correlation matrix
-    plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
-    plot_fp_heatmap<-(plot_fp_heatmap
-                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                      + ggtitle("Fingerprint correlation")
-                      + theme(plot.title = element_text(hjust = 0.5),
-                              axis.title=element_blank()))
-    
-    # Save heatmap plot
-    ggsave(paste("atl-",atlas,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
-           path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
-    
   }
-  print("Finished fingerprint().")
+  print("Finished fp().")
 }
 
 

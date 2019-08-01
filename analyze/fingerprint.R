@@ -201,7 +201,7 @@ model_fp<-function(paths_=paths,
   for (atlas in list_atlas_){
     # Load fingerprint data
     print(paste("Loading atlas: ",atlas,sep=""))
-    df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fingerprint.csv",sep="")))
+    df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep="")))
     
     # Create list of subjects who meet subsetting condition and whose MRI data exist
     list_ses_exist <- sort(unique(c(df_fp$from_ses,df_fp$to_ses)))
