@@ -49,11 +49,14 @@ source(file.path(paths$script,"analyze_img/fingerprint.R"))
 # Parameters ======================================
 #**************************************************
 
-id_dir_ts<-101
-suffix_dir<-"acompcor"
+#id_dir_ts<-101
+#suffix_dir<-"acompcor"
 
 #id_dir_ts<-111
 #suffix_dir<-"aroma"
+
+id_dir_ts<-121
+suffix_dir<-"36p"
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
