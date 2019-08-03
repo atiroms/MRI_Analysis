@@ -141,17 +141,17 @@ extract_xcp<-function(paths_=paths,
 #**************************************************
 
 combine_ts<-function(path_exp="D:/MRI_img/pnTTC/preproc",
-                     #list_src=list(list("dir"="75_c1_ts_acompcor","ses"=1),
-                     #              list("dir"="76_c2_ts_acompcor","ses"=2)),
-                     #dir_dst="77_ts_acompcor",
+                     list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
+                                   list("dir"="176_c2_ts_acompcor","ses"=2)),
+                     dir_dst="177_ts_acompcor",
                      
                      #list_src=list(list("dir"="85_c1_ts_aroma","ses"=1),
                      #              list("dir"="86_c2_ts_aroma","ses"=2)),
                      #dir_dst="87_ts_aroma",
                      
-                     list_src=list(list("dir"="95_c1_ts_36p","ses"=1),
-                                   list("dir"="96_c2_ts_36p","ses"=2)),
-                     dir_dst="97_ts_36p",
+                     #list_src=list(list("dir"="95_c1_ts_36p","ses"=1),
+                     #              list("dir"="96_c2_ts_36p","ses"=2)),
+                     #dir_dst="97_ts_36p",
                      
                      list_atlas_=list_atlas){
 
