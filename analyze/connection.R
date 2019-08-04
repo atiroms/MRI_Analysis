@@ -187,15 +187,14 @@ pca_fc<-function(paths_=paths,
 #**************************************************
 fp<-function(paths_=paths,
              list_atlas_=list_atlas,
-             subset_subj_=subset_subj){
+             subset_subj_=subset_subj,
+             key_roigroup="group_3"){
   print("Starting fp().")
   nullobj<-func_createdirs(paths_)
   dict_roi<-func_dict_roi(paths_)
-  dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi$group),stringsAsFactors = F)
+  dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi[,key_roigroup]),stringsAsFactors = F)
   
   for (atlas in list_atlas_){
-    print(paste("Calculating atlas: ",atlas,sep=""))
-    
     # Load connection data
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
@@ -218,12 +217,15 @@ fp<-function(paths_=paths,
     df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
     colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
     list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
-    print(paste(as.character(length(list_group))," subgroups of ROIs found",sep=""))
+    print(paste("Atlas: ",atlas, ", subnetwork: ", as.character(length(list_group)),".",sep=""))
     
-    for (subgroup in c("all",list_group)){
-      print(paste("Calculating subnetwork: ",subgroup,sep=""))
+    # Output dataframe
+    df_fp<-data.frame(matrix(ncol=6,nrow=0))
+    colnames(df_fp)<-c("group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")
+    
+    for (subgroup in c("whole",list_group)){
       # Create dataframe of edges within each subgroup
-      if (subgroup=="all"){
+      if (subgroup=="whole"){
         df_edge_group<-df_edge
       }else{
         df_edge_group<-df_edge[df_edge$from_group==subgroup & df_edge$to_group==subgroup,]
@@ -234,9 +236,9 @@ fp<-function(paths_=paths,
       n_node_group<-length(list_node_group)
       
       if (n_node_group<4){
-        print(paste(as.character(n_node_group)," nodes in subnetwork: ",subgroup,", fp calculation skipped.",sep=""))
+        print(paste("Atlas: ",atlas,", subnetwork: ",subgroup, ", nodes: ",as.character(n_node_group)," < 4, fp calculation skipped.",sep=""))
       }else{
-        print(paste(as.character(n_node_group)," nodes in subnetwork: ",subgroup,sep=""))
+        print(paste("Atlas: ",atlas,", subnetwork: ",subgroup, ", nodes: ",as.character(n_node_group),".",sep=""))
         
         # Create combined dataframe of Z-transformed correlation coefficients
         # Also create dataframe of sessions and subjects
@@ -256,22 +258,23 @@ fp<-function(paths_=paths,
         
         # Calculate correlation matrix
         data_fingerprint<-func_cor(input=df_conn_cbind)
-        df_fingerprint<-data_fingerprint$cor_flat
+        df_fp_subnet<-data_fingerprint$cor_flat
         
         # Rename correlation matrix to sessions and subjects
-        df_fingerprint$from_ses<-df_fingerprint$from_ID_pnTTC<-df_fingerprint$to_ses<-df_fingerprint$to_ID_pnTTC<-NA
-        for (i in seq(dim(df_fingerprint)[1])){
-          from_id<-df_fingerprint[[i,"from"]]
-          to_id<-df_fingerprint[[i,"to"]]
-          df_fingerprint[[i,"from_ses"]]<-df_ses_subj[[from_id,"ses"]]
-          df_fingerprint[[i,"from_ID_pnTTC"]]<-df_ses_subj[[from_id,"ID_pnTTC"]]
-          df_fingerprint[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
-          df_fingerprint[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
+        df_fp_subnet$from_ses<-df_fp_subnet$from_ID_pnTTC<-df_fp_subnet$to_ses<-df_fp_subnet$to_ID_pnTTC<-NA
+        for (i in seq(dim(df_fp_subnet)[1])){
+          from_id<-df_fp_subnet[[i,"from"]]
+          to_id<-df_fp_subnet[[i,"to"]]
+          df_fp_subnet[[i,"from_ses"]]<-df_ses_subj[[from_id,"ses"]]
+          df_fp_subnet[[i,"from_ID_pnTTC"]]<-df_ses_subj[[from_id,"ID_pnTTC"]]
+          df_fp_subnet[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
+          df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
         }
-        df_fingerprint<-df_fingerprint[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+        df_fp_subnet$group<-subgroup
+        df_fp_subnet<-df_fp_subnet[c("group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
         
-        # Save fingerprint correlation
-        write.csv(df_fingerprint,file.path(paths_$output,"output",paste("atl-",atlas,"_grp-",subgroup,"_fp.csv",sep="")),row.names=F)
+        # rbind to output dataframe
+        df_fp<-rbind(df_fp,df_fp_subnet)
         
         # Prepare dataframe for fingerprint correlation plot
         df_fp_plot<-data_fingerprint$cor
@@ -291,6 +294,10 @@ fp<-function(paths_=paths,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
+    
+    # Save fingerprint correlation
+    write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
+    
   }
   print("Finished fp().")
 }
