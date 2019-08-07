@@ -313,7 +313,7 @@ fp<-function(paths_=paths,
     }
     
     # Parallel fingerprint correlation computing over groups of subnetworks
-    clust<-makeCluster(detectCores()-2)
+    clust<-makeCluster(floor(detectCores()/2))
     clusterExport(clust,
                   varlist=c("paths_","atlas","func_cor","df_ses_subj",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
