@@ -199,12 +199,12 @@ fc<-function(paths_=paths,
       df_tmp<-read.csv(path_tmp)
       df_fc_stack<-rbind(df_fc_stack,df_tmp)
       file.remove(path_tmp)
-      print(paste("Finished binding: ",path_tmp,sep=""))
+      #print(paste("Finished binding: ",path_tmp,sep=""))
     }
     colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
     write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
     df_fc_stack<-NULL
-    print("Finished saving all subject results.")
+    #print("Finished saving all subject results.")
     print(paste("Finished calculating for atlas: ",atlas, sep=""))
   }
   print("Finished fc().")
