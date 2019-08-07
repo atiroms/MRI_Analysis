@@ -189,7 +189,6 @@ fc<-function(paths_=paths,
                             "theme_light","theme","element_text","element_blank",
                             "ggtitle","ggsave"),
                   envir=environment())
-
     list_path_tmp<-parSapply(clust,list_data_ts,fc_core)
     stopCluster(clust)
     
