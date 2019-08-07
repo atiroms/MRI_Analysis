@@ -164,14 +164,6 @@ source(file.path(paths$script,"util/plot.R"))
 # GLM and ANCOVA of Fingerprint change ============
 #**************************************************
 
-paths_=paths
-list_atlas_=list_atlas
-list_wave_=list_wave
-list_covar_=list_covar
-list_mod_=list_mod
-list_graph_=list_graph
-subset_subj_=subset_subj
-
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,
                    list_wave_=list_wave,
@@ -190,17 +182,12 @@ model_fp<-function(paths_=paths,
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   
-  df_out_lm<-data.frame(matrix(nrow=0,ncol=9))
-  colnames(df_out_lm)<-c("atlas","group","model","term","estimate","se","F","t","p")
-  df_out_aic<-data.frame(matrix(nrow=0,ncol=5))
-  colnames(df_out_aic)<-c("atlas","group","model","aic","aic_best_among_models")
-  
-  df_out_ancova<-data.frame(matrix(nrow=0,ncol=11))
-  colnames(df_out_ancova)<-c("atlas","group","sex","test","term","comparison","p","F","diff","ci_l","ci_u")
+  df_out_lm<-df_out_aic<-df_out_ancova<-NULL
   
   for (atlas in list_atlas_){
-    # Load fingerprint data
     print(paste("Atlas: ",atlas,sep=""))
+    
+    # Load fingerprint data
     df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep="")))
     
     # Create list of subjects who meet subsetting condition and whose MRI data exist
@@ -218,9 +205,9 @@ model_fp<-function(paths_=paths,
     list_id_subj_exist_twice<-sort(intersect(list_id_subj_exist[["1"]],
                                              list_id_subj_exist[["2"]]))
     n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
-    #print(paste(as.character(n_id_subj_exist_twice)," subjects with two sessions.",sep=""))
-
-    df_join<-data.frame(matrix(ncol=*,nrow=0))
+    
+    list_group<-sort(unique(df_fp$group))
+    df_join<-NULL
     for (group in list_group){
       # Collect longitudinal fp correlation data
       df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
@@ -232,7 +219,7 @@ model_fp<-function(paths_=paths,
       list_id_subj_nonna<-df_cor_fp[!is.na(df_cor_fp$value),"ID_pnTTC"]
       df_cor_fp<-df_cor_fp[df_cor_fp$ID_pnTTC %in% list_id_subj_nonna,]
       n_id_subj_exist_twice<-length(list_id_subj_nonna)
-      print(paste(as.character(n_id_subj_exist_twice)," subjects with non-NA data for two sessions.",sep=""))
+      print(paste("Atlas: ",atlas,", group: ",group,", ",as.character(n_id_subj_exist_twice)," subjects with longitudinal non-NA data.",sep=""))
       
       # Create dataframe for GLM analysis
       df_join_grp<-func_clinical_data_join(df_src=df_clin,
@@ -241,15 +228,15 @@ model_fp<-function(paths_=paths,
       df_join_grp<-inner_join(df_join_grp,df_cor_fp,by="ID_pnTTC")
       df_join_grp$ID_pnTTC<-as.factor(df_join_grp$ID_pnTTC)
       df_join_grp$sex<-as.factor(df_join_grp$sex)
+      df_join_grp<-cbind(group=group,df_join_grp)
       
       df_join<-rbind(df_join,df_join_grp)
       
       # Calculate GLM
-      print('Calculating GLM.')
       list_mod_gamm<-list()
       df_out_aic_add<-data.frame()
       for (mod in names(list_mod_)){
-        print(paste("GLM of model: ", mod, sep=""))
+        print(paste("Atlas: ",atlas,", group: ",group,", GLM of model: ", mod, sep=""))
         list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join_grp)
         p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
         if (is.null(summary.gam(list_mod_gamm[[mod]])$s.table)){
@@ -304,14 +291,13 @@ model_fp<-function(paths_=paths,
       df_out_aic<-rbind(df_out_aic,df_out_aic_add)
       
       # Calculate ANCOVA
-      print('Calculating ANCOVA.')
       df_join_grp$long_tanner<-paste(as.character(df_join_grp$ses1_tanner),
                                      as.character(df_join_grp$ses2_tanner),sep="_")
       df_join_grp$long_tanner<-as.factor(df_join_grp$long_tanner)
       list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
       
       for (id_sex in names(list_sex)){
-        print(paste("ANCOVA of sex: ",id_sex,sep=''))
+        print(paste("Atlas: ",atlas,", group: ",group,", ANCOVA of sex: ",id_sex,sep=''))
         df_join_grp_sex<-df_join_grp[df_join_grp$sex %in% list_sex[[id_sex]],]
         df_heatmap<-data.frame(matrix(ncol=5,nrow=5))
         df_id<-data.frame(matrix(ncol=0,nrow=0))
@@ -330,7 +316,7 @@ model_fp<-function(paths_=paths,
         df_id$init<-NULL
         write.csv(df_heatmap,file.path(paths_$output,"output",
                                        paste("atl-",atlas,"_sex-",
-                                             id_sex,"_tanner_heatmap.csv",sep="")))
+                                             id_sex,"_tanner_cnt.csv",sep="")))
         write.csv(df_id,file.path(paths_$output,"output",
                                   paste("atl-",atlas,"_sex-",
                                         id_sex,"_tanner_id.csv",sep="")),row.names=F)

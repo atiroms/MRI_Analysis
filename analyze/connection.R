@@ -217,11 +217,10 @@ fp<-function(paths_=paths,
     df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
     colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
     list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
-    print(paste("Atlas: ",atlas, ", subnetwork: ", as.character(length(list_group)),".",sep=""))
+    print(paste("Atlas: ",atlas, ", group: ", as.character(length(list_group)),".",sep=""))
     
     # Output dataframe
-    df_fp<-data.frame(matrix(ncol=6,nrow=0))
-    colnames(df_fp)<-c("group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")
+    df_fp<-NULL
     
     for (subgroup in c("whole",list_group)){
       # Create dataframe of edges within each subgroup
@@ -236,9 +235,9 @@ fp<-function(paths_=paths,
       n_node_group<-length(list_node_group)
       
       if (n_node_group<4){
-        print(paste("Atlas: ",atlas,", subnetwork: ",subgroup, ", nodes: ",as.character(n_node_group)," < 4, fp calculation skipped.",sep=""))
+        print(paste("Atlas: ",atlas,", group: ",subgroup, ", nodes: ",as.character(n_node_group)," < 4, fp calculation skipped.",sep=""))
       }else{
-        print(paste("Atlas: ",atlas,", subnetwork: ",subgroup, ", nodes: ",as.character(n_node_group),".",sep=""))
+        print(paste("Atlas: ",atlas,", group: ",subgroup, ", nodes: ",as.character(n_node_group),".",sep=""))
         
         # Create combined dataframe of Z-transformed correlation coefficients
         # Also create dataframe of sessions and subjects
