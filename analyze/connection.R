@@ -217,17 +217,21 @@ fp<-function(paths_=paths,
     df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
     colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
     list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
-    print(paste("Atlas: ",atlas, ", group: ", as.character(length(list_group)),".",sep=""))
+    if (!("whole" %in% list_group)){
+      list_group<-c("whole",list_group)
+    }
+    print(paste("Atlas: ",atlas, ", ", as.character(length(list_group))," groups:",sep=""))
+    print(list_group)
     
     # Output dataframe
     df_fp<-NULL
     
-    for (subgroup in c("whole",list_group)){
-      # Create dataframe of edges within each subgroup
-      if (subgroup=="whole"){
+    for (group in list_group){
+      # Create dataframe of edges within each group
+      if (group=="whole"){
         df_edge_group<-df_edge
       }else{
-        df_edge_group<-df_edge[df_edge$from_group==subgroup & df_edge$to_group==subgroup,]
+        df_edge_group<-df_edge[df_edge$from_group==group & df_edge$to_group==group,]
       }
       n_edge_group<-dim(df_edge_group)[1]
       list_node_group<-sort(unique(c(as.character(unique(df_edge_group$from)),
@@ -235,9 +239,9 @@ fp<-function(paths_=paths,
       n_node_group<-length(list_node_group)
       
       if (n_node_group<4){
-        print(paste("Atlas: ",atlas,", group: ",subgroup, ", nodes: ",as.character(n_node_group)," < 4, fp calculation skipped.",sep=""))
+        print(paste("Atlas: ",atlas,", group: ",group, ", nodes: ",as.character(n_node_group)," < 4, fp calculation skipped.",sep=""))
       }else{
-        print(paste("Atlas: ",atlas,", group: ",subgroup, ", nodes: ",as.character(n_node_group),".",sep=""))
+        print(paste("Atlas: ",atlas,", group: ",group, ", nodes: ",as.character(n_node_group),".",sep=""))
         
         # Create combined dataframe of Z-transformed correlation coefficients
         # Also create dataframe of sessions and subjects
@@ -269,7 +273,7 @@ fp<-function(paths_=paths,
           df_fp_subnet[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
           df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
         }
-        df_fp_subnet$group<-subgroup
+        df_fp_subnet$group<-group
         df_fp_subnet<-df_fp_subnet[c("group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
         
         # rbind to output dataframe
@@ -284,12 +288,12 @@ fp<-function(paths_=paths,
         plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
         plot_fp_heatmap<-(plot_fp_heatmap
                           + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                          + ggtitle(paste("Fingerprint correlation,",atlas,":",subgroup,sep=" "))
+                          + ggtitle(paste("Fingerprint correlation,",atlas,":",group,sep=" "))
                           + theme(plot.title = element_text(hjust = 0.5),
                                   axis.title=element_blank()))
         
         # Save heatmap plot
-        ggsave(paste("atl-",atlas,"_grp-",subgroup,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
