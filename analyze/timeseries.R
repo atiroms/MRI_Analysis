@@ -120,7 +120,7 @@ func_data_timeseries<-function(paths__,atlas_=atlas){
 # Functional correlation of each subs =============
 #**************************************************
 
-# Core function of functional correlation for parallel processing
+# Core function of functional correlation to be parallelized by fc()
 fc_core<-function(data_ts){
   id_subj<-data_ts$subj
   ses<-data_ts$ses
@@ -158,6 +158,7 @@ fc_core<-function(data_ts){
 }
 
 
+# Main function of functional correlation
 fc<-function(paths_=paths,
              list_atlas_=list_atlas){
   print("Starting fc().")
@@ -179,11 +180,15 @@ fc<-function(paths_=paths,
     list_label_roi<-data_timeseries$list_label_roi
     
     # Parallel computing of fc for each subject/session
-    n_core<-detectCores()-2
-    clust<-makeCluster(n_core)
+    clust<-makeCluster(detectCores()-2)
     clusterExport(clust,
-                  varlist=c("paths_","atlas","list_label_roi","func_cor","plot_cor_heatmap"),
-                  envir=.GlobalEnv)
+                  varlist=c("paths_","atlas","list_label_roi","func_cor",
+                            "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                            "ggplot","aes","geom_tile","scale_fill_gradientn",
+                            "matlab.like2","scale_y_discrete","scale_x_discrete",
+                            "theme_light","theme","element_text","element_blank",
+                            "ggtitle","ggsave"),
+                  envir=environment())
 
     list_path_tmp<-parSapply(clust,list_data_ts,fc_core)
     stopCluster(clust)
