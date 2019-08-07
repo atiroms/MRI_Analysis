@@ -180,7 +180,7 @@ fc<-function(paths_=paths,
     list_label_roi<-data_timeseries$list_label_roi
     
     # Parallel computing of fc for each subject/session
-    clust<-makeCluster(floor(detectCores()/2))
+    clust<-makeCluster(floor(detectCores()*3/4))
     clusterExport(clust,
                   varlist=c("paths_","atlas","list_label_roi","func_cor",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
