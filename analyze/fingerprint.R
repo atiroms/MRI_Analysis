@@ -369,11 +369,7 @@ identify_fp<-function(paths_=paths,
   df_clin<-data_clin$df_clin
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   
-  df_out_combined<-data.frame(matrix(nrow=0,ncol=11))
-  colnames(df_out_combined)<-c("atlas","group","n_subj","n_identified","proportion_identified",
-                               "n_identified_1_targeted","proportion_identified_1_targeted",
-                               "n_identified_2_targeted","proportion_identified_2_targeted",
-                               "p_permutation","p_permutation_1_targeted","p_permutation_2_targeted")
+  df_out_combined<-NULL
   
   for (atlas in list_atlas_){
     # Load fingerprint data
