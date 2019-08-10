@@ -9,6 +9,17 @@ summary(mtcars)
 mtcars$am<-as.factor(mtcars$am)
 mtcars$vs<-as.factor(mtcars$vs)
 mtcars$gear<-as.factor(mtcars$gear)
+mtcars$am_vs<-as.factor(paste(as.character(mtcars$am),as.character(mtcars$vs),sep="_"))
+
+mod6<-aov(mpg~am:vs+hp,data=mtcars)
+summary(mod6)
+posthoc6<-TukeyHSD(mod6,which="am:vs")[[1]]
+
+mod10<-aov(mpg~am_vs+hp,data=mtcars)
+summary(mod10)
+posthoc10<-TukeyHSD(mod10,which="am_vs")[[1]]
+
+
 
 mod1<-lm(mpg~am*vs+hp,data=mtcars)
 summary(mod1)
@@ -32,9 +43,6 @@ contrast1
 
 test1<-glht(mod3, linfct = contrast1)
 summary(test1)
-
-mod6<-aov(mpg~am:vs+hp,data=mtcars)
-summary(mod6)
 
 mod7<-lm(mpg~am:vs+hp,data=mtcars)
 summary(mod7)
