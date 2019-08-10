@@ -49,7 +49,7 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 # Parameters ======================================
 #**************************************************
 
-id_dir_ts<-201
+id_dir_ts<-101
 suffix_dir<-"acompcor"
 
 #id_dir_ts<-111
@@ -171,25 +171,24 @@ pipe_func<-function(paths_=paths,
   nullobj<-fp(paths_=paths,list_atlas_=list_atlas_,subset_subj_=subset_subj_)
   
   # Fingerprint to identification of fingerprints
-  #dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  #id_dir_idfp<-id_dir_fp+1
-  #dir_out<-paste(as.character(id_dir_idfp),"fp_id",suffix_dir_,sep='_')
-  #paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  #nullobj<-identify_fp(paths_=paths,list_atlas_=list_atlas_,
-  #                     list_wave_=list_wave_,
-  #                     subset_subj_=subset_subj_,
-  #                     n_permutation_=n_permutation_)
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
+  id_dir_idfp<-id_dir_fp+1
+  dir_out<-paste(as.character(id_dir_idfp),"fp_id",suffix_dir_,sep='_')
+  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+  nullobj<-identify_fp(paths_=paths,list_atlas_=list_atlas_,
+                       list_wave_=list_wave_,
+                       subset_subj_=subset_subj_,
+                       n_permutation_=n_permutation_)
   
   # Fingerprint to GLM / ANCOVA of fingerprint difference
-  #dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  #id_dir_gamfp<-id_dir_fp+2
-  #dir_out<-paste(as.character(id_dir_gamfp),"fp_model",suffix_dir_,sep='_')
-  #paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  #nullobj<-glm_ancova_fp(paths_=paths,list_atlas_=list_atlas_,
-  #                       list_wave_=list_wave_,list_covar_=list_covar_,
-  #                       list_mod_=list_mod_,list_graph_=list_graph_,
-  #                       subset_subj_=subset_subj_)
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
+  id_dir_gamfp<-id_dir_fp+2
+  dir_out<-paste(as.character(id_dir_gamfp),"fp_model",suffix_dir_,sep='_')
+  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+  nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
+                         list_wave_=list_wave_,list_covar_=list_covar_,
+                         list_mod_=list_mod_,list_graph_=list_graph_,
+                         subset_subj_=subset_subj_)
   
   print('Finished pipe_func().')
-  
 }
