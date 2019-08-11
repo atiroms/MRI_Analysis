@@ -224,11 +224,11 @@ fp_core<-function(data_zr){
   
   # Heatmap plot of fp correlation matrix
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
-  plot_fp_heatmap<-(plot_fp_heatmap
-                    + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                    + ggtitle(paste("Fingerprint correlation,",atlas,":",group,sep=" "))
-                    + theme(plot.title = element_text(hjust = 0.5),
-                            axis.title=element_blank()))
+  suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
+                                     + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                                     + ggtitle(paste("Fingerprint correlation,",atlas,":",group,sep=" "))
+                                     + theme(plot.title = element_text(hjust = 0.5),
+                                             axis.title=element_blank())))
   
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,

@@ -407,14 +407,14 @@ identify_fp<-function(paths_=paths,
       colnames(df_fp_exist_twice_plot)[-1]<-rownames(df_fp_exist_twice_plot)<-sprintf("%05d",df_fp_exist_twice_plot$from_ID_pnTTC)
       df_fp_exist_twice_plot<-df_fp_exist_twice_plot[-1]
       plot_fp_exist_twice<-plot_cor_heatmap(input=df_fp_exist_twice_plot)
-      plot_fp_exist_twice<-(plot_fp_exist_twice
-                            + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                            + ggtitle(paste("Longitudinal fingerprint correlation, ",atlas,": ",group,sep=""))
-                            + xlab("2nd wave")
-                            + ylab("1st wave")
-                            + theme(plot.title = element_text(hjust = 0.5)))
+      suppressMessages(plot_fp_exist_twice<-(plot_fp_exist_twice
+                                             + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                                             + ggtitle(paste("Longitudinal fingerprint correlation, ",atlas,": ",group,sep=""))
+                                             + xlab("2nd wave")
+                                             + ylab("1st wave")
+                                             + theme(plot.title = element_text(hjust = 0.5))))
       ggsave(paste("atl-",atlas,"_grp-",group,"_fp_id.eps",sep=""),plot=plot_fp_exist_twice,device=cairo_ps,
-             path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+                   path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
     
     # Calculate fingerprint identification
@@ -443,6 +443,8 @@ identify_fp<-function(paths_=paths,
           if (!is.na(rank_similarity)){
             if (rank_similarity==1){
               df_ident_grp[df_ident_grp$target==id_subj,paste(as.character(ses),"_targeted_identification",sep='')]<-1
+            }else{
+              df_ident_grp[df_ident_grp$target==id_subj,paste(as.character(ses),"_targeted_identification",sep='')]<-0
             }
           }
         }
@@ -473,9 +475,6 @@ identify_fp<-function(paths_=paths,
           #print(paste("Iteration: ",as.character(i),", subjects identified: ",as.character(n_identified),sep=""))
         }
       }
-      df_ident_grp[is.na(df_ident_grp["1_targeted_identification"]),"1_targeted_identification"]<-0
-      df_ident_grp[is.na(df_ident_grp["2_targeted_identification"]),"2_targeted_identification"]<-0
-      
       df_ident<-rbind(df_ident,df_ident_grp)
       df_perm<-rbind(df_perm,df_perm_grp)
       
