@@ -40,9 +40,9 @@ paths<-func_path()
 #**************************************************
 source(file.path(paths$script,"util/function.R"))
 source(file.path(paths$script,"util/plot.R"))
-source(file.path(paths$script,"analyze_img/timeseries.R"))
-source(file.path(paths$script,"analyze_img/connection.R"))
-source(file.path(paths$script,"analyze_img/fingerprint.R"))
+source(file.path(paths$script,"analyze/timeseries.R"))
+source(file.path(paths$script,"analyze/connection.R"))
+source(file.path(paths$script,"analyze/fingerprint.R"))
 
 
 #**************************************************
@@ -54,6 +54,9 @@ suffix_dir<-"acompcor"
 
 #id_dir_ts<-111
 #suffix_dir<-"aroma"
+
+#id_dir_ts<-121
+#suffix_dir<-"36p"
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
@@ -137,7 +140,6 @@ list_graph <-list("a"=list("title"="Effect of age difference",
 #**************************************************
 
 
-
 #**************************************************
 # Timeseries to GAMM of Fingerprints ==============
 #**************************************************
@@ -171,7 +173,7 @@ pipe_func<-function(paths_=paths,
   # Fingerprint to identification of fingerprints
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   id_dir_idfp<-id_dir_fp+1
-  dir_out<-paste(as.character(id_dir_idfp),"idfp",suffix_dir_,sep='_')
+  dir_out<-paste(as.character(id_dir_idfp),"fp_id",suffix_dir_,sep='_')
   paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
   nullobj<-identify_fp(paths_=paths,list_atlas_=list_atlas_,
                        list_wave_=list_wave_,
@@ -183,11 +185,10 @@ pipe_func<-function(paths_=paths,
   id_dir_gamfp<-id_dir_fp+2
   dir_out<-paste(as.character(id_dir_gamfp),"fp_model",suffix_dir_,sep='_')
   paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  nullobj<-glm_ancova_fp(paths_=paths,list_atlas_=list_atlas_,
+  nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
                          list_wave_=list_wave_,list_covar_=list_covar_,
                          list_mod_=list_mod_,list_graph_=list_graph_,
                          subset_subj_=subset_subj_)
   
   print('Finished pipe_func().')
-  
 }
