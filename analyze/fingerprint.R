@@ -418,19 +418,17 @@ identify_fp<-function(paths_=paths,
     }
     
     # Calculate fingerprint identification
-    df_ident<-data.frame(matrix(nrow=0,ncol=6))
-    colnames(df_ident)<-c("group","target","1_targeted_rank","1_targeted_identification","2_targeted_rank","2_targeted_identification")
-    df_perm<-data.frame(matrix(nrow=0,ncol=4))
-    colnames(df_perm)<-c("group","id_perm","1_n_ident","2_n_ident")
+    df_ident<-df_perm<-NULL
     
     for (group in list_group){
       df_ident_grp<-data.frame("group"=group,"target"=list_id_subj_exist_twice)
       df_perm_grp<-data.frame("group"=group,"id_perm"=seq(1,n_permutation_))
+      df_fp_exist_twice_group<-df_fp_exist_twice[df_fp_exist_twice$group==group,]
       for(ses in c(1,2)){
         if(ses==1){
-          df_fp_pool<-df_fp_exist_twice[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+          df_fp_pool<-df_fp_exist_twice_group[c("from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
         }else{
-          df_fp_pool<-df_fp_exist_twice[c("to_ses","to_ID_pnTTC","from_ses","from_ID_pnTTC","r")]
+          df_fp_pool<-df_fp_exist_twice_group[c("to_ses","to_ID_pnTTC","from_ses","from_ID_pnTTC","r")]
         }
         colnames(df_fp_pool)<-c("target_ses","target_ID_pnTTC","pool_ses","pool_ID_pnTTC","r")
         for (id_subj in list_id_subj_exist_twice){
@@ -449,13 +447,17 @@ identify_fp<-function(paths_=paths,
           }
         }
         
+        # Permutation test calculation
         for (i in seq(1,n_permutation_)){
+          # Create dataframe for random shuffling
           df_rand<-data.frame(pool_ID_pnTTC=list_id_subj_exist_twice,rand_ID_pnTTC=sample(list_id_subj_exist_twice,length(list_id_subj_exist_twice)))
-          df_fp_rand<-left_join(df_fp_subset,df_rand,by="pool_ID_pnTTC")
+          
+          # Randomize subject ID of pool session accordint to df_rand
+          df_fp_rand<-left_join(df_fp_pool,df_rand,by="pool_ID_pnTTC")
           n_identified<-0
           for (id_subj in list_id_subj_exist_twice){
-            df_fp_rand<-df_fp_rand[df_fp_rand$target_ID_pnTTC==id_subj,]
-            list_id_subj_ordered<-df_fp_subset[order(df_fp_subset$r,decreasing = TRUE,na.last=NA),'pool_ID_pnTTC']
+            df_fp_rand_subj<-df_fp_rand[df_fp_rand$target_ID_pnTTC==id_subj,]
+            list_id_subj_ordered<-df_fp_rand_subj[order(df_fp_rand_subj$r,decreasing = TRUE,na.last=NA),'rand_ID_pnTTC']
             if (id_subj %in% list_id_subj_ordered){
               rank_similarity<-which(list_id_subj_ordered==id_subj)
             }else{
@@ -463,7 +465,7 @@ identify_fp<-function(paths_=paths,
             }
             if (!is.na(rank_similarity)){
               if (rank_similarity==1){
-                n_dentified<-n_identified+1
+                n_identified<-n_identified+1
               }
             }
           }
