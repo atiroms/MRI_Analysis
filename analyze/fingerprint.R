@@ -398,11 +398,11 @@ identify_fp<-function(paths_=paths,
     # Output subset with longitudinal data
     write.csv(df_fp_exist_twice,file.path(paths_$output,"output",paste("atl-",atlas,"_fp_input_subset.csv",sep="")),row.names=F)
     
-    list_group<-as.characer(unique(df_fp_exist_twice$group))
+    list_group<-as.character(unique(df_fp_exist_twice$group))
     
     # Correlation matrix graphical output
     for (group in list_group){
-      df_fp_exist_twice_plot<-df_fp_exist_twice[,df_fp_exist_twice$group==group,c('from_ID_pnTTC','to_ID_pnTTC','r')]
+      df_fp_exist_twice_plot<-df_fp_exist_twice[df_fp_exist_twice$group==group,c('from_ID_pnTTC','to_ID_pnTTC','r')]
       df_fp_exist_twice_plot<-spread(df_fp_exist_twice_plot,key=to_ID_pnTTC,value=r)
       colnames(df_fp_exist_twice_plot)[-1]<-rownames(df_fp_exist_twice_plot)<-sprintf("%05d",df_fp_exist_twice_plot$from_ID_pnTTC)
       df_fp_exist_twice_plot<-df_fp_exist_twice_plot[-1]
@@ -420,7 +420,7 @@ identify_fp<-function(paths_=paths,
     # Calculate fingerprint identification
     df_ident<-data.frame(matrix(nrow=0,ncol=6))
     colnames(df_ident)<-c("group","target","1_targeted_rank","1_targeted_identification","2_targeted_rank","2_targeted_identification")
-    df_perm<-data.frame(matrix(nrow=0,nrow=4))
+    df_perm<-data.frame(matrix(nrow=0,ncol=4))
     colnames(df_perm)<-c("group","id_perm","1_n_ident","2_n_ident")
     
     for (group in list_group){
