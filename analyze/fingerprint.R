@@ -127,6 +127,7 @@ n_permutation<-1000
 library(dplyr)
 library(mgcv)
 library(rowr)
+library(multcomp)
 #library(ggplot2)
 #library(GGally)
 #library(igraph)
