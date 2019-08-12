@@ -18,11 +18,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_out<-"59_pca_fc"
 #dir_out<-"58_fp_acompcor"
 
-#dir_in<-"102_fc_acompcor"
-#dir_out<-"103_fp_acompcor"
+dir_in<-"102_fc_acompcor"
+dir_out<-"103_fp_acompcor"
 
-dir_in<-"59_fc_test"
-dir_out<-"60_fp_test"
+#dir_in<-"59_fc_test"
+#dir_out<-"60_fp_test"
 
 list_wave <- c(1,2)
 
@@ -195,7 +195,6 @@ fp_core<-function(data_zr){
   group<-data_zr$group
   df_zr<-data_zr$df_zr
   n_edge<-dim(df_zr)[1]
-  print(paste("Atlas: ",atlas,", group: ",group, ".",sep=""))
   
   # Calculate correlation matrix
   data_fingerprint<-func_cor(input=df_zr)
@@ -313,7 +312,8 @@ fp<-function(paths_=paths,
     }
     
     # Parallel fingerprint correlation computing over groups of subnetworks
-    clust<-makeCluster(floor(detectCores()*3/4))
+    n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
+    clust<-makeCluster(n_cluster)
     clusterExport(clust,
                   varlist=c("paths_","atlas","func_cor","df_ses_subj",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
