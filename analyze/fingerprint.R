@@ -12,8 +12,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"103_fp_acompcor"
-#dir_out<-"104_fp_id_acompcor"
-dir_out<-"105_fp_model_acompcor"
+dir_out<-"104_fp_id_acompcor"
+#dir_out<-"105_fp_model_acompcor"
 
 #dir_in<-"113_fp_aroma"
 #dir_out<-"115_fp_model_aroma"

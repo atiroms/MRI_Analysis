@@ -168,7 +168,7 @@ func_clinical_data_long<-function(paths,
       print(paste('Clinical: ',as.character(n_subj_deleted),' subjects with NA values in any covariates deleted.',sep=''))
     }else{
       n_subj_na<-n_subj_pre-nrow(df_clin_exist_wave[df_clin_exist_wave$ID_pnTTC %in% id_exist_intersect,])
-      print('Clinical: ',paste(as.character(n_subj_na),' subjects with NA values in any covariates, but NOT deleted.',sep=''))
+      print(paste('Clinical: ',as.character(n_subj_na),' subjects with NA values in any covariates, but NOT deleted.',sep=''))
     }
     list_id_exist_wave<-c(list_id_exist_wave,list('intersect'=id_exist_intersect))
     df_clin_exist<-rbind(df_clin_exist,df_clin_exist_wave)
