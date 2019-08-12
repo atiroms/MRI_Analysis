@@ -440,7 +440,9 @@ identify_fp<-function(paths_=paths,
             rank_similarity<-NA
           }
           df_ident_grp[df_ident_grp$target==id_subj,paste(as.character(ses),"_targeted_rank",sep='')]<-rank_similarity
-          if (!is.na(rank_similarity)){
+          if (is.na(rank_similarity)){
+            df_ident_grp[df_ident_grp$target==id_subj,paste(as.character(ses),"_targeted_identification",sep='')]<-0
+          }else{
             if (rank_similarity==1){
               df_ident_grp[df_ident_grp$target==id_subj,paste(as.character(ses),"_targeted_identification",sep='')]<-1
             }else{
