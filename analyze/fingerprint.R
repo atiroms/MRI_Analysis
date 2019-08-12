@@ -12,8 +12,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"103_fp_acompcor"
-dir_out<-"104_fp_id_acompcor"
-#dir_out<-"105_fp_model_acompcor"
+#dir_out<-"104_fp_id_acompcor"
+dir_out<-"105_fp_model_acompcor"
 
 #dir_in<-"113_fp_aroma"
 #dir_out<-"115_fp_model_aroma"
@@ -206,7 +206,9 @@ model_fp<-function(paths_=paths,
                                              list_id_subj_exist[["2"]]))
     n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
     
-    list_group<-sort(unique(df_fp$group))
+    list_group<-sort(unique(as.character(df_fp$group)))
+    list_group<-c("whole",list_group[list_group!="whole"])
+                  
     df_join<-NULL
     for (group in list_group){
       # Collect longitudinal fp correlation data
@@ -327,13 +329,17 @@ model_fp<-function(paths_=paths,
         }
         df_ancova<-summary(mod_ancova)[[1]]
         df_out_ancova_add<-data.frame(atlas=atlas,group=group,sex=id_sex,test="ANCOVA",term=rownames(df_ancova),comparison=NA,
-                                      p=df_ancova[,'Pr(>F)'],F=df_ancova[,'F value'],diff=NA,ci_l=NA,ci_u=NA)
+                                      p=df_ancova[,'Pr(>F)'],t=NA,F=df_ancova[,'F value'],diff=NA,sigma=NA)
         df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
         
         # Calculate Tukey-Kramer
-        df_tc<-TukeyHSD(mod_ancova,which='long_tanner')[[1]]
-        df_out_ancova_add<-data.frame(atlas=atlas,group=group,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=rownames(df_tc),
-                                      p=df_tc[,'p adj'],F=NA,diff=df_tc[,'diff'],ci_l=df_tc[,'lwr'],ci_u=df_tc[,'upr'])
+        #df_tk<-TukeyHSD(mod_ancova,which='long_tanner')[[1]]
+        #df_out_ancova_add<-data.frame(atlas=atlas,group=group,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=rownames(df_tk),
+        #                              p=df_tk[,'p adj'],F=NA,diff=df_tk[,'diff'],ci_l=df_tk[,'lwr'],ci_u=df_tk[,'upr'])
+        tk<-summary(glht(mod_ancova, linfct = mcp('long_tanner' = 'Tukey')))$test
+        df_out_ancova_add<-data.frame(atlas=atlas,group=group,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=names(tk$coefficients),
+                                      p=tk$pvalues[1:length(tk$coefficients)],t=tk$tstat,F=NA,diff=tk$coefficients,sigma=tk$sigma)
+        
         df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
       }
       
