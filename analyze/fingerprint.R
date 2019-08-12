@@ -62,6 +62,16 @@ list_mod <- list("lin_diff_a"=
 #                 "linear_mixed"=
 #                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')")
 
+list_tanner <-list("25"=
+                     list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
+                          "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
+                   "9"=
+                     list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
+                          "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
+                   "4"=
+                     list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
+                          "2"=list("123"=c(1,2,3),"45"=c(4,5))))
+
 list_graph <-list("a"=list("title"="Effect of age difference",
                            "x_axis"="diff_age",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),
@@ -169,6 +179,7 @@ model_fp<-function(paths_=paths,
                    list_wave_=list_wave,
                    list_covar_=list_covar,
                    list_mod_=list_mod,
+                   list_tanner_=list_tanner,
                    list_graph_=list_graph,
                    subset_subj_=subset_subj
                    ){
@@ -293,6 +304,18 @@ model_fp<-function(paths_=paths,
       df_out_aic<-rbind(df_out_aic,df_out_aic_add)
       
       # Calculate ANCOVA
+      df_join_grp_tanner<-df_join_grp
+      for (group_tanner in names(list_tanner_)){
+        for (ses in c(1,2)){
+          list_tanner_ses<-names(list_tanner_[[group_tanner]][[as.character(ses)]])
+          for (label_tanner in list_tanner_ses){
+            list_tanner_ses_group<-list_tanner_[[group_tanner]][[as.character(ses)]][[label_tanner]]
+            #print(list_tanner_ses_group)
+            df_join_grp_tanner[df_join_grp_tanner[paste('ses',as.character(ses),'_tanner',sep='')] %in% list_tanner_ses_group,
+                               paste('ses',as.character(ses),'_tanner_label',sep='')]<-label_tanner
+          }
+        }
+      }
       df_join_grp$long_tanner<-paste(as.character(df_join_grp$ses1_tanner),
                                      as.character(df_join_grp$ses2_tanner),sep="_")
       df_join_grp$long_tanner<-as.factor(df_join_grp$long_tanner)
@@ -333,13 +356,9 @@ model_fp<-function(paths_=paths,
         df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
         
         # Calculate Tukey-Kramer
-        #df_tk<-TukeyHSD(mod_ancova,which='long_tanner')[[1]]
-        #df_out_ancova_add<-data.frame(atlas=atlas,group=group,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=rownames(df_tk),
-        #                              p=df_tk[,'p adj'],F=NA,diff=df_tk[,'diff'],ci_l=df_tk[,'lwr'],ci_u=df_tk[,'upr'])
         tk<-summary(glht(mod_ancova, linfct = mcp('long_tanner' = 'Tukey')))$test
         df_out_ancova_add<-data.frame(atlas=atlas,group=group,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=names(tk$coefficients),
                                       p=tk$pvalues[1:length(tk$coefficients)],t=tk$tstat,F=NA,diff=tk$coefficients,sigma=tk$sigma)
-        
         df_out_ancova<-rbind(df_out_ancova,df_out_ancova_add)
       }
       
