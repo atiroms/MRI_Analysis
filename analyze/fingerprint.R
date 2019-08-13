@@ -12,8 +12,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-"103_fp_acompcor"
-dir_out<-"104_fp_id_acompcor"
-#dir_out<-"105_fp_model_acompcor"
+#dir_out<-"104_fp_id_acompcor"
+dir_out<-"105_fp_model_acompcor"
 
 #dir_in<-"113_fp_aroma"
 #dir_out<-"115_fp_model_aroma"
@@ -75,7 +75,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                     "color"="steelblue2","alpha"=1),
                                         "Female"=list("subset"=list("sex"=2),
                                                       "color"="lightcoral","alpha"=1))),
-                  "st"=list("title"="Effect of Tanner stage difference",
+                  "tdiff"=list("title"="Effect of Tanner stage difference",
                             "x_axis"="diff_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -85,24 +85,36 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))),
-                  "sat"=list("title"="Age difference-Tanner stage difference interaction",
-                             "x_axis"="diff_age",
-                             "smooth"=list("Male delta TS = -1"=list("fix"=list("sex"=1,"diff_tanner"=-1),
-                                                              "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
-                                           "Male delta TS = 1"=list("fix"=list("sex"=1,"diff_tanner"=1),
-                                                              "color"="steelblue2","alpha"=0.7,"ribbon"=F),
-                                           "Male delta TS = 3"=list("fix"=list("sex"=1,"diff_tanner"=3),
-                                                              "color"="steelblue2","alpha"=1,"ribbon"=F),
-                                           "Female delta TS = -1"=list("fix"=list("sex"=2,"diff_tanner"=-1),
-                                                                "color"="lightcoral","alpha"=0.4,"ribbon"=F),
-                                           "Female delta TS = 1"=list("fix"=list("sex"=2,"diff_tanner"=1),
-                                                                "color"="lightcoral","alpha"=0.7,"ribbon"=F),
-                                           "Female delta TS = 3"=list("fix"=list("sex"=2,"diff_tanner"=3),
-                                                                "color"="lightcoral","alpha"=1,"ribbon"=F)),
-                             "point"=list("Male"=list("subset"=list("sex"=1),
-                                                      "color"="steelblue2","alpha"=1),
-                                          "Female"=list("subset"=list("sex"=2),
-                                                        "color"="lightcoral","alpha"=1))))
+                  "tmean"=list("title"="Effect of Tanner stage mean",
+                            "x_axis"="mean_tanner",
+                            "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                          "Female"=list("fix"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                            "point"=list("Male"=list("subset"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1),
+                                         "Female"=list("subset"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1))),
+                  "t1"=list("title"="Effect of 1st wave Tanner stage",
+                            "x_axis"="ses1_tanner",
+                            "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                          "Female"=list("fix"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                            "point"=list("Male"=list("subset"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1),
+                                         "Female"=list("subset"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1))),
+                  "t2"=list("title"="Effect of 2nd wave Tanner stage",
+                            "x_axis"="ses2_tanner",
+                            "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                          "Female"=list("fix"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                            "point"=list("Male"=list("subset"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1),
+                                         "Female"=list("subset"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1))))
 
 list_tanner <-list("25"=
                      list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
