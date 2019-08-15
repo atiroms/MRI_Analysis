@@ -287,7 +287,7 @@ model_fp<-function(paths_=paths,
       df_join<-rbind(df_join,df_join_grp)
       
       # Calculate GLM
-      print(paste("Atlas: ",atlas,", group: ",group,", GLM.",  sep=""))
+      print(paste("Atlas: ",atlas,", group: ",group,", GLM/GAM.",  sep=""))
       list_mod_gamm<-list()
       df_out_aic_add<-data.frame()
       for (mod in names(list_mod_)){
@@ -330,7 +330,7 @@ model_fp<-function(paths_=paths,
             }
             
             plot<-(plot
-                   + ggtitle(list_graph_[[idx_graph]][["title"]])
+                   + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,group,mod,sep=" "))
                    + xlab(label_x)
                    + ylab("Fingerprint correlation")
                    + theme(legend.position = "none"))
@@ -464,7 +464,7 @@ identify_fp<-function(paths_=paths,
       plot_fp_exist_twice<-plot_cor_heatmap(input=df_fp_exist_twice_plot)
       suppressMessages(plot_fp_exist_twice<-(plot_fp_exist_twice
                                              + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                             + ggtitle(paste("Longitudinal fingerprint correlation, ",atlas,": ",group,sep=""))
+                                             + ggtitle(paste("Longitudinal fingerprint correlation,",atlas,group,sep=" "))
                                              + xlab("2nd wave")
                                              + ylab("1st wave")
                                              + theme(plot.title = element_text(hjust = 0.5))))

@@ -143,7 +143,7 @@ fc_core<-function(data_ts){
   # Heatmap plot of FC correlation matrix
   plot_fc_heatmap<-plot_cor_heatmap(input=df_fc_roilabel)
   plot_fc_heatmap<-(plot_fc_heatmap
-                    + ggtitle(paste(sprintf("Subject %05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))
+                    + ggtitle(paste("Functional connectivity, wave",as.character(ses),sprintf("%05d", id_subj),atlas,sep=" "))
                     + theme(plot.title = element_text(hjust = 0.5),
                             axis.title=element_blank()))
   

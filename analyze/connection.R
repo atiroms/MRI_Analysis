@@ -225,7 +225,7 @@ fp_core<-function(data_zr){
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
   suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
                                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                     + ggtitle(paste("Fingerprint correlation,",atlas,":",group,sep=" "))
+                                     + ggtitle(paste("Fingerprint correlation,",atlas,group,sep=" "))
                                      + theme(plot.title = element_text(hjust = 0.5),
                                              axis.title=element_blank())))
   
@@ -251,6 +251,8 @@ fp<-function(paths_=paths,
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    df_edge$from<-as.character(df_edge$from)
+    df_edge$to<-as.character(df_edge$to)
     
     # Examine existing subject IDs and sessions in connection data
     list_ses_exist <- sort(unique(df_conn$ses))
