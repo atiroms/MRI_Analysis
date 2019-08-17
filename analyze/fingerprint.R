@@ -13,7 +13,9 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"103_fp_acompcor"
 #dir_out<-"104_fp_id_acompcor"
-dir_out<-"105_fp_model_acompcor"
+#dir_out<-"105_fp_model_acompcor"
+dir_out<-"108_fp_model_acompcor_test"
+
 
 #dir_in<-"113_fp_aroma"
 #dir_out<-"115_fp_model_aroma"
@@ -194,22 +196,101 @@ ancova_core<-function(data_input){
   atlas<-data_input$atlas
   group=data_input$group_network
   group_tanner<-data_input$group_tanner
+  group_tanner_content<-data_input$group_tanner_content
   id_sex<-data_input$group_sex
   df_src_ancova<-data_input$df_src_ancova
+  
+  # Calculate ANCOVA
   if (id_sex=="all"){
     mod_ancova<-aov(value~long_tanner+diff_age+sex,data=df_src_ancova)
   }else{
     mod_ancova<-aov(value~long_tanner+diff_age,data=df_src_ancova)
   }
   df_ancova<-summary(mod_ancova)[[1]]
-  df_out_ancova<-data.frame(atlas=atlas,group=group,tanner=group_tanner,sex=id_sex,test="ANCOVA",term=rownames(df_ancova),comparison=NA,
-                                p=df_ancova[,'Pr(>F)'],t=NA,F=df_ancova[,'F value'],diff=NA,sigma=NA)
+  df_out_ancova<-data.frame(atlas=atlas,group=group,tanner=group_tanner,sex=id_sex,test="ANCOVA",
+                            term=rownames(df_ancova),label=NA,
+                            p=df_ancova[,'Pr(>F)'],t=NA,F=df_ancova[,'F value'],
+                            fit=NA,diff=NA,sigma=NA)
+  
+  # Extract fitting of ANCOVA
+  fit_ancova<-mod_ancova$coefficients
+  list_term<-names(mod_ancova$model)
+  list_term<-c("(Intercept)",list_term[list_term!="value"])
+  #list_term<-list_term[list_term!="value"]
+  df_out_fit<-NULL
+  for (term in list_term){
+    if (term %in% names(mod_ancova$xlevels)){
+      list_label<-mod_ancova$xlevels[[term]]
+    }else{
+      list_label<-NA
+    }
+    
+    for (label in list_label){
+      if (is.na(label)){
+        term_label<-term
+      }else{
+        term_label<-paste(term,label,sep='')
+      }
+      if (term_label %in% names(mod_ancova$coefficients)){
+        fit<-mod_ancova$coefficients[[term_label]]
+      }else{
+        fit<-0
+      }
+      df_out_fit<-rbind(df_out_fit,
+                        data.frame(atlas=atlas,group=group,tanner=group_tanner,sex=id_sex,test="fit",
+                                   term=term,label=label,
+                                   p=NA,t=NA,F=NA,
+                                   fit=fit,diff=NA,sigma=NA))
+    }
+  }
+  
+  # Graphical output of ANCOVA tanner result
+  mean_fit<-df_out_fit[df_out_fit$term=="(Intercept)","fit"]
+  for (term in list_term[list_term!="(Intercept)" & list_term!="long_tanner"]){
+    list_label<-df_out_fit[df_out_fit$term==term,"label"]
+    if (is.na(list_label[1])){
+      mean_fit<-mean_fit+mean(df_src_ancova[,term]*df_out_fit[df_out_fit$term==term,"fit"])
+    }else{
+      list_label<-sort(unique(list_label))
+      df_calc_mean<-data.frame(df_out_fit[df_out_fit$term==term & df_out_fit$label==list_label,c("label","fit")])
+      df_src_ancova_mean<-df_src_ancova
+      colnames(df_src_ancova_mean)[colnames(df_src_ancova_mean)==term]<-"label"
+      df_src_ancova_mean$label<-as.character(df_src_ancova_mean$label)
+      df_calc_mean<-left_join(df_src_ancova_mean,df_calc_mean,by="label")
+      mean_fit<-mean_fit+mean(df_calc_mean$fit)
+    }
+  }
+  
+  df_ancova_plot<-data.frame(matrix(nrow=length(group_tanner_content[["1"]]),
+                                    ncol=length(group_tanner_content[["2"]])))
+  rownames(df_ancova_plot)<-names(group_tanner_content[["1"]])
+  colnames(df_ancova_plot)<-names(group_tanner_content[["2"]])
+  for(group_tanner_1 in names(group_tanner_content[["1"]])){
+    for(group_tanner_2 in names(group_tanner_content[["2"]])){
+      mean_fit_tanner<-df_out_fit[df_out_fit$term=="long_tanner" & df_out_fit$label==paste(group_tanner_1,group_tanner_2,sep="_"),"fit"]
+      if (length(mean_fit_tanner)>0){
+        df_ancova_plot[group_tanner_1,group_tanner_2]<-mean_fit+mean_fit_tanner
+      }else{
+        df_ancova_plot[group_tanner_1,group_tanner_2]<-NA
+      }
+    }
+  }
+  plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
+  suppressMessages(plot_ancova<-(plot_ancova
+                                 + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                                 + ggtitle(paste("Fingerprint correlation,",atlas,group,sep=" "))
+                                 + theme(plot.title = element_text(hjust = 0.5),
+                                         axis.title=element_blank())))
+  
+  
   
   # Calculate Tukey-Kramer
   tk<-summary(glht(mod_ancova, linfct = mcp('long_tanner' = 'Tukey')))$test
-  df_out_posthoc<-data.frame(atlas=atlas,group=group,tanner=group_tanner,sex=id_sex,test="Tukey-Kramer",term="long_tanner",comparison=names(tk$coefficients),
-                                p=tk$pvalues[1:length(tk$coefficients)],t=tk$tstat,F=NA,diff=tk$coefficients,sigma=tk$sigma)
-  df_out<-rbind(df_out_ancova,df_out_posthoc)
+  df_out_posthoc<-data.frame(atlas=atlas,group=group,tanner=group_tanner,sex=id_sex,test="Tukey-Kramer",
+                             term="long_tanner",label=names(tk$coefficients),
+                             p=tk$pvalues[1:length(tk$coefficients)],t=tk$tstat,F=NA,
+                             fit=NA,diff=tk$coefficients,sigma=tk$sigma)
+  df_out<-rbind(df_out_ancova,df_out_fit,df_out_posthoc)
   return(df_out)
 }
 
@@ -345,7 +426,7 @@ model_fp<-function(paths_=paths,
       df_out_aic_add[which(df_out_aic_add$aic==min(df_out_aic_add$aic)),'aic_best_among_models']<-1
       df_out_aic<-rbind(df_out_aic,df_out_aic_add)
       
-      # Calculate ANCOVA
+      # Prepare ANCOVA calculation for later parallel computing
       print(paste("Atlas: ",atlas,", group: ",group,", ANCOVA preparation.",  sep=""))
       # Create list of input dataframes for parallel ANCOVA calculation
       for (group_tanner in names(list_tanner_)){
@@ -371,6 +452,7 @@ model_fp<-function(paths_=paths,
                              list(list("atlas"=atlas,
                                        "group_network"=group,
                                        "group_tanner"=group_tanner,
+                                       "group_tanner_content"=list_tanner_[[group_tanner]],
                                        "group_sex"=id_sex,
                                        "df_src_ancova"=df_join_grp_tanner_sex)))
         }
@@ -387,7 +469,7 @@ model_fp<-function(paths_=paths,
   n_cluster<-min(floor(detectCores()*3/4),length(list_src_ancova))
   clust<-makeCluster(n_cluster)
   clusterExport(clust,
-                varlist=c("aov","summary","glht","mcp"),
+                varlist=c("aov","summary","glht","mcp","left_join"),
                 envir=environment())
   list_df_ancova<-parLapply(clust,list_src_ancova,ancova_core)
   stopCluster(clust)
