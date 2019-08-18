@@ -277,7 +277,7 @@ ancova_core<-function(data_input){
   }
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
-                                 + scale_fill_viridis(name="N")
+                                 + scale_fill_viridis(name="r")
                                  + ggtitle(paste("Fingerprint correlation prediction,",atlas,group,id_sex,sep=" "))
                                  + xlab("2nd wave")
                                  + ylab("1st wave")
@@ -285,10 +285,8 @@ ancova_core<-function(data_input){
                                          axis.text.x = element_text(size=8,angle = 0,vjust=0,hjust=0.5),
                                          axis.text.y = element_text(size=8))))
   
-  ggsave(paste("atlas-",atlas,"_grp-",group,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_grp-",group,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
-  
-  
   
   # Calculate Tukey-Kramer
   tk<-summary(glht(mod_ancova, linfct = mcp('long_tanner' = 'Tukey')))$test
