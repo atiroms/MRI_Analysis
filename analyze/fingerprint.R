@@ -277,10 +277,16 @@ ancova_core<-function(data_input){
   }
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
-                                 + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                 + ggtitle(paste("Fingerprint correlation,",atlas,group,sep=" "))
+                                 + scale_fill_viridis(name="N")
+                                 + ggtitle(paste("Fingerprint correlation prediction,",atlas,group,id_sex,sep=" "))
+                                 + xlab("2nd wave")
+                                 + ylab("1st wave")
                                  + theme(plot.title = element_text(hjust = 0.5),
-                                         axis.title=element_blank())))
+                                         axis.text.x = element_text(size=8,angle = 0,vjust=0,hjust=0.5),
+                                         axis.text.y = element_text(size=8))))
+  
+  ggsave(paste("atlas-",atlas,"_grp-",group,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot,device=cairo_ps,
+         path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
   
   
   
@@ -469,7 +475,12 @@ model_fp<-function(paths_=paths,
   n_cluster<-min(floor(detectCores()*3/4),length(list_src_ancova))
   clust<-makeCluster(n_cluster)
   clusterExport(clust,
-                varlist=c("aov","summary","glht","mcp","left_join"),
+                varlist=c("aov","summary","glht","mcp","left_join","paths_",
+                          "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                          "ggplot","aes","geom_tile","scale_fill_gradientn",
+                          "matlab.like2","scale_y_discrete","scale_x_discrete",
+                          "theme_light","theme","element_text","element_blank",
+                          "ggtitle","ggsave","scale_fill_viridis","xlab","ylab"),
                 envir=environment())
   list_df_ancova<-parLapply(clust,list_src_ancova,ancova_core)
   stopCluster(clust)
