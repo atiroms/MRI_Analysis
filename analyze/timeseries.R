@@ -74,7 +74,7 @@ source(file.path(paths$script,"util/plot.R"))
 #**************************************************
 #func_data_timeseries<-function(paths,data_clinical,subset_roi,atlas_=atlas){
 func_data_timeseries<-function(paths__,atlas_=atlas){
-  print("Starting to load timeseries data.")
+  #print("Starting to load timeseries data.")
   df_timeseries <- read.csv(file.path(paths__$input,"output",paste("atl-",atlas_,"_ts.csv",sep="")))
   #df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
   #                                          data_clinical_$list_id_subj),]
@@ -111,7 +111,7 @@ func_data_timeseries<-function(paths__,atlas_=atlas){
                  "list_id_subj_exist"=list_id_subj_exist,
                  "n_subj_exist"=n_subj_exist,
                  "list_ses_exist"=list_ses_exist)
-  print("Finished loading timeseries data.")
+  #print("Finished loading timeseries data.")
   return(output)
 }
 
@@ -143,7 +143,7 @@ fc_core<-function(data_ts){
   # Heatmap plot of FC correlation matrix
   plot_fc_heatmap<-plot_cor_heatmap(input=df_fc_roilabel)
   plot_fc_heatmap<-(plot_fc_heatmap
-                    + ggtitle(paste(sprintf("Subject %05d", id_subj),"Wave",as.character(ses),"Functional Connectivity",sep=" "))
+                    + ggtitle(paste("Functional connectivity, wave",as.character(ses),sprintf("%05d", id_subj),atlas,sep=" "))
                     + theme(plot.title = element_text(hjust = 0.5),
                             axis.title=element_blank()))
   
@@ -152,7 +152,7 @@ fc_core<-function(data_ts){
          plot=plot_fc_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
-  print(paste("Finished Wave: ",as.character(ses),", Subject: ",as.character(id_subj),sep=""))
+  #print(paste("Finished Wave: ",as.character(ses),", Subject: ",as.character(id_subj),sep=""))
   
   return(path_file_tmp)
 }
@@ -165,7 +165,7 @@ fc<-function(paths_=paths,
   nullobj<-func_createdirs(paths_)
   
   for (atlas in list_atlas_){
-    print(paste("Starting to calculate atlas: ",atlas,sep=""))
+    print(paste("Atlas: ",atlas,", loading data.",sep=""))
     data_timeseries<-func_data_timeseries(paths__=paths_,atlas_=atlas)
     
     # Split timeseries data to each session/subject as input for parallel processing
@@ -180,6 +180,7 @@ fc<-function(paths_=paths,
     list_label_roi<-data_timeseries$list_label_roi
     
     # Parallel computing of fc for each subject/session
+    print(paste("Atlas: ",atlas,", calculating FC in parallel.",sep=""))
     clust<-makeCluster(floor(detectCores()*3/4))
     clusterExport(clust,
                   varlist=c("paths_","atlas","list_label_roi","func_cor",
@@ -193,7 +194,7 @@ fc<-function(paths_=paths,
     stopCluster(clust)
     
     # Bind results in temporary files
-    print("Starting to bind all subject results.")
+    print(paste("Atlas: ",atlas,", binding results."))
     df_fc_stack<-data.frame()
     for (path_tmp in list_path_tmp){
       df_tmp<-read.csv(path_tmp)
@@ -205,7 +206,7 @@ fc<-function(paths_=paths,
     write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
     df_fc_stack<-NULL
     #print("Finished saving all subject results.")
-    print(paste("Finished calculating for atlas: ",atlas, sep=""))
+    #print(paste("Finished calculating for atlas: ",atlas, sep=""))
   }
   print("Finished fc().")
 }

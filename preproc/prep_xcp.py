@@ -150,51 +150,52 @@ class XCPScript():
 
 class PrepXCP():
     def __init__(self,
+        skip_log_copy=True,
         skip_fmriprep_copy=True,
-        skip_fmriprep_moveanat=False,
+        skip_fmriprep_moveanat=True,
         n_proc=20,
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
-        #file_id='69_id_c1_t1exist_rsfmriexist.csv',
-        #ses='ses-01',
-        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_fconly_noqcfc.dsn',
+        path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
+        file_id='69_id_c1_t1exist_rsfmriexist.csv',
+        ses='ses-01',
+        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        file_design='fc-acompcor_fconly_noqcfc_shen.dsn',
 
         #path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         #path_exp='/media/veracrypt1/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_fconly_noqcfc.dsn',
+        #file_design='fc-acompcor_fconly_noqcfc_shen.dsn',
 
-        path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
-        file_id='69_id_c1_t1exist_rsfmriexist.csv',
-        ses='ses-01',
-        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        file_design='fc-aroma_fconly_noqcfc.dsn',
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
+        #file_id='69_id_c1_t1exist_rsfmriexist.csv',
+        #ses='ses-01',
+        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #file_design='fc-aroma_fconly_noqcfc_shen.dsn',
 
         #path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         #path_exp='/media/veracrypt1/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-aroma_fconly_noqcfc.dsn',
+        #file_design='fc-aroma_fconly_noqcfc_shen.dsn',
 
         #path_fmriprep='/media/veracrypt3/MRI_img/pnTTC/preproc/67_c1_fmriprep',
         #path_exp='/media/veracrypt3/MRI_img/pnTTC/preproc/191_c1_xcp_36p',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
+        #file_design='fc-36p_spkreg_fconly_noqcfc_shen.dsn',
 
         #path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         #path_exp='/media/veracrypt1/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
+        #file_design='fc-36p_spkreg_fconly_noqcfc_shen.dsn',
 
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
@@ -212,7 +213,8 @@ class PrepXCP():
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
         path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
         #path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
-        script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
+        script='export BRAINSPACE="${HOME}/data/input/space"\nexport BRAINATLAS="${HOME}/data/input/atlas"\nsingularity run -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
+        #script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
 
         print('Starting PrepXCP().')
@@ -231,11 +233,12 @@ class PrepXCP():
         print('Finished creating experiment folder.')
 
         # Copy fmriprep log file
-        print('Starting to copy fMRIPrep log folder.')
-        path_log_in=os.path.join(path_fmriprep,'log')
-        path_log_out=os.path.join(path_exp,'log')
-        shutil.copytree(path_log_in,path_log_out)
-        print('Finished copying fMRIPrep log folder.')
+        if not skip_log_copy:
+            print('Starting to copy fMRIPrep log folder.')
+            path_log_in=os.path.join(path_fmriprep,'log')
+            path_log_out=os.path.join(path_exp,'log')
+            shutil.copytree(path_log_in,path_log_out)
+            print('Finished copying fMRIPrep log folder.')
 
         # Create XCP cohort file
         _=CreateCohortfile(n_proc=n_proc,

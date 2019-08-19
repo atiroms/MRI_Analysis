@@ -18,11 +18,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_out<-"59_pca_fc"
 #dir_out<-"58_fp_acompcor"
 
-#dir_in<-"102_fc_acompcor"
-#dir_out<-"103_fp_acompcor"
+dir_in<-"102_fc_acompcor"
+dir_out<-"103_fp_acompcor"
 
-dir_in<-"59_fc_test"
-dir_out<-"60_fp_test"
+#dir_in<-"59_fc_test"
+#dir_out<-"60_fp_test"
 
 list_wave <- c(1,2)
 
@@ -195,7 +195,6 @@ fp_core<-function(data_zr){
   group<-data_zr$group
   df_zr<-data_zr$df_zr
   n_edge<-dim(df_zr)[1]
-  print(paste("Atlas: ",atlas,", group: ",group, ".",sep=""))
   
   # Calculate correlation matrix
   data_fingerprint<-func_cor(input=df_zr)
@@ -224,11 +223,11 @@ fp_core<-function(data_zr){
   
   # Heatmap plot of fp correlation matrix
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
-  plot_fp_heatmap<-(plot_fp_heatmap
-                    + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                    + ggtitle(paste("Fingerprint correlation,",atlas,":",group,sep=" "))
-                    + theme(plot.title = element_text(hjust = 0.5),
-                            axis.title=element_blank()))
+  suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
+                                     + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                                     + ggtitle(paste("Fingerprint correlation,",atlas,group,sep=" "))
+                                     + theme(plot.title = element_text(hjust = 0.5),
+                                             axis.title=element_blank())))
   
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
@@ -252,6 +251,8 @@ fp<-function(paths_=paths,
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    df_edge$from<-as.character(df_edge$from)
+    df_edge$to<-as.character(df_edge$to)
     
     # Examine existing subject IDs and sessions in connection data
     list_ses_exist <- sort(unique(df_conn$ses))
@@ -313,7 +314,8 @@ fp<-function(paths_=paths,
     }
     
     # Parallel fingerprint correlation computing over groups of subnetworks
-    clust<-makeCluster(floor(detectCores()*3/4))
+    n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
+    clust<-makeCluster(n_cluster)
     clusterExport(clust,
                   varlist=c("paths_","atlas","func_cor","df_ses_subj",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",

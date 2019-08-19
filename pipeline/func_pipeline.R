@@ -49,23 +49,17 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 # Parameters ======================================
 #**************************************************
 
-id_dir_ts<-101
+id_dir_ts<-201
 suffix_dir<-"acompcor"
 
-#id_dir_ts<-111
+#id_dir_ts<-211
 #suffix_dir<-"aroma"
 
-#id_dir_ts<-121
+#id_dir_ts<-221
 #suffix_dir<-"36p"
 
 list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
-#list_atlas<-"glasser360"
-#list_atlas<-"gordon333"
-#list_atlas<-"power264"
-#list_atlas<-"schaefer100"
-#list_atlas<-"schaefer200"
-#list_atlas<-"schaefer400"
+
 n_permutation<-1000
 #n_permutation<-100
 
@@ -82,19 +76,23 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                  "sex"=list("1"="Sex",
                             "2"="Sex",
                             "label"="Sex"))
-list_mod <- list("lin_diff_a"=
-                   "value ~ diff_age + sex",
-                 "lin_diff_t"=
+list_mod <- list("lin_diff_t"=
                    "value ~ sex + sex:diff_tanner",
                  "lin_diff_at"=
                    "value ~ diff_age + sex + sex:diff_tanner",
-                 "add_diff_a"=
-                   "value ~ s(diff_age,k=3) + sex",
+                 "lin_diff_at_mean_t"=
+                   "value ~ diff_age + sex + sex:mean_tanner + sex:diff_tanner",
+                 "lin_diff_a_ses_t"=
+                   "value ~ diff_age + sex + sex:ses1_tanner + sex:ses2_tanner",
                  "add_diff_t"=
                    "value ~ sex + s(diff_tanner,k=3,by=sex)",
                  "add_diff_at"=
-                   "value ~ s(diff_age,k=3) + sex + s(diff_tanner,k=3,by=sex)"
-                 )
+                   "value ~ s(diff_age,k=3) + sex + s(diff_tanner,k=3,by=sex)",
+                 "add_diff_at_mean_t"=
+                   "value ~ s(diff_age,k=3) + sex + s(mean_tanner,k=3,by=sex) + s(diff_tanner,k=3,by=sex)",
+                 "add_diff_a_ses_t"=
+                   "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
+
 list_graph <-list("a"=list("title"="Effect of age difference",
                            "x_axis"="diff_age",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),
@@ -105,8 +103,28 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                     "color"="steelblue2","alpha"=1),
                                         "Female"=list("subset"=list("sex"=2),
                                                       "color"="lightcoral","alpha"=1))),
-                  "st"=list("title"="Effect of Tanner stage difference",
-                            "x_axis"="diff_tanner",
+                  "tdiff"=list("title"="Effect of Tanner stage difference",
+                               "x_axis"="diff_tanner",
+                               "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                         "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                             "Female"=list("fix"=list("sex"=2),
+                                                           "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                               "point"=list("Male"=list("subset"=list("sex"=1),
+                                                        "color"="steelblue2","alpha"=1),
+                                            "Female"=list("subset"=list("sex"=2),
+                                                          "color"="lightcoral","alpha"=1))),
+                  "tmean"=list("title"="Effect of Tanner stage mean",
+                               "x_axis"="mean_tanner",
+                               "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                         "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                             "Female"=list("fix"=list("sex"=2),
+                                                           "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                               "point"=list("Male"=list("subset"=list("sex"=1),
+                                                        "color"="steelblue2","alpha"=1),
+                                            "Female"=list("subset"=list("sex"=2),
+                                                          "color"="lightcoral","alpha"=1))),
+                  "t1"=list("title"="Effect of 1st wave Tanner stage",
+                            "x_axis"="ses1_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
                                           "Female"=list("fix"=list("sex"=2),
@@ -115,24 +133,26 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))),
-                  "sat"=list("title"="Age difference-Tanner stage difference interaction",
-                             "x_axis"="diff_age",
-                             "smooth"=list("Male delta TS = -1"=list("fix"=list("sex"=1,"diff_tanner"=-1),
-                                                                     "color"="Steelblue2","alpha"=0.4,"ribbon"=F),
-                                           "Male delta TS = 1"=list("fix"=list("sex"=1,"diff_tanner"=1),
-                                                                    "color"="steelblue2","alpha"=0.7,"ribbon"=F),
-                                           "Male delta TS = 3"=list("fix"=list("sex"=1,"diff_tanner"=3),
-                                                                    "color"="steelblue2","alpha"=1,"ribbon"=F),
-                                           "Female delta TS = -1"=list("fix"=list("sex"=2,"diff_tanner"=-1),
-                                                                       "color"="lightcoral","alpha"=0.4,"ribbon"=F),
-                                           "Female delta TS = 1"=list("fix"=list("sex"=2,"diff_tanner"=1),
-                                                                      "color"="lightcoral","alpha"=0.7,"ribbon"=F),
-                                           "Female delta TS = 3"=list("fix"=list("sex"=2,"diff_tanner"=3),
-                                                                      "color"="lightcoral","alpha"=1,"ribbon"=F)),
-                             "point"=list("Male"=list("subset"=list("sex"=1),
-                                                      "color"="steelblue2","alpha"=1),
-                                          "Female"=list("subset"=list("sex"=2),
-                                                        "color"="lightcoral","alpha"=1))))
+                  "t2"=list("title"="Effect of 2nd wave Tanner stage",
+                            "x_axis"="ses2_tanner",
+                            "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
+                                          "Female"=list("fix"=list("sex"=2),
+                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                            "point"=list("Male"=list("subset"=list("sex"=1),
+                                                     "color"="steelblue2","alpha"=1),
+                                         "Female"=list("subset"=list("sex"=2),
+                                                       "color"="lightcoral","alpha"=1))))
+
+list_tanner <-list("25"=
+                     list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
+                          "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
+                   "9"=
+                     list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
+                          "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
+                   "4"=
+                     list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
+                          "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
 
 #**************************************************
@@ -149,7 +169,7 @@ pipe_func<-function(paths_=paths,
                     list_atlas_=list_atlas,
                     list_wave_=list_wave,
                     list_covar_=list_covar,
-                    list_mod_=list_mod,list_graph_=list_graph,
+                    list_mod_=list_mod,list_graph_=list_graph,list_tanner_=list_tanner,
                     subset_subj_=subset_subj,
                     n_permutation_=n_permutation){
   
@@ -186,9 +206,9 @@ pipe_func<-function(paths_=paths,
   dir_out<-paste(as.character(id_dir_gamfp),"fp_model",suffix_dir_,sep='_')
   paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
   nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
-                         list_wave_=list_wave_,list_covar_=list_covar_,
-                         list_mod_=list_mod_,list_graph_=list_graph_,
-                         subset_subj_=subset_subj_)
+                    list_wave_=list_wave_,list_covar_=list_covar_,
+                    list_mod_=list_mod_,list_graph_=list_graph_,list_tanner=list_tanner_,
+                    subset_subj_=subset_subj_)
   
   print('Finished pipe_func().')
 }

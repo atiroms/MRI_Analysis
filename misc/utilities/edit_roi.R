@@ -1,4 +1,33 @@
-#
+library(dplyr)
+
+
+dir_exp<-"C:/Users/atiro/Dropbox/temp/Shen_to_ICBM/roi_dictionary/source"
+
+df_out<-data.frame(matrix(nrow=268,ncol=0))
+df_out$number<-1:268
+df_out$atlas<-"shen268"
+df_out$id<-paste(df_out$atlas,sprintf("%05d",df_out$number),sep="_")
+
+df_group<-read.csv(file.path(dir_exp,"shen268CommunityAffiliation.csv"))
+df_roiconvert<-read.csv(file.path(dir_exp,"shen268CommunityNames.csv"))
+
+df_group<-left_join(df_group,df_roiconvert,by="id_group")
+
+df_out<-cbind(df_out,df_group)
+df_out$label<-paste(as.character(df_out$number),df_out$name_group_long,sep=" ")
+df_out$group_1<-df_out$group_2<-df_out$group_3<-df_out$name_group
+df_out$label_short<-NA
+df_out2<-df_out
+df_out<-df_out[,c("id","atlas","number","label_short","label","group_1","group_2","group_3")]
+
+write.csv(df_out,file.path(dir_exp,"roi_shen.csv"),row.names=F)
+
+df_out2$label_xcp<-paste(df_out2$name_group_xcp,as.character(df_out2$number),sep="_")
+df_out2<-df_out2[,c("number","label_xcp")]
+
+write.csv(df_out2,file.path(dir_exp,"label_xcp_shen.csv"),row.names=F)
+
+####
 
 working_dir <- "G:/MRI/Statistics/Structural_FS"
 setwd(working_dir)
