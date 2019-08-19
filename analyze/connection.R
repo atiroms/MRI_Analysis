@@ -192,6 +192,7 @@ pca_fc<-function(paths_=paths,
 
 # Core function for parallelization of fp_fc()
 fp_fc_core<-function(data_zr){
+  measure<-"fc"
   group<-data_zr$group
   df_zr<-data_zr$df_zr
   df_ses_subj<-data_zr$df_ses_subj
@@ -212,7 +213,7 @@ fp_fc_core<-function(data_zr){
     df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
   }
   df_fp_subnet$group<-group
-  df_fp_subnet<-df_fp_subnet[c("group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+  df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
   
   # rbind to output dataframe
   #df_fp<-rbind(df_fp,df_fp_subnet)
@@ -226,12 +227,12 @@ fp_fc_core<-function(data_zr){
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
   suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
                                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                     + ggtitle(paste("Fingerprint correlation,",atlas,group,sep=" "))
+                                     + ggtitle(paste("FP Cor,",atlas,measure,group,sep=" "))
                                      + theme(plot.title = element_text(hjust = 0.5),
                                              axis.title=element_blank())))
   
   # Save heatmap plot
-  ggsave(paste("atl-",atlas,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)

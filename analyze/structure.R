@@ -9,7 +9,7 @@
 # Parameters ======================================
 #**************************************************
 
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/fs"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 #dir_in <-"01_extract"
 #dir_out <-"02_glm"
 dir_in <-"31_meas"
@@ -118,12 +118,12 @@ fp_str_core<-function(data_str){
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
   suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
                                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                     + ggtitle(paste("Fingerprint correlation,",measure,group,sep=" "))
+                                     + ggtitle(paste("Fingerprint correlation,",atlas,measure,group,sep=" "))
                                      + theme(plot.title = element_text(hjust = 0.5),
                                              axis.title=element_blank())))
   
   # Save heatmap plot
-  ggsave(paste("meas-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
@@ -131,7 +131,7 @@ fp_str_core<-function(data_str){
 
 # Main function for fingerprint computing
 fp_str<-function(paths_=paths,
-                 list_atlas_=list_atlas,
+                 atlas="dk",
                  key_roigroup="group_3"){
   print("Starting fp_str().")
   nullobj<-func_createdirs(paths_)
@@ -182,8 +182,8 @@ fp_str<-function(paths_=paths,
       }
       n_roi_group<-dim(df_roi_group)[1]
       
-      if (n_roi_group<4){
-        print(paste("Measure: ",measure,", group: ",group, ", nodes: ",as.character(n_roi_group)," < 4, fp calculation skipped.",sep=""))
+      if (n_roi_group<5){
+        print(paste("Measure: ",measure,", group: ",group, ", nodes: ",as.character(n_roi_group)," < 5, fp calculation skipped.",sep=""))
       }else{
         # Create combined dataframe of structural measures
         # Also create dataframe of sessions and subjects
@@ -208,10 +208,11 @@ fp_str<-function(paths_=paths,
   }
   
   # Parallel fingerprint correlation computing over groups of subnetworks
+  print("Calculating structure fingerprint correlation in parallel.")
   n_cluster<-min(floor(detectCores()*3/4),length(list_data_str))
   clust<-makeCluster(n_cluster)
   clusterExport(clust,
-                varlist=c("paths_","func_cor",
+                varlist=c("paths_","func_cor","atlas",
                           "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                           "ggplot","aes","geom_tile","scale_fill_gradientn",
                           "matlab.like2","scale_y_discrete","scale_x_discrete",
@@ -230,7 +231,7 @@ fp_str<-function(paths_=paths,
   }
   
   # Save fingerprint correlation
-  write.csv(df_fp,file.path(paths_$output,"output","fp.csv"),row.names=F)
+  write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
   print("Finished fp_str().")
 }
 
