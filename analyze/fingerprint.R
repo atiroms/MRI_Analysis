@@ -335,9 +335,6 @@ model_fp<-function(paths_=paths,
     # Load fingerprint data
     df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep="")))
     
-    
-    ####
-    
     list_measure<-sort(unique(df_fp$measure))
     df_join<-NULL
     for (measure in list_measure){
@@ -361,7 +358,9 @@ model_fp<-function(paths_=paths,
       n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
       
       list_group<-sort(unique(as.character(df_fp_meas$group)))
-      list_group<-c("whole",list_group[list_group!="whole"])
+      if ("whole" %in% list_group){
+        list_group<-c("whole",list_group[list_group!="whole"])
+      }
                     
       for (group in list_group){
         # Collect longitudinal fp correlation data
@@ -566,7 +565,10 @@ identify_fp<-function(paths_=paths,
       # Output subset with longitudinal data
       write.csv(df_fp_exist_twice,file.path(paths_$output,"output",paste("atl-",atlas,"_mea-",measure,"_fp_input_subset.csv",sep="")),row.names=F)
       
-      list_group<-as.character(unique(df_fp_exist_twice$group))
+      list_group<-sort(unique(as.character(df_fp_exist_twice$group)))
+      if ("whole" %in% list_group){
+        list_group<-c("whole",list_group[list_group!="whole"])
+      }
       
       # Correlation matrix graphical output
       for (group in list_group){
