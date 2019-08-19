@@ -71,7 +71,7 @@ list_mod <- list("lin_diff_t"=
 #                 "linear_mixed"=
 #                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')")
 
-list_graph <-list("a"=list("title"="Effect of age difference",
+list_graph <-list("a"=list("title"="Age diff effect",
                            "x_axis"="diff_age",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -81,7 +81,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                     "color"="steelblue2","alpha"=1),
                                         "Female"=list("subset"=list("sex"=2),
                                                       "color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Effect of Tanner stage difference",
+                  "tdiff"=list("title"="Tanner diff effect",
                             "x_axis"="diff_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -91,7 +91,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Effect of Tanner stage mean",
+                  "tmean"=list("title"="Tanner mean effect",
                             "x_axis"="mean_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -101,7 +101,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))),
-                  "t1"=list("title"="Effect of 1st wave Tanner stage",
+                  "t1"=list("title"="1st Tanner effect",
                             "x_axis"="ses1_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -111,7 +111,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))),
-                  "t2"=list("title"="Effect of 2nd wave Tanner stage",
+                  "t2"=list("title"="2nd Tanner effect",
                             "x_axis"="ses2_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -292,7 +292,7 @@ ancova_core<-function(data_input){
                                          axis.text.x = element_text(size=8,angle = 0,vjust=0,hjust=0.5),
                                          axis.text.y = element_text(size=8))))
   
-  ggsave(paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
   
   # Calculate Tukey-Kramer
@@ -434,7 +434,7 @@ model_fp<-function(paths_=paths,
                      + xlab(label_x)
                      + ylab("Fingerprint correlation")
                      + theme(legend.position = "none"))
-              filename_plot<-paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_mod-",mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
+              filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_mod-",mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
               ggsave(filename_plot,plot=plot,device=cairo_ps,
                      path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
             }
@@ -446,7 +446,7 @@ model_fp<-function(paths_=paths,
         df_out_aic<-rbind(df_out_aic,df_out_aic_add)
         
         # Prepare ANCOVA calculation for later parallel computing
-        print(paste("Atlas: ",atlas,", group: ",group,", ANCOVA preparation.",  sep=""))
+        print(paste("Atlas: ",atlas," Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
         # Create list of input dataframes for parallel ANCOVA calculation
         for (group_tanner in names(list_tanner_)){
           df_join_grp_tanner<-df_join_grp
@@ -563,7 +563,7 @@ identify_fp<-function(paths_=paths,
       df_fp_exist_twice<-df_fp_exist_twice[(df_fp_exist_twice$from_ses==1 & df_fp_exist_twice$to_ses==2),]
       
       # Output subset with longitudinal data
-      write.csv(df_fp_exist_twice,file.path(paths_$output,"output",paste("atl-",atlas,"_mea-",measure,"_fp_input_subset.csv",sep="")),row.names=F)
+      write.csv(df_fp_exist_twice,file.path(paths_$output,"output",paste("atl-",atlas,"_msr-",measure,"_fp_input_subset.csv",sep="")),row.names=F)
       
       list_group<-sort(unique(as.character(df_fp_exist_twice$group)))
       if ("whole" %in% list_group){
@@ -583,7 +583,7 @@ identify_fp<-function(paths_=paths,
                                                + xlab("2nd wave")
                                                + ylab("1st wave")
                                                + theme(plot.title = element_text(hjust = 0.5))))
-        ggsave(paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_fp_id.eps",sep=""),plot=plot_fp_exist_twice,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_fp_id.eps",sep=""),plot=plot_fp_exist_twice,device=cairo_ps,
                      path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
       
@@ -668,8 +668,8 @@ identify_fp<-function(paths_=paths,
                                           p_permutation=p_perm,
                                           p_permutation_1_targeted=p_perm_1_tar,p_permutation_2_targeted=p_perm_2_tar))
       }
-      write.csv(df_ident,file.path(paths_$output,"output",paste("atl-",atlas,"_mea-",measure,"_fp_id.csv",sep="")),row.names=F)
-      write.csv(df_perm,file.path(paths_$output,"output",paste("atl-",atlas,"_mea-",measure,"_fp_perm.csv",sep="")),row.names=F)
+      write.csv(df_ident,file.path(paths_$output,"output",paste("atl-",atlas,"_msr-",measure,"_fp_id.csv",sep="")),row.names=F)
+      write.csv(df_perm,file.path(paths_$output,"output",paste("atl-",atlas,"_msr-",measure,"_fp_perm.csv",sep="")),row.names=F)
     }
   }
   write.csv(df_out_combined,file.path(paths_$output,"output","fp_id_summary.csv"),row.names=F)

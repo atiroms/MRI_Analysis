@@ -41,9 +41,9 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                             "2"="Sex",
                             "label"="Sex"))
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
-list_atlas<-"schaefer100"
+#list_atlas<-"schaefer100"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
 
@@ -233,7 +233,7 @@ fp_fc_core<-function(data_zr){
                                              axis.title=element_blank())))
   
   # Save heatmap plot
-  ggsave(paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)

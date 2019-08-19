@@ -118,12 +118,12 @@ fp_str_core<-function(data_str){
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
   suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
                                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                     + ggtitle(paste("Fingerprint correlation,",atlas,measure,group,sep=" "))
+                                     + ggtitle(paste("FP Cor,",atlas,measure,group,sep=" "))
                                      + theme(plot.title = element_text(hjust = 0.5),
                                              axis.title=element_blank())))
   
   # Save heatmap plot
-  ggsave(paste("atl-",atlas,"_mea-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
