@@ -13,11 +13,11 @@
 #path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
-path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_in <- "/media/veracrypt3/MRI_img/pnTTC/preproc"
+#path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
-#path_in <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
-#path_out <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
+path_in <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
 
 #dir_in <-"171_c1_xcp_acompcor"
 #dir_out<-"175_c1_ts_acompcor"
@@ -35,15 +35,16 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #dir_out<-"186_c2_ts_aroma"
 #ses<-'ses-02'
 
-dir_in <-"191_c1_xcp_36p"
-dir_out<-"195_c1_ts_36p"
-ses<-'ses-01'
+#dir_in <-"191_c1_xcp_36p"
+#dir_out<-"195_c1_ts_36p"
+#ses<-'ses-01'
 
-#dir_in <-"192_c2_xcp_36p"
-#dir_out<-"196_c2_ts_36p"
-#ses<-'ses-02'
+dir_in <-"192_c2_xcp_36p"
+dir_out<-"196_c2_ts_36p"
+ses<-'ses-02'
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"shen268"
 #list_atlas<-c("aal116")
 
 #list_id_subj<-c(14,19,26,28,29)
