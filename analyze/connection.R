@@ -212,6 +212,7 @@ fp_fc_core<-function(data_zr){
     df_fp_subnet[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
     df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
   }
+  df_fp_subset$measure<-measure
   df_fp_subnet$group<-group
   df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
   
