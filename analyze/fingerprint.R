@@ -122,13 +122,13 @@ list_graph <-list("a"=list("title"="Age diff effect",
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))))
 
-list_tanner <-list("25"=
+list_tanner <-list("5by5"=
                      list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
                           "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
-                   "9"=
+                   "3by3"=
                      list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
                           "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
-                   "4"=
+                   "2by2"=
                      list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
                           "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
@@ -285,14 +285,14 @@ ancova_core<-function(data_input){
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
                                  + scale_fill_viridis(name="r")
-                                 + ggtitle(paste("FP Cor Model,",atlas,measure,group,id_sex,sep=" "))
+                                 + ggtitle(paste("FP Cor Model,",atlas,measure,group,group_tanner,id_sex,sep=" "))
                                  + xlab("2nd wave")
                                  + ylab("1st wave")
                                  + theme(plot.title = element_text(hjust = 0.5),
                                          axis.text.x = element_text(size=8,angle = 0,vjust=0,hjust=0.5),
                                          axis.text.y = element_text(size=8))))
   
-  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_tan-",group_tanner,"_sex-",id_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
   
   # Calculate Tukey-Kramer
@@ -485,7 +485,7 @@ model_fp<-function(paths_=paths,
   
   
   # Parallel ANCOVA calculation
-  print("Calculating ANCOVA.")
+  print("Calculating ANCOVA in parallel.")
   n_cluster<-min(floor(detectCores()*3/4),length(list_src_ancova))
   clust<-makeCluster(n_cluster)
   clusterExport(clust,

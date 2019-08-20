@@ -145,13 +145,13 @@ list_graph <-list("a"=list("title"="Age diff effect",
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))))
 
-list_tanner <-list("25"=
+list_tanner <-list("5by5"=
                      list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
                           "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
-                   "9"=
+                   "3by3"=
                      list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
                           "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
-                   "4"=
+                   "2by2"=
                      list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
                           "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
