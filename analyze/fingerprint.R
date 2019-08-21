@@ -284,7 +284,7 @@ ancova_core<-function(data_input){
   }
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
-                                 + scale_color_gradient(low="steelblue2",high="lightcoral",name="r")
+                                 + scale_fill_gradient(low="white",high="seagreen",name="r")
                                  + ggtitle(paste("FP Cor Model,",atlas,measure,group,group_tanner,id_sex,sep=" "))
                                  + xlab("2nd wave")
                                  + ylab("1st wave")
@@ -494,7 +494,7 @@ model_fp<-function(paths_=paths,
                           "ggplot","aes","geom_tile","scale_fill_gradientn",
                           "matlab.like2","scale_y_discrete","scale_x_discrete",
                           "theme_light","theme","element_text","element_blank",
-                          "ggtitle","ggsave","scale_fill_viridis","xlab","ylab"),
+                          "ggtitle","ggsave","scale_fill_gradient","xlab","ylab"),
                 envir=environment())
   list_df_ancova<-parLapply(clust,list_src_ancova,ancova_core)
   stopCluster(clust)
