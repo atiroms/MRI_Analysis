@@ -284,7 +284,7 @@ ancova_core<-function(data_input){
   }
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
-                                 + scale_fill_viridis(name="r")
+                                 + scale_color_gradient(low="steelblue2",high="lightcoral",name="r")
                                  + ggtitle(paste("FP Cor Model,",atlas,measure,group,group_tanner,id_sex,sep=" "))
                                  + xlab("2nd wave")
                                  + ylab("1st wave")
