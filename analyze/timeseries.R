@@ -194,7 +194,7 @@ fc<-function(paths_=paths,
     stopCluster(clust)
     
     # Bind results in temporary files
-    print(paste("Atlas: ",atlas,", binding results."))
+    print(paste("Atlas: ",atlas,", binding results.",sep=""))
     df_fc_stack<-data.frame()
     for (path_tmp in list_path_tmp){
       df_tmp<-read.csv(path_tmp)
