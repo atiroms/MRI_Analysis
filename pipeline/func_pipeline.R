@@ -193,7 +193,7 @@ pipe_func<-function(paths_=paths,
   id_dir_fp<-id_dir_fc+1
   dir_out<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  nullobj<-fp_fc(paths_=paths,list_atlas_=list_atlas_,subset_subj_=subset_subj_)
+  nullobj<-fp_fc(paths_=paths,list_atlas_=list_atlas_)
   
   # Fingerprint to identification of fingerprints
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
