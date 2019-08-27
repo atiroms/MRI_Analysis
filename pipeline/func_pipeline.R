@@ -53,14 +53,14 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #id_dir_ts<-101
 #suffix_dir<-"acompcor"
 
-id_dir_ts<-201
-suffix_dir<-"acompcor"
+#id_dir_ts<-201
+#suffix_dir<-"acompcor"
 
 #id_dir_ts<-211
 #suffix_dir<-"aroma"
 
-#id_dir_ts<-221
-#suffix_dir<-"36p"
+id_dir_ts<-221
+suffix_dir<-"36p"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400")
