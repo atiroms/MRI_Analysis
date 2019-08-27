@@ -31,13 +31,13 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #dir_out<-"185_c1_ts_aroma"
 #ses<-'ses-01'
 
-dir_in <-"182_c2_xcp_aroma"
-dir_out<-"186_c2_ts_aroma"
-ses<-'ses-02'
+#dir_in <-"182_c2_xcp_aroma"
+#dir_out<-"186_c2_ts_aroma"
+#ses<-'ses-02'
 
-#dir_in <-"191_c1_xcp_36p"
-#dir_out<-"195_c1_ts_36p"
-#ses<-'ses-01'
+dir_in <-"191_c1_xcp_36p"
+dir_out<-"195_c1_ts_36p"
+ses<-'ses-01'
 
 #dir_in <-"192_c2_xcp_36p"
 #dir_out<-"196_c2_ts_36p"
@@ -147,13 +147,13 @@ combine_ts<-function(path_exp="D:/MRI_img/pnTTC/preproc",
                      #              list("dir"="176_c2_ts_acompcor","ses"=2)),
                      #dir_dst="177_ts_acompcor",
                      
-                     list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
-                                   list("dir"="186_c2_ts_aroma","ses"=2)),
-                     dir_dst="187_ts_aroma",
+                     #list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
+                     #              list("dir"="186_c2_ts_aroma","ses"=2)),
+                     #dir_dst="187_ts_aroma",
                      
-                     #list_src=list(list("dir"="195_c1_ts_36p","ses"=1),
-                     #              list("dir"="196_c2_ts_36p","ses"=2)),
-                     #dir_dst="197_ts_36p",
+                     list_src=list(list("dir"="195_c1_ts_36p","ses"=1),
+                                   list("dir"="196_c2_ts_36p","ses"=2)),
+                     dir_dst="197_ts_36p",
                      
                      list_atlas_=list_atlas){
 
