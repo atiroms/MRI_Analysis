@@ -331,9 +331,9 @@ class ExtractNifti():
         path_output='/media/veracrypt1/MRI_img/pnTTC/preproc/198_nii_36p',
         ses='ses-01'
 
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
-        #path_output='/media/veracrypt1/MRI_img/pnTTC/preproc/198_nii_36p',
-        #ses='ses-02'
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
+        path_output='/media/veracrypt1/MRI_img/pnTTC/preproc/198_nii_36p',
+        ses='ses-02'
         ):
 
         print('Starting NIfTI extraction.')
