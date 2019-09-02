@@ -9,9 +9,11 @@
 # Parameters ======================================
 #**************************************************
 
-path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
-dir_in <-"01_extract"
-dir_out <-"02_glm"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
+#dir_in <-"01_extract"
+#dir_out <-"02_glm"
+dir_in <-"31_meas"
+dir_out <-"32_fp"
 
 wave <- 1
 measure <-c("volume","thickness","area")
@@ -31,18 +33,13 @@ subset_subj <- list(list("column"="W1_T1QC","value"=1),list("column"="Sex","valu
 #**************************************************
 # Libraries =======================================
 #**************************************************
-#library(corrplot)
-#library(gplots)
 library(Hmisc)
 library(FactoMineR)
 library(ica)
 library(tidyverse)
 library(Rtsne)
 library(tidyr)
-#library(ggpubr)
-#library(multcomp)
-#library(car)
-#library(fastICA)
+library(parallel)
 
 
 #**************************************************
@@ -80,6 +77,163 @@ source(file.path(paths$script,"util/function.R"))
 source(file.path(paths$script,"util/glm_function.R"))
 source(file.path(paths$script,"util/plot.R"))
 #source(file.path(script_dir,"Functionalities/LI_Functions.R"))
+
+
+#**************************************************
+# Fingerprinting ==================================
+#**************************************************
+
+# Core function for parallelization of fp_str()
+fp_str_core<-function(data_str){
+  measure<-data_str$measure
+  group<-data_str$group
+  df_str<-data_str$df_str
+  df_ses_subj<-data_str$df_ses_subj
+  n_roi<-dim(df_str)[1]
+  
+  # Calculate correlation matrix
+  data_fingerprint<-func_cor(input=df_str)
+  df_fp_subnet<-data_fingerprint$cor_flat
+  
+  # Rename correlation matrix to sessions and subjects
+  df_fp_subnet$from_ses<-df_fp_subnet$from_ID_pnTTC<-df_fp_subnet$to_ses<-df_fp_subnet$to_ID_pnTTC<-NA
+  for (i in seq(dim(df_fp_subnet)[1])){
+    from_id<-df_fp_subnet[[i,"from"]]
+    to_id<-df_fp_subnet[[i,"to"]]
+    df_fp_subnet[[i,"from_ses"]]<-df_ses_subj[[from_id,"ses"]]
+    df_fp_subnet[[i,"from_ID_pnTTC"]]<-df_ses_subj[[from_id,"ID_pnTTC"]]
+    df_fp_subnet[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
+    df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
+  }
+  df_fp_subnet$measure<-measure
+  df_fp_subnet$group<-group
+  df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+  
+  # Prepare dataframe for fingerprint correlation plot
+  df_fp_plot<-data_fingerprint$cor
+  list_name_subj_ses<-paste(sprintf("%05d",df_ses_subj$ID_pnTTC),as.character(df_ses_subj$ses),sep="_")
+  colnames(df_fp_plot)<-rownames(df_fp_plot)<-list_name_subj_ses
+  
+  # Heatmap plot of fp correlation matrix
+  plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
+  suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
+                                     + scale_fill_gradientn(colors = matlab.like2(100),name="r")
+                                     + ggtitle(paste("FP Cor,",atlas,measure,group,sep=" "))
+                                     + theme(plot.title = element_text(hjust = 0.5),
+                                             axis.title=element_blank())))
+  
+  # Save heatmap plot
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+         path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+  
+  return(df_fp_subnet)
+}
+
+# Main function for fingerprint computing
+fp_str<-function(paths_=paths,
+                 atlas="dk",
+                 key_roigroup="group_3"){
+  print("Starting fp_str().")
+  nullobj<-func_createdirs(paths_)
+  dict_roi<-func_dict_roi(paths_)
+  dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi[,key_roigroup]),stringsAsFactors = F)
+  
+  # Load structure data
+  df_str<-read.csv(file.path(paths_$input,"output","fs_measure.csv"))
+  list_measure<-unique(as.character(df_str$measure))
+  
+  list_data_str<-list()
+  for (measure in list_measure){
+    df_str_measure<-df_str[df_str$measure==measure,]
+    
+    # Examine existing subject IDs and sessions in connection data
+    list_ses_exist <- sort(unique(df_str_measure$ses))
+    list_id_subj_exist<-list()
+    for (ses in list_ses_exist){
+      df_str_ses<-df_str_measure[df_str_measure$ses==ses,]
+      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_str_ses$ID_pnTTC))
+    }
+    
+    # Examine existing ROI and their groups
+    df_roi<-df_str_measure[df_str_measure$ID_pnTTC==df_str_measure[1,"ID_pnTTC"],]
+    df_roi<-df_roi[df_roi$ses==df_roi[1,"ses"],"roi",drop=F]
+    df_roi$roi<-as.character(df_roi$roi)
+    df_roi<-df_roi[order(df_roi$roi),,drop=F]
+    df_roi<-left_join(df_roi,dict_roi,by=c("roi"="id"))
+    
+    # List groups of existing rois
+    list_group<-sort(unique(c(df_roi$group)))
+    if (!("whole" %in% list_group)){
+      if (length(list_group)>1){
+        list_group<-c("whole",list_group)
+      }
+    }
+    print(paste("Measure: ",measure, ", ", as.character(length(list_group))," groups:",sep=""))
+    print(list_group)
+    
+    # Split and combine structure data for each subgroup of rois for later parallel computing
+
+    for (group in list_group){
+      # Create dataframe of structural measures within each group
+      if (group=="whole"){
+        df_roi_group<-df_roi
+      }else{
+        df_roi_group<-df_roi[df_roi$group==group,]
+      }
+      n_roi_group<-dim(df_roi_group)[1]
+      
+      if (n_roi_group<5){
+        print(paste("Measure: ",measure,", group: ",group, ", nodes: ",as.character(n_roi_group)," < 5, fp calculation skipped.",sep=""))
+      }else{
+        # Create combined dataframe of structural measures
+        # Also create dataframe of sessions and subjects
+        df_str_cbind<-data.frame(matrix(nrow=n_roi_group,ncol=0))
+        df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+        colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+        for (ses in list_ses_exist){
+          for (id_subj in list_id_subj_exist[[ses]]){
+            df_str_subj<-df_str_measure[df_str_measure$ID_pnTTC==id_subj & df_str_measure$ses==ses,]
+            df_str_subj<-df_str_subj[df_str_subj$roi %in% df_roi_group$roi,]
+            df_str_cbind<-cbind(df_str_cbind,df_str_subj[["value"]])
+            df_ses_subj<-rbind(df_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
+          }
+        }
+        colnames(df_str_cbind)<-as.character(seq(ncol(df_str_cbind)))
+        rownames(df_str_cbind)<-NULL
+        
+        list_data_str<-c(list_data_str,list(list("measure"=measure,"group"=group,
+                                                 "df_str"=df_str_cbind,"df_ses_subj"=df_ses_subj)))
+      }
+    }
+  }
+  
+  # Parallel fingerprint correlation computing over groups of subnetworks
+  print("Calculating structure fingerprint correlation in parallel.")
+  n_cluster<-min(floor(detectCores()*3/4),length(list_data_str))
+  clust<-makeCluster(n_cluster)
+  clusterExport(clust,
+                varlist=c("paths_","func_cor","atlas",
+                          "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                          "ggplot","aes","geom_tile","scale_fill_gradientn",
+                          "matlab.like2","scale_y_discrete","scale_x_discrete",
+                          "theme_light","theme","element_text","element_blank",
+                          "ggtitle","ggsave"),
+                envir=environment())
+  list_df_fp<-parLapply(clust,list_data_str,fp_str_core)
+  stopCluster(clust)
+  
+  # Output dataframe
+  df_fp<-NULL
+  for (df_fp_subnet in list_df_fp){
+    if (!is.null(df_fp_subnet)){
+      df_fp<-rbind(df_fp,df_fp_subnet)
+    }
+  }
+  
+  # Save fingerprint correlation
+  write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
+  print("Finished fp_str().")
+}
 
 
 #**************************************************

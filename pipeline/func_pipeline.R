@@ -48,17 +48,24 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 #**************************************************
 # Parameters ======================================
 #**************************************************
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_ts<-201
-suffix_dir<-"acompcor"
+#id_dir_ts<-101
+#suffix_dir<-"acompcor"
+
+#id_dir_ts<-201
+#suffix_dir<-"acompcor"
 
 #id_dir_ts<-211
 #suffix_dir<-"aroma"
 
-#id_dir_ts<-221
-#suffix_dir<-"36p"
+id_dir_ts<-221
+suffix_dir<-"36p"
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100","schaefer200","schaefer400")
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100","schaefer200","schaefer400","shen268")
 
 n_permutation<-1000
 #n_permutation<-100
@@ -93,7 +100,7 @@ list_mod <- list("lin_diff_t"=
                  "add_diff_a_ses_t"=
                    "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
 
-list_graph <-list("a"=list("title"="Effect of age difference",
+list_graph <-list("a"=list("title"="Age diff effect",
                            "x_axis"="diff_age",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -103,7 +110,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                     "color"="steelblue2","alpha"=1),
                                         "Female"=list("subset"=list("sex"=2),
                                                       "color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Effect of Tanner stage difference",
+                  "tdiff"=list("title"="Tanner diff effect",
                                "x_axis"="diff_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                          "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -113,7 +120,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                         "color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),
                                                           "color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Effect of Tanner stage mean",
+                  "tmean"=list("title"="Tanner mean effect",
                                "x_axis"="mean_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                          "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -123,7 +130,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                         "color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),
                                                           "color"="lightcoral","alpha"=1))),
-                  "t1"=list("title"="Effect of 1st wave Tanner stage",
+                  "t1"=list("title"="1st Tanner effect",
                             "x_axis"="ses1_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -133,7 +140,7 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                                      "color"="steelblue2","alpha"=1),
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))),
-                  "t2"=list("title"="Effect of 2nd wave Tanner stage",
+                  "t2"=list("title"="2nd Tanner effect",
                             "x_axis"="ses2_tanner",
                             "smooth"=list("Male"=list("fix"=list("sex"=1),
                                                       "color"="steelblue2","alpha"=1,"ribbon"=T),
@@ -144,13 +151,13 @@ list_graph <-list("a"=list("title"="Effect of age difference",
                                          "Female"=list("subset"=list("sex"=2),
                                                        "color"="lightcoral","alpha"=1))))
 
-list_tanner <-list("25"=
+list_tanner <-list("5by5"=
                      list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
                           "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
-                   "9"=
+                   "3by3"=
                      list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
                           "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
-                   "4"=
+                   "2by2"=
                      list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
                           "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
@@ -188,7 +195,7 @@ pipe_func<-function(paths_=paths,
   id_dir_fp<-id_dir_fc+1
   dir_out<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  nullobj<-fp(paths_=paths,list_atlas_=list_atlas_,subset_subj_=subset_subj_)
+  nullobj<-fp_fc(paths_=paths,list_atlas_=list_atlas_)
   
   # Fingerprint to identification of fingerprints
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')

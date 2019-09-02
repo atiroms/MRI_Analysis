@@ -190,10 +190,12 @@ pca_fc<-function(paths_=paths,
 # Fingerprinting ==================================
 #**************************************************
 
-# Core function for parallelization of fp()
-fp_core<-function(data_zr){
+# Core function for parallelization of fp_fc()
+fp_fc_core<-function(data_zr){
+  measure<-"fc"
   group<-data_zr$group
   df_zr<-data_zr$df_zr
+  df_ses_subj<-data_zr$df_ses_subj
   n_edge<-dim(df_zr)[1]
   
   # Calculate correlation matrix
@@ -210,8 +212,9 @@ fp_core<-function(data_zr){
     df_fp_subnet[[i,"to_ses"]]<-df_ses_subj[[to_id,"ses"]]
     df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
   }
+  df_fp_subnet$measure<-measure
   df_fp_subnet$group<-group
-  df_fp_subnet<-df_fp_subnet[c("group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+  df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
   
   # rbind to output dataframe
   #df_fp<-rbind(df_fp,df_fp_subnet)
@@ -225,23 +228,22 @@ fp_core<-function(data_zr){
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
   suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
                                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                     + ggtitle(paste("Fingerprint correlation,",atlas,group,sep=" "))
+                                     + ggtitle(paste("FP Cor,",atlas,measure,group,sep=" "))
                                      + theme(plot.title = element_text(hjust = 0.5),
                                              axis.title=element_blank())))
   
   # Save heatmap plot
-  ggsave(paste("atl-",atlas,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
 }
 
 # Main function for fingerprint computing
-fp<-function(paths_=paths,
-             list_atlas_=list_atlas,
-             subset_subj_=subset_subj,
-             key_roigroup="group_3"){
-  print("Starting fp().")
+fp_fc<-function(paths_=paths,
+                list_atlas_=list_atlas,
+                key_roigroup="group_3"){
+  print("Starting fp_fc().")
   nullobj<-func_createdirs(paths_)
   dict_roi<-func_dict_roi(paths_)
   dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi[,key_roigroup]),stringsAsFactors = F)
@@ -276,7 +278,7 @@ fp<-function(paths_=paths,
     print(paste("Atlas: ",atlas, ", ", as.character(length(list_group))," groups:",sep=""))
     print(list_group)
     
-    # Split combine z_r data for each subgroup of networks for parallel computing
+    # Split and combine z_r data for each subgroup of networks for parallel computing
     list_data_zr<-list()
     for (group in list_group){
       # Create dataframe of edges within each group
@@ -309,7 +311,7 @@ fp<-function(paths_=paths,
         colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
         rownames(df_conn_cbind)<-NULL
         
-        list_data_zr<-c(list_data_zr,list(list("group"=group,"df_zr"=df_conn_cbind)))
+        list_data_zr<-c(list_data_zr,list(list("group"=group,"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
       }
     }
     
@@ -317,14 +319,14 @@ fp<-function(paths_=paths,
     n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
     clust<-makeCluster(n_cluster)
     clusterExport(clust,
-                  varlist=c("paths_","atlas","func_cor","df_ses_subj",
+                  varlist=c("paths_","atlas","func_cor",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                             "ggplot","aes","geom_tile","scale_fill_gradientn",
                             "matlab.like2","scale_y_discrete","scale_x_discrete",
                             "theme_light","theme","element_text","element_blank",
                             "ggtitle","ggsave"),
                   envir=environment())
-    list_df_fp<-parLapply(clust,list_data_zr,fp_core)
+    list_df_fp<-parLapply(clust,list_data_zr,fp_fc_core)
     stopCluster(clust)
     
     # Output dataframe
@@ -338,7 +340,7 @@ fp<-function(paths_=paths,
     # Save fingerprint correlation
     write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
   }
-  print("Finished fp().")
+  print("Finished fp_fc().")
 }
 
 

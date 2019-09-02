@@ -143,7 +143,7 @@ fc_core<-function(data_ts){
   # Heatmap plot of FC correlation matrix
   plot_fc_heatmap<-plot_cor_heatmap(input=df_fc_roilabel)
   plot_fc_heatmap<-(plot_fc_heatmap
-                    + ggtitle(paste("Functional connectivity, wave",as.character(ses),sprintf("%05d", id_subj),atlas,sep=" "))
+                    + ggtitle(paste("FC, wave",as.character(ses),sprintf("%05d", id_subj),atlas,sep=" "))
                     + theme(plot.title = element_text(hjust = 0.5),
                             axis.title=element_blank()))
   
@@ -194,7 +194,7 @@ fc<-function(paths_=paths,
     stopCluster(clust)
     
     # Bind results in temporary files
-    print(paste("Atlas: ",atlas,", binding results."))
+    print(paste("Atlas: ",atlas,", binding results.",sep=""))
     df_fc_stack<-data.frame()
     for (path_tmp in list_path_tmp){
       df_tmp<-read.csv(path_tmp)
