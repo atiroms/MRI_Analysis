@@ -8,35 +8,56 @@
 # Parameters ======================================
 #**************************************************
 # parameters for gta_bin() and gta_weight()
-#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-#dir_in<-"103_fp_acompcor"
-#dir_out<-"104_fp_id_acompcor"
-#dir_out<-"105_fp_model_acompcor"
-#dir_out<-"108_fp_model_acompcor_test"
-
-dir_in<-"32_fp"
-#dir_out<-"33_fp_id"
-dir_out<-"34_fp_model"
-
-#dir_in<-"113_fp_aroma"
-#dir_out<-"115_fp_model_aroma"
-
-#dir_out<-"55_gta_bin"
-#dir_out<-"56_fp_identification"
-#dir_out<-"58_glm_ancova_acompcor"
+dir_in<-"203_fp_acompcor"
+dir_out<-"206_fp_model_acompcor_test"
 
 list_wave <- c(1,2)
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+#
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+#                               "2"="W2_Tanner_Max",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"),
+#                 "sex"=list("1"="Sex",
+#                            "2"="Sex",
+#                            "label"="Sex"))
+#
+#list_mod <- list("lin_diff_t"=
+#                   "value ~ sex + sex:diff_tanner",
+#                 "lin_diff_at"=
+#                   "value ~ diff_age + sex + sex:diff_tanner",
+#                 "lin_diff_at_mean_t"=
+#                   "value ~ diff_age + sex + sex:mean_tanner + sex:diff_tanner",
+#                 "lin_diff_a_ses_t"=
+#                   "value ~ diff_age + sex + sex:ses1_tanner + sex:ses2_tanner",
+#                 "add_diff_t"=
+#                   "value ~ sex + s(diff_tanner,k=3,by=sex)",
+#                 "add_diff_at"=
+#                   "value ~ s(diff_age,k=3) + sex + s(diff_tanner,k=3,by=sex)",
+#                 "add_diff_at_mean_t"=
+#                   "value ~ s(diff_age,k=3) + sex + s(mean_tanner,k=3,by=sex) + s(diff_tanner,k=3,by=sex)",
+#                 "add_diff_a_ses_t"=
+#                   "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
 
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max",
+subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
+                             list("key"="Sex","value"=1)),
+                    "2"=list(list("key"="W2_T1QC","value"=1),
+                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
+                             list("key"="Sex","value"=1)))
+
+list_covar<-list("tanner"=list("1"="W1_Tanner_Male_Genitals",
+                               "2"="W2_Tanner_Male_Genitals",
                                "label"="Tanner stage"),
                  "age"=list("1"="W1_Age_at_MRI",
                             "2"="W2_Age_at_MRI",
@@ -46,30 +67,22 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                             "label"="Sex"))
 
 list_mod <- list("lin_diff_t"=
-                   "value ~ sex + sex:diff_tanner",
+                   "value ~ diff_tanner",
                  "lin_diff_at"=
-                   "value ~ diff_age + sex + sex:diff_tanner",
+                   "value ~ diff_age + diff_tanner",
                  "lin_diff_at_mean_t"=
-                   "value ~ diff_age + sex + sex:mean_tanner + sex:diff_tanner",
+                   "value ~ diff_age + mean_tanner + diff_tanner",
                  "lin_diff_a_ses_t"=
-                   "value ~ diff_age + sex + sex:ses1_tanner + sex:ses2_tanner",
+                   "value ~ diff_age + ses1_tanner + ses2_tanner",
                  "add_diff_t"=
-                   "value ~ sex + s(diff_tanner,k=3,by=sex)",
+                   "value ~ s(diff_tanner,k=3)",
                  "add_diff_at"=
-                   "value ~ s(diff_age,k=3) + sex + s(diff_tanner,k=3,by=sex)",
+                   "value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
                  "add_diff_at_mean_t"=
-                   "value ~ s(diff_age,k=3) + sex + s(mean_tanner,k=3,by=sex) + s(diff_tanner,k=3,by=sex)",
+                   "value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)",
                  "add_diff_a_ses_t"=
-                   "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
+                   "value ~ s(diff_age,k=3) + s(ses1_tanner,k=3) + s(ses2_tanner,k=3)")
 
-#list_mod <- list("additive"=
-#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex)",
-#                 "additive_mixed"=
-#                   "value ~ s(age,k=3) + sex + s(tanner,k=3,by=sex) + s(ID_pnTTC,bs='re')",
-#                 "linear"=
-#                   "value ~ age + sex + sex:tanner",
-#                 "linear_mixed"=
-#                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')")
 
 list_graph <-list("a"=list("title"="Age diff effect",
                            "x_axis"="diff_age",
@@ -135,9 +148,9 @@ list_tanner <-list("5by5"=
 
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
-list_atlas<-"dk"
+#list_atlas<-"dk"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #thr_pvalue <- 0.05
 n_permutation<-1000
