@@ -320,6 +320,15 @@ ancova_core<-function(data_input){
 }
 
 
+paths_=paths
+list_atlas_=list_atlas
+list_wave_=list_wave
+list_covar_=list_covar
+list_mod_=list_mod
+list_graph_=list_graph
+list_tanner_=list_tanner
+subset_subj_=subset_subj
+
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,
                    list_wave_=list_wave,
@@ -430,7 +439,7 @@ model_fp<-function(paths_=paths,
           for (idx_graph in names(list_graph_)){
             if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(list_mod_gamm[[mod]]$model)){
               plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
-                              df_join_grp,
+                              df_join_measure_roi=df_join_grp,
                               spec_graph=list_graph_[[idx_graph]])
               axis_x<-list_graph_[[idx_graph]][["x_axis"]]
               for (idx_prefix in list(c("",""),c("ses1_"," 1st wave"),c("ses2_"," 2nd wave"),
