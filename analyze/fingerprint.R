@@ -320,15 +320,6 @@ ancova_core<-function(data_input){
 }
 
 
-paths_=paths
-list_atlas_=list_atlas
-list_wave_=list_wave
-list_covar_=list_covar
-list_mod_=list_mod
-list_graph_=list_graph
-list_tanner_=list_tanner
-subset_subj_=subset_subj
-
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,
                    list_wave_=list_wave,
@@ -360,7 +351,7 @@ model_fp<-function(paths_=paths,
     list_measure<-sort(unique(df_fp$measure))
     df_join<-NULL
     for (measure in list_measure){
-      print(paste("Atlas: ",atlas," Measure: ",measure,sep=""))
+      print(paste("Atlas: ",atlas,", Measure: ",measure,sep=""))
       df_fp_meas<-df_fp[df_fp$measure==measure,]
     
       # Create list of subjects who meet subsetting condition and whose MRI data exist
@@ -395,7 +386,7 @@ model_fp<-function(paths_=paths,
         list_id_subj_nonna<-df_cor_fp[!is.na(df_cor_fp$value),"ID_pnTTC"]
         df_cor_fp<-df_cor_fp[df_cor_fp$ID_pnTTC %in% list_id_subj_nonna,]
         n_id_subj_exist_twice<-length(list_id_subj_nonna)
-        print(paste("Atlas: ",atlas," Measure: ",measure,", Group: ",group,", ",as.character(n_id_subj_exist_twice)," subjects with longitudinal non-NA data.",sep=""))
+        print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ",as.character(n_id_subj_exist_twice)," subjects with longitudinal non-NA data.",sep=""))
         
         # Create dataframe for GLM analysis
         df_join_grp<-func_clinical_data_join(df_src=df_clin,
@@ -409,7 +400,7 @@ model_fp<-function(paths_=paths,
         df_join<-rbind(df_join,df_join_grp)
         
         # Calculate GLM
-        print(paste("Atlas: ",atlas," Measure: ",measure,", Group: ",group,", GLM/GAM.",  sep=""))
+        print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", GLM/GAM.",  sep=""))
         list_mod_gamm<-list()
         df_out_aic_add<-data.frame()
         for (mod in names(list_mod_)){
@@ -468,7 +459,7 @@ model_fp<-function(paths_=paths,
         df_out_aic<-rbind(df_out_aic,df_out_aic_add)
         
         # Prepare ANCOVA calculation for later parallel computing
-        print(paste("Atlas: ",atlas," Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
+        print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
         # Create list of input dataframes for parallel ANCOVA calculation
         for (group_tanner in names(list_tanner_)){
           df_join_grp_tanner<-df_join_grp
@@ -485,7 +476,14 @@ model_fp<-function(paths_=paths,
                                                 as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
           df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
           
-          list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+          list_sex<-sort(as.numeric.factor(unique(df_join_grp_tanner$sex)))
+          if (identical(list_sex,c(1,2))){
+            list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+          }else if(identical(list_sex,1)){
+            list_sex<-list("male"=1)
+          }else if(identical(list_sex,2)){
+            list_sex<-list("female"=2)
+          }
           
           for (id_sex in names(list_sex)){
             df_join_grp_tanner_sex<-df_join_grp_tanner[df_join_grp_tanner$sex %in% list_sex[[id_sex]],]
@@ -503,7 +501,7 @@ model_fp<-function(paths_=paths,
     }
     write.csv(df_join,file.path(paths_$output,"output",
                                 paste("atl-",atlas,"_fp_model_src.csv",sep="")),row.names = F)
-  } 
+  }
   
   
   # Parallel ANCOVA calculation
