@@ -197,12 +197,12 @@ class PrepXCP():
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #file_design='fc-36p_spkreg_fconly_noqcfc_shen.dsn',
 
-        path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        file_id='69_id_c1_t1exist_rsfmriexist.csv',
-        ses='ses-01',
-        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        file_design='fc-acompcor_gsr_fconly_noqcfc.dsn',
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
+        #file_id='69_id_c1_t1exist_rsfmriexist.csv',
+        #ses='ses-01',
+        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #file_design='fc-acompcor_gsr_fconly_noqcfc.dsn',
 
         #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
         #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
@@ -211,12 +211,12 @@ class PrepXCP():
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #file_design='fc-aroma_gsr_fconly_noqcfc.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
-        #file_id='68_id_c2_t1exist_rsfmriexist.csv',
-        #ses='ses-02',
-        #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_gsr_fconly_noqcfc.dsn',
+        path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
+        file_id='68_id_c2_t1exist_rsfmriexist.csv',
+        ses='ses-02',
+        suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        file_design='fc-acompcor_gsr_fconly_noqcfc.dsn',
 
         #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
@@ -354,9 +354,9 @@ class ExtractNifti():
         path_output='/media/veracrypt1/MRI_img/pnTTC/preproc/198_nii_36p',
         ses='ses-01'
 
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
-        path_output='/media/veracrypt1/MRI_img/pnTTC/preproc/198_nii_36p',
-        ses='ses-02'
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
+        #path_output='/media/veracrypt1/MRI_img/pnTTC/preproc/198_nii_36p',
+        #ses='ses-02'
         ):
 
         print('Starting NIfTI extraction.')
