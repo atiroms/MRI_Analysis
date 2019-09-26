@@ -334,17 +334,17 @@ class MultiPrepXCP():
 
 class ExtractNifti():
     def __init__(self,
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/378_nii_acompcor_gsr',
-        ses='ses-01'
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/378_nii_acompcor_gsr',
+        #ses='ses-01'
 
         #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
         #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/378_nii_acompcor_gsr',
         #ses='ses-02'
 
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/388_nii_aroma_gsr',
-        #ses='ses-01'
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/388_nii_aroma_gsr',
+        ses='ses-01'
 
         #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
         #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/388_nii_aroma_gsr',
