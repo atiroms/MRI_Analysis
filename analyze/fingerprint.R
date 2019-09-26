@@ -17,21 +17,21 @@ dir_out<-"206_fp_model_acompcor_test"
 
 list_wave <- c(1,2)
 
-#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
-#                    "2"=list(list("key"="W2_T1QC","value"=1),
-#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-#
-#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-#                               "2"="W2_Tanner_Max",
-#                               "label"="Tanner stage"),
-#                 "age"=list("1"="W1_Age_at_MRI",
-#                            "2"="W2_Age_at_MRI",
-#                            "label"="Age"),
-#                 "sex"=list("1"="Sex",
-#                            "2"="Sex",
-#                            "label"="Sex"))
-#
+subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
+                    "2"=list(list("key"="W2_T1QC","value"=1),
+                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+
+list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+                               "2"="W2_Tanner_Max",
+                               "label"="Tanner stage"),
+                 "age"=list("1"="W1_Age_at_MRI",
+                            "2"="W2_Age_at_MRI",
+                            "label"="Age"),
+                 "sex"=list("1"="Sex",
+                            "2"="Sex",
+                            "label"="Sex"))
+
 #list_mod <- list("lin_diff_t"=
 #                   "value ~ sex + sex:diff_tanner",
 #                 "lin_diff_at"=
@@ -49,22 +49,22 @@ list_wave <- c(1,2)
 #                 "add_diff_a_ses_t"=
 #                   "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
-                             list("key"="Sex","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
-                             list("key"="Sex","value"=1)))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
+#                             list("key"="Sex","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
+#                             list("key"="Sex","value"=1)))
 
-list_covar<-list("tanner"=list("1"="W1_Tanner_Male_Genitals",
-                               "2"="W2_Tanner_Male_Genitals",
-                               "label"="Tanner stage"),
-                 "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI",
-                            "label"="Age"),
-                 "sex"=list("1"="Sex",
-                            "2"="Sex",
-                            "label"="Sex"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Male_Genitals",
+#                               "2"="W2_Tanner_Male_Genitals",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"),
+#                 "sex"=list("1"="Sex",
+#                            "2"="Sex",
+#                            "label"="Sex"))
 
 list_mod <- list("lin_diff_t"=
                    "value ~ diff_tanner",
@@ -82,7 +82,6 @@ list_mod <- list("lin_diff_t"=
                    "value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)",
                  "add_diff_a_ses_t"=
                    "value ~ s(diff_age,k=3) + s(ses1_tanner,k=3) + s(ses2_tanner,k=3)")
-
 
 list_graph <-list("a"=list("title"="Age diff effect",
                            "x_axis"="diff_age",
@@ -211,6 +210,67 @@ source(file.path(paths$script,"util/plot.R"))
 #**************************************************
 # GLM and ANCOVA of Fingerprint change ============
 #**************************************************
+
+glm_core<-function(df_src,atlas,measure,group,list_mod_,list_graph_,list_covar_,paths_){
+  print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", GLM/GAM.",  sep=""))
+  df_out_aic_add<-df_out_lm_add<-data.frame()
+  for (idx_mod in names(list_mod_)){
+
+    mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src)
+    p_table<-summary.gam(mod)$p.table
+    if (is.null(summary.gam(mod)$s.table)){
+      df_out_lm_add_add<-data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(p_table),
+                                estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+      
+    }else{
+      s_table<-summary.gam(mod)$s.table
+      df_out_lm_add_add<-rbind(data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(p_table),
+                                      estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                      t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                           data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(s_table),
+                                      estimate=NA,se=NA,F=s_table[,'F'],
+                                      t=NA,p=s_table[,'p-value']))
+    }
+    df_out_lm_add<-rbind(df_out_lm_add,df_out_lm_add_add)
+    df_out_aic_add<-rbind(df_out_aic_add,
+                          data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,aic=mod$aic,
+                                     aic_best_among_models=0))
+    
+    # Graphical output of GLM results
+    for (idx_graph in names(list_graph_)){
+      if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(mod$model)){
+        plot<-plot_gamm(mod_gamm=mod,
+                        df_join_measure_roi=df_src,
+                        spec_graph=list_graph_[[idx_graph]])
+        axis_x<-list_graph_[[idx_graph]][["x_axis"]]
+        for (idx_prefix in list(c("",""),c("ses1_"," 1st wave"),c("ses2_"," 2nd wave"),
+                                c("diff_"," difference"),c("mean_"," mean"))){
+          for (idx_covar in names(list_covar_)){
+            if (axis_x==paste(idx_prefix[1],idx_covar,sep="")){
+              label_x<-paste(list_covar_[[idx_covar]][["label"]],idx_prefix[2],sep='')
+            }
+          }
+        }
+        
+        plot<-(plot
+               + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,measure,group,idx_mod,sep=" "))
+               + xlab(label_x)
+               + ylab("Fingerprint correlation")
+               + theme(legend.position = "none"))
+        filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_mod-",idx_mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
+        ggsave(filename_plot,plot=plot,device=cairo_ps,
+               path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+      }
+    }
+  }
+  
+  # Compare AICs of GLM models
+  df_out_aic_add[which(df_out_aic_add$aic==min(df_out_aic_add$aic)),'aic_best_among_models']<-1
+  
+  return(list("df_out_lm_add"=df_out_lm_add,"df_out_aic_add"=df_out_aic_add))
+}
+
 ancova_core<-function(data_input){
   atlas<-data_input$atlas
   measure<-data_input$measure
@@ -365,7 +425,7 @@ model_fp<-function(paths_=paths,
         list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist_ses)
       }
       
-      # Identify those with longitudinal data
+      # Identify subjects with longitudinal data
       list_id_subj_exist_twice<-sort(intersect(list_id_subj_exist[["1"]],
                                                list_id_subj_exist[["2"]]))
       n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
@@ -400,68 +460,16 @@ model_fp<-function(paths_=paths,
         df_join<-rbind(df_join,df_join_grp)
         
         # Calculate GLM
-        print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", GLM/GAM.",  sep=""))
-        list_mod_gamm<-list()
-        df_out_aic_add<-data.frame()
-        for (mod in names(list_mod_)){
-          #print(paste("Atlas: ",atlas,", group: ",group,", GLM of model: ", mod, sep=""))
-          list_mod_gamm[[mod]]<-gam(as.formula(list_mod_[[mod]]),data=df_join_grp)
-          p_table<-summary.gam(list_mod_gamm[[mod]])$p.table
-          if (is.null(summary.gam(list_mod_gamm[[mod]])$s.table)){
-            df_out_lm_add<-data.frame(atlas=atlas,measure=measure,group=group,model=mod,term=rownames(p_table),
-                                      estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                      t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
-            
-          }else{
-            s_table<-summary.gam(list_mod_gamm[[mod]])$s.table
-            df_out_lm_add<-rbind(data.frame(atlas=atlas,measure=measure,group=group,model=mod,term=rownames(p_table),
-                                            estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                            t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                                 data.frame(atlas=atlas,measure=measure,group=group,model=mod,term=rownames(s_table),
-                                            estimate=NA,se=NA,F=s_table[,'F'],
-                                            t=NA,p=s_table[,'p-value']))
-          }
-          df_out_lm<-rbind(df_out_lm,df_out_lm_add)
-          df_out_aic_add<-rbind(df_out_aic_add,
-                                data.frame(atlas=atlas,measure=measure,group=group,model=mod,aic=list_mod_gamm[[mod]]$aic,
-                                           aic_best_among_models=0))
-          
-          # Graphical output of GLM results
-          for (idx_graph in names(list_graph_)){
-            if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(list_mod_gamm[[mod]]$model)){
-              plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
-                              df_join_measure_roi=df_join_grp,
-                              spec_graph=list_graph_[[idx_graph]])
-              axis_x<-list_graph_[[idx_graph]][["x_axis"]]
-              for (idx_prefix in list(c("",""),c("ses1_"," 1st wave"),c("ses2_"," 2nd wave"),
-                                      c("diff_"," difference"),c("mean_"," mean"))){
-                for (idx_covar in names(list_covar_)){
-                  if (axis_x==paste(idx_prefix[1],idx_covar,sep="")){
-                    label_x<-paste(list_covar_[[idx_covar]][["label"]],idx_prefix[2],sep='')
-                  }
-                }
-              }
-              
-              plot<-(plot
-                     + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,measure,group,mod,sep=" "))
-                     + xlab(label_x)
-                     + ylab("Fingerprint correlation")
-                     + theme(legend.position = "none"))
-              filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_mod-",mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
-              ggsave(filename_plot,plot=plot,device=cairo_ps,
-                     path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
-            }
-          }
-        }
-        
-        # Compare AICs of GLM models
-        df_out_aic_add[which(df_out_aic_add$aic==min(df_out_aic_add$aic)),'aic_best_among_models']<-1
-        df_out_aic<-rbind(df_out_aic,df_out_aic_add)
+        out_glm<-glm_core(df_src=df_join_grp,atlas,measure,group,
+                          list_mod_,list_graph_,list_covar_,paths_)
+        df_out_lm<-rbind(df_out_lm,out_glm$df_out_lm_add)
+        df_out_aic<-rbind(df_out_aic,out_glm$df_out_aic_add)
         
         # Prepare ANCOVA calculation for later parallel computing
         print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
         # Create list of input dataframes for parallel ANCOVA calculation
         for (group_tanner in names(list_tanner_)){
+          # group by longitudinal Tanner stage
           df_join_grp_tanner<-df_join_grp
           for (ses in c(1,2)){
             list_tanner_ses<-names(list_tanner_[[group_tanner]][[as.character(ses)]])
@@ -476,14 +484,16 @@ model_fp<-function(paths_=paths,
                                                 as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
           df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
           
-          list_sex<-sort(as.numeric.factor(unique(df_join_grp_tanner$sex)))
-          if (identical(list_sex,c(1,2))){
-            list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
-          }else if(identical(list_sex,1)){
-            list_sex<-list("male"=1)
-          }else if(identical(list_sex,2)){
-            list_sex<-list("female"=2)
-          }
+          #list_sex<-sort(as.numeric.factor(unique(df_join_grp_tanner$sex)))
+          #if (identical(list_sex,c(1,2))){
+          #  list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+          #}else if(identical(list_sex,1)){
+          #  list_sex<-list("male"=1)
+          #}else if(identical(list_sex,2)){
+          #  list_sex<-list("female"=2)
+          #}
+          
+          list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
           
           for (id_sex in names(list_sex)){
             df_join_grp_tanner_sex<-df_join_grp_tanner[df_join_grp_tanner$sex %in% list_sex[[id_sex]],]
@@ -503,6 +513,10 @@ model_fp<-function(paths_=paths,
                                 paste("atl-",atlas,"_fp_model_src.csv",sep="")),row.names = F)
   }
   
+  # Data saving
+  rownames(df_out_lm)<-rownames(df_out_aic)<-NULL
+  write.csv(df_out_lm, file.path(paths_$output,"output","fp_glm.csv"),row.names = F)
+  write.csv(df_out_aic,file.path(paths_$output,"output","fp_glm_aic.csv"),row.names = F)
   
   # Parallel ANCOVA calculation
   print("Calculating ANCOVA in parallel.")
@@ -524,9 +538,7 @@ model_fp<-function(paths_=paths,
   }
   
   # Data saving
-  rownames(df_out_lm)<-rownames(df_out_aic)<-rownames(df_out_ancova)<-NULL
-  write.csv(df_out_lm, file.path(paths_$output,"output","fp_glm.csv"),row.names = F)
-  write.csv(df_out_aic,file.path(paths_$output,"output","fp_glm_aic.csv"),row.names = F)
+  rownames(df_out_ancova)<-NULL
   write.csv(df_out_ancova,file.path(paths_$output,"output","fp_ancova.csv"),row.names=F)
   print("Finished model_fp()")
 }
