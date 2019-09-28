@@ -129,8 +129,8 @@ list_tanner <-list("5by5"=
 
 
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
 #list_atlas<-"dk"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
@@ -364,12 +364,12 @@ ancova_core<-function(data_input){
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
                                  + scale_fill_gradient(low="white",high=color_plot,name="r")
-                                 + ggtitle(paste("FP Cor Model,",atlas,measure,group,group_tanner,idx_sex,sep=" "))
-                                 + xlab("2nd wave")
-                                 + ylab("1st wave")
+                                 + ggtitle(paste("FP Cor ANCOVA,",atlas,measure,group,group_tanner,idx_sex,sep=" "))
+                                 + xlab("2nd wave Tanner stage")
+                                 + ylab("1st wave Tanner stage")
                                  + theme(plot.title = element_text(hjust = 0.5),
-                                         axis.text.x = element_text(size=8,angle = 0,vjust=0,hjust=0.5),
-                                         axis.text.y = element_text(size=8))))
+                                         axis.text.x = element_text(size=12,angle = 0,vjust=0,hjust=0.5),
+                                         axis.text.y = element_text(size=12,angle = 90))))
   
   ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_tan-",group_tanner,"_sex-",idx_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
