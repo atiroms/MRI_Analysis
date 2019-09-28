@@ -61,8 +61,14 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
-  #df_src <- mod_gamm$model
+plot_gamm<-function(plot_in,mod_gamm,df_join_measure_roi,spec_graph){
+  
+  if (is.null(plot_in)){
+    plot<-ggplot()
+  }else{
+    plot<-plot_in
+  }
+  
   key_df_src<-c("value",names(mod_gamm$var.summary))
   if (!("ID_pnTTC" %in% key_df_src)){
     key_df_src<-c(key_df_src, "ID_pnTTC")
@@ -72,7 +78,6 @@ plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
   }
   df_src <- df_join_measure_roi[key_df_src]
   
-  plot<-ggplot()
   # add prediction line + ribbon to plot
   if (!is.null(spec_graph[["smooth"]])){
     for (name_smooth in names(spec_graph[["smooth"]])){
