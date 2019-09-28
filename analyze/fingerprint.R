@@ -215,52 +215,61 @@ glm_core<-function(df_src,atlas,measure,group,list_mod_,list_graph_,list_covar_,
   print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", GLM/GAM.",  sep=""))
   df_out_aic_add<-df_out_lm_add<-data.frame()
   for (idx_mod in names(list_mod_)){
-
-    mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src)
-    p_table<-summary.gam(mod)$p.table
-    if (is.null(summary.gam(mod)$s.table)){
-      df_out_lm_add_add<-data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(p_table),
-                                estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+    list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
+    for (id_sex in list_sex){
+      df_src_sex<-df_src[df_src$sex==id_sex,]
+      mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
+      p_table<-summary.gam(mod)$p.table
+      if (is.null(summary.gam(mod)$s.table)){
+        df_out_lm_add_add<-data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(p_table),
+                                  estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                  t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+        
+      }else{
+        s_table<-summary.gam(mod)$s.table
+        df_out_lm_add_add<-rbind(data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(p_table),
+                                        estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                        t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                             data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(s_table),
+                                        estimate=NA,se=NA,F=s_table[,'F'],
+                                        t=NA,p=s_table[,'p-value']))
+      }
+      df_out_lm_add<-rbind(df_out_lm_add,df_out_lm_add_add)
+      df_out_aic_add<-rbind(df_out_aic_add,
+                            data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,aic=mod$aic,
+                                       aic_best_among_models=0))
       
-    }else{
-      s_table<-summary.gam(mod)$s.table
-      df_out_lm_add_add<-rbind(data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(p_table),
-                                      estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                      t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                           data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,term=rownames(s_table),
-                                      estimate=NA,se=NA,F=s_table[,'F'],
-                                      t=NA,p=s_table[,'p-value']))
-    }
-    df_out_lm_add<-rbind(df_out_lm_add,df_out_lm_add_add)
-    df_out_aic_add<-rbind(df_out_aic_add,
-                          data.frame(atlas=atlas,measure=measure,group=group,model=idx_mod,aic=mod$aic,
-                                     aic_best_among_models=0))
-    
-    # Graphical output of GLM results
-    for (idx_graph in names(list_graph_)){
-      if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(mod$model)){
-        plot<-plot_gamm(mod_gamm=mod,
-                        df_join_measure_roi=df_src,
-                        spec_graph=list_graph_[[idx_graph]])
-        axis_x<-list_graph_[[idx_graph]][["x_axis"]]
-        for (idx_prefix in list(c("",""),c("ses1_"," 1st wave"),c("ses2_"," 2nd wave"),
-                                c("diff_"," difference"),c("mean_"," mean"))){
-          for (idx_covar in names(list_covar_)){
-            if (axis_x==paste(idx_prefix[1],idx_covar,sep="")){
-              label_x<-paste(list_covar_[[idx_covar]][["label"]],idx_prefix[2],sep='')
+      # Graphical output of GLM results
+      for (idx_graph in names(list_graph_)){
+        if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(mod$model)){
+          plot<-plot_gamm(mod_gamm=mod,
+                          df_join_measure_roi=df_src_sex,
+                          spec_graph=list_graph_[[idx_graph]])
+          
+          axis_x<-list_graph_[[idx_graph]][["x_axis"]]
+          for (idx_prefix in list(c("",""),c("ses1_"," 1st wave"),c("ses2_"," 2nd wave"),
+                                  c("diff_"," difference"),c("mean_"," mean"))){
+            for (idx_covar in names(list_covar_)){
+              if (axis_x==paste(idx_prefix[1],idx_covar,sep="")){
+                label_x<-paste(list_covar_[[idx_covar]][["label"]],idx_prefix[2],sep='')
+              }
             }
           }
+          if (id_sex==1){
+            label_sex<-"male"
+          }else{
+            label_sex<-"female"
+          }
+          
+          plot<-(plot
+                 + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,measure,group,idx_mod,sep=" "))
+                 + xlab(label_x)
+                 + ylab("Fingerprint correlation")
+                 + theme(legend.position = "none"))
+          filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_mod-",idx_mod,"_sex-",label_sex,"_plt-",idx_graph,"_fp_glm.eps",sep="")
+          ggsave(filename_plot,plot=plot,device=cairo_ps,
+                 path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
         }
-        
-        plot<-(plot
-               + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,measure,group,idx_mod,sep=" "))
-               + xlab(label_x)
-               + ylab("Fingerprint correlation")
-               + theme(legend.position = "none"))
-        filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_mod-",idx_mod,"_plt-",idx_graph,"_fp_glm.eps",sep="")
-        ggsave(filename_plot,plot=plot,device=cairo_ps,
-               path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
       }
     }
   }
@@ -380,6 +389,15 @@ ancova_core<-function(data_input){
 }
 
 
+
+paths_=paths
+list_atlas_=list_atlas
+list_wave_=list_wave
+list_covar_=list_covar
+list_mod_=list_mod
+list_graph_=list_graph
+list_tanner_=list_tanner
+subset_subj_=subset_subj
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,
                    list_wave_=list_wave,
