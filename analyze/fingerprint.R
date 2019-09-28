@@ -49,23 +49,6 @@ list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                 "add_diff_a_ses_t"=
 #                   "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
 
-#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
-#                             list("key"="Sex","value"=1)),
-#                    "2"=list(list("key"="W2_T1QC","value"=1),
-#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1),
-#                             list("key"="Sex","value"=1)))
-
-#list_covar<-list("tanner"=list("1"="W1_Tanner_Male_Genitals",
-#                               "2"="W2_Tanner_Male_Genitals",
-#                               "label"="Tanner stage"),
-#                 "age"=list("1"="W1_Age_at_MRI",
-#                            "2"="W2_Age_at_MRI",
-#                            "label"="Age"),
-#                 "sex"=list("1"="Sex",
-#                            "2"="Sex",
-#                            "label"="Sex"))
-
 list_mod <- list("lin_diff_t"=
                    "value ~ diff_tanner",
                  "lin_diff_at"=
@@ -301,8 +284,13 @@ ancova_core<-function(data_input){
   # Calculate ANCOVA
   if (idx_sex=="all"){
     mod_ancova<-aov(value~long_tanner+diff_age+sex,data=df_src_ancova)
-  }else{
+    color_plot<-"seagreen"
+  }else if (idx_sex=="male"){
     mod_ancova<-aov(value~long_tanner+diff_age,data=df_src_ancova)
+    color_plot<-"steelblue2"
+  }else if (idx_sex=="female"){
+    mod_ancova<-aov(value~long_tanner+diff_age,data=df_src_ancova)
+    color_plot<-"lightcoral"
   }
   df_ancova<-summary(mod_ancova)[[1]]
   df_out_ancova<-data.frame(atlas=atlas,measure=measure,group=group,tanner=group_tanner,sex=idx_sex,test="ANCOVA",
@@ -375,7 +363,7 @@ ancova_core<-function(data_input){
   }
   plot_ancova<-plot_cor_heatmap(input=df_ancova_plot)
   suppressMessages(plot_ancova<-(plot_ancova
-                                 + scale_fill_gradient(low="white",high="seagreen",name="r")
+                                 + scale_fill_gradient(low="white",high=color_plot,name="r")
                                  + ggtitle(paste("FP Cor Model,",atlas,measure,group,group_tanner,idx_sex,sep=" "))
                                  + xlab("2nd wave")
                                  + ylab("1st wave")
@@ -397,16 +385,6 @@ ancova_core<-function(data_input){
   return(df_out)
 }
 
-
-
-paths_=paths
-list_atlas_=list_atlas
-list_wave_=list_wave
-list_covar_=list_covar
-list_mod_=list_mod
-list_graph_=list_graph
-list_tanner_=list_tanner
-subset_subj_=subset_subj
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,
                    list_wave_=list_wave,
@@ -510,15 +488,6 @@ model_fp<-function(paths_=paths,
           df_join_grp_tanner$long_tanner<-paste(as.character(df_join_grp_tanner$ses1_tanner_label),
                                                 as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
           df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
-          
-          #list_sex<-sort(as.numeric.factor(unique(df_join_grp_tanner$sex)))
-          #if (identical(list_sex,c(1,2))){
-          #  list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
-          #}else if(identical(list_sex,1)){
-          #  list_sex<-list("male"=1)
-          #}else if(identical(list_sex,2)){
-          #  list_sex<-list("female"=2)
-          #}
           
           list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
           
