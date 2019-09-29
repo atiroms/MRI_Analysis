@@ -53,12 +53,18 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 id_dir_start<-202
 suffix_dir<-"acompcor"
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-"aal116"
+list_id_dir<-list("acompcor"=201,
+                  "aroma"=211,
+                  "36p"=221,
+                  "acompcor_gsr"=231,
+                  "aroma_gsr"=241)
 
-#n_permutation<-1000
-n_permutation<-100
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100","schaefer200","schaefer400","shen268")
+#list_atlas<-"aal116"
+
+n_permutation<-1000
+#n_permutation<-100
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                              list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
@@ -141,7 +147,7 @@ list_type_tanner<-list("max"=list("1"="W1_Tanner_Max",
 
 
 #**************************************************
-# Timeseries to GAMM of Fingerprints ==============
+# Timeseries to GLM/GAM of Fingerprints ===========
 #**************************************************
 pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas_=list_atlas,
                     list_wave_=list_wave,list_covar_=list_covar,
@@ -223,4 +229,28 @@ itr_model_fp<-function(id_dir_fp_=id_dir_fp,id_dir_cnt_=id_dir_fp+1,
                       subset_subj_=subset_subj_)
   }
   print("Finished itr_model_fp()")
+}
+
+#**************************************************
+# pipe_func() with multiple starting FCs ==========
+#**************************************************
+pipe_func_multi<-function(list_id_dir_=list_id_dir,
+                          list_atlas_=list_atlas,
+                          list_wave_=list_wave,list_covar_=list_covar,
+                          list_mod_=list_mod,list_graph_=list_graph,
+                          list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
+                          subset_subj_=subset_subj,n_permutation_=n_permutation,
+                          skip_ts2fc=TRUE){
+  
+  print("Starting pipe_func_multi()")
+  for (suffix_dir in names(list_id_dir_)){
+    id_dir_start<-list_id_dir_[[suffix_dir]]
+    nullobj<-pipe_func(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas_=list_atlas_,
+                       list_wave_=list_wave_,list_covar_=list_covar_,
+                       list_mod_=list_mod_,list_graph_=list_graph_,
+                       list_strat_tanner_=list_strat_tanner_,list_type_tanner_=list_type_tanner_,
+                       subset_subj_=subset_subj_,n_permutation_=n_permutation_,
+                       skip_ts2fc=skip_ts2fc)
+  }
+  print("Finished pipe_func_multi()")
 }
