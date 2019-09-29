@@ -22,8 +22,18 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
                     "2"=list(list("key"="W2_T1QC","value"=1),
                              list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max",
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+#                               "2"="W2_Tanner_Max",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"),
+#                 "sex"=list("1"="Sex",
+#                            "2"="Sex",
+#                            "label"="Sex"))
+
+list_covar<-list("tanner"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+                               "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
                                "label"="Tanner stage"),
                  "age"=list("1"="W1_Age_at_MRI",
                             "2"="W2_Age_at_MRI",
@@ -129,8 +139,8 @@ list_tanner <-list("5by5"=
 
 
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"aal116"
 #list_atlas<-"schaefer400"
 #list_atlas<-"dk"
 #list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
@@ -369,7 +379,7 @@ ancova_core<-function(data_input){
                                  + ylab("1st wave Tanner stage")
                                  + theme(plot.title = element_text(hjust = 0.5),
                                          axis.text.x = element_text(size=12,angle = 0,vjust=0,hjust=0.5),
-                                         axis.text.y = element_text(size=12,angle = 90))))
+                                         axis.text.y = element_text(size=12))))
   
   ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_tan-",group_tanner,"_sex-",idx_sex,"_fp_ancova.eps",sep=""),plot=plot_ancova,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)

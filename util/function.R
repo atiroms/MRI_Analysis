@@ -147,14 +147,23 @@ func_clinical_data_long<-function(paths,
     list_id_exist_wave<-list('src'=id_exist_intersect)
     if (length(list_covar)>0){
       for (id_covar in seq(length(list_covar))){
-        name_covar_src<-list_covar[[id_covar]][[str_wave]]
+        list_name_covar_src<-list_covar[[id_covar]][[str_wave]]
         name_covar_dst<-names(list_covar)[id_covar]
-        df_clin_exist_wave_add<-df_clin_subset[df_clin_subset$wave==wave,name_covar_src,drop=F]
+        
+        # Choose non-NA value from list of possible source covariate columns
+        n_subj_wave<-dim(df_clin_subset[df_clin_subset$wave==wave,])[1]
+        df_clin_exist_wave_add<-data.frame(matrix(nrow=n_subj_wave,ncol=1))
+        for (name_covar_src in list_name_covar_src){
+          df_clin_exist_wave_add<-pmax(df_clin_exist_wave_add,
+                                       df_clin_subset[df_clin_subset$wave==wave,name_covar_src,drop=F],
+                                       na.rm=TRUE)
+        }
+        
         colnames(df_clin_exist_wave_add)<-name_covar_dst
         df_clin_exist_wave<-cbind(df_clin_exist_wave,df_clin_exist_wave_add)
         id_exist<-df_clin_exist_wave[!is.na(df_clin_exist_wave[name_covar_dst]),'ID_pnTTC']
         id_exist_intersect<-intersect(id_exist_intersect,id_exist)
-        print(paste('Clinical: ',as.character(length(id_exist)),' subjects with non-NA values of covariate: ',name_covar_src,sep=''))
+        print(paste('Clinical: ',as.character(length(id_exist)),' subjects with non-NA values of covariate: ',paste(list_name_covar_src,collapse="/"),sep=''))
         id_exist<-list(id_exist)
         names(id_exist)<-name_covar_dst
         list_id_exist_wave<-c(list_id_exist_wave,id_exist)
@@ -192,7 +201,7 @@ func_clinical_data_join<-function(df_src,list_id_subj,list_covar){
   # Classify covaiates to fixed values and unfixed values
   list_covar_fix<-list_covar_change<-NULL
   for (id_covar in names(list_covar)){
-    if (list_covar[[id_covar]][["1"]]==list_covar[[id_covar]][["2"]]){
+    if (list_covar[[id_covar]][["1"]][1]==list_covar[[id_covar]][["2"]][1]){
       list_covar_fix<-c(list_covar_fix,id_covar)
     }else{
       list_covar_change<-c(list_covar_change,id_covar)
