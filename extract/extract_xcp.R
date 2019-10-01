@@ -19,25 +19,25 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #path_in <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
 #path_out <- "/media/veracrypt1/MRI_img/pnTTC/preproc"
 
-#dir_in <-"171_c1_xcp_acompcor"
-#dir_out<-"175_c1_ts_acompcor"
+#dir_in <-"371_c1_xcp_acompcor_gsr"
+#dir_out<-"375_c1_ts_acompcor_gsr"
 #ses<-'ses-01'
 
-#dir_in <-"172_c2_xcp_acompcor"
-#dir_out<-"176_c2_ts_acompcor"
+#dir_in <-"372_c2_xcp_acompcor_gsr"
+#dir_out<-"376_c2_ts_acompcor_gsr"
 #ses<-'ses-02'
 
-#dir_in <-"181_c1_xcp_aroma"
-#dir_out<-"185_c1_ts_aroma"
-#ses<-'ses-01'
-
-#dir_in <-"182_c2_xcp_aroma"
-#dir_out<-"186_c2_ts_aroma"
-#ses<-'ses-02'
-
-dir_in <-"191_c1_xcp_36p"
-dir_out<-"195_c1_ts_36p"
+dir_in <-"381_c1_xcp_aroma_gsr"
+dir_out<-"385_c1_ts_aroma_gsr"
 ses<-'ses-01'
+
+#dir_in <-"382_c2_xcp_aroma_gsr"
+#dir_out<-"386_c2_ts_aroma_gsr"
+#ses<-'ses-02'
+
+#dir_in <-"191_c1_xcp_36p"
+#dir_out<-"195_c1_ts_36p"
+#ses<-'ses-01'
 
 #dir_in <-"192_c2_xcp_36p"
 #dir_out<-"196_c2_ts_36p"
@@ -143,17 +143,17 @@ extract_xcp<-function(paths_=paths,
 #**************************************************
 
 combine_ts<-function(path_exp="D:/MRI_img/pnTTC/preproc",
-                     #list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
-                     #              list("dir"="176_c2_ts_acompcor","ses"=2)),
-                     #dir_dst="177_ts_acompcor",
+                     #list_src=list(list("dir"="375_c1_ts_acompcor_gsr","ses"=1),
+                     #              list("dir"="376_c2_ts_acompcor_gsr","ses"=2)),
+                     #dir_dst="377_ts_acompcor_gsr",
                      
-                     #list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
-                     #              list("dir"="186_c2_ts_aroma","ses"=2)),
-                     #dir_dst="187_ts_aroma",
+                     list_src=list(list("dir"="385_c1_ts_aroma_gsr","ses"=1),
+                                   list("dir"="386_c2_ts_aroma_gsr","ses"=2)),
+                     dir_dst="387_ts_aroma_gsr",
                      
-                     list_src=list(list("dir"="195_c1_ts_36p","ses"=1),
-                                   list("dir"="196_c2_ts_36p","ses"=2)),
-                     dir_dst="197_ts_36p",
+                     #list_src=list(list("dir"="195_c1_ts_36p","ses"=1),
+                     #              list("dir"="196_c2_ts_36p","ses"=2)),
+                     #dir_dst="197_ts_36p",
                      
                      list_atlas_=list_atlas){
 

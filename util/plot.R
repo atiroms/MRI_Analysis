@@ -61,17 +61,23 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
-  #df_src <- mod_gamm$model
-  key_df_src<-c("value",names(mod_gamm$var.summary))
-  if ("ID_pnTTC" %in% key_df_src){
-    key_df_src<-key_df_src
+plot_gamm<-function(plot_in,mod_gamm,df_join_measure_roi,spec_graph){
+  
+  if (is.null(plot_in)){
+    plot<-ggplot()
   }else{
+    plot<-plot_in
+  }
+  
+  key_df_src<-c("value",names(mod_gamm$var.summary))
+  if (!("ID_pnTTC" %in% key_df_src)){
     key_df_src<-c(key_df_src, "ID_pnTTC")
+  }
+  if (!("sex" %in% key_df_src)){
+    key_df_src<-c(key_df_src, "sex")
   }
   df_src <- df_join_measure_roi[key_df_src]
   
-  plot<-ggplot()
   # add prediction line + ribbon to plot
   if (!is.null(spec_graph[["smooth"]])){
     for (name_smooth in names(spec_graph[["smooth"]])){
@@ -92,25 +98,29 @@ plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
           }
         }
       }
+      flag_plot<-T
       if (!is.null(spec_smooth[["fix"]])){
         for (var in names(spec_smooth[["fix"]])){
           df_smooth[[var]]<-spec_smooth[["fix"]][[var]]
+          if (!(spec_smooth[["fix"]][[var]] %in% df_src[[var]])){
+            flag_plot<-F
+          }
         }
       }
-      #df_smooth <- cbind(df_smooth,
-      #                   as.data.frame(predict.gam(mod_gamm, df_smooth, se.fit = TRUE)))
-      df_smooth <- cbind(df_smooth,
-                         as.data.frame(predict.gam(mod_gamm, df_smooth, exclude="s(ID_pnTTC)",se.fit = TRUE)))
-      plot <- (plot
-               + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
-                           color=spec_smooth[["color"]],size=0.5,alpha=spec_smooth[["alpha"]]))
-      if (spec_smooth[["ribbon"]]){
+      if (flag_plot){
+        df_smooth <- cbind(df_smooth,
+                           as.data.frame(predict.gam(mod_gamm, df_smooth, exclude="s(ID_pnTTC)",se.fit = TRUE)))
         plot <- (plot
-                 + geom_ribbon(aes(x=!!df_smooth[,1],
-                                   ymax = !!df_smooth[["fit"]]+1.96*!!df_smooth[["se.fit"]],
-                                   ymin = !!df_smooth[["fit"]]-1.96*!!df_smooth[["se.fit"]],
-                                   linetype=NA),
-                               fill=spec_smooth[["color"]],alpha = 0.2*spec_smooth[["alpha"]]))
+                 + geom_line(aes(x=!!df_smooth[,1],y=!!df_smooth[["fit"]]),
+                             color=spec_smooth[["color"]],size=0.5,alpha=spec_smooth[["alpha"]]))
+        if (spec_smooth[["ribbon"]]){
+          plot <- (plot
+                   + geom_ribbon(aes(x=!!df_smooth[,1],
+                                     ymax = !!df_smooth[["fit"]]+1.96*!!df_smooth[["se.fit"]],
+                                     ymin = !!df_smooth[["fit"]]-1.96*!!df_smooth[["se.fit"]],
+                                     linetype=NA),
+                                 fill=spec_smooth[["color"]],alpha = 0.2*spec_smooth[["alpha"]]))
+        }
       }
     }
   }
@@ -124,15 +134,17 @@ plot_gamm<-function(mod_gamm,df_join_measure_roi,spec_graph){
       for (var_subset in names(spec_point[["subset"]])){
         df_point_series<-df_point_series[df_point_series[[var_subset]]==spec_point[["subset"]][[var_subset]],]
       }
-      df_point_series$name_series<-name_point
-      df_point_series$color<-spec_point[["color"]]
-      df_point_series$alpha<-spec_point[["alpha"]]
-      df_point<-rbind(df_point,df_point_series)
+      if (dim(df_point_series)[1]>0){
+        df_point_series$name_series<-name_point
+        df_point_series$color<-spec_point[["color"]]
+        df_point_series$alpha<-spec_point[["alpha"]]
+        df_point<-rbind(df_point,df_point_series)
+      }
     }
     plot <- (plot
              + geom_point(aes(x=df_point[[spec_graph[["x_axis"]]]],
                               y=df_point[,1]),
-                          color=df_point[["color"]],shape=1,size=2,alpha=0.4*df_point[["alpha"]]))
+                          color=df_point[["color"]],shape=1,size=2,alpha=0.6*df_point[["alpha"]]))
     if (any(duplicated(df_point[["ID_pnTTC"]]))){
       plot <- (plot
                + geom_path(aes(x=df_point[[spec_graph[["x_axis"]]]],
