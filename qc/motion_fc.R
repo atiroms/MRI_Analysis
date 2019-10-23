@@ -13,8 +13,10 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 dir_in<-"201_fc_acompcor"
 dir_out<-"205_fc_motion_acompcor"
 dir_motion<-c("69_c1_motion","70_c2_motion")
+dir_quality<-c("391_c1_quality","392_c2_quality")
 
-list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100","schaefer200","schaefer400","shen268")
 #list_atlas<-"aal116"
 
 
@@ -32,7 +34,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
                     path_exp_=path_exp,
                     dir_in_=dir_in,
                     dir_out_=dir_out,
-                    dir_motion_=dir_motion){
+                    dir_motion_=dir_motion,dir_quality_=dir_quality){
   path_root<-NA
   for(p in list_path_root){
     if(file.exists(p)){
@@ -47,8 +49,11 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
   path_in     <- file.path(path_root,path_exp_,dir_in_)
   path_out    <- file.path(path_root,path_exp_,dir_out_)
   path_motion <- file.path(path_root,path_exp_,dir_motion_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,"motion"=path_motion,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_,"dir_motion"=dir_motion_)
+  path_quality<- file.path(path_root,path_exp_,dir_quality_)
+  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+                 "motion"=path_motion,"quality"=path_quality,
+                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_,
+                 "dir_motion"=dir_motion_,"dir_quality"=dir_quality_)
   return(output)
 }
 
@@ -103,14 +108,15 @@ fc_motion<-function(paths_=paths,
     rownames(df_conn_cbind)<-NULL
     
     # Calculate average FC
-    mean_fc<-rowMeans(df_conn_cbind)
+    mean_fc<-rowMeans(df_conn_cbind,na.rm=T)
     
     # Calculate distance between average FC and each subject FC
     df_dist_fc<-df_ses_subj
     for (idx_column in seq(dim(df_conn_cbind)[2])){
-      df_dist_fc[idx_column,"dist"]<-sqrt(sum((mean_fc-df_conn_cbind[,idx_column])^2))
+      df_dist_fc[idx_column,"dist"]<-sqrt(sum((mean_fc-df_conn_cbind[,idx_column])^2,na.rm=T))
     }
     
+    # Load motion.tsv data
     df_motion<-data.frame()
     for (ses in c(1,2)){
       df_motion_ses<-read_tsv(file.path(paths_$motion[ses],"output","motion.tsv"))
@@ -118,15 +124,17 @@ fc_motion<-function(paths_=paths,
       df_motion<-rbind(df_motion,df_motion_ses)
     }
     
-    df_plot<-left_join(df_dist_fc,df_motion,by=c("ses","ID_pnTTC"))
-    df_plot$max_trans<-pmax(df_plot$trans_x_max,df_plot$trans_y_max,df_plot$trans_z_max)
-    df_plot$max_rot<-pmax(df_plot$rot_x_max,df_plot$rot_y_max,df_plot$rot_z_max)
-    df_plot<-df_plot[,c("ses","ID_pnTTC","dist","max_trans","max_rot","max_max")]
+    df_plot_motion<-left_join(df_dist_fc,df_motion,by=c("ses","ID_pnTTC"))
+    df_plot_motion$max_trans<-pmax(df_plot_motion$trans_x_max,df_plot_motion$trans_y_max,
+                                   df_plot_motion$trans_z_max)
+    df_plot_motion$max_rot<-pmax(df_plot_motion$rot_x_max,df_plot_motion$rot_y_max,
+                                 df_plot_motion$rot_z_max)
+    df_plot_motion<-df_plot_motion[,c("ses","ID_pnTTC","dist","max_trans","max_rot","max_max")]
     
     for (type_max in c("max_trans","max_rot","max_max")){
-      df_plot_subset<-df_plot[,c("dist",type_max)]
-      colnames(df_plot_subset)<-c("x","y")
-      plot<-(ggplot(df_plot_subset)
+      df_plot_motion_subset<-df_plot_motion[,c("dist",type_max)]
+      colnames(df_plot_motion_subset)<-c("x","y")
+      plot<-(ggplot(df_plot_motion_subset)
              + aes(x=x,y=y)
              + geom_point(size=2)
              + ggtitle(paste("FC-motion correlation,",type_max,sep=" "))
@@ -135,9 +143,40 @@ fc_motion<-function(paths_=paths,
              + theme_light()
              + theme(plot.title = element_text(hjust = 0.5))
             )
-      ggsave(paste("atl-",atlas,"_type-",type_max,"_fc_motion.eps",sep=""),plot=plot,device=cairo_ps,
+      ggsave(paste("atl-",atlas,"_type-",type_max,"_fc_motion.eps",sep=""),
+             plot=plot,device=cairo_ps,
              path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
+    
+    # Load quality.csv data
+    df_quality<-data.frame()
+    for (ses in c(1,2)){
+      df_quality_ses<-read.csv(file.path(paths_$quality[ses],"output","quality.csv"))
+      df_quality_ses<-data.frame(ses=ses,df_quality_ses)
+      df_quality<-rbind(df_quality,df_quality_ses)
+    }
+    
+    df_plot_quality<-left_join(df_dist_fc,df_quality,by=c("ses","ID_pnTTC"))
+    df_plot_quality<-df_plot_quality[,c("ses","ID_pnTTC","dist","meanDV",
+                                        "relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")]
+    
+    for (type_max in c("meanDV","relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")){
+      df_plot_quality_subset<-df_plot_quality[,c("dist",type_max)]
+      colnames(df_plot_quality_subset)<-c("x","y")
+      plot<-(ggplot(df_plot_quality_subset)
+             + aes(x=x,y=y)
+             + geom_point(size=2)
+             + ggtitle(paste("FC-motion correlation,",type_max,sep=" "))
+             + xlab("Distance from average")
+             + ylab(type_max)
+             + theme_light()
+             + theme(plot.title = element_text(hjust = 0.5))
+      )
+      ggsave(paste("atl-",atlas,"_type-",type_max,"_fc_motion.eps",sep=""),
+             plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+    }
+    
   }
   print("Finished fc_motion().")
 }
