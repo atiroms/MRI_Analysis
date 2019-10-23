@@ -10,8 +10,17 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"201_fc_acompcor"
-dir_out<-"205_fc_motion_acompcor"
+#dir_in<-"201_fc_acompcor"
+#dir_out<-"205_fc_motion_acompcor"
+#dir_in<-"211_fc_aroma"
+#dir_out<-"215_fc_motion_aroma"
+dir_in<-"221_fc_36p"
+dir_out<-"225_fc_motion_36p"
+#dir_in<-"231_fc_acompcor_gsr"
+#dir_out<-"235_fc_motion_acompcor_gsr"
+#dir_in<-"241_fc_aroma_gsr"
+#dir_out<-"245_fc_motion_aroma_gsr"
+
 dir_motion<-c("69_c1_motion","70_c2_motion")
 dir_quality<-c("391_c1_quality","392_c2_quality")
 
