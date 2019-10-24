@@ -53,7 +53,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 id_dir_start<-202
 suffix_dir<-"acompcor"
 
-dir_summary<-"300_summary"
+dir_summary<-"300_fp_model_summary"
 
 list_id_dir<-list("acompcor"=201,
                   "aroma"=211,
@@ -186,7 +186,7 @@ summarize_model<-function(dir_summary_=dir_summary,
       
       # Load GLM/GAM results
       df_fp_glm<-read.csv(file.path(path_dir_in,"fp_glm.csv"))
-      df_sing<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
       
       if (dim(df_sign)[1]>0){
         df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
@@ -204,7 +204,7 @@ summarize_model<-function(dir_summary_=dir_summary,
     }
   }
   write.csv(df_out,file.path(path_dir_out,"summary_model.csv"),row.names=F)
-  
+  print("Finished summarize_model().")
 }
 
 
