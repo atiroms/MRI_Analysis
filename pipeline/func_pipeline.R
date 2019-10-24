@@ -190,6 +190,16 @@ summarize_model<-function(dir_summary_=dir_summary,
       
       if (dim(df_sign)[1]>0){
         df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
+        for (i_row in seq(dim(df_sign)[1])){
+          filename_src<-paste("atl-",df_sign[i_row,"atlas"],"_msr-",df_sign[i_row,"measure"],
+                              "_grp-",df_sign[i_row,"group"],"_mod-",df_sign[i_row,"model"],
+                               "_plt-tdiff_fp_glm.eps",sep="")
+          filename_dst<-paste("prc-",label_preproc,"_tnr-",label_type_tanner,"_",filename_src,sep="")
+          if (!file.exists(file.path(path_dir_out,filename_dst))){
+            file.copy(file.path(path_dir_in,filename_src),path_dir_out)
+            file.rename(file.path(path_dir_out,filename_src),file.path(path_dir_out,filename_dst))
+          }
+        }
       }
     }
   }
