@@ -53,7 +53,12 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 id_dir_start<-202
 suffix_dir<-"acompcor"
 
-dir_summary<-"300_fp_model_summary"
+#dir_summary<-"300_fp_model_summary"
+dir_summary<-"301_fp_model_summary"
+
+list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
+#thresh_sign<-0.05
+thresh_sign<-0.001
 
 list_id_dir<-list("acompcor"=201,
                   "aroma"=211,
@@ -145,8 +150,7 @@ list_type_tanner<-list("max"=list("1"="W1_Tanner_Max",
 
 # Parameters for summarize_model()
 
-list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
-thresh_sign<-0.05
+
 
 #**************************************************
 # Libraries =======================================
