@@ -53,6 +53,13 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 id_dir_start<-202
 suffix_dir<-"acompcor"
 
+#dir_summary<-"300_fp_model_summary"
+dir_summary<-"301_fp_model_summary"
+
+list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
+#thresh_sign<-0.05
+thresh_sign<-0.001
+
 list_id_dir<-list("acompcor"=201,
                   "aroma"=211,
                   "36p"=221,
@@ -141,9 +148,69 @@ list_type_tanner<-list("max"=list("1"="W1_Tanner_Max",
                                       "label"="Tanner stage (adrenal)"))
 
 
+# Parameters for summarize_model()
+
+
+
 #**************************************************
 # Libraries =======================================
 #**************************************************
+
+
+#**************************************************
+# Summarize model_fp() results ====================
+#**************************************************
+
+summarize_model<-function(dir_summary_=dir_summary,
+                          list_id_dir_=list_id_dir,list_type_tanner_=list_type_tanner,
+                          list_term_summary_=list_term_summary,thresh_sign_=thresh_sign
+                          ){
+  print("Starting summarize_model().")
+  
+  df_out<-data.frame()
+  flag_in_first<-T
+  for (i_id_dir in seq(length(list_id_dir_))){
+    for (i_type_tanner in seq(length(list_type_tanner_))){
+      label_preproc<-names(list_id_dir_)[[i_id_dir]]
+      label_type_tanner<-names(list_type_tanner_)[[i_type_tanner]]
+      
+      # Prepare directories
+      id_dir_in<-as.character(list_id_dir[[i_id_dir]]+3+0.1*i_type_tanner)
+      dir_in<-paste(id_dir_in,"fp_model",
+                    label_preproc,label_type_tanner,
+                    sep="_")
+      paths<-func_path(dir_in=dir_in,dir_out=dir_summary_)
+      if (flag_in_first){
+        nullobj<-func_createdirs(paths)
+        flag_in_first<-F
+      }
+      
+      path_dir_in<-file.path(paths$input,"output")
+      path_dir_out<-file.path(paths$output,"output")
+      
+      # Load GLM/GAM results
+      df_fp_glm<-read.csv(file.path(path_dir_in,"fp_glm.csv"))
+      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      
+      if (dim(df_sign)[1]>0){
+        df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
+        for (i_row in seq(dim(df_sign)[1])){
+          filename_src<-paste("atl-",df_sign[i_row,"atlas"],"_msr-",df_sign[i_row,"measure"],
+                              "_grp-",df_sign[i_row,"group"],"_mod-",df_sign[i_row,"model"],
+                               "_plt-tdiff_fp_glm.eps",sep="")
+          filename_dst<-paste("prc-",label_preproc,"_tnr-",label_type_tanner,"_",filename_src,sep="")
+          if (!file.exists(file.path(path_dir_out,filename_dst))){
+            file.copy(file.path(path_dir_in,filename_src),path_dir_out)
+            file.rename(file.path(path_dir_out,filename_src),file.path(path_dir_out,filename_dst))
+          }
+        }
+      }
+    }
+  }
+  write.csv(df_out,file.path(path_dir_out,"summary_model.csv"),row.names=F)
+  print("Finished summarize_model().")
+}
+
 
 
 #**************************************************

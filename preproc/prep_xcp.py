@@ -406,17 +406,13 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        #path_input='/media/veracrypt3/MRI_img/pnTTC/preproc/71_c1_xcp_acompcor',
-        #path_output='/media/veracrypt3/MRI_img/pnTTC/preproc/73_c1_quality_acompcor',
+
+        path_input='Q:/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
+        path_output='Q:/MRI_img/pnTTC/preproc/391_c1_quality',
         
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/72_c2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/74_c2_quality_acompcor',
+        #path_input='P:/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
+        #path_output='P:/MRI_img/pnTTC/preproc/392_c2_quality',
         
-        path_input='/media/veracrypt3/MRI_img/pnTTC/preproc/81_c1_xcp_acompcor',
-        path_output='/media/veracrypt3/MRI_img/pnTTC/preproc/83_c1_quality_acompcor',
-        
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/82_c2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/84_c2_quality_acompcor',
         skip_mkdir=False,
         skip_copylog=False,
         filename_output='quality.csv'
@@ -437,7 +433,7 @@ class ExtractQuality():
 
         if not skip_copylog:
             # Copy log file
-            print('Starting to copylog folder.')
+            print('Starting to copy log folder.')
             path_log_in=os.path.join(path_input,'log')
             path_log_out=os.path.join(path_output,'log')
             shutil.copytree(path_log_in,path_log_out)
@@ -456,6 +452,7 @@ class ExtractQuality():
         df_quality.loc[:,'id0']=[int(i.replace('sub-','')) for i in df_quality.loc[:,'id0']]
         df_quality_spaced=pd.DataFrame([i for i in range(1,max(df_quality.loc[:,'id0'])+1)],columns=['id0'])
         df_quality_spaced=pd.merge(df_quality_spaced,df_quality,how='left',on='id0')
+        df_quality_spaced=df_quality_spaced.rename(columns={'id0':'ID_pnTTC'})
         path_file_output=os.path.join(path_output,'output',filename_output)
         df_quality_spaced.to_csv(path_file_output,index=False)
 
