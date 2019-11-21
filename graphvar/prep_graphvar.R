@@ -9,11 +9,13 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"102_fc_acompcor"
-dir_out<-"107_corrmat"
+#dir_in<-"102_fc_acompcor"
+dir_in<-"201_fc_acompcor"
+dir_out<-"310_corrmat"
 
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100","schaefer200","schaefer400","shen268")
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100","schaefer200","schaefer400","shen268")
+list_atlas<-"power264"
 
 
 #**************************************************
@@ -99,9 +101,11 @@ prep_graphvar<-function(paths_=paths,
     list_ses<-sort(unique(df_fc$ses))
     
     list_src_corrmat<-list()
+    df_ses_subj<-data.frame()
     for (ses in list_ses){
       list_subj<-sort(unique(df_fc[df_fc$ses==ses,"ID_pnTTC"]))
       for (subj in list_subj){
+        df_ses_subj[nrow(df_ses_subj)+1,"Subj_ID"]<-sprintf("%02d_%05d",ses,subj)
         df_fc_subj<-df_fc[df_fc$ses==ses & df_fc$ID_pnTTC==subj,c("from","to","r","p")]
         file_out<-sprintf("%02d_%05d.mat",ses,subj)
         list_src_corrmat<-c(list_src_corrmat,
@@ -109,6 +113,7 @@ prep_graphvar<-function(paths_=paths,
                                       "path_file_out"=file.path(paths_$output,"output",atlas,file_out))))
       }
     }
+    write.csv(df_ses_subj,file.path(paths_$output,"output",atlas,paste("Variables_",atlas,".csv",sep="")),row.names=F)
     
     # Parallel computing of correlation matrices
     print(paste("Atlas: ",atlas,", calculating correlation matrices in parallel.",sep=""))
