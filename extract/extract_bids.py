@@ -77,9 +77,9 @@ class SubsetNiigz():
     def __init__(self,
         path_src='D:/MRI_img/pnTTC/data/400_niigz',
         path_dst='D:/MRI_img/pnTTC/data/401_nii',
-        #file_clin='D:/atiroms/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv',
-        crt_subset=[[1,['W1_T1QC',1],['W1_rsfMRIexist',1]],
-                    [1,['W2_T1QC',1],['W2_rsfMRIexist',1]]],
+        file_clin='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv',
+        list_list_crt_subset=[[1,['W1_T1QC',1],['W1_rsfMRIexist',1]],
+                              [2,['W2_T1QC',1],['W2_rsfMRIexist',1]]],
         list_subdir_dst=['ses-01/anat','ses-01/func','ses-02/anat','ses-02/func']):
         
         print('Starting SubsetNiigz().')
@@ -113,5 +113,5 @@ class SubsetNiigz():
                 df_clin_ses=df_clin_ses[df_clin_ses[crt_subset[0]]==crt_subset[1]]
             df_clin_long=pd.concat([df_clin_long,df_clin_ses])
         df_clin_long=df_clin_long.reset_index()
-        df_clin_long.to_csv(os.path.join(path_dst,'output','df_clin.csv'))
+        df_clin_long.to_csv(os.path.join(path_dst,'output','df_clin.csv'),index=False)
 
