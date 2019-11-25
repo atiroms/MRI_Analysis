@@ -117,13 +117,13 @@ class SubsetNiigz():
         df_clin_long.to_csv(os.path.join(path_dst,'output','df_clin_plan.csv'),index=False)
 
         # Copy and unzip .nii.gz files
-        df_clin_long_copied=pd.DataFrame()
+        df_clin_long_copied=pd.DataFrame(columns=df_clin_long.columns)
+        list_absent=[]
         for idx_row in tqdm(range(len(df_clin_long))):
             list_path_copy=[]
             flag_present=True
             for subdir_dst in list_subdir_dst:
                 if 'ses-'+str(df_clin_long.loc[idx_row,'ses']).zfill(2) in subdir_dst:
-                
                     file_src_regex='sub-'+str(df_clin_long.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(df_clin_long.loc[idx_row,'ses']).zfill(2)+'_*'
                     path_file_src=glob.glob(path_src+'/output/'+subdir_dst+'/'+file_src_regex,recursive=True)
                     if len(path_file_src)>0:
@@ -133,13 +133,17 @@ class SubsetNiigz():
                         list_path_copy.append([path_file_src,path_file_dst])
                     else:
                         flag_present=False
+                        list_absent.append(subdir_dst+'/sub-'+str(df_clin_long.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(df_clin_long.loc[idx_row,'ses']).zfill(2))
 
-                if flag_present:
-                    for path_copy in list_path_copy:
-                        with gzip.open(path_copy[0], 'rb') as img_in:
-                            with open(path_copy[1], 'wb') as img_out:
-                                shutil.copyfileobj(img_in, img_out)
-                    df_clin_long_copied=pd.concat([df_clin_long_copied,df_clin_long.loc[idx_row,:]])
+            if flag_present:
+                for path_copy in list_path_copy:
+                    with gzip.open(path_copy[0], 'rb') as img_in:
+                        with open(path_copy[1], 'wb') as img_out:
+                            shutil.copyfileobj(img_in, img_out)
+                df_clin_long_copied=df_clin_long_copied.append(df_clin_long.loc[idx_row,:])
+        if len(list_absent)>0:
+            print('Absent data:')
+            print(list_absent)
         df_clin_long_copied.to_csv(os.path.join(path_dst,'output','df_clin.csv'),index=False)
 
         print('Finished SubsetNiigz()')
