@@ -9,6 +9,7 @@ import pandas as pd
 import shutil
 import glob
 from tqdm.autonotebook import tqdm
+import gzip
 
 #def _copyfileobj_patched(fsrc, fdst, length=16*1024*1024):
 def _copyfileobj_patched(fsrc, fdst, length=1024*1024*1024):
@@ -113,5 +114,33 @@ class SubsetNiigz():
                 df_clin_ses=df_clin_ses[df_clin_ses[crt_subset[0]]==crt_subset[1]]
             df_clin_long=pd.concat([df_clin_long,df_clin_ses])
         df_clin_long=df_clin_long.reset_index()
-        df_clin_long.to_csv(os.path.join(path_dst,'output','df_clin.csv'),index=False)
+        df_clin_long.to_csv(os.path.join(path_dst,'output','df_clin_plan.csv'),index=False)
 
+        # Copy and unzip .nii.gz files
+        df_clin_long_copied=pd.DataFrame()
+        for idx_row in tqdm(range(len(df_clin_long))):
+            list_path_copy=[]
+            flag_present=True
+            for subdir_dst in list_subdir_dst:
+                if 'ses-'+str(df_clin_long.loc[idx_row,'ses']).zfill(2) in subdir_dst:
+                
+                    file_src_regex='sub-'+str(df_clin_long.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(df_clin_long.loc[idx_row,'ses']).zfill(2)+'_*'
+                    path_file_src=glob.glob(path_src+'/output/'+subdir_dst+'/'+file_src_regex,recursive=True)
+                    if len(path_file_src)>0:
+                        path_file_src=path_file_src[0]
+                        #print(path_file_src)
+                        path_file_dst=path_dst+path_file_src[len(path_src):-3]
+                        list_path_copy.append([path_file_src,path_file_dst])
+                    else:
+                        flag_present=False
+
+                if flag_present:
+                    for path_copy in list_path_copy:
+                        with gzip.open(path_copy[0], 'rb') as img_in:
+                            with open(path_copy[1], 'wb') as img_out:
+                                shutil.copyfileobj(img_in, img_out)
+                    df_clin_long_copied=pd.concat([df_clin_long_copied,df_clin_long.loc[idx_row,:]])
+        df_clin_long_copied.to_csv(os.path.join(path_dst,'output','df_clin.csv'),index=False)
+
+        print('Finished SubsetNiigz()')
+   
