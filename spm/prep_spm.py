@@ -26,9 +26,11 @@ shutil.copyfileobj = _copyfileobj_patched
 ##################################################
 class ClinVol():
     def __init__(self,
-        file_clin_long='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/df_clin.csv',
+        df_clin_long,
+        path_dst,
+        #file_clin_long='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/df_clin.csv',
         file_vol='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv',
-        file_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/df_covar.csv',
+        #file_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/df_covar.csv',
         list_key_asis=['Sex'],
         list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
                           ['Testosterone',['W1_Testosterone','W2_Testosterone']],
@@ -36,7 +38,8 @@ class ClinVol():
                           ['Cortisol',['W1_Cortisol','W2_Cortisol']],
                           ['DHEAS',['W1_DHEAS','W2_DHEAS']]]):
 
-        df_clin_long=pd.read_csv(file_clin_long,encoding = 'unicode_escape')
+        #df_clin_long=pd.read_csv(file_clin_long,encoding = 'unicode_escape')
+
         df_covar=df_clin_long.loc[:,['ses','ID_pnTTC']+list_key_asis]
 
         # Combine session-specific data into one column
@@ -60,6 +63,7 @@ class ClinVol():
         df_covar=df_covar.sort_values(by=['ID_pnTTC','ses'])
         df_covar=df_covar.reset_index(drop=True)
 
+        file_dst=path_dst+'/df_covar.csv'
         df_covar.to_csv(file_dst,index=False)
 
 
@@ -67,15 +71,52 @@ class ClinVol():
 # Pickup SPM-preprocessed nii files
 ##################################################
 
-class Pickup_preproc():
+class Pickup():
     def __init__(self,
         path_src='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/preproc',
-        path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup',
         file_clin='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv',
+        file_vol='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv',
         prefix_file='smwc1',
         suffix_file='_T1w.nii',
-        list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','>0'],['W1_Testosterone','>0']],
-                              [2,['W2_T1QC','==1'],['Sex','>0'],['W2_Testosterone','>0']]]):
+
+        #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_Hormone',
+        #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','>0'],['W1_Testosterone','>0']],
+        #                      [2,['W2_T1QC','==1'],['Sex','>0'],['W2_Testosterone','>0']]],
+        #list_key_asis=['Sex'],
+        #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+        #                  ['Testosterone',['W1_Testosterone','W2_Testosterone']],
+        #                  ['DHEA',['W1_DHEA','W2_DHEA']],
+        #                  ['Cortisol',['W1_Cortisol','W2_Cortisol']],
+        #                  ['DHEAS',['W1_DHEAS','W2_DHEAS']]]
+                          
+        #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerAdrenalFemale',
+        #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==2'],['W1_Tanner_Female_Pubic_Hair','>0']],
+        #                      [2,['W2_T1QC','==1'],['Sex','==2'],['W2_Tanner_Female_Pubic_Hair','>0']]],
+        #list_key_asis=['Sex'],
+        #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+        #                  ['Tanner_Adrenal',['W1_Tanner_Female_Pubic_Hair','W2_Tanner_Female_Pubic_Hair']]]
+                          
+        #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerAdrenalMale',
+        #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==1'],['W1_Tanner_Male_Pubic_Hair','>0']],
+        #                      [2,['W2_T1QC','==1'],['Sex','==1'],['W2_Tanner_Male_Pubic_Hair','>0']]],
+        #list_key_asis=['Sex'],
+        #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+        #                  ['Tanner_Adrenal',['W1_Tanner_Male_Pubic_Hair','W2_Tanner_Male_Pubic_Hair']]]
+        
+        #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerGonadalFemale',
+        #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==2'],['W1_Tanner_Female_Breast','>0']],
+        #                      [2,['W2_T1QC','==1'],['Sex','==2'],['W2_Tanner_Female_Breast','>0']]],
+        #list_key_asis=['Sex'],
+        #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+        #                  ['Tanner_Gonadal',['W1_Tanner_Female_Breast','W2_Tanner_Female_Breast']]]
+                          
+        path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerGonadalMale',
+        list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==1'],['W1_Tanner_Male_Genitals','>0']],
+                              [2,['W2_T1QC','==1'],['Sex','==1'],['W2_Tanner_Male_Genitals','>0']]],
+        list_key_asis=['Sex'],
+        list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+                          ['Tanner_Gonadal',['W1_Tanner_Male_Genitals','W2_Tanner_Male_Genitals']]]
+        ):
 
         print('Starting Pickup_preproc()')
 
@@ -111,7 +152,30 @@ class Pickup_preproc():
         df_clin_long_copied.to_csv(os.path.join(path_dst,'df_clin.csv'),index=False)
 
         # Create dataframe of clinical and global volume measures
-        _=ClinVol()
+        df_covar=df_clin_long_copied.loc[:,['ses','ID_pnTTC']+list_key_asis]
+
+        # Combine session-specific data into one column
+        for key_combine in list_key_combine:
+            for idx_row in range(len(df_covar)):
+                ses_row=int(df_covar.loc[idx_row,'ses'])
+                df_covar.loc[idx_row,key_combine[0]]=df_clin_long.loc[idx_row,key_combine[1][ses_row-1]]
+
+        # load and calculate global brain measurement data
+        df_vol=pd.read_csv(file_vol,encoding='unicode_escape')
+        df_vol['TBV']=df_vol['Volume1']+df_vol['Volume2']
+        df_vol['ICV']=df_vol['Volume1']+df_vol['Volume2']+df_vol['Volume3']
+        df_vol['ses']=[int(path_file[-16:-14]) for path_file in df_vol.loc[:,'File']]
+        df_vol['ID_pnTTC']=[int(path_file[-26:-21]) for path_file in df_vol.loc[:,'File']]
+
+        # combine global calculation into covariates data
+        df_covar['TBV']=pd.Series()
+        df_covar['ICV']=pd.Series()
+        for idx_row in range(len(df_covar)):
+            df_covar.loc[idx_row,['TBV','ICV']]=df_vol.loc[(df_vol['ses']==df_covar.loc[idx_row,'ses']) & (df_vol['ID_pnTTC']==df_covar.loc[idx_row,'ID_pnTTC']),['TBV','ICV']].values.tolist()[0]
+        df_covar=df_covar.sort_values(by=['ID_pnTTC','ses'])
+        df_covar=df_covar.reset_index(drop=True)
+
+        df_covar.to_csv(path_dst+'/df_covar.csv',index=False)
 
         print('Finished Pickup_preproc()')
 
@@ -120,7 +184,7 @@ class Pickup_preproc():
 # Pickup nii files
 ##################################################
 
-class Pickup():
+class Pickup_old():
     def __init__(self,
         path_src='D:/MRI/pnTTC/c1c2_struc/spm/00_acpc',
         path_dst='D:/MRI/pnTTC/c1c2_struc/spm/01_t1qc',
