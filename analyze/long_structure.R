@@ -8,7 +8,7 @@
 # Parameters ======================================
 #**************************************************
 
-path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/T1w_FS"
+path_exp <- "Dropbox/MRI_img/pnTTC/Puberty/Stats/str_FS"
 dir_in <-"01_extract"
 #dir_out <-"03_gamm"
 dir_out <-"06_gamm_smooth"
@@ -22,9 +22,9 @@ list_wave <- c(1,2)
 list_measure <-"volume"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
-#list_str_group<-"subcortex"
+list_str_group<-"subcortex"
 #list_str_group<-c("global","misc")
-list_str_group<-c("cortex","subcortex","global")
+#list_str_group<-c("cortex","subcortex","global")
 
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
 #                               "2"="W2_Tanner_Max",
@@ -203,7 +203,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI/pnTTC/Puberty/Stats/CommonData")
+  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
   path_in     <- file.path(path_root,path_exp_,dir_in_)
   path_out    <- file.path(path_root,path_exp_,dir_out_)
   output <- list("script"=path_script,"input"=path_in,"output"=path_out,
@@ -226,32 +226,36 @@ source(file.path(paths$script,"util/plot.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-#paths_=paths
-#subset_subj_=subset_subj
-#list_covar_=list_covar
-#file_input_=file_input
-#list_wave_=list_wave
-#list_measure_=list_measure
-#list_str_group_=list_str_group
-#list_mod_=list_mod
-#list_graph_=list_graph
+paths_=paths
+subset_subj_=subset_subj
+list_covar_=list_covar
+file_input_=file_input
+list_wave_=list_wave
+list_measure_=list_measure
+list_str_group_=list_str_group
+list_mod_=list_mod
+list_graph_=list_graph
+key_group_='group_3'
 
 
 gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
                    list_wave_=list_wave,list_measure_=list_measure,list_str_group_=list_str_group,
-                   list_mod_=list_mod,list_graph_=list_graph
+                   list_mod_=list_mod,list_graph_=list_graph,key_group_='group_3'
                    ){
   print("Starting gamm_str().")
   nullobj<-func_createdirs(paths_,copy_log=T)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
-  df_clin<-func_clinical_data_long(paths_,list_wave_)
-  data_subset_clin<-func_subset_clin(df_clin,
-                                     list_wave_,list_measure_,subset_subj_,
-                                     list_covar_,
-                                     rem_na_clin=T)
-  df_clin_subset<-data_subset_clin$df_clin
+  #df_clin<-func_clinical_data_long(paths_,list_wave_)
+  #data_subset_clin<-func_subset_clin(df_clin,
+  #                                   list_wave_,list_measure_,subset_subj_,
+  #                                   list_covar_,
+  #                                   rem_na_clin=T)
+  #df_clin_subset<-data_subset_clin$df_clin
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
+                                     list_covar=list_covar_,rem_na_clin=T)
+  df_clin<-data_clin$df_clin
   
   # Load structural data
   print('Loading structural data.')
@@ -265,7 +269,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Join clinical and structural data frames
   print('Joining clinical and structural data.')
-  df_join<-inner_join(df_str_subset,df_clin_subset,by=c('ID_pnTTC','wave'))
+  df_join<-inner_join(df_str_subset,df_clin,by=c('ID_pnTTC','wave'))
   for (key in c('ID_pnTTC','wave','sex','measure')){
     if (key %in% colnames(df_join)){
       df_join[,key]<-as.factor(df_join[,key])
@@ -285,7 +289,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
     list_roi<-list_roi[order(list_roi)]
     for (roi in list_roi){
       label_roi<-as.character(dict_roi[dict_roi$id==roi,'label'])
-      group_roi<-as.character(dict_roi[dict_roi$id==roi,'group'])
+      group_roi<-as.character(dict_roi[dict_roi$id==roi,key_group_])
       print(paste('Calculating ',roi,' = ',label_roi,sep=''))
       df_join_measure_roi<-df_join_measure[df_join_measure$roi==roi,]
       list_mod_gamm<-list()
@@ -304,7 +308,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                                            aic=list_mod_gamm[[mod]]$aic,aic_best_among_models=0))
         
         for (idx_graph in names(list_graph_)){
-          plot<-plot_gamm(mod_gamm=list_mod_gamm[[mod]],
+          plot<-plot_gamm(NULL,mod_gamm=list_mod_gamm[[mod]],
                           df_join_measure_roi,
                           spec_graph=list_graph_[[idx_graph]])
           axis_x<-list_graph_[[idx_graph]][["x_axis"]]

@@ -246,7 +246,8 @@ func_clinical_data_join<-function(df_src,list_id_subj,list_covar){
 func_subset_str<-function(df_str,
                           list_measure,
                           list_str_group,
-                          dict_roi){
+                          dict_roi,
+                          key_group='group_3'){
   
   df_str_dst<-data.frame(matrix(nrow=0,ncol=ncol(df_str)))
   for (measure in list_measure){
@@ -257,7 +258,7 @@ func_subset_str<-function(df_str,
     print(paste(as.character(length(list_roi)),' ROIs exist in the source data.',sep=''))
     list_roi_subset<-NULL
     for (roi in list_roi){
-      group_roi<-dict_roi[dict_roi$id==roi,'group']
+      group_roi<-as.character(dict_roi[dict_roi$id==roi,key_group])
       if (group_roi %in% list_str_group){
         list_roi_subset<-c(list_roi_subset,roi)
       }
