@@ -261,13 +261,14 @@ func_subset_str<-function(df_str,
       group_roi<-as.character(dict_roi[dict_roi$id==roi,key_group])
       if (group_roi %in% list_str_group){
         list_roi_subset<-c(list_roi_subset,roi)
+        df_str_tmp[df_str_tmp$roi==roi,"group"]<-group_roi
       }
     }
     print(paste(as.character(length(list_roi_subset)),' ROIs remaining.',sep=''))
     df_str_tmp<-df_str_tmp[df_str_tmp$roi %in% list_roi_subset,]
     df_str_dst<-rbind(df_str_dst,df_str_tmp)
   }
-  colnames(df_str_dst)<-colnames(df_str)
+  colnames(df_str_dst)<-c(colnames(df_str),"group")
   return(df_str_dst)
 }
 
