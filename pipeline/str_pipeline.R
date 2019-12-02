@@ -135,7 +135,7 @@ pipe_str<-function(dir_in_=dir_in,id_dir_start_=id_dir_start,list_str_group_=lis
   for (hormone in names(list_hormone_)){
     print(paste("Calculating hormone:",list_hormone_[[hormone]][["label"]],sep=" "))
     id_dir_cnt<-id_dir_cnt+0.1
-    dir_out<-paste(as.character(id_dir_cnt),"gamm",hormone,sep='_')
+    dir_out<-paste(sprintf("%04.1f",id_dir_cnt),"gamm",hormone,sep='_')
     paths<-func_path(dir_in_=dir_in_,dir_out_=dir_out)
     list_covar<-c(list_hormone_[hormone],list_covar_)
     list_mod<-list_mod_

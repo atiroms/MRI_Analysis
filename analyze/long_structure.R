@@ -16,11 +16,12 @@ file_input<-"fs_measure.csv"
 
 list_wave <- c(1,2)
 
-list_measure <-c("volume","thickness","area")
-#list_measure <-"volume"
+#list_measure <-c("volume","thickness","area")
+list_measure <-"volume"
 
-list_str_group<-c("cortex","subcortex","white matter","global","misc")
+#list_str_group<-c("cortex","subcortex","white matter","global","misc")
 #list_str_group<-"subcortex"
+list_str_group<-"cortex"
 #list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
@@ -166,8 +167,8 @@ glm_core<-function(df_src,roi,label_roi,group,measure,list_mod_,list_graph_,list
     for (idx_sex in list_sex){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
       #mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
-      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex), silent=T)
-      if (class(mod)=="try-error"){
+      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+      if (class(mod)[1]=="try-error"){
         print(paste("Error fiting ",idx_mod, ", sex= ",idx_sex,".",sep=''))
       }else{
         p_table<-summary.gam(mod)$p.table
@@ -269,6 +270,8 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   # Calculate GAMM
   print('Calculating GAMM.')
   df_out_lm<-df_out_aic<-NULL
+  
+  gam.control(maxit=1000)
   
   for (measure in list_measure_){
     for (str_group in list_str_group_){
