@@ -78,14 +78,15 @@ class SubsetNiigz():
     def __init__(self,
         path_src='D:/MRI_img/pnTTC/data/400_niigz',
         file_clin='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv',
-        #path_dst='D:/MRI_img/pnTTC/data/401_nii',
-        #list_list_crt_subset=[[1,['W1_T1QC',1],['W1_rsfMRIexist',1]],
-        #                      [2,['W2_T1QC',1],['W2_rsfMRIexist',1]]],
-        #list_subdir_dst=['ses-01/anat','ses-01/func','ses-02/anat','ses-02/func']
-        path_dst='D:/MRI_img/pnTTC/data/402_nii',
-        list_list_crt_subset=[[1,['W1_T1QC',1]],
-                              [2,['W2_T1QC',1]]],        
-        list_subdir_dst=['ses-01/anat','ses-02/anat']):
+        path_dst='D:/MRI_img/pnTTC/data/403_nii',
+        list_list_crt_subset=[[1,['W1_T1QC',1],['W1_rsfMRIexist',1]],
+                              [2,['W2_T1QC',1],['W2_rsfMRIexist',1]]],
+        list_subdir_dst=['ses-01/anat','ses-01/func','ses-02/anat','ses-02/func']
+        #path_dst='D:/MRI_img/pnTTC/data/402_nii',
+        #list_list_crt_subset=[[1,['W1_T1QC',1]],
+        #                      [2,['W2_T1QC',1]]],        
+        #list_subdir_dst=['ses-01/anat','ses-02/anat']
+        ):
         
         print('Starting SubsetNiigz().')
 
