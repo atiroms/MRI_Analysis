@@ -88,7 +88,27 @@ class Pickup():
         #                  ['DHEA',['W1_DHEA','W2_DHEA']],
         #                  ['Cortisol',['W1_Cortisol','W2_Cortisol']],
         #                  ['DHEAS',['W1_DHEAS','W2_DHEAS']]]
+
+        path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_Hormone_Female',
+        list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==2'],['W1_Testosterone','>0']],
+                              [2,['W2_T1QC','==1'],['Sex','==2'],['W2_Testosterone','>0']]],
+        list_key_asis=['Sex'],
+        list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+                          ['Testosterone',['W1_Testosterone','W2_Testosterone']],
+                          ['DHEA',['W1_DHEA','W2_DHEA']],
+                          ['Cortisol',['W1_Cortisol','W2_Cortisol']],
+                          ['DHEAS',['W1_DHEAS','W2_DHEAS']]]
                           
+        #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_Hormone_Male',
+        #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==1'],['W1_Testosterone','>0']],
+        #                      [2,['W2_T1QC','==1'],['Sex','==1'],['W2_Testosterone','>0']]],
+        #list_key_asis=['Sex'],
+        #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+        #                  ['Testosterone',['W1_Testosterone','W2_Testosterone']],
+        #                  ['DHEA',['W1_DHEA','W2_DHEA']],
+        #                  ['Cortisol',['W1_Cortisol','W2_Cortisol']],
+        #                  ['DHEAS',['W1_DHEAS','W2_DHEAS']]]
+
         #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerAdrenalFemale',
         #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==2'],['W1_Tanner_Female_Pubic_Hair','>0']],
         #                      [2,['W2_T1QC','==1'],['Sex','==2'],['W2_Tanner_Female_Pubic_Hair','>0']]],
@@ -110,12 +130,12 @@ class Pickup():
         #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
         #                  ['Tanner_Gonadal',['W1_Tanner_Female_Breast','W2_Tanner_Female_Breast']]]
                           
-        path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerGonadalMale',
-        list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==1'],['W1_Tanner_Male_Genitals','>0']],
-                              [2,['W2_T1QC','==1'],['Sex','==1'],['W2_Tanner_Male_Genitals','>0']]],
-        list_key_asis=['Sex'],
-        list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
-                          ['Tanner_Gonadal',['W1_Tanner_Male_Genitals','W2_Tanner_Male_Genitals']]]
+        #path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerGonadalMale',
+        #list_list_crt_subset=[[1,['W1_T1QC','==1'],['Sex','==1'],['W1_Tanner_Male_Genitals','>0']],
+        #                      [2,['W2_T1QC','==1'],['Sex','==1'],['W2_Tanner_Male_Genitals','>0']]],
+        #list_key_asis=['Sex'],
+        #list_key_combine=[['Age',['W1_Age_at_MRI','W2_Age_at_MRI']],
+        #                  ['Tanner_Gonadal',['W1_Tanner_Male_Genitals','W2_Tanner_Male_Genitals']]]
         ):
 
         print('Starting Pickup_preproc()')
