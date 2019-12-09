@@ -176,8 +176,8 @@ plot_cor_heatmap<-function(input){
          + scale_y_discrete(limits = rev(rownames(input)))
          + scale_x_discrete(limits = colnames(input), position="top")
          + theme_light()
-         + theme(axis.text.x = element_text(size=700/ncol(input),angle = 90,vjust=0,hjust=0),
-                 axis.text.y = element_text(size=700/ncol(input)),
+         + theme(axis.text.x = element_text(size=29/log(ncol(input),2),angle = 90,vjust=0,hjust=0),
+                 axis.text.y = element_text(size=29/log(ncol(input),2)),
                  #axis.title=element_blank(),
                  panel.grid.major=element_blank(),
                  panel.grid.minor = element_blank(),
