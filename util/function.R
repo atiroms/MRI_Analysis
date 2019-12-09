@@ -11,6 +11,7 @@
 library(tidyverse)
 library(dplyr)
 library(Hmisc)
+library(DescTools)
 
 #**************************************************
 # Factor to numeric function ======================
@@ -246,7 +247,8 @@ func_clinical_data_join<-function(df_src,list_id_subj,list_covar){
 func_subset_str<-function(df_str,
                           list_measure,
                           list_str_group,
-                          dict_roi){
+                          dict_roi,
+                          key_group='group_3'){
   
   df_str_dst<-data.frame(matrix(nrow=0,ncol=ncol(df_str)))
   for (measure in list_measure){
@@ -257,16 +259,17 @@ func_subset_str<-function(df_str,
     print(paste(as.character(length(list_roi)),' ROIs exist in the source data.',sep=''))
     list_roi_subset<-NULL
     for (roi in list_roi){
-      group_roi<-dict_roi[dict_roi$id==roi,'group']
+      group_roi<-as.character(dict_roi[dict_roi$id==roi,key_group])
       if (group_roi %in% list_str_group){
         list_roi_subset<-c(list_roi_subset,roi)
+        df_str_tmp[df_str_tmp$roi==roi,"group"]<-group_roi
       }
     }
     print(paste(as.character(length(list_roi_subset)),' ROIs remaining.',sep=''))
     df_str_tmp<-df_str_tmp[df_str_tmp$roi %in% list_roi_subset,]
     df_str_dst<-rbind(df_str_dst,df_str_tmp)
   }
-  colnames(df_str_dst)<-colnames(df_str)
+  colnames(df_str_dst)<-c(colnames(df_str),"group")
   return(df_str_dst)
 }
 
@@ -289,9 +292,10 @@ func_cor<-function(input){
                          cor$P[i,j])
     }
   }
-  mean_cor<-mean(cor$r,na.rm=TRUE)
-  sd_cor<-sd(cor$r,na.rm=TRUE)
-  cor_flat$z_r<-(as.numeric(cor_flat$r)-mean_cor)/sd_cor
+  #mean_cor<-mean(cor$r,na.rm=TRUE)
+  #sd_cor<-sd(cor$r,na.rm=TRUE)
+  #cor_flat$z_r<-(as.numeric(cor_flat$r)-mean_cor)/sd_cor
+  cor_flat$z_r<-FisherZ(as.numeric(cor_flat$r))
   output<-list("cor"=data.frame(cor$r),"cor_flat"=cor_flat)
   return(output)
 }

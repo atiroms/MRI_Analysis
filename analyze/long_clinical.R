@@ -11,7 +11,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/clin"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-""
-dir_out<-"01_clin_plot"
+#dir_out<-"01_clin_plot"
+dir_out<-"03_hormone"
 
 list_wave <- c(1,2)
 
@@ -23,15 +24,55 @@ list_wave <- c(1,2)
 subset_subj <- list("1"=list(),
                     "2"=list())
 
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max",
-                               "label"="Tanner stage"),
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
+#                               "2"="W2_Tanner_Max",
+#                               "label"="Tanner stage"),
+#                 "age"=list("1"="W1_Age_at_MRI",
+#                            "2"="W2_Age_at_MRI",
+#                            "label"="Age"),
+#                 "sex"=list("1"="Sex",
+#                            "2"="Sex",
+#                            "label"="Sex"))
+
+list_covar<-list("testo"=list("1"="W1_Testosterone",
+                              "2"="W2_Testosterone",
+                              "label"="Testosterone"),
+                 "corti"=list("1"="W1_Cortisol",
+                              "2"="W2_Cortisol",
+                              "label"="Cortisol"),
+                 "dhea"=list("1"="W1_DHEA",
+                             "2"="W2_DHEA",
+                             "label"="DHEA"),
+                 "dheas"=list("1"="W1_DHEAS",
+                              "2"="W2_DHEAS",
+                              "label"="DHEA-S"),
                  "age"=list("1"="W1_Age_at_MRI",
                             "2"="W2_Age_at_MRI",
                             "label"="Age"),
                  "sex"=list("1"="Sex",
                             "2"="Sex",
                             "label"="Sex"))
+
+list_hormone<-c("testo","corti","dhea","dheas")
+
+list_mod <- list("lin"=
+                   "value ~ age + s(ID_pnTTC,bs='re')",
+                 "add"=
+                   "value ~ s(age,k=3) + s(ID_pnTTC,bs='re')",
+                 "quad"=
+                   "value ~ poly(age,2) + s(ID_pnTTC,bs='re')"
+                 )
+
+spec_graph<-list("title"="Hormone-age relationship",
+                 "x_axis"="age",
+                 "smooth"=list("Male"=list("fix"=list("sex"=1),
+                                           "color"="steelblue2","alpha"=1,"ribbon"=T),
+                               "Female"=list("fix"=list("sex"=2),
+                                             "color"="lightcoral","alpha"=1,"ribbon"=T)),
+                 "point"=list("Male"=list("subset"=list("sex"=1),
+                                          "color"="steelblue2","alpha"=1),
+                              "Female"=list("subset"=list("sex"=2),
+                                            "color"="lightcoral","alpha"=1)))
 
 #df_clinical<-read.csv("C:/Users/atiro/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv")
 
@@ -84,13 +125,91 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
-# Plot clinical data ==============================
+# Plot Hormonal and  clinical data ================
 #**************************************************
-plot_clin<-function(paths_=paths,
-                    list_wave_=list_wave,list_covar_=list_covar,
-                    subset_subj_=subset_subj
-                    ){
-  print("Starting plot_clin().")
+
+plot_clin_hormone<-function(paths_=paths,
+                            list_wave_=list_wave,list_covar_=list_covar,list_hormone_=list_hormone,
+                            subset_subj_=subset_subj,list_mod_=list_mod,spec_graph_=spec_graph
+                            ){
+  print("Starting plot_clin_hormone().")
+  nullobj<-func_createdirs(paths_)
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar_,rem_na_clin=T)
+  df_clin<-data_clin$df_clin
+  df_clin$sex=as.factor(df_clin$sex)
+  df_clin$wave=as.factor(df_clin$wave)
+  
+  write.csv(df_clin,file.path(paths_$output,"output",
+                              paste("src.csv",sep="")),row.names = F)
+  
+  #list_plot<-list()
+  
+  # Longitudinal clinical plot
+  for (hormone in list_hormone_){
+    print(paste('Calculating: ',list_covar_[[hormone]][["label"]]))
+    df_plot<-df_clin
+    df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave",hormone)]
+    colnames(df_plot)[colnames(df_plot)==hormone]<-"hormone"
+    
+    # Path plot
+    #plot <- (ggplot(df_plot)
+    #         + aes(x=age,y=hormone,color=sex,shape=wave, label=ID_pnTTC)
+    #         + scale_colour_manual(name=NULL,labels=c("Male","Female"),values=c("steelblue2","lightcoral"))
+    #         + scale_shape_manual(name=NULL,labels=c("1st wave","2nd wave"),values=c(3,4))
+    #         + geom_point(size=4)
+    #         #geom_text_repel(size=2)
+    #         + geom_path(aes(group=ID_pnTTC,color=sex),size=0.5,alpha=0.5)
+    #         + ggtitle(paste(list_covar_[[hormone]][["label"]]," vs Age",sep=''))
+    #         + xlab("Age (day)")
+    #         + ylab(list_covar_[[hormone]][["label"]])
+    #         + theme_light()
+    #         + theme(plot.title = element_text(hjust = 0.5),legend.justification=c(0,1),
+    #                 legend.position=c(0.05,0.95),legend.direction="horizontal",
+    #                 panel.grid.minor=element_blank()))
+    #ggsave(paste(hormone,"_age_path.eps",sep=''),plot=plot,device=cairo_ps,
+    #       path=file.path(paths_$output,"output"),dpi=300,height=7,width=7,limitsize=F)
+    #plot<-list(plot)
+    #names(plot)<-paste(hormone,"_age_path",sep='')
+    #list_plot<-c(list_plot,plot)
+    
+    # GAM fit plot
+    for (idx_mod in names(list_mod_)){
+      plot<-NULL
+      for (idx_sex in c(1,2)){
+        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
+        colnames(df_plot_sex)[colnames(df_plot_sex)=="hormone"]<-"value"
+        mod_gamm<-gam(as.formula(list_mod_[[idx_mod]]),data=df_plot_sex)
+        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_)
+      }
+      label_axis_y<-list_covar_[[hormone]][["label"]]
+      plot<-(plot
+             + ggtitle(paste(label_axis_y,' - Age','\n',idx_mod,sep=''))
+             + xlab("Age")
+             + ylab(label_axis_y)
+             + theme(legend.position = "none"))
+      filename_plot<-paste(hormone,"-age_mod-",idx_mod,".eps",sep="")
+      ggsave(filename_plot,plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
+    }
+  }
+
+  
+  print("Finished plot_clin_hormone().")
+  #return(list_plot)
+}
+
+
+#**************************************************
+# Plot Tanner stage clinical data =================
+#**************************************************
+plot_clin_tanner<-function(paths_=paths,
+                           list_wave_=list_wave,list_covar_=list_covar,
+                           subset_subj_=subset_subj
+                           ){
+  print("Starting plot_clin_tanner().")
   nullobj<-func_createdirs(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
@@ -182,15 +301,6 @@ plot_clin<-function(paths_=paths,
     names(plot)<-paste("sex-",id_sex,"_tanner_heatmap",sep="")
   }
   
-  print("Finished plot_clin().")
+  print("Finished plot_clin_tanner().")
   return(list_plot)
 }
-
-
-#**************************************************
-# GAMM ============================================
-#**************************************************
-#mod_clinical<-gam(tanner_max ~ s(age) + s(ID_pnTTC,bs='re'),data=df_clinical_rbind)
-#summary(mod_clinical)
-#plot(mod_clinical,select=2)
-#plot_smooth(mod_clinical,view='age')

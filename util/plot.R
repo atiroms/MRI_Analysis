@@ -61,7 +61,7 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
 #**************************************************
 # modified from voxel/plotGAM
 
-plot_gamm<-function(plot_in,mod_gamm,df_join_measure_roi,spec_graph){
+plot_gamm<-function(plot_in,mod_gamm,df_in,spec_graph){
   
   if (is.null(plot_in)){
     plot<-ggplot()
@@ -76,7 +76,7 @@ plot_gamm<-function(plot_in,mod_gamm,df_join_measure_roi,spec_graph){
   if (!("sex" %in% key_df_src)){
     key_df_src<-c(key_df_src, "sex")
   }
-  df_src <- df_join_measure_roi[key_df_src]
+  df_src <- df_in[key_df_src]
   
   # add prediction line + ribbon to plot
   if (!is.null(spec_graph[["smooth"]])){
@@ -150,7 +150,7 @@ plot_gamm<-function(plot_in,mod_gamm,df_join_measure_roi,spec_graph){
                + geom_path(aes(x=df_point[[spec_graph[["x_axis"]]]],
                                y=df_point[,1],
                                group=df_point[["ID_pnTTC"]]),
-                           color=df_point[["color"]],size=0.3,alpha=0.2*df_point[["alpha"]],linetype="dashed"))
+                           color=df_point[["color"]],size=0.3,alpha=0.3*df_point[["alpha"]],linetype="dashed"))
     }
   }
   
@@ -176,8 +176,8 @@ plot_cor_heatmap<-function(input){
          + scale_y_discrete(limits = rev(rownames(input)))
          + scale_x_discrete(limits = colnames(input), position="top")
          + theme_light()
-         + theme(axis.text.x = element_text(size=700/ncol(input),angle = 90,vjust=0,hjust=0),
-                 axis.text.y = element_text(size=700/ncol(input)),
+         + theme(axis.text.x = element_text(size=29/log(ncol(input),2),angle = 90,vjust=0,hjust=0),
+                 axis.text.y = element_text(size=29/log(ncol(input),2)),
                  #axis.title=element_blank(),
                  panel.grid.major=element_blank(),
                  panel.grid.minor = element_blank(),

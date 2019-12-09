@@ -212,7 +212,6 @@ summarize_model<-function(dir_summary_=dir_summary,
 }
 
 
-
 #**************************************************
 # Timeseries to GLM/GAM of Fingerprints ===========
 #**************************************************

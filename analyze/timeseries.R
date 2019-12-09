@@ -14,9 +14,9 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in <-"53_ts_acompcor"
+dir_in <-"200_ts_acompcor"
 #dir_out <-"54_fc_acompcor"
-dir_out <-"59_fc_test"
+dir_out <-"450_fc_test"
 
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
@@ -73,7 +73,7 @@ source(file.path(paths$script,"util/plot.R"))
 # Functional data loading =========================
 #**************************************************
 #func_data_timeseries<-function(paths,data_clinical,subset_roi,atlas_=atlas){
-func_data_timeseries<-function(paths__,atlas_=atlas){
+func_data_timeseries<-function(paths__,atlas_=atlas,key_group="group_3"){
   #print("Starting to load timeseries data.")
   df_timeseries <- read.csv(file.path(paths__$input,"output",paste("atl-",atlas_,"_ts.csv",sep="")))
   #df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
@@ -83,15 +83,30 @@ func_data_timeseries<-function(paths__,atlas_=atlas){
   dict_roi <- dict_roi[is.element(dict_roi$id,list_id_roi),]
   #dict_roi <- dict_roi[is.element(dict_roi$group,subset_roi),]
   list_id_roi <- sort(as.character(dict_roi$id))
-  list_label_roi<-NULL
+  list_label_roi<-list_group_roi<-NULL
   for (id_roi in list_id_roi){
     list_label_roi<-c(list_label_roi,as.character(dict_roi[dict_roi$id==id_roi,"label"]))
+    list_group_roi<-c(list_group_roi,as.character(dict_roi[dict_roi$id==id_roi,"group_3"]))
   }
-  
   n_roi <- length(list_id_roi)
+  
+  # Create dataframe of ROI-wise BOLD timeseries
   df_timeseries <- cbind(df_timeseries[,c(1,2,3)],
                          df_timeseries[,is.element(colnames(df_timeseries),
                                                    list_id_roi)])
+  
+  # Create dataframe of ROI group-wise BOLD timeseries by averaging over ROIs within each group
+  list_group<-sort(unique(list_group_roi))
+  n_group<-length(list_group)
+  df_timeseries_group<-df_timeseries[,c(1,2,3)]
+  for (group in list_group){
+    list_id_roi_group<-list_id_roi[list_group_roi==group]
+    df_timeseries_group_add<-df_timeseries[,is.element(colnames(df_timeseries),list_id_roi_group)]
+    df_timeseries_group<-cbind(df_timeseries_group,col_mean=rowMeans(df_timeseries_group_add))
+    colnames(df_timeseries_group)[colnames(df_timeseries_group)=="col_mean"]<-group
+  }
+  
+  # Create list of IDs and sessions that exist in the data
   list_ses_exist <- sort(unique(df_timeseries$ses))
   list_id_subj_exist<-list()
   n_subj_exist<-NULL
@@ -106,8 +121,10 @@ func_data_timeseries<-function(paths__,atlas_=atlas){
   }
   #n_subj_exist <- length(list_id_subj_exist)
   list_ses_exist <- sort(unique(df_timeseries$ses))
-  output <- list("df_timeseries"=df_timeseries,"list_id_roi"=list_id_roi,"list_label_roi"=list_label_roi,
-                 "dict_roi"=dict_roi,"n_roi"=n_roi,
+  output <- list("df_timeseries"=df_timeseries,"df_timeseries_group"=df_timeseries_group,
+                 "list_id_roi"=list_id_roi,"list_label_roi"=list_label_roi,"list_group_roi"=list_group_roi,
+                 "list_group"=list_group,
+                 "dict_roi"=dict_roi,"n_roi"=n_roi,"n_group"=n_group,
                  "list_id_subj_exist"=list_id_subj_exist,
                  "n_subj_exist"=n_subj_exist,
                  "list_ses_exist"=list_ses_exist)
@@ -130,7 +147,7 @@ fc_core<-function(data_ts){
   df_fc_flat<-data_fc$cor_flat
   df_fc_flat<-cbind(ses=ses,ID_pnTTC=id_subj,df_fc_flat)
   colnames(df_fc_flat)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
-  file_tmp<-paste("TMP_atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),"_fc.csv",sep="")
+  file_tmp<-paste("TMP_atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),suffix_file,".csv",sep="")
   path_file_tmp<-file.path(paths_$output,"output",file_tmp)
   #list_path_tmp<-c(list_path_tmp,path_file_tmp)
   write.csv(df_fc_flat,path_file_tmp,row.names=F)
@@ -148,7 +165,7 @@ fc_core<-function(data_ts){
                             axis.title=element_blank()))
   
   # Save heatmap plot
-  ggsave(paste("atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),"_fc.eps",sep=""),
+  ggsave(paste("atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),suffix_file,".eps",sep=""),
          plot=plot_fc_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
@@ -169,44 +186,77 @@ fc<-function(paths_=paths,
     data_timeseries<-func_data_timeseries(paths__=paths_,atlas_=atlas)
     
     # Split timeseries data to each session/subject as input for parallel processing
-    list_data_ts<-list()
+    list_data_ts<-list_data_ts_group<-list()
     for (ses_subj in data_timeseries$list_id_subj_exist){
       ses<-ses_subj[[1]]
       id_subj<-ses_subj[[2]]
       df_timeseries_ses_subj<-data_timeseries$df_timeseries[which(data_timeseries$df_timeseries$ID_pnTTC==id_subj),]
       df_timeseries_ses_subj<-df_timeseries_ses_subj[which(df_timeseries_ses_subj$ses==ses),c(-1,-2,-3)]
-      list_data_ts<-c(list_data_ts,list(list("ses"=ses,"subj"=id_subj,"df_ts"=df_timeseries_ses_subj)))
+      list_data_ts<-c(list_data_ts,list(list("ses"=ses,"subj"=id_subj,
+                                             "df_ts"=df_timeseries_ses_subj)))
+      
+      df_timeseries_group_ses_subj<-data_timeseries$df_timeseries_group[which(data_timeseries$df_timeseries_group$ID_pnTTC==id_subj),]
+      df_timeseries_group_ses_subj<-df_timeseries_group_ses_subj[which(df_timeseries_group_ses_subj$ses==ses),c(-1,-2,-3)]
+      list_data_ts_group<-c(list_data_ts_group,list(list("ses"=ses,"subj"=id_subj,
+                                                         "df_ts"=df_timeseries_group_ses_subj)))
     }
-    list_label_roi<-data_timeseries$list_label_roi
     
-    # Parallel computing of fc for each subject/session
-    print(paste("Atlas: ",atlas,", calculating FC in parallel.",sep=""))
+    # Parallel computing of ROI-wise FC for each subject/session
+    list_label_roi<-data_timeseries$list_label_roi
+    suffix_file="_fc"
+    print(paste("Atlas: ",atlas,", calculating ROI-wise FC in parallel.",sep=""))
     clust<-makeCluster(floor(detectCores()*3/4))
     clusterExport(clust,
-                  varlist=c("paths_","atlas","list_label_roi","func_cor",
+                  varlist=c("paths_","atlas","list_label_roi","func_cor","FisherZ",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                             "ggplot","aes","geom_tile","scale_fill_gradientn",
                             "matlab.like2","scale_y_discrete","scale_x_discrete",
                             "theme_light","theme","element_text","element_blank",
-                            "ggtitle","ggsave"),
+                            "ggtitle","ggsave","suffix_file"),
                   envir=environment())
     list_path_tmp<-parSapply(clust,list_data_ts,fc_core)
     stopCluster(clust)
     
-    # Bind results in temporary files
-    print(paste("Atlas: ",atlas,", binding results.",sep=""))
+    # Bind results of ROI-wise FC from temporary files
+    print(paste("Atlas: ",atlas,", binding ROI-wise FC results.",sep=""))
     df_fc_stack<-data.frame()
     for (path_tmp in list_path_tmp){
       df_tmp<-read.csv(path_tmp)
       df_fc_stack<-rbind(df_fc_stack,df_tmp)
       file.remove(path_tmp)
-      #print(paste("Finished binding: ",path_tmp,sep=""))
     }
     colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
     write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
     df_fc_stack<-NULL
-    #print("Finished saving all subject results.")
-    #print(paste("Finished calculating for atlas: ",atlas, sep=""))
+    
+    # Parallel computing of group-wise FC for each subject/session
+    list_label_roi<-data_timeseries$list_group
+    suffix_file="_fc_grp"
+    print(paste("Atlas: ",atlas,", calculating group-wise FC in parallel.",sep=""))
+    clust<-makeCluster(floor(detectCores()*3/4))
+    clusterExport(clust,
+                  varlist=c("paths_","atlas","list_label_roi","func_cor","FisherZ",
+                            "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                            "ggplot","aes","geom_tile","scale_fill_gradientn",
+                            "matlab.like2","scale_y_discrete","scale_x_discrete",
+                            "theme_light","theme","element_text","element_blank",
+                            "ggtitle","ggsave","suffix_file"),
+                  envir=environment())
+    list_path_tmp<-parSapply(clust,list_data_ts_group,fc_core)
+    stopCluster(clust)
+    
+    # Bind results of group-wise FC from temporary files
+    print(paste("Atlas: ",atlas,", binding group-wise FC results.",sep=""))
+    df_fc_stack<-data.frame()
+    for (path_tmp in list_path_tmp){
+      df_tmp<-read.csv(path_tmp)
+      df_fc_stack<-rbind(df_fc_stack,df_tmp)
+      file.remove(path_tmp)
+    }
+    colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
+    write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc_grp.csv",sep="")),row.names = F)
+    df_fc_stack<-NULL
+
   }
   print("Finished fc().")
 }
