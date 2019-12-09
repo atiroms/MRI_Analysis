@@ -295,7 +295,7 @@ func_cor<-function(input){
   #mean_cor<-mean(cor$r,na.rm=TRUE)
   #sd_cor<-sd(cor$r,na.rm=TRUE)
   #cor_flat$z_r<-(as.numeric(cor_flat$r)-mean_cor)/sd_cor
-  cor_flat$z_r<-FisherZ(as.numeric(cor_glat$r))
+  cor_flat$z_r<-FisherZ(as.numeric(cor_flat$r))
   output<-list("cor"=data.frame(cor$r),"cor_flat"=cor_flat)
   return(output)
 }
