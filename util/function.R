@@ -350,11 +350,11 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
 #**************************************************
 
 mltcomp_corr<-function(input){
-  output<-data.frame("p_bonferroni"=p.adjust(input$p,method = "bonferroni"),
-                     "p_holm_bonferroni"=p.adjust(input$p,method = "holm"),
-                     "p_hockberg"=p.adjust(input$p,method = "holm"),
-                     "p_hommel"=p.adjust(input$p,method = "hommel"),
-                     "p_benjamini_hochberg"=p.adjust(input$p,method="BH"),
-                     "p_benjamini_yukutieli"=p.adjust(input$p,method="BY"))
+  output<-data.frame("bonf"=p.adjust(input$p,method = "bonferroni"),
+                     "holm"=p.adjust(input$p,method = "holm"),
+                     "hoch"=p.adjust(input$p,method = "hochberg"),
+                     "homm"=p.adjust(input$p,method = "hommel"),
+                     "bh"=p.adjust(input$p,method="BH"),
+                     "by"=p.adjust(input$p,method="BY"))
   return(output)
 }
