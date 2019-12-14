@@ -12,15 +12,17 @@
 
 # parameters for fc()
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in <-"200_ts_acompcor"
+#dir_in <-"200_ts_acompcor"
 #dir_out <-"54_fc_acompcor"
-dir_out <-"450_fc_test"
-
-
+#dir_out <-"450_fc_test"
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+#list_atlas<-"aal116"
+
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
+dir_in <-"56.1_ts_conn"
+dir_out <-"56.2_fc_conn"
+list_atlas<-"cnn"
 
 
 #**************************************************
