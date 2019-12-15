@@ -283,7 +283,7 @@ plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
   plot<-ggraph(igraph_plot, layout = "linear",circular = T) +
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=label, angle = angle, hjust=hjust,vjust=0.2),
-                   size=10/log(nrow(df_node)), alpha=1) +
+                   size=min(5,10/log(nrow(df_node))), alpha=1) +
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
     scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+

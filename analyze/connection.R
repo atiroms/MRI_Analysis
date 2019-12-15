@@ -68,8 +68,8 @@ list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
                  )
 
 
-#list_type_p=c("p_bh","seed_p_bh")
-list_type_p="p"
+list_type_p=c("p_bh","seed_p_bh")
+#list_type_p="p"
 thr_p <- 0.05
 
 list_cost<-seq(0.15,0.40,0.01)
@@ -223,26 +223,6 @@ join_fc_clin<-function(df_fc,df_clin){
   return(df_join)
 }
 
-corr2igraph<-function(df_in,df_roi){
-  list_roi<-as.character(df_roi$id)
-  
-  df_node<-data.frame(id=list_roi,
-                      stringsAsFactors = F)
-  # Convert node IDs into node labels
-  for (idx_node in seq(dim(df_node)[1])){
-    df_node[idx_node,"label"]<-as.character(df_roi[df_roi$id==df_node[idx_node,"id"],"label"])
-  }
-  
-  df_edge<-df_in
-  df_edge$from<-as.character(df_edge$from)
-  df_edge$to<-as.character(df_edge$to)
-
-  # Convert edge/node dataframes into igraph object
-  igraph_out <- graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
-  
-  return(igraph_out)
-}
-
 add_mltcmp<-function(df_out_gamm,df_roi,analysis,atlas,list_mod,list_plot,calc_seed_level=TRUE){
   df_plot_gamm_concat<-NULL
   for (idx_mod in names(list_mod)){
@@ -312,7 +292,17 @@ plot_gamm_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
           }else{
             df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="F")
           }
-          igraph_gamm<-corr2igraph(df_in=df_plot_gamm_subset,df_roi)
+          
+          # Convert FC dataframe into iGraph object
+          list_roi<-as.character(df_roi$id)
+          df_node<-data.frame(id=list_roi,stringsAsFactors = F)
+          for (idx_node in seq(dim(df_node)[1])){
+            df_node[idx_node,"label"]<-as.character(df_roi[df_roi$id==df_node[idx_node,"id"],"label"])
+          }
+          df_edge<-df_plot_gamm_subset
+          df_edge$from<-as.character(df_edge$from)
+          df_edge$to<-as.character(df_edge$to)
+          igraph_gamm <- graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
           
           # Plot and save circular graph
           for (type_p in list_type_p){
@@ -322,7 +312,7 @@ plot_gamm_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
                                   limit_color=NULL)
               plot<-plot +
                 ggtitle(paste("GLM/GAM sex: ",label_sex, ", model: ",idx_mod,", expvar: ",var_exp,
-                              "\nthresh: ",type_p,sep="")) +
+                              "\nanalysis: ",analysis," threshold: ",type_p,sep="")) +
                 theme(plot.title = element_text(hjust = 0.5))
               ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
                            "_sex-",label_sex,"_pval-",type_p,"_gamm_fc.eps",sep=""),
