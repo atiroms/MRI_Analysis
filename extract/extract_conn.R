@@ -10,8 +10,8 @@
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/fs"
 
-dir_in<-"D:/MRI_img/pnTTC/c1c2_func/56_conn"
-dir_out<-"D:/MRI_img/pnTTC/c1c2_func/56.1_ts_conn"
+dir_in<-"D:/MRI_img/pnTTC/c1c2_func/57_conn"
+dir_out<-"D:/MRI_img/pnTTC/c1c2_func/57.1_ts_conn"
 list_atlas<-c("hoa","cnn","power264")
 #list_atlas<-"cnn"
 
