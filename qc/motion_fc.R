@@ -10,10 +10,10 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"201_fc_acompcor"
-dir_out<-"206_motion_fc_acompcor"
-#dir_in<-"211_fc_aroma"
-#dir_out<-"216_motion_fc_aroma"
+#dir_in<-"201_fc_acompcor"
+#dir_out<-"206_motion_fc_acompcor"
+dir_in<-"211_fc_aroma"
+dir_out<-"216_motion_fc_aroma"
 #dir_in<-"221_fc_36p"
 #dir_out<-"226_motion_fc_36p"
 #dir_in<-"231_fc_acompcor_gsr"
