@@ -10,22 +10,23 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"201_fc_acompcor"
-#dir_out<-"205_fc_motion_acompcor"
+dir_in<-"201_fc_acompcor"
+dir_out<-"206_motion_fc_acompcor"
 #dir_in<-"211_fc_aroma"
-#dir_out<-"215_fc_motion_aroma"
+#dir_out<-"216_motion_fc_aroma"
 #dir_in<-"221_fc_36p"
-#dir_out<-"225_fc_motion_36p"
+#dir_out<-"226_motion_fc_36p"
 #dir_in<-"231_fc_acompcor_gsr"
-#dir_out<-"235_fc_motion_acompcor_gsr"
-dir_in<-"241_fc_aroma_gsr"
-dir_out<-"245_fc_motion_aroma_gsr"
+#dir_out<-"236_motion_fc_acompcor_gsr"
+#dir_in<-"241_fc_aroma_gsr"
+#dir_out<-"246_motion_fc_aroma_gsr"
 
 dir_motion<-c("69_c1_motion","70_c2_motion")
 dir_quality<-c("391_c1_quality","392_c2_quality")
 
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100","schaefer200","schaefer400","shen268")
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100","schaefer200","schaefer400","shen268")
+list_atlas<-c("aal116","gordon333","power264","shen268")
 #list_atlas<-"aal116"
 
 
@@ -79,10 +80,10 @@ source(file.path(paths$script,"util/plot.R"))
 #**************************************************
 # FC dist - motion correlation ====================
 #**************************************************
-fc_motion<-function(paths_=paths,
+motion_fc<-function(paths_=paths,
                     list_atlas_=list_atlas){
   
-  print("Starting fc_motion().")
+  print("Starting motion_fc().")
   nullobj<-func_createdirs(paths_)
  
   for (atlas in list_atlas_){
@@ -134,13 +135,21 @@ fc_motion<-function(paths_=paths,
     }
     
     df_plot_motion<-left_join(df_dist_fc,df_motion,by=c("ses","ID_pnTTC"))
-    df_plot_motion$max_trans<-pmax(df_plot_motion$trans_x_max,df_plot_motion$trans_y_max,
-                                   df_plot_motion$trans_z_max)
-    df_plot_motion$max_rot<-pmax(df_plot_motion$rot_x_max,df_plot_motion$rot_y_max,
-                                 df_plot_motion$rot_z_max)
-    df_plot_motion<-df_plot_motion[,c("ses","ID_pnTTC","dist","max_trans","max_rot","max_max")]
+    df_plot_motion$max_trans<-pmax(df_plot_motion$max_trans_x,
+                                   df_plot_motion$max_trans_y,
+                                   df_plot_motion$max_trans_z)
+    df_plot_motion$max_rot<-pmax(df_plot_motion$max_rot_x,
+                                 df_plot_motion$max_rot_y,
+                                 df_plot_motion$max_rot_z)
+    df_plot_motion<-df_plot_motion[,c("ses","ID_pnTTC","dist",
+                                      "max_trans","max_rot","max_max",
+                                      "max_fd_power","mean_fd_power",
+                                      "max_dvars","mean_dvars","max_std_dvars")]
+    write.csv(df_plot_motion,file.path(paths_$output,"output",paste("atl-",atlas,"_motion_fc.csv",sep="")),row.names=F)
     
-    for (type_max in c("max_trans","max_rot","max_max")){
+    for (type_max in c("max_trans","max_rot","max_max",
+                       "max_fd_power","mean_fd_power",
+                       "max_dvars","mean_dvars","max_std_dvars")){
       df_plot_motion_subset<-df_plot_motion[,c("dist",type_max)]
       colnames(df_plot_motion_subset)<-c("x","y")
       plot<-(ggplot(df_plot_motion_subset)
@@ -152,7 +161,7 @@ fc_motion<-function(paths_=paths,
              + theme_light()
              + theme(plot.title = element_text(hjust = 0.5))
             )
-      ggsave(paste("atl-",atlas,"_type-",type_max,"_fc_motion.eps",sep=""),
+      ggsave(paste("atl-",atlas,"_type-",type_max,"_motion_fc.eps",sep=""),
              plot=plot,device=cairo_ps,
              path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
@@ -168,6 +177,7 @@ fc_motion<-function(paths_=paths,
     df_plot_quality<-left_join(df_dist_fc,df_quality,by=c("ses","ID_pnTTC"))
     df_plot_quality<-df_plot_quality[,c("ses","ID_pnTTC","dist","meanDV",
                                         "relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")]
+    write.csv(df_plot_quality,file.path(paths_$output,"output",paste("atl-",atlas,"_quality_fc.csv",sep="")),row.names=F)
     
     for (type_max in c("meanDV","relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")){
       df_plot_quality_subset<-df_plot_quality[,c("dist",type_max)]
@@ -181,11 +191,11 @@ fc_motion<-function(paths_=paths,
              + theme_light()
              + theme(plot.title = element_text(hjust = 0.5))
       )
-      ggsave(paste("atl-",atlas,"_type-",type_max,"_fc_motion.eps",sep=""),
+      ggsave(paste("atl-",atlas,"_type-",type_max,"_quality_fc.eps",sep=""),
              plot=plot,device=cairo_ps,
              path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
     }
     
   }
-  print("Finished fc_motion().")
+  print("Finished motion_fc().")
 }
