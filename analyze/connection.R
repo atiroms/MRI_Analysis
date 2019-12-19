@@ -19,6 +19,7 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 dir_in<-"56.2_fc"
 dir_out<-"56.3_gamm_fc"
+list_atlas<-c("cnn","hoa","power264")
 list_atlas<-"cnn"
 
 list_wave <- c(1,2)
