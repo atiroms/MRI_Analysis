@@ -6,7 +6,7 @@ import os
 import shutil
 import pandas as pd
 import csv
-import nilearn.image as nl_image
+#import nilearn.image as nl_image
 import json
 import numpy as np
 import pydicom
@@ -156,7 +156,7 @@ class PrepXCP():
         n_proc=20,
 
         path_fmriprep='/media/veracrypt3/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
+        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
         file_id='69_id_c1_t1exist_rsfmriexist.csv',
         ses='ses-01',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
@@ -226,8 +226,8 @@ class PrepXCP():
         #file_design='fc-aroma_gsr_fconly_noqcfc.dsn',
 
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
-        #path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
-        path_folder_design='C:/Users/NICT_WS/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
+        path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
+        #path_folder_design='C:/Users/NICT_WS/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
 
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
         path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
