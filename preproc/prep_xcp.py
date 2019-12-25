@@ -403,14 +403,14 @@ class ExtractNifti():
 class ExtractQuality():
     def __init__(self,
 
-        path_input='Q:/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        path_output='Q:/MRI_img/pnTTC/preproc/391_c1_quality',
+        #path_input='P:/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
+        #path_output='P:/MRI_img/pnTTC/preproc/175_c1_ts_acompcor',
         
-        #path_input='P:/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
-        #path_output='P:/MRI_img/pnTTC/preproc/392_c2_quality',
+        path_input='Q:/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
+        path_output='Q:/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
         
-        skip_mkdir=False,
-        skip_copylog=False,
+        skip_mkdir=True,
+        skip_copylog=True,
         filename_output='quality.csv'
         ):
 
