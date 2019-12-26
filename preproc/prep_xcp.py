@@ -169,12 +169,12 @@ class PrepXCP():
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #file_design='fc-acompcor_20191219.dsn',
 
-        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
-        #file_id='69_id_c1_t1exist_rsfmriexist.csv',
-        #ses='ses-01',
-        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-aroma_20191219.dsn',
+        path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
+        file_id='69_id_c1_t1exist_rsfmriexist.csv',
+        ses='ses-01',
+        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        file_design='fc-aroma_20191219.dsn',
 
         path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
         path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
@@ -403,14 +403,14 @@ class ExtractNifti():
 class ExtractQuality():
     def __init__(self,
 
-        path_input='Q:/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        path_output='Q:/MRI_img/pnTTC/preproc/391_c1_quality',
+        #path_input='P:/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
+        #path_output='P:/MRI_img/pnTTC/preproc/175_c1_ts_acompcor',
         
-        #path_input='P:/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
-        #path_output='P:/MRI_img/pnTTC/preproc/392_c2_quality',
+        path_input='Q:/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
+        path_output='Q:/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
         
-        skip_mkdir=False,
-        skip_copylog=False,
+        skip_mkdir=True,
+        skip_copylog=True,
         filename_output='quality.csv'
         ):
 
