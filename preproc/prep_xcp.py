@@ -406,8 +406,14 @@ class ExtractQuality():
         #path_input='P:/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
         #path_output='P:/MRI_img/pnTTC/preproc/175_c1_ts_acompcor',
         
-        path_input='Q:/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
-        path_output='Q:/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
+        #path_input='Q:/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
+        #path_output='Q:/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
+
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/185_c1_ts_aroma',
+
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/172_c2_xcp_aroma',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/175_c2_ts_aroma',
         
         skip_mkdir=True,
         skip_copylog=True,

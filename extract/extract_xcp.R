@@ -13,8 +13,11 @@
 #path_in <- "P:/MRI_img/pnTTC/preproc"
 #path_out <- "P:/MRI_img/pnTTC/preproc"
 
-path_in <- "Q:/MRI_img/pnTTC/preproc"
-path_out <- "Q:/MRI_img/pnTTC/preproc"
+#path_in <- "Q:/MRI_img/pnTTC/preproc"
+#path_out <- "Q:/MRI_img/pnTTC/preproc"
+
+path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
 #dir_in <-"171_c1_xcp_acompcor"
 #dir_out<-"175_c1_ts_acompcor"
