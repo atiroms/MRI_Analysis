@@ -10,7 +10,7 @@
 
 path_exp <- "Dropbox/MRI_img/pnTTC/Puberty/Stats/str_FS"
 dir_in <-"01_extract"
-dir_out <-"02_gamm_test"
+dir_out <-"03_gamm_test"
 
 file_input<-"fs_measure.csv"
 
@@ -20,8 +20,8 @@ list_wave <- c(1,2)
 list_measure <-"volume"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
-#list_str_group<-"subcortex"
-list_str_group<-"cortex"
+list_str_group<-"subcortex"
+#list_str_group<-"cortex"
 #list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
@@ -55,10 +55,10 @@ list_covar<-list("testo"=list("1"="W1_Testosterone",
                             "label"="Sex"))
 
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild","value"=1)))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+                             list("key"="W1_T1QC_new_mild","condition"="==1")),
+                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
+                             list("key"="W2_T1QC_new_mild","condition"="==1")))
 
 #list_mod <- list("a+s+st"=
 #                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')",
