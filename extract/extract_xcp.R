@@ -156,14 +156,22 @@ extract_xcp<-function(paths_=paths,
 # Combine timeseries data from 2 sessions =========
 #**************************************************
 
-combine_ts<-function(path_exp="D:/MRI_img/pnTTC/preproc",
+combine_ts<-function(path_exp="C:/Users/NICT_WS/Dropbox/temp",
+                     list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
+                                   list("dir"="176_c2_ts_acompcor","ses"=2)),
+                     dir_dst="300_ts_acompcor",
+                     
+                     #list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
+                     #              list("dir"="186_c2_ts_aroma","ses"=2)),
+                     #dir_dst="310_ts_aroma",
+                     
                      #list_src=list(list("dir"="375_c1_ts_acompcor_gsr","ses"=1),
                      #              list("dir"="376_c2_ts_acompcor_gsr","ses"=2)),
-                     #dir_dst="377_ts_acompcor_gsr",
+                     #dir_dst="330_ts_acompcor_gsr",
                      
-                     list_src=list(list("dir"="385_c1_ts_aroma_gsr","ses"=1),
-                                   list("dir"="386_c2_ts_aroma_gsr","ses"=2)),
-                     dir_dst="387_ts_aroma_gsr",
+                     #list_src=list(list("dir"="385_c1_ts_aroma_gsr","ses"=1),
+                     #              list("dir"="386_c2_ts_aroma_gsr","ses"=2)),
+                     #dir_dst="340_ts_aroma_gsr",
                      
                      #list_src=list(list("dir"="195_c1_ts_36p","ses"=1),
                      #              list("dir"="196_c2_ts_36p","ses"=2)),

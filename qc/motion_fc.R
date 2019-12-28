@@ -10,19 +10,19 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"201_fc_acompcor"
-#dir_out<-"206_motion_fc_acompcor"
-dir_in<-"211_fc_aroma"
-dir_out<-"216_motion_fc_aroma"
-#dir_in<-"221_fc_36p"
-#dir_out<-"226_motion_fc_36p"
-#dir_in<-"231_fc_acompcor_gsr"
-#dir_out<-"236_motion_fc_acompcor_gsr"
-#dir_in<-"241_fc_aroma_gsr"
-#dir_out<-"246_motion_fc_aroma_gsr"
+dir_in<-"301_fc_acompcor"
+dir_out<-"306_motion_fc_acompcor"
+#dir_in<-"311_fc_aroma"
+#dir_out<-"316_motion_fc_aroma"
+#dir_in<-"321_fc_36p"
+#dir_out<-"326_motion_fc_36p"
+#dir_in<-"331_fc_acompcor_gsr"
+#dir_out<-"336_motion_fc_acompcor_gsr"
+#dir_in<-"341_fc_aroma_gsr"
+#dir_out<-"346_motion_fc_aroma_gsr"
 
 dir_motion<-c("69_c1_motion","70_c2_motion")
-dir_quality<-c("391_c1_quality","392_c2_quality")
+dir_quality<-c("393_c1_quality","394_c2_quality")
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
