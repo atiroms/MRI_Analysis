@@ -415,8 +415,11 @@ class ExtractQuality():
         #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
         #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
 
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/375_c1_ts_acompcor_gsr',
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/375_c1_ts_acompcor_gsr',
+
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/186_c2_ts_aroma',
         
         skip_mkdir=True,
         skip_copylog=True,
