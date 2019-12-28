@@ -23,9 +23,9 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #dir_out<-"175_c1_ts_acompcor"
 #ses<-'ses-01'
 
-dir_in <-"172_c2_xcp_acompcor"
-dir_out<-"176_c2_ts_acompcor"
-ses<-'ses-02'
+#dir_in <-"172_c2_xcp_acompcor"
+#dir_out<-"176_c2_ts_acompcor"
+#ses<-'ses-02'
 
 #dir_in <-"181_c1_xcp_aroma"
 #dir_out<-"185_c1_ts_aroma"
@@ -41,6 +41,22 @@ ses<-'ses-02'
 
 #dir_in <-"192_c2_xcp_36p"
 #dir_out<-"196_c2_ts_36p"
+#ses<-'ses-02'
+
+dir_in <-"371_c1_xcp_acompcor_gsr"
+dir_out<-"375_c1_ts_acompcor_gsr"
+ses<-'ses-01'
+
+#dir_in <-"372_c2_xcp_acompcor_gsr"
+#dir_out<-"376_c2_ts_acompcor_gsr"
+#ses<-'ses-02'
+
+#dir_in <-"381_c1_xcp_aroma_gsr"
+#dir_out<-"385_c1_ts_aroma_gsr"
+#ses<-'ses-01'
+
+#dir_in <-"382_c2_xcp_aroma_gsr"
+#dir_out<-"386_c2_ts_aroma_gsr"
 #ses<-'ses-02'
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
