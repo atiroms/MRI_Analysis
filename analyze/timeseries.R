@@ -13,14 +13,14 @@
 # parameters for fc()
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in <-"300_ts_acompcor"
-dir_out <-"301_fc_acompcor"
-#dir_in <-"210_ts_aroma"
-#dir_out <-"211_fc_aroma"
-#dir_in <-"230_ts_acompcor_gsr"
-#dir_out <-"231_fc_acompcor_gsr"
-#dir_in <-"240_ts_aroma_gsr"
-#dir_out <-"241_fc_aroma_gsr"
+#dir_in <-"300_ts_acompcor"
+#dir_out <-"301_fc_acompcor"
+dir_in <-"310_ts_aroma"
+dir_out <-"311_fc_aroma"
+#dir_in <-"330_ts_acompcor_gsr"
+#dir_out <-"331_fc_acompcor_gsr"
+#dir_in <-"340_ts_aroma_gsr"
+#dir_out <-"341_fc_aroma_gsr"
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
 list_atlas<-c("aal116","gordon333","power264","shen268")
