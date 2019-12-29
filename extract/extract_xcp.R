@@ -157,13 +157,13 @@ extract_xcp<-function(paths_=paths,
 #**************************************************
 
 combine_ts<-function(path_exp="C:/Users/NICT_WS/Dropbox/temp",
-                     list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
-                                   list("dir"="176_c2_ts_acompcor","ses"=2)),
-                     dir_dst="300_ts_acompcor",
+                     #list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
+                     #              list("dir"="176_c2_ts_acompcor","ses"=2)),
+                     #dir_dst="300_ts_acompcor",
                      
-                     #list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
-                     #              list("dir"="186_c2_ts_aroma","ses"=2)),
-                     #dir_dst="310_ts_aroma",
+                     list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
+                                   list("dir"="186_c2_ts_aroma","ses"=2)),
+                     dir_dst="310_ts_aroma",
                      
                      #list_src=list(list("dir"="375_c1_ts_acompcor_gsr","ses"=1),
                      #              list("dir"="376_c2_ts_acompcor_gsr","ses"=2)),
