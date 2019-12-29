@@ -428,7 +428,7 @@ class ExtractQuality():
         #path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/386_c2_ts_aroma_gsr',
 
         path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_ts_aroma_gsr',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/385_c1_ts_aroma_gsr',
 
         skip_mkdir=True,
         skip_copylog=True,

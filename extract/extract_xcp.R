@@ -33,7 +33,7 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #dir_in <-"181_c1_xcp_aroma"
 #dir_out<-"185_c1_ts_aroma"
 #ses<-'ses-01'
-
+  
 #dir_in <-"182_c2_xcp_aroma"
 #dir_out<-"186_c2_ts_aroma"
 #ses<-'ses-02'
