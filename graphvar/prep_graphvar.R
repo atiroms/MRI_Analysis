@@ -9,9 +9,8 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"102_fc_acompcor"
-dir_in<-"201_fc_acompcor"
-dir_out<-"310_corrmat"
+dir_in<-"300_fc_acompcor"
+dir_out<-"400_corrmat"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
