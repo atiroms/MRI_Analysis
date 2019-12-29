@@ -10,10 +10,10 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"301_fc_acompcor"
-dir_out<-"306_motion_fc_acompcor"
-#dir_in<-"311_fc_aroma"
-#dir_out<-"316_motion_fc_aroma"
+#dir_in<-"301_fc_acompcor"
+#dir_out<-"306_motion_fc_acompcor"
+dir_in<-"311_fc_aroma"
+dir_out<-"316_motion_fc_aroma"
 #dir_in<-"321_fc_36p"
 #dir_out<-"326_motion_fc_36p"
 #dir_in<-"331_fc_acompcor_gsr"
@@ -26,8 +26,8 @@ dir_quality<-c("393_c1_quality","394_c2_quality")
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("aal116","gordon333","power264","shen268")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-"power264"
 
 
 #**************************************************
@@ -175,11 +175,12 @@ motion_fc<-function(paths_=paths,
     }
     
     df_plot_quality<-left_join(df_dist_fc,df_quality,by=c("ses","ID_pnTTC"))
-    df_plot_quality<-df_plot_quality[,c("ses","ID_pnTTC","dist","meanDV",
+    df_plot_quality<-df_plot_quality[,c("ses","ID_pnTTC","dist","motionDVCorrInit","nSpikesDV","nSpikesRMS","nVolCensored",
                                         "relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")]
     write.csv(df_plot_quality,file.path(paths_$output,"output",paste("atl-",atlas,"_quality_fc.csv",sep="")),row.names=F)
     
-    for (type_max in c("meanDV","relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")){
+    for (type_max in c("motionDVCorrInit","nSpikesDV","nSpikesRMS","nVolCensored",
+                       "relMeanRMSMotion","relMaxRMSMotion","motionDVCorrInit")){
       df_plot_quality_subset<-df_plot_quality[,c("dist",type_max)]
       colnames(df_plot_quality_subset)<-c("x","y")
       plot<-(ggplot(df_plot_quality_subset)

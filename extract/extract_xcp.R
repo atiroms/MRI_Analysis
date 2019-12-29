@@ -31,9 +31,9 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #dir_out<-"185_c1_ts_aroma"
 #ses<-'ses-01'
 
-dir_in <-"182_c2_xcp_aroma"
-dir_out<-"186_c2_ts_aroma"
-ses<-'ses-02'
+#dir_in <-"182_c2_xcp_aroma"
+#dir_out<-"186_c2_ts_aroma"
+#ses<-'ses-02'
 
 #dir_in <-"191_c1_xcp_36p"
 #dir_out<-"195_c1_ts_36p"
@@ -47,9 +47,9 @@ ses<-'ses-02'
 #dir_out<-"375_c1_ts_acompcor_gsr"
 #ses<-'ses-01'
 
-#dir_in <-"372_c2_xcp_acompcor_gsr"
-#dir_out<-"376_c2_ts_acompcor_gsr"
-#ses<-'ses-02'
+dir_in <-"372_c2_xcp_acompcor_gsr"
+dir_out<-"376_c2_ts_acompcor_gsr"
+ses<-'ses-02'
 
 #dir_in <-"381_c1_xcp_aroma_gsr"
 #dir_out<-"385_c1_ts_aroma_gsr"
@@ -157,17 +157,17 @@ extract_xcp<-function(paths_=paths,
 #**************************************************
 
 combine_ts<-function(path_exp="C:/Users/NICT_WS/Dropbox/temp",
-                     list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
-                                   list("dir"="176_c2_ts_acompcor","ses"=2)),
-                     dir_dst="300_ts_acompcor",
+                     #list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
+                     #              list("dir"="176_c2_ts_acompcor","ses"=2)),
+                     #dir_dst="300_ts_acompcor",
                      
                      #list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
                      #              list("dir"="186_c2_ts_aroma","ses"=2)),
                      #dir_dst="310_ts_aroma",
                      
-                     #list_src=list(list("dir"="375_c1_ts_acompcor_gsr","ses"=1),
-                     #              list("dir"="376_c2_ts_acompcor_gsr","ses"=2)),
-                     #dir_dst="330_ts_acompcor_gsr",
+                     list_src=list(list("dir"="375_c1_ts_acompcor_gsr","ses"=1),
+                                   list("dir"="376_c2_ts_acompcor_gsr","ses"=2)),
+                     dir_dst="330_ts_acompcor_gsr",
                      
                      #list_src=list(list("dir"="385_c1_ts_aroma_gsr","ses"=1),
                      #              list("dir"="386_c2_ts_aroma_gsr","ses"=2)),
