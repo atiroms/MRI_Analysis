@@ -19,6 +19,9 @@
 path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 
+#path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+#path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+
 #dir_in <-"171_c1_xcp_acompcor"
 #dir_out<-"175_c1_ts_acompcor"
 #ses<-'ses-01'
@@ -47,13 +50,13 @@ path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #dir_out<-"375_c1_ts_acompcor_gsr"
 #ses<-'ses-01'
 
-dir_in <-"372_c2_xcp_acompcor_gsr"
-dir_out<-"376_c2_ts_acompcor_gsr"
-ses<-'ses-02'
+#dir_in <-"372_c2_xcp_acompcor_gsr"
+#dir_out<-"376_c2_ts_acompcor_gsr"
+#ses<-'ses-02'
 
-#dir_in <-"381_c1_xcp_aroma_gsr"
-#dir_out<-"385_c1_ts_aroma_gsr"
-#ses<-'ses-01'
+dir_in <-"381_c1_xcp_aroma_gsr"
+dir_out<-"385_c1_ts_aroma_gsr"
+ses<-'ses-01'
 
 #dir_in <-"382_c2_xcp_aroma_gsr"
 #dir_out<-"386_c2_ts_aroma_gsr"
