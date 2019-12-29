@@ -73,10 +73,16 @@ list_atlas<-c("aal116","glasser360","gordon333","power264",
 n_permutation<-1000
 #n_permutation<-100
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+                             list("key"="W1_rsfMRIexist","condition"="==1"),
+                             list("key"="W1_Censor","condition"="<126")),
+                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
+                             list("key"="W2_rsfMRIexist","condition"="==1"),
+                             list("key"="W2_Censor","condition"="<126")))
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
                                "2"="W2_Tanner_Max",
                                "label"="Tanner stage (max)"),

@@ -6,10 +6,10 @@ import os
 import shutil
 import pandas as pd
 import csv
-import nilearn.image as nl_image
+#import nilearn.image as nl_image
 import json
 import numpy as np
-import pydicom
+#import pydicom
 import datetime
 import gzip
 import glob
@@ -155,84 +155,80 @@ class PrepXCP():
         skip_fmriprep_moveanat=True,
         n_proc=20,
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
+        #path_fmriprep='/media/veracrypt3/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_fconly_noqcfc_shen.dsn',
+        #file_design='fc-acompcor_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_fconly_noqcfc_shen.dsn',
+        #file_design='fc-acompcor_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-aroma_fconly_noqcfc_shen.dsn',
+        #file_design='fc-aroma_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-aroma_fconly_noqcfc_shen.dsn',
+        #file_design='fc-aroma_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/191_c1_xcp_36p',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/191_c1_xcp_36p',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-36p_spkreg_fconly_noqcfc_shen.dsn',
+        #file_design='fc-36p_spkreg_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt1/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        #path_exp='/media/veracrypt1/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/192_c2_xcp_36p',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-36p_spkreg_fconly_noqcfc_shen.dsn',
+        #file_design='fc-36p_spkreg_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_gsr_fconly_noqcfc.dsn',
+        #file_design='fc-acompcor_gsr_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/67_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
         #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-aroma_gsr_fconly_noqcfc.dsn',
+        #file_design='fc-aroma_gsr_20191219.dsn',
 
-        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        #path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
         #file_id='68_id_c2_t1exist_rsfmriexist.csv',
         #ses='ses-02',
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #file_design='fc-acompcor_gsr_fconly_noqcfc.dsn',
+        #file_design='fc-acompcor_gsr_20191219.dsn',
 
-        path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        path_exp='/media/veracrypt2/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
+        path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
         file_id='68_id_c2_t1exist_rsfmriexist.csv',
         ses='ses-02',
         suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        file_design='fc-aroma_gsr_fconly_noqcfc.dsn',
+        file_design='fc-aroma_gsr_20191219.dsn',
 
-        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
-        #file_design='fc-36p_spkreg_fconly_noqcfc.dsn',
-        #file_design='fc-aroma_fconly_noqcfc.dsn',
-        #file_design='fc-acompcor_fconly_noqcfc.dsn',
-        #file_design='fc-prestats.dsn',
+        #path_folder_design='C:/Users/NICT_WS/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
+
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
         path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
         #path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
@@ -407,14 +403,29 @@ class ExtractNifti():
 class ExtractQuality():
     def __init__(self,
 
-        path_input='Q:/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        path_output='Q:/MRI_img/pnTTC/preproc/391_c1_quality',
+        #path_input='P:/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
+        #path_output='P:/MRI_img/pnTTC/preproc/175_c1_ts_acompcor',
         
-        #path_input='P:/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
-        #path_output='P:/MRI_img/pnTTC/preproc/392_c2_quality',
+        #path_input='Q:/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
+        #path_output='Q:/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
+
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/185_c1_ts_aroma',
+
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
+
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/375_c1_ts_acompcor_gsr',
+
+        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
+        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/186_c2_ts_aroma',
+
+        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
+        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/376_c2_ts_acompcor_gsr',
         
-        skip_mkdir=False,
-        skip_copylog=False,
+        skip_mkdir=True,
+        skip_copylog=True,
         filename_output='quality.csv'
         ):
 

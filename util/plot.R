@@ -248,26 +248,42 @@ custom_densityDiag <- function(data, mapping, ...){
 #**************************************************
 # circular graph ==================================
 #**************************************************
-graph_circular<-function(input,type_pvalue,thr_pvalue){
-  edge_plot<-input$edge
-  edge_plot<-edge_plot[which(edge_plot[,type_pvalue]<thr_pvalue),]
-  node_plot<-input$node
-  r_node<-grep("^R ",node_plot$label)
-  l_node<-rev(grep("^L ",node_plot$label))
-  if (length(r_node)+length(l_node)>0){
-    node_plot<-rbind(node_plot[r_node,],node_plot[c(-r_node,-l_node),],node_plot[l_node,])
+plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
+  
+  # Subset edges according to p value criteria
+  df_edge<-get.data.frame(igraph_in,what="edges")
+  df_edge<-df_edge[which(df_edge[,type_p]<thr_p),]
+  
+  # Change order of nodes for circular plot aesthetics
+  df_node<-get.data.frame(igraph_in,what="vertices")
+  idx_node_r<-grep("^R ",df_node$label)
+  idx_node_l<-rev(grep("^L ",df_node$label))
+  if (length(idx_node_r)+length(idx_node_l)>0){
+    df_node<-rbind(df_node[idx_node_r,],
+                   df_node[c(-idx_node_r,-idx_node_l),],
+                   df_node[idx_node_l,])
   }
-  node_plot$angle <- 90 - 360 * ((1:nrow(node_plot))-0.5) / nrow(node_plot)
-  node_plot$hjust<-ifelse(node_plot$angle < -90, 1, 0)
-  node_plot$angle<-ifelse(node_plot$angle < -90, node_plot$angle+180, node_plot$angle)
-  data_igraph <- graph_from_data_frame(d = edge_plot, vertices = node_plot, directed = F)
-  #limit_color <- max(abs(max(edge_plot$weight)),abs(min(edge_plot$weight)))
-  #limit_color <- c(-limit_color,limit_color)
-  limit_color <- c(-1,1)
-  fig<-ggraph(data_igraph, layout = "linear",circular = T) +
+  
+  # Add circular plot specs 
+  df_node$angle <- 90 - 360 * ((1:nrow(df_node))-0.5) / nrow(df_node)
+  df_node$hjust<-ifelse(df_node$angle < -90, 1, 0)
+  df_node$angle<-ifelse(df_node$angle < -90, df_node$angle+180, df_node$angle)
+  
+  # Convert edge/node dataframes into igraph object again
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  # Calculate color limit if not specified
+  if(is.null(limit_color)){
+    if (nrow(df_edge)>0){
+      limit_color <- max(abs(max(df_edge$weight)),abs(min(df_edge$weight)))
+      limit_color <- c(-limit_color,limit_color)
+    }
+  }
+  
+  plot<-ggraph(igraph_plot, layout = "linear",circular = T) +
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=label, angle = angle, hjust=hjust,vjust=0.2),
-                   size=400/nrow(node_plot), alpha=1) +
+                   size=min(5,10/log(nrow(df_node))), alpha=1) +
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
     scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+
@@ -275,9 +291,9 @@ graph_circular<-function(input,type_pvalue,thr_pvalue){
     theme_void() +
     #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
     theme(legend.justification=c(1,1), legend.position=c(1,1))
-  if (nrow(edge_plot)>0){
-    fig<-fig+
-      geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
+  if (nrow(df_edge)>0){
+    plot<-plot+
+          geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
   }
-  return(fig)
+  return(plot)
 }

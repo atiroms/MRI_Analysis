@@ -10,7 +10,7 @@
 
 path_exp <- "Dropbox/MRI_img/pnTTC/Puberty/Stats/str_FS"
 dir_in <-"01_extract"
-dir_out <-"02_gamm_test"
+dir_out <-"03_gamm_test"
 
 file_input<-"fs_measure.csv"
 
@@ -20,8 +20,8 @@ list_wave <- c(1,2)
 list_measure <-"volume"
 
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
-#list_str_group<-"subcortex"
-list_str_group<-"cortex"
+list_str_group<-"subcortex"
+#list_str_group<-"cortex"
 #list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
@@ -55,10 +55,10 @@ list_covar<-list("testo"=list("1"="W1_Testosterone",
                             "label"="Sex"))
 
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild","value"=1)))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+                             list("key"="W1_T1QC_new_mild","condition"="==1")),
+                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
+                             list("key"="W2_T1QC_new_mild","condition"="==1")))
 
 #list_mod <- list("a+s+st"=
 #                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')",
@@ -158,7 +158,7 @@ source(file.path(paths$script,"util/plot.R"))
 # GAMM of structural measures =====================
 #**************************************************
 
-glm_core<-function(df_src,roi,label_roi,group,measure,list_mod_,list_graph_,list_covar_,paths_){
+gamm_core<-function(df_src,roi,label_roi,group,measure,list_mod_,list_graph_,list_covar_,paths_){
   print(paste("GLM/GAM ",measure,' of ',roi," (",label_roi,")",sep=""))
   df_out_aic_add<-df_out_lm_add<-data.frame()
   for (idx_mod in names(list_mod_)){
@@ -220,7 +220,7 @@ glm_core<-function(df_src,roi,label_roi,group,measure,list_mod_,list_graph_,list
     }
   }
   
-  # Compare AICs of GLM models
+  # Compare AICs of GAMM models
   df_out_aic_add_sex_rbind<-data.frame()
   for (idx_sex in list_sex){
     df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
@@ -270,9 +270,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   # Calculate GAMM
   print('Calculating GAMM.')
   df_out_lm<-df_out_aic<-NULL
-  
-  gam.control(maxit=1000)
-  
+  #gam.control(maxit=1000)
   for (measure in list_measure_){
     for (str_group in list_str_group_){
       df_join_measure_group<-df_join[df_join$measure==measure & df_join$group==str_group,]
@@ -281,7 +279,7 @@ gamm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
         label_roi=as.character(dict_roi[dict_roi$id==roi,"label"])
         df_src=df_join_measure_group[df_join_measure_group$roi==roi,]
         if (dim(df_src)[2]>0){
-          out_glm<-glm_core(df_src,roi,label_roi,group=str_group,measure,
+          out_glm<-gamm_core(df_src,roi,label_roi,group=str_group,measure,
                             list_mod_,list_graph_,list_covar_,paths_)
           df_out_lm<-rbind(df_out_lm,out_glm$df_out_lm_add)
           df_out_aic<-rbind(df_out_aic,out_glm$df_out_aic_add)

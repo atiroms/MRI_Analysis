@@ -112,13 +112,16 @@ func_clinical_data_long<-function(paths,
     print(paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
     id_intersect<-df_clin_wave[,'ID_pnTTC']
     list_id_subset_wave<-list("src"=id_intersect)
-    for (cond_subset in subset_subj[[str_wave]]){
-      key_subset<-cond_subset$key
-      value_subset<-cond_subset$value
-      id_meet_cond<-df_clin_wave[df_clin_wave[key_subset]==value_subset,'ID_pnTTC']
+    for (key_condition in subset_subj[[str_wave]]){
+      key_subset<-key_condition$key
+      #value_subset<-key_condition$value
+      condition_subset<-key_condition$condition
+      #id_meet_cond<-df_clin_wave[df_clin_wave[key_subset]==value_subset,'ID_pnTTC']
+      id_meet_cond<-df_clin_wave[eval(parse(text=paste('df_clin_wave[key_subset]',condition_subset,sep=''))),'ID_pnTTC']
       id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
-      print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
+      #print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
+      print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, condition_subset,sep=''))
       id_meet_cond<-list(id_meet_cond)
       names(id_meet_cond)<-key_subset
       list_id_subset_wave<-c(list_id_subset_wave,id_meet_cond)
@@ -350,11 +353,11 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
 #**************************************************
 
 mltcomp_corr<-function(input){
-  output<-data.frame("p_bonferroni"=p.adjust(input$p,method = "bonferroni"),
-                     "p_holm_bonferroni"=p.adjust(input$p,method = "holm"),
-                     "p_hockberg"=p.adjust(input$p,method = "holm"),
-                     "p_hommel"=p.adjust(input$p,method = "hommel"),
-                     "p_benjamini_hochberg"=p.adjust(input$p,method="BH"),
-                     "p_benjamini_yukutieli"=p.adjust(input$p,method="BY"))
+  output<-data.frame("p_bonf"=p.adjust(input$p,method = "bonferroni"),
+                     "p_holm"=p.adjust(input$p,method = "holm"),
+                     "p_hoch"=p.adjust(input$p,method = "hochberg"),
+                     "p_homm"=p.adjust(input$p,method = "hommel"),
+                     "p_bh"=p.adjust(input$p,method="BH"),
+                     "p_by"=p.adjust(input$p,method="BY"))
   return(output)
 }
