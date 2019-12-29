@@ -48,7 +48,7 @@ source(file.path(paths$script,"analyze/long_structure.R"))
 #**************************************************
 
 dir_in <-"01_extract"
-id_dir_start<-02
+id_dir_start<-03
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 
@@ -61,61 +61,29 @@ list_measure <-c("volume","thickness","area")
 
 list_str_group<-c("cortex","subcortex","white matter","global","misc")
 #list_str_group<-"subcortex"
-#list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
-list_hormone<-list("testo"=list("1"="W1_Testosterone",
-                                "2"="W2_Testosterone",
-                                "label"="Testosterone"),
-                   "corti"=list("1"="W1_Cortisol",
-                                "2"="W2_Cortisol",
-                                "label"="Cortisol"),
-                   "dhea"=list("1"="W1_DHEA",
-                               "2"="W2_DHEA",
-                               "label"="DHEA"),
-                   "dheas"=list("1"="W1_DHEAS",
-                                "2"="W2_DHEAS",
-                                "label"="DHEA-S"))
+list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                   "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                   "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                   "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
 
-list_covar<-list("age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI",
-                            "label"="Age"),
-                 "sex"=list("1"="Sex",
-                            "2"="Sex",
-                            "label"="Sex"))
+list_covar<-list("age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                 "sex"=list("1"="Sex",          "2"="Sex",          "label"="Sex"),
+                 "icv"=list("1"="W1_ICV",       "2"="W2_ICV",       "label"="ICV"))
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-                             list("key"="W1_T1QC_new_mild","value"=1)),
-                    "2"=list(list("key"="W2_T1QC","value"=1),
-                             list("key"="W2_T1QC_new_mild","value"=1)))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1")),
+                    "2"=list(list("key"="W2_T1QC","condition"="==1")))
 
-list_mod <- list("lin"=
-                   "value ~ age + hormone + s(ID_pnTTC,bs='re')",
-                 "add"=
-                   "value ~ s(age,k=3) + s(hormone,k=3) + s(ID_pnTTC,bs='re')",
-                 "quad"=
-                   "value ~ poly(age,2) + poly(hormone,2) + s(ID_pnTTC,bs='re')")
+list_mod <- list("lin"  ="value ~ age + hormone + icv + s(ID_pnTTC,bs='re')",
+                 "add"  ="value ~ s(age,k=3) + s(hormone,k=3) + s(icv,k=3) + s(ID_pnTTC,bs='re')",
+                 "quad" ="value ~ poly(age,2) + poly(hormone,2) + s(icv,k=3) + s(ID_pnTTC,bs='re')")
 
-list_graph <-list("a"=list("title"="Age effect",
-                           "x_axis"="age",
-                           "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                     "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                         "Female"=list("fix"=list("sex"=2),
-                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                           "point"=list("Male"=list("subset"=list("sex"=1),
-                                                    "color"="steelblue2","alpha"=1),
-                                        "Female"=list("subset"=list("sex"=2),
-                                                      "color"="lightcoral","alpha"=1))),
-                  "h"=list("title"="Hormone effect",
-                           "x_axis"="hormone",
-                           "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                     "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                         "Female"=list("fix"=list("sex"=2),
-                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                           "point"=list("Male"=list("subset"=list("sex"=1),
-                                                    "color"="steelblue2","alpha"=1),
-                                        "Female"=list("subset"=list("sex"=2),
-                                                      "color"="lightcoral","alpha"=1))))
+list_graph <-list("h"=list("title"="Hormone effect","x_axis"="hormone",
+                           "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                         "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                           "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                        "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
 
 
 #**************************************************
