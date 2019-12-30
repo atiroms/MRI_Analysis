@@ -60,38 +60,33 @@ list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner
 #thresh_sign<-0.05
 thresh_sign<-0.001
 
-list_id_dir<-list("acompcor"=201,
-                  "aroma"=211,
-                  "36p"=221,
-                  "acompcor_gsr"=231,
-                  "aroma_gsr"=241)
-
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100","schaefer200","schaefer400","shen268")
+#<-list("acompcor"=201,
+#                  "aroma"=211,
+#                  "36p"=221,
+#                  "acompcor_gsr"=231,
+#                  "aroma_gsr"=241)
+#
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100","schaefer200","schaefer400","shen268")
 #list_atlas<-"aal116"
-
-n_permutation<-1000
-#n_permutation<-100
-
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+list_id_dir<-list("acompcor"=301,
+                  "aroma"=311,
+                  "acompcor_gsr"=331,
+                  "aroma_gsr"=341)
+list_atlas<-c("aal116","gordon333","power264","shen268")
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
                              list("key"="W1_Censor","condition"="<126")),
                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max",
-                               "label"="Tanner stage (max)"),
-                 "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI",
-                            "label"="Age"),
-                 "sex"=list("1"="Sex",
-                            "2"="Sex",
-                            "label"="Sex"))
+list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+                 "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                 "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
 list_mod <- list("glm_tdiff"=
                    "value ~ diff_age + diff_tanner",
                  "glm_tdiff_tmean"=
@@ -140,12 +135,8 @@ list_strat_tanner <-list("5by5"=
                      list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
                           "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
-list_type_tanner<-list("max"=list("1"="W1_Tanner_Max",
-                                  "2"="W2_Tanner_Max",
-                                  "label"="Tanner stage (max)"),
-                       "full"=list("1"="W1_Tanner_Full",
-                                   "2"="W2_Tanner_Full",
-                                   "label"="Tanner stage (full)"),
+list_type_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+                       "full"=list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
                        "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
                                       "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
                                       "label"="Tanner stage (gonadal)"),
@@ -153,9 +144,8 @@ list_type_tanner<-list("max"=list("1"="W1_Tanner_Max",
                                       "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
                                       "label"="Tanner stage (adrenal)"))
 
-
-# Parameters for summarize_model()
-
+n_permutation<-1000
+#n_permutation<-100
 
 
 #**************************************************
