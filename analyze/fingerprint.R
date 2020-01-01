@@ -203,7 +203,7 @@ glm_core<-function(df_src,atlas,measure,group,list_mod_,list_graph_,list_covar_,
         if (list_graph_[[idx_graph]][["x_axis"]] %in% colnames(mod$model)){
           # Add sex-wise lines/plots to existent plot, initialize if absent
           plot<-plot_gamm(plot_in=list_plot[[idx_graph]],mod_gamm=mod,
-                          df_join_measure_roi=df_src_sex,
+                          df_in=df_src_sex,
                           spec_graph=list_graph_[[idx_graph]])
           list_plot[[idx_graph]]<-plot
           

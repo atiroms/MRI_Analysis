@@ -662,7 +662,7 @@ fp_fc<-function(paths_=paths,
     clust<-makeCluster(n_cluster)
     clusterExport(clust,
                   varlist=c("paths_","atlas","func_cor",
-                            "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                            "plot_cor_heatmap","rcorr","FisherZ","rownames_to_column","gather",
                             "ggplot","aes","geom_tile","scale_fill_gradientn",
                             "matlab.like2","scale_y_discrete","scale_x_discrete",
                             "theme_light","theme","element_text","element_blank",
