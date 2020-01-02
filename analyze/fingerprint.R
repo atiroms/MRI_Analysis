@@ -12,8 +12,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in<-"203_fp_acompcor"
-dir_out<-"206_fp_model_acompcor_test"
+dir_in<-"202_fp_acompcor"
+dir_out<-"205_fp_model_acompcor_test"
 
 list_wave <- c(1,2)
 
@@ -82,7 +82,7 @@ list_graph <-list("diff"=list("title"="Testosterone diff effect",
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
-
+list_strat_tanner <-NULL
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 list_atlas<-"aal116"
@@ -338,6 +338,7 @@ ancova_core<-function(data_input){
   return(df_out)
 }
 
+
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,
                    list_wave_=list_wave,
@@ -362,8 +363,6 @@ model_fp<-function(paths_=paths,
   list_src_ancova<-NULL
   
   for (atlas in list_atlas_){
-    print(paste("Atlas: ",atlas,sep=""))
-    
     # Load fingerprint data
     df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep="")))
     
@@ -398,7 +397,8 @@ model_fp<-function(paths_=paths,
         # Collect longitudinal fp correlation data
         df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
         for (id_subj in list_id_subj_exist_twice){
-          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"z_r"]
+          #df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"z_r"]
+          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"r"]
         }
         
         # Subset those without longitudinal fp correlation
@@ -489,11 +489,10 @@ model_fp<-function(paths_=paths,
     for (df_ancova in list_df_ancova){
       df_out_ancova<-rbind(df_out_ancova,df_ancova)
     }
+    # Data saving
+    rownames(df_out_ancova)<-NULL
+    write.csv(df_out_ancova,file.path(paths_$output,"output","fp_ancova.csv"),row.names=F)
   }
-  
-  # Data saving
-  rownames(df_out_ancova)<-NULL
-  write.csv(df_out_ancova,file.path(paths_$output,"output","fp_ancova.csv"),row.names=F)
   print("Finished model_fp()")
 }
 

@@ -556,7 +556,7 @@ fp_fc_core<-function(data_zr){
   }
   df_fp_subnet$measure<-measure
   df_fp_subnet$group<-group
-  df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r")]
+  df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r","z_r")]
   
   # rbind to output dataframe
   #df_fp<-rbind(df_fp,df_fp_subnet)
