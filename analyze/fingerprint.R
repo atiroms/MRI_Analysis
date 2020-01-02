@@ -425,7 +425,7 @@ model_fp<-function(paths_=paths,
         df_out_aic<-rbind(df_out_aic,out_glm$df_out_aic_add)
         
         # Prepare ANCOVA calculation for later parallel computing
-        if (!skip_tanner){
+        if (!skip_ancova){
           print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
           # Create list of input dataframes for parallel ANCOVA calculation
           for (group_tanner in names(list_strat_tanner_)){
