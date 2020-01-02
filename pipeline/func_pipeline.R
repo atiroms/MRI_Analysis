@@ -60,11 +60,10 @@ list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner
 #thresh_sign<-0.05
 thresh_sign<-0.001
 
-list_id_dir<-list("acompcor"=201,
-                  "aroma"=211,
-#                  "36p"=221,
-                  "acompcor_gsr"=231,
-                  "aroma_gsr"=241)
+list_id_dir<-list("acompcor"=202,
+                  "aroma"=212,
+                  "acompcor_gsr"=232,
+                  "aroma_gsr"=242)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
@@ -73,10 +72,10 @@ list_id_dir<-list("acompcor"=201,
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-#list_id_dir<-list("acompcor"=301,
-#                  "aroma"=311,
-#                  "acompcor_gsr"=331,
-#                  "aroma_gsr"=341)
+#list_id_dir<-list("acompcor"=302,
+#                  "aroma"=312,
+#                  "acompcor_gsr"=332,
+#                  "aroma_gsr"=342)
 list_atlas<-c("aal116","gordon333","power264","shen268")
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
@@ -130,7 +129,7 @@ list_type_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "la
 
 
 # Parameters for gamm_multi_hormone()
-list_id_dir_hormone<-list("acompcor"=205,"aroma"=215,"acompcor_gsr"=235,"aroma_gsr"=245)
+list_id_dir_fp<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
 list_covar_hormone<-list("hormone"=list("1"="W1_Hormone","2"="W2_Hormone","label"="Hormone"),
                          "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                          "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
@@ -227,7 +226,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
                     list_mod_=list_mod,list_graph_=list_graph,
                     list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
                     subset_subj_=subset_subj,n_permutation_=n_permutation,
-                    skip_ts2fc=TRUE){
+                    skip_ts2fc=TRUE,skip_fc2fp=TRUE){
   
   print('Starting pipe_func().')
   
@@ -245,13 +244,16 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   }
   
   # Functional connetivity to fingerprint
-  dir_in<-paste(as.character(id_dir_fc),"fc",suffix_dir_,sep='_')
-  id_dir_cnt<-id_dir_cnt+1
-  id_dir_fp<-id_dir_cnt
-  dir_out<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  nullobj<-fp_fc(paths_=paths,list_atlas_=list_atlas_)
-  
+  if(!skip_fc2fp){
+    dir_in<-paste(as.character(id_dir_fc),"fc",suffix_dir_,sep='_')
+    id_dir_cnt<-id_dir_cnt+1
+    id_dir_fp<-id_dir_cnt
+    dir_out<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
+    paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-fp_fc(paths_=paths,list_atlas_=list_atlas_)
+  }else{
+    id_dir_fp<-id_dir_cnt
+  }
   # Fingerprint to identification of fingerprints
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   id_dir_cnt<-id_dir_cnt+1
@@ -313,7 +315,7 @@ pipe_func_multi<-function(list_id_dir_=list_id_dir,
                           list_mod_=list_mod,list_graph_=list_graph,
                           list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
                           subset_subj_=subset_subj,n_permutation_=n_permutation,
-                          skip_ts2fc=TRUE){
+                          skip_ts2fc=TRUE,skip_fc2fp=TRUE){
   
   print("Starting pipe_func_multi()")
   for (suffix_dir in names(list_id_dir_)){
@@ -323,7 +325,7 @@ pipe_func_multi<-function(list_id_dir_=list_id_dir,
                        list_mod_=list_mod_,list_graph_=list_graph_,
                        list_strat_tanner_=list_strat_tanner_,list_type_tanner_=list_type_tanner_,
                        subset_subj_=subset_subj_,n_permutation_=n_permutation_,
-                       skip_ts2fc=skip_ts2fc)
+                       skip_ts2fc=skip_ts2fc,skip_fc2fp=skip_fc2fp)
   }
   print("Finished pipe_func_multi()")
 }
@@ -331,24 +333,23 @@ pipe_func_multi<-function(list_id_dir_=list_id_dir,
 #**************************************************
 # gamm_fp() for hormonal data =====================
 #**************************************************
-gamm_multi_hormone<-function(list_id_dir_=list_id_dir_hormone,
+gamm_multi_hormone<-function(list_id_dir_=list_id_dir_fp,
                              list_atlas_=list_atlas,
                              list_wave_=list_wave,list_covar_=list_covar_hormone,
                              list_mod_=list_mod_hormone,list_graph_=list_graph_hormone,
-                             list_hormone_=list_hormone_,
+                             list_hormone_=list_hormone,
                              subset_subj_=subset_subj){
   
   print("Starting gamm_multi_hormone()")
   for (suffix_dir in names(list_id_dir_)){
     id_dir_fp<-list_id_dir_[[suffix_dir]]
-    dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-    id_dir_cnt<-id_dir_cnt_+2
-    id_dir_model_fp<-id_dir_cnt
+    dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir,sep='_')
+    id_dir_model_fp<-id_dir_fp+2.4
     for (idx_hormone in names(list_hormone_)){
       id_dir_model_fp<-id_dir_model_fp+0.1
       print(paste("Preproc: ",suffix_dir,", Hormone: ",list_hormone[[idx_hormone]][["label"]],sep=""))
       list_covar_[["hormone"]]<-list_hormone[[idx_hormone]]
-      dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir_,idx_hormone,sep='_')
+      dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir,idx_hormone,sep='_')
       paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
       nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
                         list_wave_=list_wave_,list_covar_=list_covar_,

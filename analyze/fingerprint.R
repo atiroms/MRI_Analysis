@@ -100,6 +100,7 @@ library(mgcv)
 library(rowr)
 library(multcomp)
 library(parallel)
+library(DescTools)
 #library(ggplot2)
 #library(GGally)
 #library(igraph)
@@ -398,7 +399,7 @@ model_fp<-function(paths_=paths,
         df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
         for (id_subj in list_id_subj_exist_twice){
           #df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"z_r"]
-          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"r"]
+          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-FisherZ(df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"r"])
         }
         
         # Subset those without longitudinal fp correlation
