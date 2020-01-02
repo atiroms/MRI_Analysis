@@ -27,88 +27,66 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-                               "2"="W2_Tanner_Max",
-                               "label"="Tanner stage (max)"),
-                 "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI",
-                            "label"="Age"),
-                 "sex"=list("1"="Sex",
-                            "2"="Sex",
-                            "label"="Sex"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+#                 "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+#                 "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
+#list_mod <- list("glm_tdiff"="value ~ diff_age + diff_tanner",
+#                 "glm_tdiff_tmean"="value ~ diff_age + diff_tanner + mean_tanner",
+#                 "gam_tdiff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
+#                 "gam_tdiff_tmean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+#list_graph <-list("adiff"=list("title"="Age diff effect",
+#                               "x_axis"="diff_age",
+#                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+#                  "tdiff"=list("title"="Tanner diff effect",
+#                               "x_axis"="diff_tanner",
+#                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+#                  "tmean"=list("title"="Tanner mean effect",
+#                               "x_axis"="mean_tanner",
+#                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
+#list_strat_tanner <-list("5by5"=list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
+#                                     "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
+#                         "3by3"=list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
+#                                     "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
+#                         "2by2"=list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
+#                                     "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
-list_mod <- list("glm_tdiff"=
-                   "value ~ diff_age + diff_tanner",
-                 "glm_tdiff_tmean"=
-                   "value ~ diff_age + diff_tanner + mean_tanner",
-                 "gam_tdiff"=
-                   "value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
-                 "gam_tdiff_tmean"=
-                   "value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                 "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                 "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
+                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
+                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"),
+                 "icv"  =list("1"="W1_ICV",         "2"="W2_ICV",         "label"="ICV"))
+list_mod <- list("lin_diff"="value ~ diff_age + diff_testo",
+                 "lin_diff_mean"="value ~ diff_age + diff_testo + mean_testo",
+                 "add_diff"="value ~ s(diff_age,k=3) + s(diff_testo,k=3)",
+                 "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_testo,k=3) + s(diff_testo,k=3)")
+list_graph <-list("diff"=list("title"="Testosterone diff effect",
+                              "x_axis"="diff_testo",
+                              "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                            "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                              "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                           "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+                  "mean"=list("title"="Testosterone mean effect",
+                               "x_axis"="mean_testo",
+                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
 
-list_graph <-list("adiff"=list("title"="Age diff effect",
-                               "x_axis"="diff_age",
-                               "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                         "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                             "Female"=list("fix"=list("sex"=2),
-                                                           "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                               "point"=list("Male"=list("subset"=list("sex"=1),
-                                                        "color"="steelblue2","alpha"=1),
-                                            "Female"=list("subset"=list("sex"=2),
-                                                          "color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Tanner diff effect",
-                               "x_axis"="diff_tanner",
-                               "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                         "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                             "Female"=list("fix"=list("sex"=2),
-                                                           "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                               "point"=list("Male"=list("subset"=list("sex"=1),
-                                                        "color"="steelblue2","alpha"=1),
-                                            "Female"=list("subset"=list("sex"=2),
-                                                          "color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Tanner mean effect",
-                               "x_axis"="mean_tanner",
-                               "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                         "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                             "Female"=list("fix"=list("sex"=2),
-                                                           "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                               "point"=list("Male"=list("subset"=list("sex"=1),
-                                                        "color"="steelblue2","alpha"=1),
-                                            "Female"=list("subset"=list("sex"=2),
-                                                          "color"="lightcoral","alpha"=1))))
-
-list_strat_tanner <-list("5by5"=
-                           list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
-                                "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
-                         "3by3"=
-                           list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
-                                "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
-                         "2by2"=
-                           list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
-                                "2"=list("123"=c(1,2,3),"45"=c(4,5))))
-
-#list_mod <- list("lin_diff_t"=
-#                   "value ~ sex + sex:diff_tanner",
-#                 "lin_diff_at"=
-#                   "value ~ diff_age + sex + sex:diff_tanner",
-#                 "lin_diff_at_mean_t"=
-#                   "value ~ diff_age + sex + sex:mean_tanner + sex:diff_tanner",
-#                 "lin_diff_a_ses_t"=
-#                   "value ~ diff_age + sex + sex:ses1_tanner + sex:ses2_tanner",
-#                 "add_diff_t"=
-#                   "value ~ sex + s(diff_tanner,k=3,by=sex)",
-#                 "add_diff_at"=
-#                   "value ~ s(diff_age,k=3) + sex + s(diff_tanner,k=3,by=sex)",
-#                 "add_diff_at_mean_t"=
-#                   "value ~ s(diff_age,k=3) + sex + s(mean_tanner,k=3,by=sex) + s(diff_tanner,k=3,by=sex)",
-#                 "add_diff_a_ses_t"=
-#                   "value ~ s(diff_age,k=3) + sex + s(ses1_tanner,k=3,by=sex) + s(ses2_tanner,k=3,by=sex)")
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 list_atlas<-"aal116"
-#list_atlas<-"schaefer400"
-#list_atlas<-"dk"
-#list_atlas<-c("glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+
 #thr_pvalue <- 0.05
 n_permutation<-1000
 #n_permutation<-100
@@ -187,8 +165,8 @@ glm_core<-function(df_src,atlas,measure,group,list_mod_,list_graph_,list_covar_,
       }else{
         s_table<-summary.gam(mod)$s.table
         df_out_lm_add_add<-rbind(data.frame(atlas=atlas,measure=measure,group=group,sex=idx_sex,model=idx_mod,term=rownames(p_table),
-                                        estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                        t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                                            estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                            t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
                              data.frame(atlas=atlas,measure=measure,group=group,sex=idx_sex,model=idx_mod,term=rownames(s_table),
                                         estimate=NA,se=NA,F=s_table[,'F'],
                                         t=NA,p=s_table[,'p-value']))
@@ -367,7 +345,8 @@ model_fp<-function(paths_=paths,
                    list_mod_=list_mod,
                    list_graph_=list_graph,
                    list_strat_tanner_=list_strat_tanner,
-                   subset_subj_=subset_subj
+                   subset_subj_=subset_subj,
+                   skip_ancova=T
                    ){
   print("Starting model_fp().")
   nullobj<-func_createdirs(paths_)
@@ -419,7 +398,7 @@ model_fp<-function(paths_=paths,
         # Collect longitudinal fp correlation data
         df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
         for (id_subj in list_id_subj_exist_twice){
-          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"r"]
+          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"z_r"]
         }
         
         # Subset those without longitudinal fp correlation
@@ -430,8 +409,8 @@ model_fp<-function(paths_=paths,
         
         # Create dataframe for GLM analysis
         df_join_grp<-func_clinical_data_join(df_src=df_clin,
-                                         list_id_subj=list_id_subj_nonna,
-                                         list_covar=list_covar_)
+                                             list_id_subj=list_id_subj_nonna,
+                                             list_covar=list_covar_)
         df_join_grp<-inner_join(df_join_grp,df_cor_fp,by="ID_pnTTC")
         df_join_grp$ID_pnTTC<-as.factor(df_join_grp$ID_pnTTC)
         df_join_grp$sex<-as.factor(df_join_grp$sex)
@@ -446,36 +425,38 @@ model_fp<-function(paths_=paths,
         df_out_aic<-rbind(df_out_aic,out_glm$df_out_aic_add)
         
         # Prepare ANCOVA calculation for later parallel computing
-        print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
-        # Create list of input dataframes for parallel ANCOVA calculation
-        for (group_tanner in names(list_strat_tanner_)){
-          # group by longitudinal Tanner stage
-          df_join_grp_tanner<-df_join_grp
-          for (ses in c(1,2)){
-            list_strat_tanner_ses<-names(list_strat_tanner_[[group_tanner]][[as.character(ses)]])
-            for (label_tanner in list_strat_tanner_ses){
-              list_strat_tanner_ses_group<-list_strat_tanner_[[group_tanner]][[as.character(ses)]][[label_tanner]]
-              #print(list_strat_tanner_ses_group)
-              df_join_grp_tanner[df_join_grp_tanner[[paste('ses',as.character(ses),'_tanner',sep='')]] %in% list_strat_tanner_ses_group,
-                                 paste('ses',as.character(ses),'_tanner_label',sep='')]<-label_tanner
+        if (!skip_tanner){
+          print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
+          # Create list of input dataframes for parallel ANCOVA calculation
+          for (group_tanner in names(list_strat_tanner_)){
+            # group by longitudinal Tanner stage
+            df_join_grp_tanner<-df_join_grp
+            for (ses in c(1,2)){
+              list_strat_tanner_ses<-names(list_strat_tanner_[[group_tanner]][[as.character(ses)]])
+              for (label_tanner in list_strat_tanner_ses){
+                list_strat_tanner_ses_group<-list_strat_tanner_[[group_tanner]][[as.character(ses)]][[label_tanner]]
+                #print(list_strat_tanner_ses_group)
+                df_join_grp_tanner[df_join_grp_tanner[[paste('ses',as.character(ses),'_tanner',sep='')]] %in% list_strat_tanner_ses_group,
+                                   paste('ses',as.character(ses),'_tanner_label',sep='')]<-label_tanner
+              }
             }
-          }
-          df_join_grp_tanner$long_tanner<-paste(as.character(df_join_grp_tanner$ses1_tanner_label),
-                                                as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
-          df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
-          
-          list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
-          
-          for (idx_sex in names(list_sex)){
-            df_join_grp_tanner_sex<-df_join_grp_tanner[df_join_grp_tanner$sex %in% list_sex[[idx_sex]],]
-            list_src_ancova<-c(list_src_ancova,
-                               list(list("atlas"=atlas,
-                                         "measure"=measure,
-                                         "group_network"=group,
-                                         "group_tanner"=group_tanner,
-                                         "group_tanner_content"=list_strat_tanner_[[group_tanner]],
-                                         "group_sex"=idx_sex,
-                                         "df_src_ancova"=df_join_grp_tanner_sex)))
+            df_join_grp_tanner$long_tanner<-paste(as.character(df_join_grp_tanner$ses1_tanner_label),
+                                                  as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
+            df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
+            
+            list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+            
+            for (idx_sex in names(list_sex)){
+              df_join_grp_tanner_sex<-df_join_grp_tanner[df_join_grp_tanner$sex %in% list_sex[[idx_sex]],]
+              list_src_ancova<-c(list_src_ancova,
+                                 list(list("atlas"=atlas,
+                                           "measure"=measure,
+                                           "group_network"=group,
+                                           "group_tanner"=group_tanner,
+                                           "group_tanner_content"=list_strat_tanner_[[group_tanner]],
+                                           "group_sex"=idx_sex,
+                                           "df_src_ancova"=df_join_grp_tanner_sex)))
+            }
           }
         }
       }
@@ -490,22 +471,24 @@ model_fp<-function(paths_=paths,
   write.csv(df_out_aic,file.path(paths_$output,"output","fp_glm_aic.csv"),row.names = F)
   
   # Parallel ANCOVA calculation
-  print("Calculating ANCOVA in parallel.")
-  n_cluster<-min(floor(detectCores()*3/4),length(list_src_ancova))
-  clust<-makeCluster(n_cluster)
-  clusterExport(clust,
-                varlist=c("aov","summary","glht","mcp","left_join","paths_",
-                          "plot_cor_heatmap","rcorr","rownames_to_column","gather",
-                          "ggplot","aes","geom_tile","scale_fill_gradientn",
-                          "matlab.like2","scale_y_discrete","scale_x_discrete",
-                          "theme_light","theme","element_text","element_blank",
-                          "ggtitle","ggsave","scale_fill_gradient","xlab","ylab"),
-                envir=environment())
-  list_df_ancova<-parLapply(clust,list_src_ancova,ancova_core)
-  stopCluster(clust)
-  df_out_ancova<-NULL
-  for (df_ancova in list_df_ancova){
-    df_out_ancova<-rbind(df_out_ancova,df_ancova)
+  if (!skip_ancova){
+    print("Calculating ANCOVA in parallel.")
+    n_cluster<-min(floor(detectCores()*3/4),length(list_src_ancova))
+    clust<-makeCluster(n_cluster)
+    clusterExport(clust,
+                  varlist=c("aov","summary","glht","mcp","left_join","paths_",
+                            "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                            "ggplot","aes","geom_tile","scale_fill_gradientn",
+                            "matlab.like2","scale_y_discrete","scale_x_discrete",
+                            "theme_light","theme","element_text","element_blank",
+                            "ggtitle","ggsave","scale_fill_gradient","xlab","ylab"),
+                  envir=environment())
+    list_df_ancova<-parLapply(clust,list_src_ancova,ancova_core)
+    stopCluster(clust)
+    df_out_ancova<-NULL
+    for (df_ancova in list_df_ancova){
+      df_out_ancova<-rbind(df_out_ancova,df_ancova)
+    }
   }
   
   # Data saving
