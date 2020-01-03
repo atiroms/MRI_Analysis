@@ -129,7 +129,8 @@ list_type_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "la
 
 
 # Parameters for gamm_multi_hormone()
-list_id_dir_fp<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
+#list_id_dir_fp<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
+list_id_dir_fp<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
 list_covar_hormone<-list("hormone"=list("1"="W1_Hormone","2"="W2_Hormone","label"="Hormone"),
                          "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                          "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
