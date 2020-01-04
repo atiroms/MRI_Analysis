@@ -9,8 +9,15 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-list_id_dir<-list("acompcor"=201,
-                  "aroma"=211,
+#list_id_dir<-list("acompcor"=201,
+#                  "aroma"=211,
+#                  "acompcor_gsr"=231,
+#                  "aroma_gsr"=241,
+#                  "acompcor"=301,
+#                  "aroma"=311,
+#                  "acompcor_gsr"=331,
+#                  "aroma_gsr"=341)
+list_id_dir<-list("aroma"=211,
                   "acompcor_gsr"=231,
                   "aroma_gsr"=241,
                   "acompcor"=301,
@@ -189,8 +196,7 @@ prep_graphvar<-function(paths_=paths,
     
     # Parallel computing of correlation matrices
     print(paste("Atlas: ",atlas,", creating group-wise correlation matrices in parallel.",sep=""))
-    clust<-makeCluster(floor(detectCores()*3/4))
-    #clust<-makeCluster(floor(detectCores()*1/4))
+    clust<-makeCluster(1)
     clusterExport(clust,
                   varlist=c("writeMat"),
                   envir=environment())
