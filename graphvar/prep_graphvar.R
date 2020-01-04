@@ -150,15 +150,6 @@ prep_graphvar<-function(paths_=paths,
     df_ses_subj$dummy<-0
     write.csv(df_ses_subj,file.path(paths_$output,"output",atlas,paste("Variables_",atlas,".csv",sep="")),row.names=F)
     
-    # Parallel computing of correlation matrices
-    print(paste("Atlas: ",atlas,", creating correlation matrices in parallel.",sep=""))
-    clust<-makeCluster(floor(detectCores()*3/4))
-    clusterExport(clust,
-                  varlist=c("writeMat"),
-                  envir=environment())
-    list_path_tmp<-parSapply(clust,list_src_corrmat,prep_graphvar_core)
-    stopCluster(clust)
-    
     # Load inter-group FC data
     print(paste("Atlas: ",atlas,", loading group-wise FC data.",sep=""))
     dir.create(file.path(path_out_atlas,"group"))
@@ -168,7 +159,6 @@ prep_graphvar<-function(paths_=paths,
     n_node<-length(list_node)
     
     # Prepare dataset
-    list_src_corrmat<-list()
     df_ses_subj<-data.frame()
     for (ses in list_ses){
       list_subj<-sort(unique(df_fc[df_fc$ses==ses,"ID_pnTTC"]))
