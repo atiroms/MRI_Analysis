@@ -129,7 +129,7 @@ prep_graphvar<-function(paths_=paths,
     for (ses in list_ses){
       list_subj<-sort(unique(df_fc[df_fc$ses==ses,"ID_pnTTC"]))
       for (subj in list_subj){
-        print(paste("Atlas: ",atlas,", Session: ",ses,", Subject: ",subj,", preparing data.",sep=""))
+        #print(paste("Atlas: ",atlas,", Session: ",ses,", Subject: ",subj,", preparing data.",sep=""))
         df_ses_subj[nrow(df_ses_subj)+1,"Subj_ID"]<-sprintf("%02d_%05d",ses,subj)
         df_fc_subj<-df_fc[df_fc$ses==ses & df_fc$ID_pnTTC==subj,c("from","to","r","p")]
         file_out<-sprintf("%02d_%05d.mat",ses,subj)
@@ -163,7 +163,7 @@ prep_graphvar<-function(paths_=paths,
     for (ses in list_ses){
       list_subj<-sort(unique(df_fc[df_fc$ses==ses,"ID_pnTTC"]))
       for (subj in list_subj){
-        print(paste("Atlas: ",atlas,", Session: ",ses,", Subject: ",subj,", preparing data.",sep=""))
+        #print(paste("Atlas: ",atlas,", Session: ",ses,", Subject: ",subj,", preparing data.",sep=""))
         df_ses_subj[nrow(df_ses_subj)+1,"Subj_ID"]<-sprintf("%02d_%05d",ses,subj)
         df_fc_subj<-df_fc[df_fc$ses==ses & df_fc$ID_pnTTC==subj,c("from","to","r","p")]
         file_out<-sprintf("%02d_%05d.mat",ses,subj)
@@ -176,7 +176,8 @@ prep_graphvar<-function(paths_=paths,
     
     # Parallel computing of correlation matrices
     print(paste("Atlas: ",atlas,", creating correlation matrices in parallel.",sep=""))
-    clust<-makeCluster(floor(detectCores()*3/4))
+    #clust<-makeCluster(floor(detectCores()*3/4))
+    clust<-makeCluster(floor(detectCores()*1/4))
     clusterExport(clust,
                   varlist=c("writeMat"),
                   envir=environment())
