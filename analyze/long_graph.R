@@ -138,15 +138,6 @@ source(file.path(paths$script,"util/plot.R"))
 #**************************************************
 # GAMM function ===================================
 #**************************************************
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-list_wave_=list_wave
-list_mod_=list_mod
-list_plot_=list_plot
-list_atlas_=list_atlas
-atlas=list_atlas_[1]
-
 gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                    list_wave_=list_wave,
                    list_mod_=list_mod,list_plot_=list_plot,list_atlas_=list_atlas
