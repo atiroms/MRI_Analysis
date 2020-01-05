@@ -34,9 +34,9 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
-list_mod <- list("lin"  ="value ~ age + testo + icv + s(ID_pnTTC,bs='re')",
-                 "add"  ="value ~ s(age,k=3) + s(testo,k=3) + s(icv,k=3) + s(ID_pnTTC,bs='re')",
-                 "quad" ="value ~ poly(age,2) + poly(testo,2) + s(icv,k=3) + s(ID_pnTTC,bs='re')")
+list_mod <- list("lin"  ="value ~ age + testo + s(ID_pnTTC,bs='re')",
+                 "add"  ="value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
+                 "quad" ="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
 list_graph <-list("t"=list("title"="Testosterone effect","x_axis"="testo",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                          "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
@@ -155,7 +155,15 @@ gamm_core<-function(df_src,roi,label_roi,group,measure,list_mod_,list_graph_,lis
             # Output
             if (idx_sex==list_sex[length(list_sex)]){
               idx_axis_x<-list_graph_[[idx_graph]][["x_axis"]]
-              label_axis_x<-list_covar_[[idx_axis_x]][["label"]]
+              if (substring(idx_axis_x,1,5)=="diff_"){
+                label_axis_x<-list_covar_[[substring(idx_axis_x,6)]][["label"]]
+                label_axis_x<-paste(label_axis_x,"Difference",sep=" ")
+              }else if(substring(idx_axis_x,1,5)=="mean_"){
+                label_axis_x<-list_covar_[[substring(idx_axis_x,6)]][["label"]]
+                label_axis_x<-paste(label_axis_x,"Mean",sep=" ")
+              }else{
+                label_axis_x<-list_covar_[[idx_axis_x]][["label"]]
+              }
               plot<-(plot
                      + ggtitle(paste(list_graph_[[idx_graph]][["title"]],' on ',label_roi,' ',measure,'\n',idx_mod,sep=''))
                      + xlab(label_axis_x)
@@ -188,18 +196,16 @@ paths_=paths
 subset_subj_=subset_subj
 list_covar_=list_covar
 list_wave_=list_wave
-list_mod_=list_mod
-list_graph_=list_graph
-key_group_='group_3'
 list_metric_global_=list_metric_global
 list_metric_local_=list_metric_local
+list_mod_=list_mod
+list_graph_=list_graph
 list_mod_diff_=list_mod_diff
 list_graph_diff_=list_graph_diff
-
 gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,list_wave_=list_wave,
                    list_metric_global_=list_metric_global,list_metric_local_=list_metric_local,
                    list_mod_=list_mod,list_graph_=list_graph,list_mod_diff_=list_mod_diff,
-                   list_graph_diff_=list_graph_diff,key_group_='group_3'
+                   list_graph_diff_=list_graph_diff
                    ){
   print("Starting gamm_gta().")
   nullobj<-func_createdirs(paths_,copy_log=T)
@@ -329,9 +335,6 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   rownames(df_out_global)<-rownames(df_out_global_aic)<-NULL
   write.csv(df_out_global, file.path(paths_$output,"output","gamm_global_diff.csv"),row.names = F)
   write.csv(df_out_global_aic,file.path(paths_$output,"output","gamm_global_diff_aic.csv"),row.names = F)
-  
-  
-  
   
   print('Finished gamm_gta().')
 }
