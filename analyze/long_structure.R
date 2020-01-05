@@ -22,90 +22,57 @@ list_measure <-"volume"
 #list_str_group<-c("cortex","subcortex","white matter","global","misc")
 list_str_group<-"subcortex"
 #list_str_group<-"cortex"
-#list_str_group<-c("global","misc")
 #list_str_group<-c("cortex","subcortex","global")
 
-#list_covar<-list("tanner"=list("1"="W1_Tanner_Max",
-#                               "2"="W2_Tanner_Max",
-#                               "label"="Tanner stage (max)"),
-#                 "age"=list("1"="W1_Age_at_MRI",
-#                            "2"="W2_Age_at_MRI",
-#                            "label"="Age"),
-#                 "sex"=list("1"="Sex",
-#                            "2"="Sex",
-#                            "label"="Sex"))
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+#                 "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+#                 "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
+list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                 "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                 "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
+                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
+                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"),
+                 "icv"  =list("1"="W1_ICV",         "2"="W2_ICV",         "label"="ICV"))
 
-list_covar<-list("testo"=list("1"="W1_Testosterone",
-                               "2"="W2_Testosterone",
-                               "label"="Testosterone"),
-                 "corti"=list("1"="W1_Cortisol",
-                              "2"="W2_Cortisol",
-                              "label"="Cortisol"),
-                 "dhea"=list("1"="W1_DHEA",
-                              "2"="W2_DHEA",
-                              "label"="DHEA"),
-                 "dheas"=list("1"="W1_DHEAS",
-                              "2"="W2_DHEAS",
-                              "label"="DHEA-S"),
-                 "age"=list("1"="W1_Age_at_MRI",
-                            "2"="W2_Age_at_MRI",
-                            "label"="Age"),
-                 "sex"=list("1"="Sex",
-                            "2"="Sex",
-                            "label"="Sex"))
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+#                             list("key"="W1_T1QC_new_mild","condition"="==1")),
+#                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
+#                             list("key"="W2_T1QC_new_mild","condition"="==1")))
+subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1")),
+                    "2"=list(list("key"="W2_T1QC","condition"="==1")))
 
+#list_mod <- list("a+s+st"         ="value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')",
+#                 "a+s+st+sat"     ="value ~ age + sex + sex:tanner + sex:age:tanner + s(ID_pnTTC,bs='re')",
+#                 "a+s+st2"        ="value ~ age + sex + sex:poly(tanner,2) + s(ID_pnTTC,bs='re')",
+#                 "a+s+st2+sat2"   ="value ~ age + sex + sex:poly(tanner,2) + sex:age:poly(tanner,2) + s(ID_pnTTC,bs='re')",
+#                 "a2+s+st"        ="value ~ poly(age,2) + sex + sex:tanner + s(ID_pnTTC,bs='re')",
+#                 "a2+s+st+sa2t"   ="value ~ poly(age,2) + sex + sex:tanner + sex:poly(age,2):tanner + s(ID_pnTTC,bs='re')",
+#                 "a2+s+st2"       ="value ~ poly(age,2) + sex + sex:poly(tanner,2) + s(ID_pnTTC,bs='re')",
+#                 "a2+s+st2+sa2t2" ="value ~ poly(age,2) + sex + sex:poly(tanner,2) + sex:poly(age,2):poly(tanner,2) + s(ID_pnTTC,bs='re')")
+#list_mod <- list("lin"  ="value ~ age + testo + s(ID_pnTTC,bs='re')",
+#                 "add"  ="value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
+#                 "quad" ="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')"
+#                 )
+list_mod <- list("lin"  ="value ~ age + testo + icv + s(ID_pnTTC,bs='re')",
+                 "add"  ="value ~ s(age,k=3) + s(testo,k=3) + s(icv,k=3) + s(ID_pnTTC,bs='re')",
+                 "quad" ="value ~ poly(age,2) + poly(testo,2) + s(icv,k=3) + s(ID_pnTTC,bs='re')")
 
-subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
-                             list("key"="W1_T1QC_new_mild","condition"="==1")),
-                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
-                             list("key"="W2_T1QC_new_mild","condition"="==1")))
-
-#list_mod <- list("a+s+st"=
-#                   "value ~ age + sex + sex:tanner + s(ID_pnTTC,bs='re')",
-#                 "a+s+st+sat"=
-#                   "value ~ age + sex + sex:tanner + sex:age:tanner + s(ID_pnTTC,bs='re')",
-#                 "a+s+st2"=
-#                   "value ~ age + sex + sex:poly(tanner,2) + s(ID_pnTTC,bs='re')",
-#                 "a+s+st2+sat2"=
-#                   "value ~ age + sex + sex:poly(tanner,2) + sex:age:poly(tanner,2) + s(ID_pnTTC,bs='re')",
-#                 "a2+s+st"=
-#                   "value ~ poly(age,2) + sex + sex:tanner + s(ID_pnTTC,bs='re')",
-#                 "a2+s+st+sa2t"=
-#                   "value ~ poly(age,2) + sex + sex:tanner + sex:poly(age,2):tanner + s(ID_pnTTC,bs='re')",
-#                 "a2+s+st2"=
-#                   "value ~ poly(age,2) + sex + sex:poly(tanner,2) + s(ID_pnTTC,bs='re')",
-#                 "a2+s+st2+sa2t2"=
-#                   "value ~ poly(age,2) + sex + sex:poly(tanner,2) + sex:poly(age,2):poly(tanner,2) + s(ID_pnTTC,bs='re')")
-
-list_mod <- list("lin"=
-                   "value ~ age + testo + s(ID_pnTTC,bs='re')",
-                 "add"=
-                   "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
-                 "quad"=
-                   "value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')"
-                 )
-
-list_graph <-list("a"=list("title"="Age effect",
-                           "x_axis"="age",
-                           "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                     "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                         "Female"=list("fix"=list("sex"=2),
-                                                       "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                           "point"=list("Male"=list("subset"=list("sex"=1),
-                                                    "color"="steelblue2","alpha"=1),
-                                        "Female"=list("subset"=list("sex"=2),
-                                                      "color"="lightcoral","alpha"=1))),
-                  "t"=list("title"="Testosterone effect",
-                            "x_axis"="testo",
-                            "smooth"=list("Male"=list("fix"=list("sex"=1),
-                                                      "color"="steelblue2","alpha"=1,"ribbon"=T),
-                                          "Female"=list("fix"=list("sex"=2),
-                                                        "color"="lightcoral","alpha"=1,"ribbon"=T)),
-                            "point"=list("Male"=list("subset"=list("sex"=1),
-                                                     "color"="steelblue2","alpha"=1),
-                                         "Female"=list("subset"=list("sex"=2),
-                                                       "color"="lightcoral","alpha"=1))))
-
+#list_graph <-list("a"=list("title"="Age effect","x_axis"="age",
+#                           "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                         "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                           "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                        "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+#                  "t"=list("title"="Testosterone effect","x_axis"="testo",
+#                           "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                         "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                           "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                        "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
+list_graph <-list("t"=list("title"="Testosterone effect","x_axis"="testo",
+                           "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                         "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                           "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                        "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
 
 #**************************************************
 # Libraries =======================================
