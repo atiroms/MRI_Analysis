@@ -9,8 +9,15 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-list_id_dir<-list("acompcor"=201,
-                  "aroma"=211,
+#list_id_dir<-list("acompcor"=201,
+#                  "aroma"=211,
+#                  "acompcor_gsr"=231,
+#                  "aroma_gsr"=241,
+#                  "acompcor"=301,
+#                  "aroma"=311,
+#                  "acompcor_gsr"=331,
+#                  "aroma_gsr"=341)
+list_id_dir<-list("aroma"=211,
                   "acompcor_gsr"=231,
                   "aroma_gsr"=241,
                   "acompcor"=301,
@@ -94,6 +101,9 @@ prep_graphvar_core<-function(data_src){
   return(path_file_out)
 }
 
+paths_=paths
+list_atlas_=list_atlas
+key_grp="group_3"
 prep_graphvar<-function(paths_=paths,
                         list_atlas_=list_atlas,
                         key_grp="group_3"
@@ -124,15 +134,16 @@ prep_graphvar<-function(paths_=paths,
     }
     
     # Prepare dataset
-    list_src_corrmat<-list()
+    #list_src_corrmat<-list()
     df_ses_subj<-data.frame()
     for (ses in list_ses){
       list_subj<-sort(unique(df_fc[df_fc$ses==ses,"ID_pnTTC"]))
       for (subj in list_subj){
-        #print(paste("Atlas: ",atlas,", Session: ",ses,", Subject: ",subj,", preparing data.",sep=""))
+        print(paste("Atlas: ",atlas,", Session: ",ses,", Subject: ",subj,", creating correlation matrices.",sep=""))
         df_ses_subj[nrow(df_ses_subj)+1,"Subj_ID"]<-sprintf("%02d_%05d",ses,subj)
         df_fc_subj<-df_fc[df_fc$ses==ses & df_fc$ID_pnTTC==subj,c("from","to","r","p")]
         file_out<-sprintf("%02d_%05d.mat",ses,subj)
+        list_src_corrmat<-list()
         for (grp in names(list_node_grp)){
           if (grp=="whole"){
             df_fc_subj_grp<-df_fc_subj
@@ -145,6 +156,14 @@ prep_graphvar<-function(paths_=paths,
                               list(list("df_fc"=df_fc_subj_grp,"list_node"=list_node_grp[[grp]],"n_node"=n_node,
                                         "path_file_out"=path_file_out)))
         }
+        # Parallel computing of correlation matrices
+        clust<-makeCluster(floor(detectCores()*3/4))
+        #clust<-makeCluster(floor(detectCores()*1/4))
+        clusterExport(clust,
+                      varlist=c("writeMat"),
+                      envir=environment())
+        list_path_tmp<-parSapply(clust,list_src_corrmat,prep_graphvar_core)
+        stopCluster(clust)
       }
     }
     df_ses_subj$dummy<-0
@@ -159,6 +178,7 @@ prep_graphvar<-function(paths_=paths,
     n_node<-length(list_node)
     
     # Prepare dataset
+    list_src_corrmat<-list()
     df_ses_subj<-data.frame()
     for (ses in list_ses){
       list_subj<-sort(unique(df_fc[df_fc$ses==ses,"ID_pnTTC"]))
@@ -175,9 +195,8 @@ prep_graphvar<-function(paths_=paths,
     }
     
     # Parallel computing of correlation matrices
-    print(paste("Atlas: ",atlas,", creating correlation matrices in parallel.",sep=""))
-    #clust<-makeCluster(floor(detectCores()*3/4))
-    clust<-makeCluster(floor(detectCores()*1/4))
+    print(paste("Atlas: ",atlas,", creating group-wise correlation matrices in parallel.",sep=""))
+    clust<-makeCluster(1)
     clusterExport(clust,
                   varlist=c("writeMat"),
                   envir=environment())
