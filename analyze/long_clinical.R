@@ -11,7 +11,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/clin"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-""
-dir_out<-"01_clin_long"
+#dir_out<-"01_clin_long"
+dir_out<-"02_clin_pair"
 
 list_wave <- c(1,2)
 
@@ -37,10 +38,10 @@ list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","l
                         "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                         "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
 spec_graph_tanner<-list("title"="Tanner vs Age","x_axis"="age",
-                         "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                       "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                         "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                      "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
+                        "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                      "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                        "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                     "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
 
 list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
                    "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
@@ -54,6 +55,21 @@ spec_graph_hormone<-list("title"="Hormone vs Age","x_axis"="age",
                                        "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                          "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                       "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
+
+list_pair<-list(c("gonadal","testo"),c("gonadal","dheas"),c("adrenal","testo"),c("adrenal","dheas"),
+                c("max","testo"),c("max","dheas"))
+list_mod_pair <- list("lin" ="value ~ hormone + s(ID_pnTTC,bs='re')",
+                      "add" ="value ~ s(hormone,k=3) + s(ID_pnTTC,bs='re')",
+                      "quad"="value ~ poly(hormone,2) + s(ID_pnTTC,bs='re')")
+list_covar_pair<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+                      "hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
+                      "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                      "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
+spec_graph_pair<-list("title"="Tanner vs Hormone","x_axis"="hormone",
+                      "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                    "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                      "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                   "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
 
 
 #**************************************************
@@ -104,18 +120,60 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
+# Plot Tanner and hormone data ====================
+#**************************************************
+plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
+                    list_mod_pair_=list_mod_pair,list_pair_=list_pair,
+                    list_tanner_=list_tanner,list_hormone_=list_hormone,
+                    spec_graph_pair_=spec_graph_pair,list_covar_pair_=list_covar_pair
+                    ){
+  print("Starting plot_pair().")
+  nullobj<-func_createdirs(paths_)
+  for (pair in list_pair_){
+    tanner<-pair[1]
+    hormone<-pair[2]
+    print(paste('Calculating: ',list_tanner_[[tanner]][["label"]],
+                " and ",list_hormone_[[hormone]][["label"]],sep=""))
+    list_covar<-list_covar_pair_
+    list_covar[["tanner"]]<-list_tanner_[[tanner]]
+    list_covar[["hormone"]]<-list_hormone_[[hormone]]
+    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T)
+    df_plot<-data_clin$df_clin
+    df_plot$sex=as.factor(df_plot$sex)
+    df_plot$wave=as.factor(df_plot$wave)
+    colnames(df_plot)[colnames(df_plot)==tanner]<-"tanner"
+    colnames(df_plot)[colnames(df_plot)==hormone]<-"hormone"
+    df_plot<-df_plot[,c("ID_pnTTC","sex","wave","tanner","hormone")]
+    write.csv(df_plot,file.path(paths_$output,"output",paste("tanner_",tanner,"_hormone-",hormone,"_src.csv",sep="")),row.names = F)
+    
+    # GAM fit plot
+    for (idx_mod in names(list_mod_pair_)){
+      plot<-NULL
+      for (idx_sex in c(1,2)){
+        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
+        colnames(df_plot_sex)[colnames(df_plot_sex)=="tanner"]<-"value"
+        mod_gamm<-gam(as.formula(list_mod_pair_[[idx_mod]]),data=df_plot_sex)
+        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_pair_)
+      }
+      label_axis_x<-list_hormone_[[hormone]][["label"]]
+      label_axis_y<-list_tanner_[[tanner]][["label"]]
+      plot<-(plot
+             + ggtitle(paste(label_axis_y,' - ',label_axis_x,'\n',idx_mod,sep=''))
+             + xlab(label_axis_x)
+             + ylab(label_axis_y)
+             + theme(legend.position = "none"))
+      filename_plot<-paste("tanner_",tanner,"_hormone-",hormone,"_mod-",idx_mod,"_pair.eps",sep="")
+      ggsave(filename_plot,plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
+    }
+  }
+  print("Finished plot_pair().")
+}
+
+
+#**************************************************
 # Plot Longitudinal clinical data =================
 #**************************************************
-paths_=paths
-list_wave_=list_wave
-subset_subj_=subset_subj
-list_mod_=list_mod
-list_tanner_=list_tanner
-list_covar_tanner_=list_covar_tanner
-spec_graph_tanner_=spec_graph_tanner
-list_hormone_=list_hormone
-list_covar_hormone_=list_covar_hormone
-spec_graph_hormone_=spec_graph_hormone
 plot_clin<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
                     list_mod_=list_mod,
                     list_tanner_=list_tanner,list_covar_tanner_=list_covar_tanner,
