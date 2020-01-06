@@ -9,8 +9,10 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/graph_GV"
-dir_in <-"203_graph_acompcor"
-dir_out <-"204_gamm_graph_acompcor"
+#dir_in <-"203_graph_acompcor"
+#dir_out <-"204_gamm_graph_acompcor"
+dir_in <-"233_graph_acompcor_gsr"
+dir_out <-"234_gamm_graph_acompcor_gsr"
 
 list_wave<-c(1,2)
 
@@ -192,16 +194,7 @@ gamm_core<-function(df_src,roi,label_roi,group,measure,list_mod_,list_graph_,lis
   return(list("df_out_lm_add"=df_out_lm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind))
 }
 
-paths_=paths
-subset_subj_=subset_subj
-list_covar_=list_covar
-list_wave_=list_wave
-list_metric_global_=list_metric_global
-list_metric_local_=list_metric_local
-list_mod_=list_mod
-list_graph_=list_graph
-list_mod_diff_=list_mod_diff
-list_graph_diff_=list_graph_diff
+
 gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,list_wave_=list_wave,
                    list_metric_global_=list_metric_global,list_metric_local_=list_metric_local,
                    list_mod_=list_mod,list_graph_=list_graph,list_mod_diff_=list_mod_diff,
@@ -308,6 +301,7 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
       df_clin_diff[,key]<-as.factor(df_clin_diff[,key])
     }
   }
+  write.csv(df_clin_diff, file.path(paths_$output,"output","src_clin_diff.csv"),row.names = F)
   
   # Calculate GAMM
   print('Calculating GAMM of global data change.')
