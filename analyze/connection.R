@@ -9,17 +9,18 @@
 # Parameters ======================================
 #**************************************************
 
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-dir_in<-"450_fc_test"
-dir_out<-"451_gammfc_test"
+#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+#dir_in<-"450_fc_test"
+#dir_out<-"451_gammfc_test"
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+#list_atlas<-"aal116"
 
-#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
-#dir_in<-"56.2_fc"
-#dir_out<-"56.3_gamm_fc"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
+dir_in<-"56.2_fc"
+dir_out<-"56.3_gamm_fc"
 #list_atlas<-c("cnn","hoa","power264")
 #list_atlas<-"cnn"
+list_atlas<-"hoa"
 
 list_wave <- c(1,2)
 
@@ -30,7 +31,6 @@ list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label
                  "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
                  "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
 
-
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
                              list("key"="W1_Censor","condition"="<126")),
@@ -38,23 +38,23 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
 
-list_mod <- list("lin"= "value ~ age + testo + s(ID_pnTTC,bs='re')",
-                 "add"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
-                 "quad"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
+list_mod <- list("lin"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
+                 #"add"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
+                 #"quad"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
 
 list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
                  #"sa"=list("title"="Age effect","var_exp"="s(age)"),
                  #"pa1"=list("title"="Age effect","var_exp"="poly(age, 2)1"),
                  #"pa2"=list("title"="Age effect","var_exp"="poly(age, 2)2"),
                  "t"=list("title"="Testosterone effect","var_exp"="testo"),
-                 "st"=list("title"="Testosterone effect","var_exp"="s(testo)")
+                 #"st"=list("title"="Testosterone effect","var_exp"="s(testo)")
                  #"st"=list("title"="Testosterone effect","var_exp"="s(testo)"),
                  #"pt1"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)1"),
                  #"pt2"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)2")
                  )
 
 
-list_type_p=c("p_bh","seed_p_bh")
+list_type_p=c("p","p_bh","seed_p_bh")
 #list_type_p="p"
 thr_p <- 0.05
 
