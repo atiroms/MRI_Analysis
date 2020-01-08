@@ -129,6 +129,7 @@ plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
                     ){
   print("Starting plot_pair().")
   nullobj<-func_createdirs(paths_)
+  df_out_lm<-data.frame()
   for (pair in list_pair_){
     tanner<-pair[1]
     hormone<-pair[2]
@@ -153,6 +154,22 @@ plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
         df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
         colnames(df_plot_sex)[colnames(df_plot_sex)=="tanner"]<-"value"
         mod_gamm<-gam(as.formula(list_mod_pair_[[idx_mod]]),data=df_plot_sex)
+        p_table<-summary.gam(mod_gamm)$p.table
+        if (is.null(summary.gam(mod_gamm)$s.table)){
+          df_out_lm_add<-data.frame(tanner=tanner,hormone=hormone,sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                    estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                    t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+          
+        }else{
+          s_table<-summary.gam(mod_gamm)$s.table
+          df_out_lm_add<-rbind(data.frame(tanner=tanner,hormone=hormone,sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                          estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                          t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                               data.frame(tanner=tanner,hormone=hormone,sex=idx_sex,model=idx_mod,term=rownames(s_table),
+                                          estimate=NA,se=NA,F=s_table[,'F'],
+                                          t=NA,p=s_table[,'p-value']))
+        }
+        df_out_lm<-rbind(df_out_lm,df_out_lm_add)
         plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_pair_)
       }
       label_axis_x<-list_hormone_[[hormone]][["label"]]
@@ -167,6 +184,7 @@ plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
              path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
     }
   }
+  write.csv(df_out_lm,file.path(paths_$output,"output","gamm_result.csv"),row.names=F)
   print("Finished plot_pair().")
 }
 
