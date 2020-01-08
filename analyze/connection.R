@@ -46,7 +46,7 @@ list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
                  #"sa"=list("title"="Age effect","var_exp"="s(age)"),
                  #"pa1"=list("title"="Age effect","var_exp"="poly(age, 2)1"),
                  #"pa2"=list("title"="Age effect","var_exp"="poly(age, 2)2"),
-                 "t"=list("title"="Testosterone effect","var_exp"="testo"),
+                 "t"=list("title"="Testosterone effect","var_exp"="testo")
                  #"st"=list("title"="Testosterone effect","var_exp"="s(testo)")
                  #"st"=list("title"="Testosterone effect","var_exp"="s(testo)"),
                  #"pt1"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)1"),
