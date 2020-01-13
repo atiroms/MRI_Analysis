@@ -346,10 +346,15 @@ class PrepFmriprep():
         #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/67_c1_fmriprep',
         #file_id='67_id_c1_t1exist_rsfmriexist.csv',
         
-        path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/38_c2_bids',
-        path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/17_recon',
-        path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        file_id='68_id_c2_t1exist_rsfmriexist.csv',
+        #path_bids='/media/veracrypt1/MRI_img/pnTTC/preproc/38_c2_bids',
+        #path_freesurfer='/media/veracrypt1/MRI_img/pnTTC/c2_struc/freesurfer/17_recon',
+        #path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #file_id='68_id_c2_t1exist_rsfmriexist.csv',
+
+        path_bids='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/00_5sub_c1_bids',
+        path_freesurfer='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/01_5sub_c1_recon',
+        path_out='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/02_5sub_c1_prep_fmriprep',
+        file_id='03_id_5sub.csv',
 
         #file_id='id_3.csv'
         path_file_fslicense='/usr/local/freesurfer/license.txt'
