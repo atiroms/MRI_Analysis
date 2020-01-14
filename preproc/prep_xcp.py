@@ -232,12 +232,19 @@ class PrepXCP():
         #suffix_img='_ses-01_task-rest_space-MNI152NLin6Asym_desc-preproc_bold.nii.gz',
         #file_design='fc-acompcor_20191219.dsn',
 
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/04_5sub_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/14_5sub_c1_xcp_acompcor',
+        #file_id='03_id_5sub.csv',
+        #ses='ses-01',
+        #suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #file_design='fc-acompcor_20191219.dsn',
+
         path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/04_5sub_c1_fmriprep',
-        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/14_5sub_c1_xcp_acompcor',
+        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/14.1_5sub_c1_xcp_acompcor',
         file_id='03_id_5sub.csv',
         ses='ses-01',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        file_design='fc-acompcor_20191219.dsn',
+        file_design='fc-acompcor_20200114.dsn',
 
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
