@@ -151,7 +151,7 @@ class XCPScript():
 class PrepXCP():
     def __init__(self,
         skip_log_copy=False,
-        skip_fmriprep_copy=True,
+        skip_fmriprep_copy=False,
         skip_fmriprep_moveanat=True,
         n_proc=20,
 
@@ -218,20 +218,35 @@ class PrepXCP():
         #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         #file_design='fc-acompcor_gsr_20191219.dsn',
 
-        path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
-        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
-        file_id='68_id_c2_t1exist_rsfmriexist.csv',
-        ses='ses-02',
-        suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
-        file_design='fc-aroma_gsr_20191219.dsn',
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/68_c2_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
+        #file_id='68_id_c2_t1exist_rsfmriexist.csv',
+        #ses='ses-02',
+        #suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        #file_design='fc-aroma_gsr_20191219.dsn',
+
+        #path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/03_5sub_c1_fmriprep',
+        #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/13_5sub_c1_xcp_acompcor',
+        #file_id='03_id_5sub.csv',
+        #ses='ses-01',
+        #suffix_img='_ses-01_task-rest_space-MNI152NLin6Asym_desc-preproc_bold.nii.gz',
+        #file_design='fc-acompcor_20191219.dsn',
+
+        path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/04_5sub_c1_fmriprep',
+        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/14_5sub_c1_xcp_acompcor',
+        file_id='03_id_5sub.csv',
+        ses='ses-01',
+        suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
+        file_design='fc-acompcor_20191219.dsn',
 
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
         path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
         #path_folder_design='C:/Users/NICT_WS/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
 
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
-        path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
+        #path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
         #path_img_xcp='/data/applications/xcpEngine-100-20190628.simg',
+        path_img_xcp='/data/applications/xcpEngine-100-20200113.simg',
         script='export BRAINSPACE="${HOME}/data/input/space"\nexport BRAINATLAS="${HOME}/data/input/atlas"\nsingularity run -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         #script='singularity run --cleanenv -B {path_exp}:${HOME}/data {path_img_xcp} -d ${HOME}/data/input/{file_design} -c ${HOME}/data/input/func_cohort_{id_proc}.csv -o ${HOME}/data/output/{id_proc} -t 1 -r ${HOME}/data'
         ):
