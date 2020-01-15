@@ -356,7 +356,7 @@ class PrepFmriprep():
         #path_out='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/02_5sub_c1_prep_fmriprep',
         #file_id='03_id_5sub.csv',
 
-        path_bids='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/37_c1_bids',
+        path_bids='/media/atiroms/SSD_2TB/MRI_img/pnTTC/data/37_c1_bids',
         path_freesurfer='/media/atiroms/SSD_2TB/MRI_img/pnTTC/c1_struc/freesurfer/12_recon_t1exist',
         path_out='/media/veracrypt2/MRI_img/pnTTC/preproc/401_c1_fmriprep',
         file_id='69_id_c1_t1exist_rsfmriexist.csv',
