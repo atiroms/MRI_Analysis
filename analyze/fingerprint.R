@@ -64,8 +64,7 @@ list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label
                  "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
                  "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
                  "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
-                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"),
-                 "icv"  =list("1"="W1_ICV",         "2"="W2_ICV",         "label"="ICV"))
+                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
 list_mod <- list("lin_diff"="value ~ diff_age + diff_testo",
                  "lin_diff_mean"="value ~ diff_age + diff_testo + mean_testo",
                  "add_diff"="value ~ s(diff_age,k=3) + s(diff_testo,k=3)",

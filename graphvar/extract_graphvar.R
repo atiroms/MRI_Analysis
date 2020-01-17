@@ -20,8 +20,10 @@ list_id_dir<-list("acompcor"=201,
 
 #dir_in<-"900_graph_test"
 #dir_out<-"901_graph_test"
-dir_in<-"202_graph_acompcor"
-dir_out<-"203_graph_acompcor"
+#dir_in<-"202_graph_acompcor"
+#dir_out<-"203_graph_acompcor"
+dir_in<-"232_graph_acompcor_gsr"
+dir_out<-"233_graph_acompcor_gsr"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
