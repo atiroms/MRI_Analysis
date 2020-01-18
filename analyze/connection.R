@@ -520,7 +520,8 @@ pca_fc<-function(paths_=paths,
 # Core function for parallelization of fp_fc()
 fp_fc_core<-function(data_zr){
   measure<-"fc"
-  group<-data_zr$group
+  group_1<-data_zr$group[[1]]
+  group_2<-data_zr$group[[2]]
   df_zr<-data_zr$df_zr
   df_ses_subj<-data_zr$df_ses_subj
   n_edge<-dim(df_zr)[1]
@@ -540,8 +541,9 @@ fp_fc_core<-function(data_zr){
     df_fp_subnet[[i,"to_ID_pnTTC"]]<-df_ses_subj[[to_id,"ID_pnTTC"]]
   }
   df_fp_subnet$measure<-measure
-  df_fp_subnet$group<-group
-  df_fp_subnet<-df_fp_subnet[c("measure","group","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r","z_r")]
+  df_fp_subnet$group_1<-group_1
+  df_fp_subnet$group_2<-group_2
+  df_fp_subnet<-df_fp_subnet[c("measure","group_1","group_2","from_ses","from_ID_pnTTC","to_ses","to_ID_pnTTC","r","z_r")]
   
   # rbind to output dataframe
   #df_fp<-rbind(df_fp,df_fp_subnet)
@@ -555,12 +557,12 @@ fp_fc_core<-function(data_zr){
   plot_fp_heatmap<-plot_cor_heatmap(input=df_fp_plot)
   suppressMessages(plot_fp_heatmap<-(plot_fp_heatmap
                                      + scale_fill_gradientn(colors = matlab.like2(100),name="r")
-                                     + ggtitle(paste("FP Cor,",atlas,measure,group,sep=" "))
+                                     + ggtitle(paste("FP Cor,",atlas,measure,group_1,group_2,sep=" "))
                                      + theme(plot.title = element_text(hjust = 0.5),
                                              axis.title=element_blank())))
   
   # Save heatmap plot
-  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
+  ggsave(paste("atl-",atlas,"_msr-",measure,"_grp1-",group_1,"_grp2-",group_2,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
          path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
@@ -584,11 +586,12 @@ fp_fc<-function(paths_=paths,
     df_edge$to<-as.character(df_edge$to)
     
     # Examine existing subject IDs and sessions in connection data
+    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
     list_ses_exist <- sort(unique(df_conn$ses))
-    list_id_subj_exist<-list()
     for (ses in list_ses_exist){
-      df_conn_ses<-df_conn[df_conn$ses==ses,]
-      list_id_subj_exist[[as.character(ses)]]<-sort(unique(df_conn_ses$ID_pnTTC))
+      df_ses_subj<-rbind(df_ses_subj,
+                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,ID_pnTTC]))))
     }
     
     # Add node subgroup column to df_edge
@@ -613,43 +616,49 @@ fp_fc<-function(paths_=paths,
       for (idx_group_2 in seq(idx_group_1,idx_group_2)){
         group_1<-list_group[idx_group_1]
         group_2<-list_group[idx_group_2]
+        # 1. whole <-> whole
+        # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
+        # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
         if (group_1=="whole"){
+          if (group_2=="whole"){
+            # 1. whole <-> whole
+            df_edge_group<-df_edge
+          }else{
+            # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
+            df_edge_group<-rbind(df_edge[df_edge$from_group!=group_2 & df_edge$to_group==group_2,],
+                                 df_edge[df_edge$from_group==group_2 & df_edge$to_group!=group_2,])
+          }
+        }else{
+          # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
+          df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
+                               df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
           
         }
-      }
-    }
-    for (group in list_group){
-      # Create dataframe of edges within each group
-      if (group=="whole"){
-        df_edge_group<-df_edge
-      }else{
-        df_edge_group<-df_edge[df_edge$from_group==group & df_edge$to_group==group,]
-      }
-      n_edge_group<-dim(df_edge_group)[1]
-      list_node_group<-sort(unique(c(as.character(unique(df_edge_group$from)),
-                               as.character(unique(df_edge_group$to)))))
-      n_node_group<-length(list_node_group)
-      
-      if (n_node_group<4){
-        print(paste("Atlas: ",atlas,", group: ",group, ", nodes: ",as.character(n_node_group)," < 4, fp calculation skipped.",sep=""))
-      }else{
-        # Create combined dataframe of Z-transformed correlation coefficients
-        # Also create dataframe of sessions and subjects
-        df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
-        df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-        colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-        for (ses in list_ses_exist){
-          for (id_subj in list_id_subj_exist[[ses]]){
-            df_conn_subj<-df_conn[df_conn$ID_pnTTC==id_subj & df_conn$ses==ses,]
-            df_conn_subj<-df_conn_subj[df_conn_subj$from %in% list_node_group & df_conn_subj$to %in% list_node_group,]
-            df_conn_cbind<-cbind(df_conn_cbind,df_conn_subj[["z_r"]])
-            df_ses_subj<-rbind(df_ses_subj,data.frame(ses=ses,ID_pnTTC=id_subj))
-          }
-        }
-        colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
-        rownames(df_conn_cbind)<-NULL
         
-        list_data_zr<-c(list_data_zr,list(list("group"=group,"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
+        n_edge_group<-dim(df_edge_group)[1]
+        
+        if (n_edge_group<5){
+          print(paste("Atlas: ",atlas,", Group: ",group_1,"<->",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
+        }else{
+          # Create combined dataframe of Z-transformed correlation coefficients
+          # according to pre-calculated edge and subject data
+          df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
+          
+          for (idx_subj in seq(nrow(df_ses_subj))){
+            df_conn_subj<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,ID_pnTTC]
+                                  & df_conn$ses==df_ses_subj[idx_subj,ses],]
+            df_conn_edge<-data.frame(matrix(nrow=n_edge_group,ncol=1))
+            for (idx_edge in seq(n_edge_group)){
+              df_conn_edge[idx_edge,,1]<-df_conn_subj[df_conn_subj$from_group==df_edge_group[idx_edge,from_group]
+                                                      & df_conn_subj$to_group==df_edge_group[idx_edge,to_group],"z_r"]
+              df_conn_cbind<-cbind(df_conn_cbind,df_conn_edge)
+            }
+          }
+          colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+          rownames(df_conn_cbind)<-NULL
+          
+          list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
+        }
       }
     }
     
