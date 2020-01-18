@@ -602,11 +602,22 @@ fp_fc<-function(paths_=paths,
     if (!("whole" %in% list_group)){
       list_group<-c("whole",list_group)
     }
-    print(paste("Atlas: ",atlas, ", ", as.character(length(list_group))," groups:",sep=""))
+    n_group<-length(list_group)
+    print(paste("Atlas: ",atlas, ", ", as.character(n_group)," groups:",sep=""))
     print(list_group)
     
     # Split and combine z_r data for each subgroup of networks for parallel computing
     list_data_zr<-list()
+    
+    for (idx_group_1 in seq(n_group)){
+      for (idx_group_2 in seq(idx_group_1,idx_group_2)){
+        group_1<-list_group[idx_group_1]
+        group_2<-list_group[idx_group_2]
+        if (group_1=="whole"){
+          
+        }
+      }
+    }
     for (group in list_group){
       # Create dataframe of edges within each group
       if (group=="whole"){
