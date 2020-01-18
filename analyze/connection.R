@@ -9,18 +9,22 @@
 # Parameters ======================================
 #**************************************************
 
-#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+dir_in<-"201_fc_acompcor"
+dir_out<-"401_fp_acompcor"
+list_atlas<-"aal116"
+
 #dir_in<-"450_fc_test"
 #dir_out<-"451_gammfc_test"
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
 
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
-dir_in<-"56.2_fc"
-dir_out<-"56.3_gamm_fc"
+#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
+#dir_in<-"56.2_fc"
+#dir_out<-"56.3_gamm_fc"
 #list_atlas<-c("cnn","hoa","power264")
 #list_atlas<-"cnn"
-list_atlas<-"hoa"
+#list_atlas<-"hoa"
 
 list_wave <- c(1,2)
 
@@ -569,6 +573,7 @@ fp_fc_core<-function(data_zr){
 }
 
 # Main function for fingerprint computing
+
 fp_fc<-function(paths_=paths,
                 list_atlas_=list_atlas,
                 key_roigroup="group_3"){
@@ -591,7 +596,7 @@ fp_fc<-function(paths_=paths,
     list_ses_exist <- sort(unique(df_conn$ses))
     for (ses in list_ses_exist){
       df_ses_subj<-rbind(df_ses_subj,
-                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,ID_pnTTC]))))
+                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
     }
     
     # Add node subgroup column to df_edge
@@ -613,7 +618,7 @@ fp_fc<-function(paths_=paths,
     list_data_zr<-list()
     
     for (idx_group_1 in seq(n_group)){
-      for (idx_group_2 in seq(idx_group_1,idx_group_2)){
+      for (idx_group_2 in seq(idx_group_1,n_group)){
         group_1<-list_group[idx_group_1]
         group_2<-list_group[idx_group_2]
         # 1. whole <-> whole
@@ -630,29 +635,34 @@ fp_fc<-function(paths_=paths,
           }
         }else{
           # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
-          df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
-                               df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
-          
+          if (group_1==group_2){
+            df_edge_group<-df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_1,]
+          }else{
+            df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
+                                 df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
+          }
         }
         
+        df_edge_group$idx<-seq(nrow(df_edge_group))
         n_edge_group<-dim(df_edge_group)[1]
         
         if (n_edge_group<5){
-          print(paste("Atlas: ",atlas,", Group: ",group_1,"<->",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
+          print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
         }else{
           # Create combined dataframe of Z-transformed correlation coefficients
           # according to pre-calculated edge and subject data
+          print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2,", preparing data.",sep=""))
           df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
           
           for (idx_subj in seq(nrow(df_ses_subj))){
-            df_conn_subj<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,ID_pnTTC]
-                                  & df_conn$ses==df_ses_subj[idx_subj,ses],]
-            df_conn_edge<-data.frame(matrix(nrow=n_edge_group,ncol=1))
-            for (idx_edge in seq(n_edge_group)){
-              df_conn_edge[idx_edge,,1]<-df_conn_subj[df_conn_subj$from_group==df_edge_group[idx_edge,from_group]
-                                                      & df_conn_subj$to_group==df_edge_group[idx_edge,to_group],"z_r"]
-              df_conn_cbind<-cbind(df_conn_cbind,df_conn_edge)
-            }
+            #print(paste("Ses: ",df_ses_subj[idx_subj,"ses"],", Subj: ",df_ses_subj[idx_subj,"ID_pnTTC"],sep=""))
+            df_conn_subset<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,"ID_pnTTC"]
+                                    & df_conn$ses==df_ses_subj[idx_subj,"ses"],c("from","to","z_r")]
+            df_conn_subset$from<-as.character(df_conn_subset$from)
+            df_conn_subset$to<-as.character(df_conn_subset$to)
+            df_conn_subset<-inner_join(df_conn_subset,df_edge_group,by=c("from","to"))
+            df_conn_subset<-df_conn_subset[order(df_conn_subset$idx),"z_r"]
+            df_conn_cbind<-cbind(df_conn_cbind,df_conn_subset)
           }
           colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
           rownames(df_conn_cbind)<-NULL
@@ -663,6 +673,7 @@ fp_fc<-function(paths_=paths,
     }
     
     # Parallel fingerprint correlation computing over groups of subnetworks
+    print(paste("atlas: ",atlas,", calculating FP correlation of FC in parallel."))
     n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
     clust<-makeCluster(n_cluster)
     clusterExport(clust,
