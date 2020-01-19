@@ -12,8 +12,10 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
-dir_in<-"202_fp_acompcor"
-dir_out<-"205_fp_model_acompcor_test"
+#dir_in<-"202_fp_acompcor"
+#dir_out<-"205_fp_model_acompcor_test"
+dir_in<-"401_fp_acompcor"
+dir_out<-"402_fp_model_acompcor"
 
 list_wave <- c(1,2)
 
@@ -147,33 +149,36 @@ source(file.path(paths$script,"util/plot.R"))
 # GLM and ANCOVA of Fingerprint change ============
 #**************************************************
 
-glm_core<-function(df_src,atlas,measure,group,list_mod_,list_graph_,list_covar_,paths_){
-  print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", GLM/GAM.",  sep=""))
+glm_core<-function(df_src,atlas,measure,group_1,group_2,list_mod_,list_graph_,list_covar_,paths_){
+  print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group_1," and ",group_2,", GLM/GAM.",  sep=""))
   df_out_aic_add<-df_out_lm_add<-data.frame()
   for (idx_mod in names(list_mod_)){
     list_plot<-list()
     list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
     for (idx_sex in list_sex){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
-      mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
+      mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML")
       p_table<-summary.gam(mod)$p.table
       if (is.null(summary.gam(mod)$s.table)){
-        df_out_lm_add_add<-data.frame(atlas=atlas,measure=measure,group=group,sex=idx_sex,model=idx_mod,term=rownames(p_table),
-                                  estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                  t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+        df_out_lm_add_add<-data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                      sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                      estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                      t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
         
       }else{
         s_table<-summary.gam(mod)$s.table
-        df_out_lm_add_add<-rbind(data.frame(atlas=atlas,measure=measure,group=group,sex=idx_sex,model=idx_mod,term=rownames(p_table),
+        df_out_lm_add_add<-rbind(data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                            sex=idx_sex,model=idx_mod,term=rownames(p_table),
                                             estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
                                             t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                             data.frame(atlas=atlas,measure=measure,group=group,sex=idx_sex,model=idx_mod,term=rownames(s_table),
-                                        estimate=NA,se=NA,F=s_table[,'F'],
-                                        t=NA,p=s_table[,'p-value']))
+                                 data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                            sex=idx_sex,model=idx_mod,term=rownames(s_table),
+                                            estimate=NA,se=NA,F=s_table[,'F'],
+                                            t=NA,p=s_table[,'p-value']))
       }
       df_out_lm_add<-rbind(df_out_lm_add,df_out_lm_add_add)
       df_out_aic_add<-rbind(df_out_aic_add,
-                            data.frame(atlas=atlas,measure=measure,group=group,sex=idx_sex,
+                            data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,sex=idx_sex,
                                        model=idx_mod,aic=mod$aic,aic_best_among_models=0))
       
       # Graphical output of GLM results
@@ -199,11 +204,11 @@ glm_core<-function(df_src,atlas,measure,group,list_mod_,list_graph_,list_covar_,
             }
             
             plot<-(plot
-                   + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,measure,group,idx_mod,sep=" "))
+                   + ggtitle(paste(list_graph_[[idx_graph]][["title"]],atlas,measure,group_1,group_2,idx_mod,sep=" "))
                    + xlab(label_x)
                    + ylab("Fingerprint correlation")
                    + theme(legend.position = "none"))
-            filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp-",group,"_mod-",idx_mod,
+            filename_plot<-paste("atl-",atlas,"_msr-",measure,"_grp1-",group_1,"_grp2-",group_2,"_mod-",idx_mod,
                                  "_plt-",idx_graph,"_fp_glm.eps",sep="")
             ggsave(filename_plot,plot=plot,device=cairo_ps,
                    path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
@@ -340,13 +345,9 @@ ancova_core<-function(data_input){
 
 
 model_fp<-function(paths_=paths,
-                   list_atlas_=list_atlas,
-                   list_wave_=list_wave,
-                   list_covar_=list_covar,
-                   list_mod_=list_mod,
-                   list_graph_=list_graph,
+                   list_atlas_=list_atlas,list_wave_=list_wave,list_covar_=list_covar,
+                   list_mod_=list_mod,list_graph_=list_graph,subset_subj_=subset_subj,
                    list_strat_tanner_=list_strat_tanner,
-                   subset_subj_=subset_subj,
                    skip_ancova=T
                    ){
   print("Starting model_fp().")
@@ -388,76 +389,85 @@ model_fp<-function(paths_=paths,
                                                list_id_subj_exist[["2"]]))
       n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
       
-      list_group<-sort(unique(as.character(df_fp_meas$group)))
+      #list_group<-sort(unique(as.character(df_fp_meas$group)))
+      list_group<-sort(unique(c(as.character(df_fp_meas$group_1),as.character(df_fp_meas$group_2))))
       if ("whole" %in% list_group){
         list_group<-c("whole",list_group[list_group!="whole"])
       }
-                    
-      for (group in list_group){
-        # Collect longitudinal fp correlation data
-        df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
-        for (id_subj in list_id_subj_exist_twice){
-          #df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"z_r"]
-          df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-FisherZ(df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj & df_fp_meas$to_ID_pnTTC==id_subj &df_fp_meas$group==group,"r"])
-        }
-        
-        # Subset those without longitudinal fp correlation
-        list_id_subj_nonna<-df_cor_fp[!is.na(df_cor_fp$value),"ID_pnTTC"]
-        df_cor_fp<-df_cor_fp[df_cor_fp$ID_pnTTC %in% list_id_subj_nonna,]
-        n_id_subj_exist_twice<-length(list_id_subj_nonna)
-        print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ",as.character(n_id_subj_exist_twice)," subjects with longitudinal non-NA data.",sep=""))
-        
-        # Create dataframe for GLM analysis
-        df_join_grp<-func_clinical_data_join(df_src=df_clin,
-                                             list_id_subj=list_id_subj_nonna,
-                                             list_covar=list_covar_)
-        df_join_grp<-inner_join(df_join_grp,df_cor_fp,by="ID_pnTTC")
-        df_join_grp$ID_pnTTC<-as.factor(df_join_grp$ID_pnTTC)
-        df_join_grp$sex<-as.factor(df_join_grp$sex)
-        df_join_grp<-cbind(measure=measure,group=group,df_join_grp)
-        
-        df_join<-rbind(df_join,df_join_grp)
-        
-        # Calculate GLM
-        out_glm<-glm_core(df_src=df_join_grp,atlas,measure,group,
-                          list_mod_,list_graph_,list_covar_,paths_)
-        df_out_lm<-rbind(df_out_lm,out_glm$df_out_lm_add)
-        df_out_aic<-rbind(df_out_aic,out_glm$df_out_aic_add)
-        
-        # Prepare ANCOVA calculation for later parallel computing
-        if (!skip_ancova){
-          print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
-          # Create list of input dataframes for parallel ANCOVA calculation
-          for (group_tanner in names(list_strat_tanner_)){
-            # group by longitudinal Tanner stage
-            df_join_grp_tanner<-df_join_grp
-            for (ses in c(1,2)){
-              list_strat_tanner_ses<-names(list_strat_tanner_[[group_tanner]][[as.character(ses)]])
-              for (label_tanner in list_strat_tanner_ses){
-                list_strat_tanner_ses_group<-list_strat_tanner_[[group_tanner]][[as.character(ses)]][[label_tanner]]
-                #print(list_strat_tanner_ses_group)
-                df_join_grp_tanner[df_join_grp_tanner[[paste('ses',as.character(ses),'_tanner',sep='')]] %in% list_strat_tanner_ses_group,
-                                   paste('ses',as.character(ses),'_tanner_label',sep='')]<-label_tanner
+      
+      n_group<-length(list_group)
+      for (idx_group_1 in seq(n_group)){
+        for (idx_group_2 in seq(idx_group_1,n_group)){
+          group_1<-list_group[idx_group_1]
+          group_2<-list_group[idx_group_2]
+          df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
+          for (id_subj in list_id_subj_exist_twice){
+            df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas[df_fp_meas$from_ID_pnTTC==id_subj
+                                                                       & df_fp_meas$to_ID_pnTTC==id_subj
+                                                                       & df_fp_meas$group_1==group_1
+                                                                       & df_fp_meas$group_2==group_2,"z_r"]
+          }
+          
+          # Subset those without longitudinal fp correlation
+          list_id_subj_nonna<-df_cor_fp[!is.na(df_cor_fp$value),"ID_pnTTC"]
+          df_cor_fp<-df_cor_fp[df_cor_fp$ID_pnTTC %in% list_id_subj_nonna,]
+          n_id_subj_exist_twice<-length(list_id_subj_nonna)
+          print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group_1," and ",group_2,
+                      ", ",as.character(n_id_subj_exist_twice)," subjects with longitudinal non-NA data.",sep=""))
+          
+          # Create dataframe for GLM analysis
+          df_join_grp<-func_clinical_data_join(df_src=df_clin,
+                                               list_id_subj=list_id_subj_nonna,
+                                               list_covar=list_covar_)
+          df_join_grp<-inner_join(df_join_grp,df_cor_fp,by="ID_pnTTC")
+          df_join_grp$ID_pnTTC<-as.factor(df_join_grp$ID_pnTTC)
+          df_join_grp$sex<-as.factor(df_join_grp$sex)
+          df_join_grp<-cbind(measure=measure,group_1=group_1,group_2=group_2,df_join_grp)
+          
+          df_join<-rbind(df_join,df_join_grp)
+          
+          # Calculate GLM
+          out_glm<-glm_core(df_src=df_join_grp,atlas,measure,group_1,group_2,
+                            list_mod_,list_graph_,list_covar_,paths_)
+          df_out_lm<-rbind(df_out_lm,out_glm$df_out_lm_add)
+          df_out_aic<-rbind(df_out_aic,out_glm$df_out_aic_add)
+          
+          # Prepare ANCOVA calculation for later parallel computing
+          if (!skip_ancova){
+            print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group,", ANCOVA preparation.",  sep=""))
+            # Create list of input dataframes for parallel ANCOVA calculation
+            for (group_tanner in names(list_strat_tanner_)){
+              # group by longitudinal Tanner stage
+              df_join_grp_tanner<-df_join_grp
+              for (ses in c(1,2)){
+                list_strat_tanner_ses<-names(list_strat_tanner_[[group_tanner]][[as.character(ses)]])
+                for (label_tanner in list_strat_tanner_ses){
+                  list_strat_tanner_ses_group<-list_strat_tanner_[[group_tanner]][[as.character(ses)]][[label_tanner]]
+                  #print(list_strat_tanner_ses_group)
+                  df_join_grp_tanner[df_join_grp_tanner[[paste('ses',as.character(ses),'_tanner',sep='')]] %in% list_strat_tanner_ses_group,
+                                     paste('ses',as.character(ses),'_tanner_label',sep='')]<-label_tanner
+                }
+              }
+              df_join_grp_tanner$long_tanner<-paste(as.character(df_join_grp_tanner$ses1_tanner_label),
+                                                    as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
+              df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
+              
+              list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
+              
+              for (idx_sex in names(list_sex)){
+                df_join_grp_tanner_sex<-df_join_grp_tanner[df_join_grp_tanner$sex %in% list_sex[[idx_sex]],]
+                list_src_ancova<-c(list_src_ancova,
+                                   list(list("atlas"=atlas,
+                                             "measure"=measure,
+                                             "group_network"=group,
+                                             "group_tanner"=group_tanner,
+                                             "group_tanner_content"=list_strat_tanner_[[group_tanner]],
+                                             "group_sex"=idx_sex,
+                                             "df_src_ancova"=df_join_grp_tanner_sex)))
               }
             }
-            df_join_grp_tanner$long_tanner<-paste(as.character(df_join_grp_tanner$ses1_tanner_label),
-                                                  as.character(df_join_grp_tanner$ses2_tanner_label),sep="_")
-            df_join_grp_tanner$long_tanner<-as.factor(df_join_grp_tanner$long_tanner)
-            
-            list_sex<-list("all"=c(1,2),"male"=1,"female"=2)
-            
-            for (idx_sex in names(list_sex)){
-              df_join_grp_tanner_sex<-df_join_grp_tanner[df_join_grp_tanner$sex %in% list_sex[[idx_sex]],]
-              list_src_ancova<-c(list_src_ancova,
-                                 list(list("atlas"=atlas,
-                                           "measure"=measure,
-                                           "group_network"=group,
-                                           "group_tanner"=group_tanner,
-                                           "group_tanner_content"=list_strat_tanner_[[group_tanner]],
-                                           "group_sex"=idx_sex,
-                                           "df_src_ancova"=df_join_grp_tanner_sex)))
-            }
           }
+          
         }
       }
     }
