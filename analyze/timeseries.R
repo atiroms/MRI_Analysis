@@ -188,7 +188,7 @@ fc_core<-function(data_ts){
 fc<-function(paths_=paths,
              list_atlas_=list_atlas){
   print("Starting fc().")
-  nullobj<-func_createdirs(paths_)
+  nullobj<-func_createdirs(paths_,str_proc="fc()")
   
   for (atlas in list_atlas_){
     print(paste("Atlas: ",atlas,", loading data.",sep=""))
