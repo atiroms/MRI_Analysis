@@ -351,7 +351,7 @@ model_fp<-function(paths_=paths,
                    skip_ancova=T
                    ){
   print("Starting model_fp().")
-  nullobj<-func_createdirs(paths_)
+  nullobj<-func_createdirs(paths_,str_proc="model_fp()")
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')

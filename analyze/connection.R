@@ -323,7 +323,7 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                   list_type_p_=list_type_p,thr_p_=thr_p
                   ){
   print("Starting gamm_fc().")
-  nullobj<-func_createdirs(paths_,copy_log=T)
+  nullobj<-func_createdirs(paths_,str_proc="gamm_fc()",copy_log=T)
   dict_roi <- func_dict_roi(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
@@ -578,7 +578,7 @@ fp_fc<-function(paths_=paths,
                 list_atlas_=list_atlas,
                 key_roigroup="group_3"){
   print("Starting fp_fc().")
-  nullobj<-func_createdirs(paths_)
+  nullobj<-func_createdirs(paths_,str_proc="fp_fc()")
   dict_roi<-func_dict_roi(paths_)
   dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi[,key_roigroup]),stringsAsFactors = F)
   
