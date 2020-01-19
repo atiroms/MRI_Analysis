@@ -247,8 +247,9 @@ class PrepXCP():
         file_design='fc-acompcor_20200114.dsn',
 
         #path_folder_design='/home/atiroms/Documents/GitHub/MRI_Analysis/Preprocessing/XCP_design/accessed_on_20190131/modified',
-        path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
+        #path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
         #path_folder_design='C:/Users/NICT_WS/GitHub/MRI_Analysis/preproc/XCP_design/accessed_on_20190131/modified',
+        path_folder_design='/home/atiroms/GitHub/MRI_Analysis/preproc/XCP_design/20200114_censoring',
 
         #path_img_xcp='/data/applications/xcpEngine-070-20190130.simg',
         #path_img_xcp='/data/applications/xcpEngine-070-20190311.simg',
