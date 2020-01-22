@@ -15,7 +15,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_in<-"202_fp_acompcor"
 #dir_out<-"205_fp_model_acompcor_test"
 dir_in<-"401_fp_acompcor"
-dir_out<-"403_fp_model_acompcor"
+dir_out<-"404_fp_model_acompcor"
 
 list_wave <- c(1,2)
 
@@ -33,24 +33,21 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                  "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
-list_mod <- list("glm_tdiff"="value ~ diff_age + diff_tanner",
-                 "glm_tdiff_tmean"="value ~ diff_age + diff_tanner + mean_tanner",
-                 "gam_tdiff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
-                 "gam_tdiff_tmean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
-list_graph <-list("adiff"=list("title"="Age diff effect",
-                               "x_axis"="diff_age",
+list_mod <- list("lin_diff"="value ~ diff_age + diff_tanner",
+                 "lin_diff_mean"="value ~ diff_age + diff_tanner + mean_tanner",
+                 "add_diff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
+                 "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+list_graph <-list("adiff"=list("title"="Age diff effect","x_axis"="diff_age",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Tanner diff effect",
-                               "x_axis"="diff_tanner",
+                  "tdiff"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Tanner mean effect",
-                               "x_axis"="mean_tanner",
+                  "tmean"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
@@ -477,10 +474,47 @@ model_fp<-function(paths_=paths,
                                 paste("atl-",atlas,"_fp_model_src.csv",sep="")),row.names = F)
   }
   
-  # Data saving
+  # GLM/GAM Data saving
   rownames(df_out_lm)<-rownames(df_out_aic)<-NULL
   write.csv(df_out_lm, file.path(paths_$output,"output","fp_glm.csv"),row.names = F)
   write.csv(df_out_aic,file.path(paths_$output,"output","fp_glm_aic.csv"),row.names = F)
+  
+  # group-wise GLM/GAM visualization
+  for (atlas in list_atlas_){
+    df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas,]
+    list_measure<-sort(unique(df_out_lm_subset$measure))
+    for (measure in list_measure){
+      df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas & df_out_lm$measure==measure,]
+      for (model in names(list_mod_)){
+        for (sex in c(1,2)){
+          df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas
+                                      & df_out_lm$measure==measure
+                                      & df_out_lm$sex==sex
+                                      & df_out_lm$model==model,]
+          list_term<-sort(unique(df_out_lm_subset$term))
+          list_term<-list_term[list_term!="(Intercept)"]
+          for (term in list_term){
+            df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas
+                                        & df_out_lm$measure==measure
+                                        & df_out_lm$term==term
+                                        & df_out_lm$sex==sex
+                                        & df_out_lm$model==model,]
+            list_group<-sort(unique(c(as.character(df_out_lm_subset$group_1),
+                                      as.character(df_out_lm_subset$group_2))))
+            list_group<-list_group[list_group!="whole"]
+            for (idx_group_1 in seq(length(list_group))){
+              for (idx_group_2 in seq(idx_group_1,length(list_group))){
+                group_1<-list_group[idx_group_1]
+                group_2<-list_group[idx_group_2]
+                
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
   
   # Parallel ANCOVA calculation
   if (!skip_ancova){
@@ -512,12 +546,9 @@ model_fp<-function(paths_=paths,
 #**************************************************
 # Fingerprint identification ======================
 #**************************************************
-identify_fp<-function(paths_=paths,
-                      list_atlas_=list_atlas,
-                      list_wave_=list_wave,
+identify_fp<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
                       #list_covar_=list_covar,
-                      subset_subj_=subset_subj,
-                      n_permutation_=n_permutation
+                      subset_subj_=subset_subj,n_permutation_=n_permutation
                       ){
   print("Starting identify_fp().")
   nullobj<-func_createdirs(paths_)
