@@ -223,9 +223,12 @@ summarize_model<-function(dir_summary_=dir_summary,
 # Timeseries to GLM/GAM of Fingerprints ===========
 #**************************************************
 pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas_=list_atlas,
-                    list_wave_=list_wave,list_covar_=list_covar,
-                    list_mod_=list_mod,list_graph_=list_graph,
+                    list_wave_=list_wave,
+                    list_covar_=list_covar,list_mod_=list_mod,list_graph_=list_graph,
                     list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
+                    list_covar_hormone_=list_covar_hormone,list_mod_hormone_=list_mod_hormone,
+                    list_graph_hormone_=list_graph_hormone,
+                    list_hormone_=list_hormone,
                     subset_subj_=subset_subj,n_permutation_=n_permutation,
                     skip_ts2fc=TRUE,skip_fc2fp=TRUE){
   
@@ -267,12 +270,36 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
                        n_permutation_=n_permutation_)
   
   # Fingerprint to GLM / ANCOVA of fingerprint difference
-  nullobj<-itr_model_fp(id_dir_fp_=id_dir_fp,id_dir_cnt_=id_dir_cnt,
-                        suffix_dir_=suffix_dir_,list_atlas_=list_atlas_,
-                        list_wave_=list_wave_,list_covar_=list_covar_,
-                        list_mod_=list_mod_,list_graph_=list_graph_,
-                        list_strat_tanner_=list_strat_tanner_,list_type_tanner_=list_type_tanner_,
-                        subset_subj_=subset_subj_)
+  # #1 Tanner stage
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
+  id_dir_cnt<-id_dir_cnt_+1
+  id_dir_model_fp<-id_dir_cnt
+  for (idx_type_tanner in names(list_type_tanner_)){
+    id_dir_model_fp<-id_dir_model_fp+0.1
+    print(paste("Tanner type: ",list_type_tanner_[[idx_type_tanner]][["label"]],sep=""))
+    list_covar_[["tanner"]]<-list_type_tanner[[idx_type_tanner]]
+    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir_,idx_type_tanner,sep='_')
+    paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
+                      list_wave_=list_wave_,list_covar_=list_covar_,
+                      list_mod_=list_mod_,list_graph_=list_graph_,list_strat_tanner=list_strat_tanner_,
+                      subset_subj_=subset_subj_,skip_ancova=F)
+  }
+  
+  #2 Hormone
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir,sep='_')
+  for (idx_hormone in names(list_hormone_)){
+    id_dir_model_fp<-id_dir_model_fp+0.1
+    print(paste("Hormone: ",list_hormone[[idx_hormone]][["label"]],sep=""))
+    list_covar_hormone_[["hormone"]]<-list_hormone[[idx_hormone]]
+    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir,idx_hormone,sep='_')
+    paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
+                      list_wave_=list_wave_,list_covar_hormone_=list_covar_hormone_,
+                      list_mod_hormone_=list_mod_hormone_,list_graph_hormone_=list_graph_hormone_,
+                      list_strat_tanner=NULL,
+                      subset_subj_=subset_subj_,skip_ancova=T)
+  }
   
   print('Finished pipe_func().')
 }
