@@ -60,21 +60,20 @@ list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner
 #thresh_sign<-0.05
 thresh_sign<-0.001
 
-#list_id_dir<-list("acompcor"=202,
-#                  "aroma"=212,
-#                  "acompcor_gsr"=232,
-#                  "aroma_gsr"=242)
+#list_id_dir<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-"aal116"
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 list_id_dir<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
+list_id_dir<-list("acompcor"=500)
 
-list_atlas<-c("aal116","gordon333","power264","shen268")
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100","schaefer200","schaefer400","shen268")
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-"aal116"
+
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
                              list("key"="W1_Censor","condition"="<126")),
@@ -311,7 +310,7 @@ pipe_func_multi<-function(list_id_dir_=list_id_dir,
                           list_mod_=list_mod,list_graph_=list_graph,
                           list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
                           subset_subj_=subset_subj,n_permutation_=n_permutation,
-                          skip_ts2fc=TRUE,skip_fc2fp=TRUE,skip_fp2id=TRUE){
+                          skip_ts2fc=FALSE,skip_fc2fp=FALSE,skip_fp2id=TRUE){
   
   print("Starting pipe_func_multi()")
   for (suffix_dir in names(list_id_dir_)){
