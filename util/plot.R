@@ -167,9 +167,17 @@ plot_gamm<-function(plot_in,mod_gamm,df_in,spec_graph){
 #**************************************************
 # Plot correlation matrix in heatmap ==============
 #**************************************************
-plot_cor_heatmap<-function(input){
+plot_cor_heatmap<-function(input,label=NULL){
   input_tidy<-rownames_to_column(input,"row")
   input_tidy<-gather(input_tidy,key=column,value=r,2:ncol(input_tidy))
+  if (!is.null(label)){
+    label_tidy<-rownames_to_column(label,"row")
+    label_tidy<-gather(label_tidy,key=column,value=label,2:ncol(label_tidy))
+    input_tidy<-inner_join(input_tidy,label_tidy,by=c("row","column"))
+  }else{
+    input_tidy$label<-NA
+  }
+  
   plot<-(ggplot(input_tidy, aes(column, row))
          + geom_tile(aes(fill = r))
          + scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1))
@@ -183,7 +191,12 @@ plot_cor_heatmap<-function(input){
                  panel.grid.minor = element_blank(),
                  panel.border = element_blank(),
                  panel.background = element_blank()))
-    return(plot)
+  
+  if(!is.null(label)){
+    plot<-(plot
+           + geom_text(aes(label=label),color="white",fontface="bold"))
+  }
+  return(plot)
 }
 
 

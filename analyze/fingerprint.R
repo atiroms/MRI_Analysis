@@ -15,7 +15,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_in<-"202_fp_acompcor"
 #dir_out<-"205_fp_model_acompcor_test"
 dir_in<-"401_fp_acompcor"
-dir_out<-"404_fp_model_acompcor"
+dir_out<-"403_fp_model_acompcor"
 
 list_wave <- c(1,2)
 
@@ -342,7 +342,6 @@ ancova_core<-function(data_input){
   return(df_out)
 }
 
-
 model_fp<-function(paths_=paths,
                    list_atlas_=list_atlas,list_wave_=list_wave,list_covar_=list_covar,
                    list_mod_=list_mod,list_graph_=list_graph,subset_subj_=subset_subj,
@@ -486,33 +485,65 @@ model_fp<-function(paths_=paths,
     for (measure in list_measure){
       df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas & df_out_lm$measure==measure,]
       for (model in names(list_mod_)){
-        for (sex in c(1,2)){
+        for (idx_sex in c(1,2)){
           df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas
                                       & df_out_lm$measure==measure
-                                      & df_out_lm$sex==sex
+                                      & df_out_lm$sex==idx_sex
                                       & df_out_lm$model==model,]
-          list_term<-sort(unique(df_out_lm_subset$term))
+          list_term<-sort(unique(as.character(df_out_lm_subset$term)))
           list_term<-list_term[list_term!="(Intercept)"]
           for (term in list_term){
             df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas
                                         & df_out_lm$measure==measure
-                                        & df_out_lm$term==term
-                                        & df_out_lm$sex==sex
-                                        & df_out_lm$model==model,]
+                                        & df_out_lm$sex==idx_sex
+                                        & df_out_lm$model==model
+                                        & df_out_lm$term==term,]
             list_group<-sort(unique(c(as.character(df_out_lm_subset$group_1),
                                       as.character(df_out_lm_subset$group_2))))
             list_group<-list_group[list_group!="whole"]
-            for (idx_group_1 in seq(length(list_group))){
-              for (idx_group_2 in seq(idx_group_1,length(list_group))){
+            n_group<-length(list_group)
+            mat_static<-data.frame(matrix(nrow=n_group,ncol=n_group))
+            mat_pval<-data.frame(matrix(nrow=n_group,ncol=n_group))
+            colnames(mat_static)<-rownames(mat_static)<-colnames(mat_pval)<-rownames(mat_pval)<-list_group
+            for (idx_group_1 in seq(n_group)){
+              for (idx_group_2 in seq(idx_group_1,n_group)){
                 group_1<-list_group[idx_group_1]
                 group_2<-list_group[idx_group_2]
-                
+                df_out_lm_subset<-df_out_lm[df_out_lm$atlas==atlas
+                                            & df_out_lm$measure==measure
+                                            & df_out_lm$sex==idx_sex
+                                            & df_out_lm$model==model
+                                            & df_out_lm$term==term
+                                            & df_out_lm$group_1==group_1
+                                            & df_out_lm$group_2==group_2,c("estimate","F","p")]
+                name_static<-colnames(df_out_lm_subset[,c("estimate","F")])[!is.na(df_out_lm_subset[1,c("estimate","F")])]
+                mat_static[group_1,group_2]<-mat_static[group_2,group_1]<-df_out_lm_subset[[1,name_static]]
+                mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-df_out_lm_subset[[1,"p"]]
               }
             }
+            
+            #df_pval<-rownames_to_column(mat_pval,"row")
+            #df_pval<-gather(df_pval,key=column,value=p,2:ncol(df_pval))
+            if (idx_sex==1){
+              label_sex<-"male"
+            }else{
+              label_sex<-"female"
+            }
+            mat_pval<-round(mat_pval,3)
+            plot_stat<-plot_cor_heatmap(mat_static,mat_pval)
+            suppressMessages(plot_stat<-(plot_stat
+                                         + scale_fill_gradientn(colors = matlab.like2(100),
+                                                                lim=c(-max(max(mat_static),-min(mat_static)),max(max(mat_static),-min(mat_static))),
+                                                                name=name_static)
+                                         + ggtitle(paste("GLM-FP,",atlas,measure,label_sex,model,term,sep=" "))
+                                         + theme(plot.title = element_text(hjust = 0.5),
+                                                 axis.title=element_blank())))
+            ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-",label_sex,"_mod-",model,
+                         "_plt-",term,"_fp_glm.eps",sep=""),plot=plot_stat,device=cairo_ps,
+                   path=file.path(paths_$output,"output"),dpi=300,height=5,width=5,limitsize=F)
           }
         }
       }
-
     }
   }
   
