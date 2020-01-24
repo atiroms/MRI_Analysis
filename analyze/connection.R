@@ -673,7 +673,7 @@ fp_fc<-function(paths_=paths,
     }
     
     # Parallel fingerprint correlation computing over groups of subnetworks
-    print(paste("atlas: ",atlas,", calculating FP correlation of FC in parallel.",sep=""))
+    print(paste("atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
     n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
     clust<-makeCluster(n_cluster)
     clusterExport(clust,

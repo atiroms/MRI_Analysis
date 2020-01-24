@@ -83,21 +83,21 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                  "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-list_mod <- list("lin_diff"="value ~ diff_age + diff_tanner",
-                 "lin_diff_mean"="value ~ diff_age + diff_tanner + mean_tanner",
-                 "add_diff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
-                 "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
-list_graph <-list("adiff"=list("title"="Age diff effect","x_axis"="diff_age",
+list_mod <- list("ld" ="value ~ diff_age + diff_tanner",
+                 "ldm"="value ~ diff_age + diff_tanner + mean_tanner",
+                 "ad" ="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
+                 "adm"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+list_graph <-list("d(a)"=list("title"="Age diff effect","x_axis"="diff_age",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
+                  "d(t)"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
+                  "m(t)"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
@@ -124,21 +124,21 @@ list_type_tanner<-list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", 
 list_covar_hormone<-list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
                          "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                          "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-list_mod_hormone <- list("lin_diff"="value ~ diff_age + diff_hormone",
-                         "lin_diff_mean"="value ~ diff_age + diff_hormone+ mean_hormone",
-                         "add_diff"="value ~ s(diff_age,k=3) + s(diff_hormone,k=3)",
-                         "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_hormone,k=3) + s(diff_hormone,k=3)")
-list_graph_hormone <-list("adiff"=list("title"="Age diff effect","x_axis"="diff_age",
+list_mod_hormone <- list("ld" ="value ~ diff_age + diff_hormone",
+                         "ldm"="value ~ diff_age + diff_hormone+ mean_hormone",
+                         "ad" ="value ~ s(diff_age,k=3) + s(diff_hormone,k=3)",
+                         "adm"="value ~ s(diff_age,k=3) + s(mean_hormone,k=3) + s(diff_hormone,k=3)")
+list_graph_hormone <-list("d(a)"=list("title"="Age diff effect","x_axis"="diff_age",
                                        "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                      "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                        "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                                     "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                          "hdiff"=list("title"="Hormone diff effect","x_axis"="diff_hormone",
+                          "d(h)"=list("title"="Hormone diff effect","x_axis"="diff_hormone",
                                       "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                     "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                       "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                                    "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                          "hmean"=list("title"="Hormone mean effect","x_axis"="mean_hormone",
+                          "m(h)"=list("title"="Hormone mean effect","x_axis"="mean_hormone",
                                       "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                     "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                       "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
@@ -268,7 +268,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   # Fingerprint to GLM / ANCOVA of fingerprint difference
   # #1 Tanner stage
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  id_dir_cnt<-id_dir_cnt_+1
+  id_dir_cnt<-id_dir_cnt+1
   id_dir_model_fp<-id_dir_cnt
   for (idx_type_tanner in names(list_type_tanner_)){
     id_dir_model_fp<-id_dir_model_fp+0.1
@@ -291,8 +291,8 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir,idx_hormone,sep='_')
     paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
     nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
-                      list_wave_=list_wave_,list_covar_hormone_=list_covar_hormone_,
-                      list_mod_hormone_=list_mod_hormone_,list_graph_hormone_=list_graph_hormone_,
+                      list_wave_=list_wave_,list_covar_=list_covar_hormone_,
+                      list_mod_=list_mod_hormone_,list_graph_=list_graph_hormone_,
                       list_strat_tanner=NULL,
                       subset_subj_=subset_subj_,skip_ancova=T)
   }
