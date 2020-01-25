@@ -71,30 +71,28 @@ list_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"=
 list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                         "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                         "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-list_mod_tanner_diff <- list("lin_diff"="value ~ diff_age + diff_tanner",
-                        "lin_diff_mean"="value ~ diff_age + diff_tanner + mean_tanner",
-                        "add_diff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
-                        "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
-list_graph_tanner_diff <-list("diff"=list("title"="Tanner diff effect",
-                                     "x_axis"="diff_tanner",
-                                     "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                   "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                     "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                                  "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))),
-                         "mean"=list("title"="Tanner mean effect",
-                                     "x_axis"="mean_tanner",
-                                     "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                   "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                     "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                                  "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))))
-list_mod_tanner <- list("lin"  ="value ~ age + tanner + s(ID_pnTTC,bs='re')",
-                         "add"  ="value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')",
-                         "quad" ="value ~ poly(age,2) + poly(tanner,2) + s(ID_pnTTC,bs='re')")
+list_mod_tanner_diff <- list("ld" ="value ~ diff_age + diff_tanner",
+                             "ldm"="value ~ diff_age + diff_tanner + mean_tanner",
+                             "ad" ="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
+                             "adm"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+list_graph_tanner_diff <-list("d(t)"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
+                                          "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                        "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                                          "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                                       "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))),
+                              "m(t)"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
+                                          "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                        "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                                          "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                                       "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))))
+list_mod_tanner <- list("l" ="value ~ age + tanner + s(ID_pnTTC,bs='re')",
+                        "a" ="value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')",
+                        "q" ="value ~ poly(age,2) + poly(tanner,2) + s(ID_pnTTC,bs='re')")
 list_graph_tanner <-list("t"=list("title"="Tanner effect","x_axis"="tanner",
-                                   "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                 "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                   "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                                "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
+                                  "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                                  "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                               "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
 
 list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
                    "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
@@ -103,25 +101,23 @@ list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","lab
 list_covar_hormone<-list("hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
                          "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                          "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-list_mod_hormone_diff <- list("lin_diff"="value ~ diff_age + diff_hormone",
-                         "lin_diff_mean"="value ~ diff_age + diff_hormone+ mean_hormone",
-                         "add_diff"="value ~ s(diff_age,k=3) + s(diff_hormone,k=3)",
-                         "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_hormone,k=3) + s(diff_hormone,k=3)")
-list_graph_hormone_diff <-list("diff"=list("title"="Hormone diff effect",
-                                      "x_axis"="diff_hormone",
-                                      "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                    "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                      "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                                   "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                          "mean"=list("title"="Hormone mean effect",
-                                      "x_axis"="mean_hormone",
-                                      "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                                    "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                                      "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                                   "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
-list_mod_hormone <- list("lin"  ="value ~ age + hormone + s(ID_pnTTC,bs='re')",
-                         "add"  ="value ~ s(age,k=3) + s(hormone,k=3) + s(ID_pnTTC,bs='re')",
-                         "quad" ="value ~ poly(age,2) + poly(hormone,2) + s(ID_pnTTC,bs='re')")
+list_mod_hormone_diff <- list("ld"="value ~ diff_age + diff_hormone",
+                              "ldm"="value ~ diff_age + diff_hormone+ mean_hormone",
+                              "ad"="value ~ s(diff_age,k=3) + s(diff_hormone,k=3)",
+                              "adm"="value ~ s(diff_age,k=3) + s(mean_hormone,k=3) + s(diff_hormone,k=3)")
+list_graph_hormone_diff <-list("d(h)"=list("title"="Hormone diff effect","x_axis"="diff_hormone",
+                                           "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                         "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                                           "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                                        "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+                               "m(h)"=list("title"="Hormone mean effect","x_axis"="mean_hormone",
+                                           "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                         "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                                           "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                                        "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
+list_mod_hormone <- list("l" ="value ~ age + hormone + s(ID_pnTTC,bs='re')",
+                         "a" ="value ~ s(age,k=3) + s(hormone,k=3) + s(ID_pnTTC,bs='re')",
+                         "q" ="value ~ poly(age,2) + poly(hormone,2) + s(ID_pnTTC,bs='re')")
 list_graph_hormone <-list("h"=list("title"="Hormone effect","x_axis"="hormone",
                                    "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                  "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
