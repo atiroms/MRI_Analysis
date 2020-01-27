@@ -152,7 +152,7 @@ class PrepXCP():
     def __init__(self,
         skip_log_copy=False,
         skip_fmriprep_copy=False,
-        skip_fmriprep_moveanat=True,
+        skip_fmriprep_moveanat=False,
         n_proc=20,
 
         path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/401_c1_fmriprep',
