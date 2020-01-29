@@ -404,33 +404,10 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-
-        #path_input='P:/MRI_img/pnTTC/preproc/171_c1_xcp_acompcor',
-        #path_output='P:/MRI_img/pnTTC/preproc/175_c1_ts_acompcor',
-        
-        #path_input='Q:/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
-        #path_output='Q:/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
-
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/181_c1_xcp_aroma',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/185_c1_ts_aroma',
-
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/172_c2_xcp_acompcor',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/176_c2_ts_acompcor',
-
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/371_c1_xcp_acompcor_gsr',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/375_c1_ts_acompcor_gsr',
-
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/182_c2_xcp_aroma',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/186_c2_ts_aroma',
-
-        #path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/372_c2_xcp_acompcor_gsr',
-        #path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/376_c2_ts_acompcor_gsr',
-        
-        #path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/382_c2_xcp_aroma_gsr',
-        #path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/386_c2_ts_aroma_gsr',
-
-        path_input='/media/veracrypt2/MRI_img/pnTTC/preproc/381_c1_xcp_aroma_gsr',
-        path_output='/media/veracrypt2/MRI_img/pnTTC/preproc/385_c1_ts_aroma_gsr',
+        path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/403_c1_xcp_acompcor',
+        path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/423_c1_quality_acompcor',
+        #path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/404_c2_xcp_acompcor',
+        #path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/424_c2_quality_acompcor',
 
         skip_mkdir=True,
         skip_copylog=True,

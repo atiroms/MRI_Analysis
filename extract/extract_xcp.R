@@ -10,17 +10,11 @@
 # Parameters ======================================
 #**************************************************
 
-#path_in <- "P:/MRI_img/pnTTC/preproc"
-#path_out <- "P:/MRI_img/pnTTC/preproc"
-
-#path_in <- "Q:/MRI_img/pnTTC/preproc"
-#path_out <- "Q:/MRI_img/pnTTC/preproc"
-
 #path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-#path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-
 path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
-path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+
+path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
 
 dir_in <-"403_c1_xcp_acompcor"
 dir_out<-"413_c1_ts_acompcor"
