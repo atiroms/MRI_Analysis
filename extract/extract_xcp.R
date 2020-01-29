@@ -57,8 +57,10 @@ ses<-'ses-01'
 #ses<-'ses-02'
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("aal116","gordon333","power264","shen268")
-
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
+              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
+              "shen268")
 
 #**************************************************
 # Create path list ================================
@@ -152,25 +154,25 @@ extract_xcp<-function(paths_=paths,
 #**************************************************
 
 combine_ts<-function(path_exp="C:/Users/NICT_WS/Dropbox/temp",
-                     #list_src=list(list("dir"="175_c1_ts_acompcor","ses"=1),
-                     #              list("dir"="176_c2_ts_acompcor","ses"=2)),
-                     #dir_dst="300_ts_acompcor",
+                     list_src=list(list("dir"="403_c1_ts_acompcor","ses"=1),
+                                   list("dir"="404_c2_ts_acompcor","ses"=2)),
+                     dir_dst="400_ts_acompcor",
                      
-                     #list_src=list(list("dir"="185_c1_ts_aroma","ses"=1),
-                     #              list("dir"="186_c2_ts_aroma","ses"=2)),
-                     #dir_dst="310_ts_aroma",
+                     #list_src=list(list("dir"="405_c1_ts_acompcor_gsr","ses"=1),
+                     #              list("dir"="406_c2_ts_acompcor_gsr","ses"=2)),
+                     #dir_dst="410_ts_acompcor_gsr",
                      
-                     #list_src=list(list("dir"="375_c1_ts_acompcor_gsr","ses"=1),
-                     #              list("dir"="376_c2_ts_acompcor_gsr","ses"=2)),
-                     #dir_dst="330_ts_acompcor_gsr",
+                     #list_src=list(list("dir"="407_c1_ts_aroma","ses"=1),
+                     #              list("dir"="408_c2_ts_aroma","ses"=2)),
+                     #dir_dst="420_ts_aroma",
                      
-                     list_src=list(list("dir"="385_c1_ts_aroma_gsr","ses"=1),
-                                   list("dir"="386_c2_ts_aroma_gsr","ses"=2)),
-                     dir_dst="340_ts_aroma_gsr",
+                     #list_src=list(list("dir"="409_c1_ts_aroma_gsr","ses"=1),
+                     #              list("dir"="410_c2_ts_aroma_gsr","ses"=2)),
+                     #dir_dst="430_ts_aroma_gsr",
                      
-                     #list_src=list(list("dir"="195_c1_ts_36p","ses"=1),
-                     #              list("dir"="196_c2_ts_36p","ses"=2)),
-                     #dir_dst="197_ts_36p",
+                     #list_src=list(list("dir"="411_c1_ts_36p","ses"=1),
+                     #              list("dir"="412_c2_ts_36p","ses"=2)),
+                     #dir_dst="440_ts_36p",
                      
                      list_atlas_=list_atlas){
 
