@@ -22,9 +22,9 @@ list_wave <- c(1,2)
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 subset_subj <- list("1"=list(),
                     "2"=list())
-list_mod <- list("lin" ="value ~ age + s(ID_pnTTC,bs='re')",
-                 "add" ="value ~ s(age,k=3) + s(ID_pnTTC,bs='re')",
-                 "quad"="value ~ poly(age,2) + s(ID_pnTTC,bs='re')")
+list_mod <- list("l"="value ~ age + s(ID_pnTTC,bs='re')",
+                 "a"="value ~ s(age,k=3) + s(ID_pnTTC,bs='re')",
+                 "q"="value ~ poly(age,2) + s(ID_pnTTC,bs='re')")
 
 list_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
                   "full"=list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
@@ -58,9 +58,9 @@ spec_graph_hormone<-list("title"="Hormone vs Age","x_axis"="age",
 
 list_pair<-list(c("gonadal","testo"),c("gonadal","dheas"),c("adrenal","testo"),c("adrenal","dheas"),
                 c("max","testo"),c("max","dheas"))
-list_mod_pair <- list("lin" ="value ~ hormone + s(ID_pnTTC,bs='re')",
-                      "add" ="value ~ s(hormone,k=3) + s(ID_pnTTC,bs='re')",
-                      "quad"="value ~ poly(hormone,2) + s(ID_pnTTC,bs='re')")
+list_mod_pair <- list("l"="value ~ hormone + s(ID_pnTTC,bs='re')",
+                      "a"="value ~ s(hormone,k=3) + s(ID_pnTTC,bs='re')",
+                      "q"="value ~ poly(hormone,2) + s(ID_pnTTC,bs='re')")
 list_covar_pair<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                       "hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
                       "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),

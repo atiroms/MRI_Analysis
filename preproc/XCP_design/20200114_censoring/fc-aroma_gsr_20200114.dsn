@@ -104,7 +104,8 @@ regress_process[3]=DMT-TMP-REG
 ###################################################################
 
 #fcon_atlas[4]=shen268
-fcon_atlas[4]=aal116,power264,gordon333,shen268
+#fcon_atlas[4]=aal116,power264,gordon333,shen268
+fcon_atlas[4]=all
 fcon_metric[4]=corrcoef
 fcon_thr[4]=N
 fcon_window[4]=10

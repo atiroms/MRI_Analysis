@@ -16,10 +16,11 @@ dir_out <-"234_gamm_graph_acompcor_gsr"
 
 list_wave<-c(1,2)
 
-#list_metric_local=c("degrees_und","efficiency_local_bin")
-#list_metric_global=c("efficiency_bin","charpath_B_radius","charpath_B_diameter")
-list_metric_local=c("efficiency_local_bin")
-list_metric_global=c("efficiency_bin","efficiency_local_bin")
+#list_metric_local<-c("degrees_und","efficiency_local_bin")
+#list_metric_global<-c("efficiency_bin","charpath_B_radius","charpath_B_diameter")
+#list_metric_local<-c("efficiency_local_bin")
+list_metric_local<-NULL
+list_metric_global<-c("efficiency_bin","efficiency_local_bin")
 
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
 #                 "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
@@ -36,26 +37,24 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
-list_mod <- list("lin"  ="value ~ age + testo + s(ID_pnTTC,bs='re')",
-                 "add"  ="value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
-                 "quad" ="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
+list_mod <- list("l"="value ~ age + testo + s(ID_pnTTC,bs='re')",
+                 "a"="value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
+                 "q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
 list_graph <-list("t"=list("title"="Testosterone effect","x_axis"="testo",
                            "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                          "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                            "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                         "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
-list_mod_diff <- list("lin_diff"="value ~ diff_age + diff_testo",
-                      "lin_diff_mean"="value ~ diff_age + diff_testo + mean_testo",
-                      "add_diff"="value ~ s(diff_age,k=3) + s(diff_testo,k=3)",
-                      "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_testo,k=3) + s(diff_testo,k=3)")
-list_graph_diff <-list("diff"=list("title"="Testosterone diff effect",
-                                   "x_axis"="diff_testo",
+list_mod_diff <- list("ld"="value ~ diff_age + diff_testo",
+                      "ldm"="value ~ diff_age + diff_testo + mean_testo",
+                      "ad"="value ~ s(diff_age,k=3) + s(diff_testo,k=3)",
+                      "adm"="value ~ s(diff_age,k=3) + s(mean_testo,k=3) + s(diff_testo,k=3)")
+list_graph_diff <-list("d(h)"=list("title"="Testosterone diff effect","x_axis"="diff_testo",
                                    "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                  "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                       "mean"=list("title"="Testosterone mean effect",
-                                   "x_axis"="mean_testo",
+                       "m(h)"=list("title"="Testosterone mean effect","x_axis"="mean_testo",
                                    "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                  "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
@@ -201,7 +200,7 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                    list_graph_diff_=list_graph_diff
                    ){
   print("Starting gamm_gta().")
-  nullobj<-func_createdirs(paths_,copy_log=T)
+  nullobj<-func_createdirs(paths_,str_proc="gamm_gta()",copy_log=T)
   dict_roi<-func_dict_roi(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
@@ -243,43 +242,46 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   write.csv(df_out_global, file.path(paths_$output,"output","gamm_global.csv"),row.names = F)
   write.csv(df_out_global_aic,file.path(paths_$output,"output","gamm_global_aic.csv"),row.names = F)
   
-  # Load local graph data
-  print('Loading local graph data.')
-  df_gta_local<-read.csv(file.path(paths_$input,"output",paste("atl-power264_graph_local.csv")))
-  colnames(df_gta_local)[colnames(df_gta_local)=="ses"]<-"wave"
-  
-  # Join clinical and local graph data frames
-  print('Joining clinical and local graph data.')
-  df_join<-inner_join(df_gta_local,df_clin,by=c('ID_pnTTC','wave'))
-  for (key in c('ID_pnTTC','wave','sex')){
-    if (key %in% colnames(df_join)){
-      df_join[,key]<-as.factor(df_join[,key])
-    }
-  }
-  write.csv(df_join,file.path(paths_$output,"output","src_local.csv"),row.names=F)
-  
-  # Calculate GAMM
-  print('Calculating GAMM of local data.')
-  df_out_local<-df_out_local_aic<-NULL
-  for(metric in list_metric_local_){
-    df_join_metric<-df_join[df_join$metric==metric,]
-    list_roi<-sort(unique(as.character(df_join_metric$roi)))
-    for (roi in list_roi){
-      label_roi=as.character(dict_roi[dict_roi$id==roi,"label"])
-      df_src=df_join_metric[df_join_metric$roi==roi,]
-      if (dim(df_src)[2]>0){
-        out_glm<-gamm_core(df_src,roi,label_roi,group="whole",measure=metric,
-                           list_mod_,list_graph_,list_covar_,paths_)
-        df_out_local<-rbind(df_out_local,out_glm$df_out_lm_add)
-        df_out_local_aic<-rbind(df_out_local_aic,out_glm$df_out_aic_add)
+  if (!is.null(list_metric_local_)){
+    # Load local graph data
+    print('Loading local graph data.')
+    df_gta_local<-read.csv(file.path(paths_$input,"output",paste("atl-power264_graph_local.csv")))
+    colnames(df_gta_local)[colnames(df_gta_local)=="ses"]<-"wave"
+    
+    # Join clinical and local graph data frames
+    print('Joining clinical and local graph data.')
+    df_join<-inner_join(df_gta_local,df_clin,by=c('ID_pnTTC','wave'))
+    for (key in c('ID_pnTTC','wave','sex')){
+      if (key %in% colnames(df_join)){
+        df_join[,key]<-as.factor(df_join[,key])
       }
     }
+    write.csv(df_join,file.path(paths_$output,"output","src_local.csv"),row.names=F)
+    
+    # Calculate GAMM
+    print('Calculating GAMM of local data.')
+    df_out_local<-df_out_local_aic<-NULL
+    for(metric in list_metric_local_){
+      df_join_metric<-df_join[df_join$metric==metric,]
+      list_roi<-sort(unique(as.character(df_join_metric$roi)))
+      for (roi in list_roi){
+        label_roi=as.character(dict_roi[dict_roi$id==roi,"label"])
+        df_src=df_join_metric[df_join_metric$roi==roi,]
+        if (dim(df_src)[2]>0){
+          out_glm<-gamm_core(df_src,roi,label_roi,group="whole",measure=metric,
+                             list_mod_,list_graph_,list_covar_,paths_)
+          df_out_local<-rbind(df_out_local,out_glm$df_out_lm_add)
+          df_out_local_aic<-rbind(df_out_local_aic,out_glm$df_out_aic_add)
+        }
+      }
+    }
+    
+    # Data saving
+    rownames(df_out_local)<-rownames(df_out_local_aic)<-NULL
+    write.csv(df_out_local, file.path(paths_$output,"output","gamm_local.csv"),row.names = F)
+    write.csv(df_out_local_aic,file.path(paths_$output,"output","gamm_local_aic.csv"),row.names = F)
   }
-  
-  # Data saving
-  rownames(df_out_local)<-rownames(df_out_local_aic)<-NULL
-  write.csv(df_out_local, file.path(paths_$output,"output","gamm_local.csv"),row.names = F)
-  write.csv(df_out_local_aic,file.path(paths_$output,"output","gamm_local_aic.csv"),row.names = F)
+
   
   #************************************************
   # Analyses using parameter difference and average 

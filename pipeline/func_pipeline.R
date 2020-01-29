@@ -60,23 +60,20 @@ list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner
 #thresh_sign<-0.05
 thresh_sign<-0.001
 
-#list_id_dir<-list("acompcor"=202,
-#                  "aroma"=212,
-#                  "acompcor_gsr"=232,
-#                  "aroma_gsr"=242)
+#list_id_dir<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-"aal116"
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-list_id_dir<-list("acompcor"=302,
-                  "aroma"=312,
-                  "acompcor_gsr"=332,
-                  "aroma_gsr"=342)
-list_atlas<-c("aal116","gordon333","power264","shen268")
+list_id_dir<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
+list_id_dir<-list("acompcor"=500)
+
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100","schaefer200","schaefer400","shen268")
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-"aal116"
+
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
                              list("key"="W1_Censor","condition"="<126")),
@@ -86,40 +83,34 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                  "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-list_mod <- list("glm_tdiff"="value ~ diff_age + diff_tanner",
-                 "glm_tdiff_tmean"="value ~ diff_age + diff_tanner + mean_tanner",
-                 "gam_tdiff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
-                 "gam_tdiff_tmean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
-list_graph <-list("adiff"=list("title"="Age diff effect",
-                               "x_axis"="diff_age",
+list_mod <- list("ld" ="value ~ diff_age + diff_tanner",
+                 "ldm"="value ~ diff_age + diff_tanner + mean_tanner",
+                 "ad" ="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
+                 "adm"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+list_graph <-list("d(a)"=list("title"="Age diff effect","x_axis"="diff_age",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Tanner diff effect",
-                               "x_axis"="diff_tanner",
+                  "d(t)"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Tanner mean effect",
-                               "x_axis"="mean_tanner",
+                  "m(t)"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2), "color"="lightcoral","alpha"=1))))
-list_strat_tanner <-list("5by5"=
-                     list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
-                          "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
-                   "3by3"=
-                     list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
-                          "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
-                   "2by2"=
-                     list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
-                          "2"=list("123"=c(1,2,3),"45"=c(4,5))))
+list_strat_tanner <-list("5by5"=list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
+                                     "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
+                         "3by3"=list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
+                                     "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
+                         "2by2"=list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
+                                     "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
-list_type_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
-                       "full"=list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
+list_type_tanner<-list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+                       "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
                        "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
                                       "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
                                       "label"="Tanner stage (gonadal)"),
@@ -127,25 +118,27 @@ list_type_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "la
                                       "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
                                       "label"="Tanner stage (adrenal)"))
 
-
 # Parameters for gamm_multi_hormone()
 #list_id_dir_fp<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
-list_id_dir_fp<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
-list_covar_hormone<-list("hormone"=list("1"="W1_Hormone","2"="W2_Hormone","label"="Hormone"),
+#list_id_dir_fp<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
+list_covar_hormone<-list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
                          "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                          "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-list_mod_hormone <- list("lin_diff"="value ~ diff_age + diff_hormone",
-                         "lin_diff_mean"="value ~ diff_age + diff_hormone+ mean_hormone",
-                         "add_diff"="value ~ s(diff_age,k=3) + s(diff_hormone,k=3)",
-                         "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_hormone,k=3) + s(diff_hormone,k=3)")
-list_graph_hormone <-list("diff"=list("title"="Hormone diff effect",
-                                      "x_axis"="diff_hormone",
+list_mod_hormone <- list("ld" ="value ~ diff_age + diff_hormone",
+                         "ldm"="value ~ diff_age + diff_hormone+ mean_hormone",
+                         "ad" ="value ~ s(diff_age,k=3) + s(diff_hormone,k=3)",
+                         "adm"="value ~ s(diff_age,k=3) + s(mean_hormone,k=3) + s(diff_hormone,k=3)")
+list_graph_hormone <-list("d(a)"=list("title"="Age diff effect","x_axis"="diff_age",
+                                       "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                                     "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                                       "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                                    "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+                          "d(h)"=list("title"="Hormone diff effect","x_axis"="diff_hormone",
                                       "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                     "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                       "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                                    "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                          "mean"=list("title"="Hormone mean effect",
-                                      "x_axis"="mean_hormone",
+                          "m(h)"=list("title"="Hormone mean effect","x_axis"="mean_hormone",
                                       "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                                     "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                       "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
@@ -223,11 +216,14 @@ summarize_model<-function(dir_summary_=dir_summary,
 # Timeseries to GLM/GAM of Fingerprints ===========
 #**************************************************
 pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas_=list_atlas,
-                    list_wave_=list_wave,list_covar_=list_covar,
-                    list_mod_=list_mod,list_graph_=list_graph,
+                    list_wave_=list_wave,
+                    list_covar_=list_covar,list_mod_=list_mod,list_graph_=list_graph,
                     list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
+                    list_covar_hormone_=list_covar_hormone,list_mod_hormone_=list_mod_hormone,
+                    list_graph_hormone_=list_graph_hormone,
+                    list_hormone_=list_hormone,
                     subset_subj_=subset_subj,n_permutation_=n_permutation,
-                    skip_ts2fc=TRUE,skip_fc2fp=TRUE){
+                    skip_ts2fc=TRUE,skip_fc2fp=TRUE,skip_fp2id=TRUE){
   
   print('Starting pipe_func().')
   
@@ -255,32 +251,85 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   }else{
     id_dir_fp<-id_dir_cnt
   }
+  
   # Fingerprint to identification of fingerprints
-  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  id_dir_cnt<-id_dir_cnt+1
-  id_dir_idfp<-id_dir_cnt
-  dir_out<-paste(as.character(id_dir_idfp),"fp_id",suffix_dir_,sep='_')
-  paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
-  nullobj<-identify_fp(paths_=paths,list_atlas_=list_atlas_,
-                       list_wave_=list_wave_,
-                       subset_subj_=subset_subj_,
-                       n_permutation_=n_permutation_)
+  if(!skip_fp2id){
+    dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
+    id_dir_cnt<-id_dir_cnt+1
+    id_dir_idfp<-id_dir_cnt
+    dir_out<-paste(as.character(id_dir_idfp),"fp_id",suffix_dir_,sep='_')
+    paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-identify_fp(paths_=paths,list_atlas_=list_atlas_,
+                         list_wave_=list_wave_,
+                         subset_subj_=subset_subj_,
+                         n_permutation_=n_permutation_)
+  }
   
   # Fingerprint to GLM / ANCOVA of fingerprint difference
-  nullobj<-itr_model_fp(id_dir_fp_=id_dir_fp,id_dir_cnt_=id_dir_cnt,
-                        suffix_dir_=suffix_dir_,list_atlas_=list_atlas_,
-                        list_wave_=list_wave_,list_covar_=list_covar_,
-                        list_mod_=list_mod_,list_graph_=list_graph_,
-                        list_strat_tanner_=list_strat_tanner_,list_type_tanner_=list_type_tanner_,
-                        subset_subj_=subset_subj_)
+  # #1 Tanner stage
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
+  id_dir_cnt<-id_dir_cnt+1
+  id_dir_model_fp<-id_dir_cnt
+  for (idx_type_tanner in names(list_type_tanner_)){
+    id_dir_model_fp<-id_dir_model_fp+0.1
+    print(paste("Tanner type: ",list_type_tanner_[[idx_type_tanner]][["label"]],sep=""))
+    list_covar_[["tanner"]]<-list_type_tanner[[idx_type_tanner]]
+    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir_,idx_type_tanner,sep='_')
+    paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
+                      list_wave_=list_wave_,list_covar_=list_covar_,
+                      list_mod_=list_mod_,list_graph_=list_graph_,list_strat_tanner=list_strat_tanner_,
+                      subset_subj_=subset_subj_,skip_ancova=F)
+  }
+  
+  # #2 Hormone
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir,sep='_')
+  for (idx_hormone in names(list_hormone_)){
+    id_dir_model_fp<-id_dir_model_fp+0.1
+    print(paste("Hormone: ",list_hormone[[idx_hormone]][["label"]],sep=""))
+    list_covar_hormone_[["hormone"]]<-list_hormone[[idx_hormone]]
+    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir,idx_hormone,sep='_')
+    paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
+                      list_wave_=list_wave_,list_covar_=list_covar_hormone_,
+                      list_mod_=list_mod_hormone_,list_graph_=list_graph_hormone_,
+                      list_strat_tanner=NULL,
+                      subset_subj_=subset_subj_,skip_ancova=T)
+  }
   
   print('Finished pipe_func().')
 }
 
 
 #**************************************************
+# pipe_func() with multiple starting FCs ==========
+#**************************************************
+pipe_func_multi<-function(list_id_dir_=list_id_dir,
+                          list_atlas_=list_atlas,
+                          list_wave_=list_wave,list_covar_=list_covar,
+                          list_mod_=list_mod,list_graph_=list_graph,
+                          list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
+                          subset_subj_=subset_subj,n_permutation_=n_permutation,
+                          skip_ts2fc=FALSE,skip_fc2fp=FALSE,skip_fp2id=TRUE){
+  
+  print("Starting pipe_func_multi()")
+  for (suffix_dir in names(list_id_dir_)){
+    id_dir_start<-list_id_dir_[[suffix_dir]]
+    nullobj<-pipe_func(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas_=list_atlas_,
+                       list_wave_=list_wave_,list_covar_=list_covar_,
+                       list_mod_=list_mod_,list_graph_=list_graph_,
+                       list_strat_tanner_=list_strat_tanner_,list_type_tanner_=list_type_tanner_,
+                       subset_subj_=subset_subj_,n_permutation_=n_permutation_,
+                       skip_ts2fc=skip_ts2fc,skip_fc2fp=skip_fc2fp,skip_fp2id=skip_fp2id)
+  }
+  print("Finished pipe_func_multi()")
+}
+
+
+#**************************************************
 # Iterate model_fp() over Tanner types ============
 #**************************************************
+# OBSOLETE
 itr_model_fp<-function(id_dir_fp_=id_dir_fp,id_dir_cnt_=id_dir_fp+1,
                        suffix_dir_=suffix_dir,list_atlas_=list_atlas,
                        list_wave_=list_wave,list_covar_=list_covar,
@@ -307,33 +356,11 @@ itr_model_fp<-function(id_dir_fp_=id_dir_fp,id_dir_cnt_=id_dir_fp+1,
   print("Finished itr_model_fp()")
 }
 
-#**************************************************
-# pipe_func() with multiple starting FCs ==========
-#**************************************************
-pipe_func_multi<-function(list_id_dir_=list_id_dir,
-                          list_atlas_=list_atlas,
-                          list_wave_=list_wave,list_covar_=list_covar,
-                          list_mod_=list_mod,list_graph_=list_graph,
-                          list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
-                          subset_subj_=subset_subj,n_permutation_=n_permutation,
-                          skip_ts2fc=TRUE,skip_fc2fp=TRUE){
-  
-  print("Starting pipe_func_multi()")
-  for (suffix_dir in names(list_id_dir_)){
-    id_dir_start<-list_id_dir_[[suffix_dir]]
-    nullobj<-pipe_func(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas_=list_atlas_,
-                       list_wave_=list_wave_,list_covar_=list_covar_,
-                       list_mod_=list_mod_,list_graph_=list_graph_,
-                       list_strat_tanner_=list_strat_tanner_,list_type_tanner_=list_type_tanner_,
-                       subset_subj_=subset_subj_,n_permutation_=n_permutation_,
-                       skip_ts2fc=skip_ts2fc,skip_fc2fp=skip_fc2fp)
-  }
-  print("Finished pipe_func_multi()")
-}
 
 #**************************************************
 # gamm_fp() for hormonal data =====================
 #**************************************************
+# OBSOLETE
 gamm_multi_hormone<-function(list_id_dir_=list_id_dir_fp,
                              list_atlas_=list_atlas,
                              list_wave_=list_wave,list_covar_=list_covar_hormone,

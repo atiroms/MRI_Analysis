@@ -101,9 +101,6 @@ prep_graphvar_core<-function(data_src){
   return(path_file_out)
 }
 
-paths_=paths
-list_atlas_=list_atlas
-key_grp="group_3"
 prep_graphvar<-function(paths_=paths,
                         list_atlas_=list_atlas,
                         key_grp="group_3"
