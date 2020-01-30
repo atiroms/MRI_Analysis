@@ -151,7 +151,7 @@ class XCPScript():
 class PrepXCP():
     def __init__(self,
         skip_log_copy=False,
-        skip_fmriprep_copy=True,
+        skip_fmriprep_copy=False,
         skip_fmriprep_moveanat=False,
         n_proc=10,
 
