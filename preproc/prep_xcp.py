@@ -155,8 +155,8 @@ class PrepXCP():
         skip_fmriprep_moveanat=False,
         n_proc=10,
 
-        path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/05_5sub_c1_fmriprep',
-        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/15_5sub_c1_xcp_acompcor',
+        path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/06_5sub_c1_fmriprep',
+        path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/16_5sub_c1_xcp_acompcor',
         file_id='03_id_5sub.csv',
         ses='ses-01',
         suffix_img='_ses-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',

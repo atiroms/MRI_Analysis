@@ -259,3 +259,12 @@ singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/402_c2_fmr
 
 ## 05_5sub_c1_fmriprep
 singularity run --cleanenv -B /media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/05_5sub_c1_fmriprep:${HOME}/data /data/applications/fmriprep-154.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --ignore fieldmaps --use-syn-sdc --use-aroma --output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Asym:res-2 --bold2t1w-dof=6
+
+## 06_5sub_c1_fmriprep *try 1.5.8 (bug fixed regarding SyN SDC)
+singularity run --cleanenv -B /media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/06_5sub_c1_fmriprep:${HOME}/data /data/applications/fmriprep-158.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --ignore fieldmaps --use-syn-sdc --use-aroma --output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Asym:res-2 T1w --bold2t1w-dof=6
+
+## 401_c1_fmriprep
+singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/401_c1_fmriprep:${HOME}/data /data/applications/fmriprep-158.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --ignore fieldmaps --use-syn-sdc --use-aroma --output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Asym:res-2 T1w --bold2t1w-dof=6
+
+## 402_c2_fmriprep
+singularity run --cleanenv -B /media/veracrypt2/MRI_img/pnTTC/preproc/402_c2_fmriprep:${HOME}/data /data/applications/fmriprep-158.simg ${HOME}/data/input ${HOME}/data/output participant --work-dir ${HOME}/data/output/work --fs-license-file ${HOME}/data/log/license.txt --notrack --ignore fieldmaps --use-syn-sdc --use-aroma --output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Asym:res-2 T1w --bold2t1w-dof=6
