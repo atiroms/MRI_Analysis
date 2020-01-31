@@ -153,7 +153,7 @@ class PrepXCP():
         skip_log_copy=False,
         skip_fmriprep_copy=False,
         skip_fmriprep_moveanat=True,
-        n_proc=10,
+        n_proc=1,
 
         path_fmriprep='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/06_5sub_c1_fmriprep',
         path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/5sub/17_5sub_c1_xcp_acompcor',
