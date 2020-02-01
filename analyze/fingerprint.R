@@ -15,7 +15,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_in<-"202_fp_acompcor"
 #dir_out<-"205_fp_model_acompcor_test"
 dir_in<-"401_fp_acompcor"
-dir_out<-"403_fp_model_acompcor"
+#dir_out<-"403_fp_model_acompcor"
+dir_out<-"404_fp_variance_acompcor"
 
 list_wave <- c(1,2)
 
@@ -100,7 +101,7 @@ library(rowr)
 library(multcomp)
 library(parallel)
 library(DescTools)
-#library(ggplot2)
+library(ggplot2)
 #library(GGally)
 #library(igraph)
 #library(qgraph)
@@ -141,6 +142,197 @@ source(file.path(paths$script,"util/function.R"))
 #source(file.path(paths$script,util/glm_function.R"))
 source(file.path(paths$script,"util/plot.R"))
 #source(file.path(paths$script,"util/gta_function.R"))
+
+
+#**************************************************
+# Variance attribution ============================
+#**************************************************
+paths_=paths
+list_atlas_=list_atlas
+list_wave_=list_wave
+list_mod_=list_mod
+list_graph_=list_graph
+subset_subj_=subset_subj
+skip_ancova=T
+variance_fp<-function(paths_=paths,
+                      list_atlas_=list_atlas,list_wave_=list_wave,
+                      list_mod_=list_mod,list_graph_=list_graph,subset_subj_=subset_subj,
+                      skip_ancova=T
+                      ){
+  print("Starting variance_fp().")
+  nullobj<-func_createdirs(paths_,str_proc="variance_fp()")
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  list_covar_variance<-list("age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                            "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
+                                     list_covar=list_covar_variance,rem_na_clin=T)
+  df_clin<-data_clin$df_clin
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  
+  #df_out_lm<-df_out_aic<-NULL
+  #list_src_ancova<-NULL
+  
+  for (atlas in list_atlas_){
+    # Load fingerprint data
+    df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep="")))
+    
+    list_measure<-sort(unique(as.character(df_fp$measure)))
+    df_join<-NULL
+    for (measure in list_measure){
+      print(paste("Atlas: ",atlas,", Measure: ",measure,sep=""))
+      df_fp_meas<-df_fp[df_fp$measure==measure,]
+      
+      # Create list of subjects who meet subsetting condition and whose MRI data exist
+      list_id_subj_exist<-list()
+      for (ses in list_wave_){
+        id_subj_exist_ses<-sort(unique(c(df_fp_meas[df_fp_meas$from_ses==ses,'from_ID_pnTTC'],
+                                         df_fp_meas[df_fp_meas$to_ses==ses,'to_ID_pnTTC'])))
+        id_subj_subset_ses<-df_clin[df_clin$ses==ses,"ID_pnTTC"]
+        id_subj_exist_ses<-intersect(id_subj_exist_ses,id_subj_subset_ses)
+        list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist_ses)
+      }
+      
+      # Identify subjects with longitudinal data
+      list_id_subj_exist_twice<-sort(intersect(list_id_subj_exist[["1"]],
+                                               list_id_subj_exist[["2"]]))
+      n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
+      df_fp_meas<-df_fp_meas[df_fp_meas$from_ID_pnTTC %in% list_id_subj_exist_twice
+                             & df_fp_meas$to_ID_pnTTC %in% list_id_subj_exist_twice,]
+      
+      # Create list of groups
+      list_group<-sort(unique(c(as.character(df_fp_meas$group_1),
+                                as.character(df_fp_meas$group_2))))
+      if ("whole" %in% list_group){
+        list_group<-c("whole",list_group[list_group!="whole"])
+      }
+      n_group<-length(list_group)
+      
+      df_zr<-data.frame()
+      df_stat_zr<-data.frame()
+      list_groups<-NULL
+      for (idx_group_1 in seq(n_group)){
+        for (idx_group_2 in seq(idx_group_1,n_group)){
+          group_1<-list_group[idx_group_1]
+          group_2<-list_group[idx_group_2]
+          list_groups<-c(list_groups,paste(group_1,group_2,sep="-"))
+          df_stat_zr_group<-data.frame()
+          
+          # Group siilarity
+          df_fp_group<-df_fp_meas[df_fp_meas$group_1==group_1
+                                  & df_fp_meas$group_2==group_2,]
+          df_zr<-rbind(df_zr,
+                       data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                  strat="group",z_r=df_fp_group[,"z_r"]))
+          df_stat_zr_group<-rbind(df_stat_zr_group,
+                                  data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                             strat="group",mean_z_r=mean(df_fp_group[,"z_r"]),
+                                             n_z_r=length(df_fp_group[,"z_r"]),
+                                             sd_z_r=sd(df_fp_group[,"z_r"]),
+                                             sem_z_r=sd(df_fp_group[,"z_r"])/sqrt(length(df_fp_group[,"z_r"]))))
+          
+          # Group + sex similarity
+          df_id_sex<-data.frame("ID_pnTTC"=list_id_subj_exist_twice)
+          for (i_row in seq(n_id_subj_exist_twice)){
+            df_id_sex[i_row,"sex"]<-df_clin[which(df_clin$ID_pnTTC==df_id_sex[i_row,"ID_pnTTC"])[1],"sex"]
+          }
+          df_fp_group<-inner_join(df_fp_group,df_id_sex,
+                                  by=c("from_ID_pnTTC"="ID_pnTTC"))
+          colnames(df_fp_group)[colnames(df_fp_group)=="sex"]<-"from_sex"
+          df_fp_group<-inner_join(df_fp_group,df_id_sex,
+                                  by=c("to_ID_pnTTC"="ID_pnTTC"))
+          colnames(df_fp_group)[colnames(df_fp_group)=="sex"]<-"to_sex"
+          df_fp_group<-df_fp_group[df_fp_group$from_sex==df_fp_group$to_sex,]
+          df_zr<-rbind(df_zr,
+                       data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                  strat="group+sex",z_r=df_fp_group[,"z_r"]))
+          df_stat_zr_group<-rbind(df_stat_zr_group,
+                                  data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                             strat="group+sex",mean_z_r=mean(df_fp_group[,"z_r"]),
+                                             n_z_r=length(df_fp_group[,"z_r"]),
+                                             sd_z_r=sd(df_fp_group[,"z_r"]),
+                                             sem_z_r=sd(df_fp_group[,"z_r"])/sqrt(length(df_fp_group[,"z_r"]))))
+          
+          
+          # Group (+ sex) + individual similarity
+          df_fp_group<-df_fp_group[df_fp_group$from_ID_pnTTC==df_fp_group$to_ID_pnTTC,]
+          df_zr<-rbind(df_zr,
+                       data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                  strat="group+individual",z_r=df_fp_group[,"z_r"]))
+          df_stat_zr_group<-rbind(df_stat_zr_group,
+                                  data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                             strat="group+individual",mean_z_r=mean(df_fp_group[,"z_r"]),
+                                             n_z_r=length(df_fp_group[,"z_r"]),
+                                             sd_z_r=sd(df_fp_group[,"z_r"]),
+                                             sem_z_r=sd(df_fp_group[,"z_r"])/sqrt(length(df_fp_group[,"z_r"]))))
+          
+          max_mean<-max(df_stat_zr_group$mean_z_r)
+          df_stat_zr_group$rel_mean_z_r<-df_stat_zr_group$mean_z_r/max_mean
+          
+          df_stat_zr<-rbind(df_stat_zr,df_stat_zr_group)
+        }
+      } # End of loop over groups
+      
+      # Save results
+      write.csv(df_zr,file.path(paths_$output,"output",
+                                paste("atl-",atlas,"_msr-",measure,"_zr.csv",sep="")),
+                row.names=F)
+      write.csv(df_stat_zr,file.path(paths_$output,"output",
+                                     paste("atl-",atlas,"_msr-",measure,"_stat_zr.csv",sep="")),
+                row.names=F)
+      
+      # Graphical output
+      df_stat_zr$groups=paste(as.character(df_stat_zr$group_1),
+                              as.character(df_stat_zr$group_2),sep="-")
+      label_groups<-NULL
+      for (groups in list_groups){
+        label_groups<-c(label_groups,
+                        paste(capitalize(substring(groups,1,gregexpr("-",groups)[[1]][1]-1)),
+                              capitalize(substring(groups,gregexpr("-",groups)[[1]][1]+1)),sep=" - "))
+      }
+      plot<-(ggplot(data=df_stat_zr,aes(x=groups,y=mean_z_r,fill=strat))
+             + geom_bar(stat="identity",color="black",width=0.6,
+                        position=position_dodge())
+             + geom_errorbar(aes(ymin=mean_z_r,ymax=mean_z_r+sd_z_r),
+                             width=.2,position=position_dodge(0.6))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),
+                                  limits=c(0,max(df_stat_zr$mean_z_r)+max(df_stat_zr$sd_z_r)+0.1))
+             + scale_fill_brewer(palette="Greys",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint similarity attribution, ",atlas,sep=""))
+             + xlab("Region groups")
+             + ylab("Mean z(r)")
+             + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),
+                     axis.text.x = element_text(angle = 45,vjust=1,hjust=1))
+             )
+      filename_plot<-paste("atl-",atlas,"_msr-",measure,"_fp_similarity.eps",sep="")
+      ggsave(filename_plot,plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=7,width=7,limitsize=F)
+      
+      plot<-(ggplot(data=df_stat_zr,aes(x=groups,y=rel_mean_z_r,fill=strat))
+             + geom_bar(stat="identity",color="black",width=0.6,
+                        position=position_dodge())
+
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,1.1))
+             + scale_fill_brewer(palette="Greys",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
+             + xlab("Region groups")
+             + ylab("Mean z(r)")
+             + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),
+                     axis.text.x = element_text(angle = 45,vjust=1,hjust=1))
+      )
+      filename_plot<-paste("atl-",atlas,"_msr-",measure,"_fp_similarity_rel.eps",sep="")
+      ggsave(filename_plot,plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),dpi=300,height=7,width=7,limitsize=F)
+      
+      
+    }
+  }
+}
 
 
 #**************************************************
