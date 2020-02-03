@@ -11,8 +11,9 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/clin"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 
 dir_in<-""
-#dir_out<-"01_clin_long"
-dir_out<-"02_clin_pair"
+#dir_out<-"01_clin"
+#dir_out<-"02_clin_pair"
+dir_out<-"03_clin_long"
 
 list_wave <- c(1,2)
 
@@ -120,6 +121,42 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
+# Plot Tanner and hormone longitudinal data =======
+#**************************************************
+plot_long<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
+                    list_tanner_=list_tanner,list_hormone_=list_hormone
+                    ){
+  print("Starting plot_long().")
+  nullobj<-func_createdirs(paths_)
+  list_covar<-c(list_tanner_,list_hormone_,
+                list("age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                     "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex")))
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T)
+  df_plot<-data_clin$df_clin
+  colnames(df_plot)[colnames(df_plot)=="wave"]<-"ses"
+  list_subj_long<-intersect(data_clin[["list_id_exist"]][["1"]][["intersect"]],
+                            data_clin[["list_id_exist"]][["2"]][["intersect"]])
+  df_plot<-func_clinical_data_join(df_src=df_plot,list_id_subj=list_subj_long,
+                                   list_covar=list_covar)
+  list_sex<-list("mf"=c(1,2),"m"=1,"f"=2)
+  for (label_sex in names(list_sex)){
+    df_plot_sex<-df_plot[df_plot$sex %in% list_sex[[label_sex]],c(-1,-2)]
+    data_cor<-func_cor(df_plot_sex)
+    plot<-plot_cor_heatmap(data_cor$cor)
+    plot<-(plot
+           + ggtitle(paste("Correlation among clinical variables, ",label_sex, sep=""))
+           + xlab("Clinical variables")
+           + ylab("Clinical variables")
+           + theme(plot.title = element_text(hjust = 0.5),legend.position = "none"))
+    filename_plot<-paste("sex-",label_sex,"_long.eps",sep="")
+    ggsave(filename_plot,plot=plot,device=cairo_ps,
+           path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
+  }
+  print("Finished plot_long().")
+}
+
+
+#**************************************************
 # Plot Tanner and hormone data ====================
 #**************************************************
 plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
@@ -179,7 +216,7 @@ plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
              + xlab(label_axis_x)
              + ylab(label_axis_y)
              + theme(legend.position = "none"))
-      filename_plot<-paste("tanner_",tanner,"_hormone-",hormone,"_mod-",idx_mod,"_pair.eps",sep="")
+      filename_plot<-paste("tanner-",tanner,"_hormone-",hormone,"_mod-",idx_mod,"_pair.eps",sep="")
       ggsave(filename_plot,plot=plot,device=cairo_ps,
              path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
     }
