@@ -42,9 +42,9 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
 
-list_mod <- list("lin"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
-                 #"add"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
-                 #"quad"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
+list_mod <- list("l"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
+                 #"a"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
+                 #"q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
 
 list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
                  #"sa"=list("title"="Age effect","var_exp"="s(age)"),
