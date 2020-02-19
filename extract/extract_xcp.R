@@ -11,14 +11,16 @@
 #**************************************************
 
 #path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+#path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+path_in <- "J:/MRI_img/pnTTC/preproc"
 
-path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
+#path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+path_out <- "J:/MRI_img/pnTTC/preproc"
 
-dir_in <-"403_c1_xcp_acompcor"
-dir_out<-"413_c1_ts_acompcor"
-ses<-'ses-01'
+#dir_in <-"403_c1_xcp_acompcor"
+#dir_out<-"413_c1_ts_acompcor"
+#ses<-'ses-01'
 
 #dir_in <-"404_c2_xcp_acompcor"
 #dir_out<-"414_c2_ts_acompcor"
@@ -28,9 +30,9 @@ ses<-'ses-01'
 #dir_out<-"415_c1_ts_acompcor_gsr"
 #ses<-'ses-01'
 
-#dir_in <-"406_c2_xcp_acompcor_gsr"
-#dir_out<-"416_c2_ts_acompcor"
-#ses<-'ses-02'
+dir_in <-"406_c2_xcp_acompcor_gsr"
+dir_out<-"416_c2_ts_acompcor_gsr"
+ses<-'ses-02'
 
 #dir_in <-"407_c1_xcp_aroma"
 #dir_out<-"417_c1_ts_aroma"
@@ -153,25 +155,27 @@ extract_xcp<-function(paths_=paths,
 # Combine timeseries data from 2 sessions =========
 #**************************************************
 
-combine_ts<-function(path_exp="C:/Users/NICT_WS/Dropbox/temp",
-                     list_src=list(list("dir"="403_c1_ts_acompcor","ses"=1),
-                                   list("dir"="404_c2_ts_acompcor","ses"=2)),
-                     dir_dst="400_ts_acompcor",
+combine_ts<-function(#path_exp="C:/Users/NICT_WS/Dropbox/temp",
+                     path_exp="J:/MRI_img/pnTTC/preproc",
                      
-                     #list_src=list(list("dir"="405_c1_ts_acompcor_gsr","ses"=1),
-                     #              list("dir"="406_c2_ts_acompcor_gsr","ses"=2)),
-                     #dir_dst="410_ts_acompcor_gsr",
+                     #list_src=list(list("dir"="413_c1_ts_acompcor","ses"=1),
+                     #              list("dir"="414_c2_ts_acompcor","ses"=2)),
+                     #dir_dst="400_ts_acompcor",
                      
-                     #list_src=list(list("dir"="407_c1_ts_aroma","ses"=1),
-                     #              list("dir"="408_c2_ts_aroma","ses"=2)),
+                     list_src=list(list("dir"="415_c1_ts_acompcor_gsr","ses"=1),
+                                   list("dir"="416_c2_ts_acompcor_gsr","ses"=2)),
+                     dir_dst="410_ts_acompcor_gsr",
+                     
+                     #list_src=list(list("dir"="417_c1_ts_aroma","ses"=1),
+                     #              list("dir"="418_c2_ts_aroma","ses"=2)),
                      #dir_dst="420_ts_aroma",
                      
-                     #list_src=list(list("dir"="409_c1_ts_aroma_gsr","ses"=1),
-                     #              list("dir"="410_c2_ts_aroma_gsr","ses"=2)),
+                     #list_src=list(list("dir"="419_c1_ts_aroma_gsr","ses"=1),
+                     #              list("dir"="420_c2_ts_aroma_gsr","ses"=2)),
                      #dir_dst="430_ts_aroma_gsr",
                      
-                     #list_src=list(list("dir"="411_c1_ts_36p","ses"=1),
-                     #              list("dir"="412_c2_ts_36p","ses"=2)),
+                     #list_src=list(list("dir"="421_c1_ts_36p","ses"=1),
+                     #              list("dir"="422_c2_ts_36p","ses"=2)),
                      #dir_dst="440_ts_36p",
                      
                      list_atlas_=list_atlas){
@@ -183,12 +187,14 @@ combine_ts<-function(path_exp="C:/Users/NICT_WS/Dropbox/temp",
     for (src in list_src){
       dir_src<-src$dir
       path_file_in<-file.path(path_exp,dir_src,"output",paste("atl-",atlas,"_ts.csv",sep=""))
+      #print(path_file_in)
       df_out_add<-read.csv(path_file_in)
       df_out_add<-cbind(ses=src$ses,df_out_add)
       df_out<-rbind(df_out,df_out_add)
     }
     file_out<-paste("atl-",atlas,"_ts.csv",sep="")
     path_file_out<-file.path(path_exp,dir_dst,"output",file_out)
+    #print(path_file_out)
     write.csv(df_out,path_file_out,row.names=F)
   }
   print("Finished combine_ts().")

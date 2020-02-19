@@ -411,13 +411,17 @@ class ExtractNifti():
 
 class ExtractQuality():
     def __init__(self,
-        path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/403_c1_xcp_acompcor',
-        path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/423_c1_quality_acompcor',
+        #path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/403_c1_xcp_acompcor',
+        #path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/423_c1_quality_acompcor',
         #path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/404_c2_xcp_acompcor',
         #path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/424_c2_quality_acompcor',
+        #path_input='J:/MRI_img/pnTTC/preproc/405_c1_xcp_acompcor_gsr',
+        #path_output='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP/395_c1_quality',
+        path_input='J:/MRI_img/pnTTC/preproc/406_c2_xcp_acompcor_gsr',
+        path_output='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP/396_c2_quality',
 
-        skip_mkdir=True,
-        skip_copylog=True,
+        skip_mkdir=False,
+        skip_copylog=False,
         filename_output='quality.csv'
         ):
 
