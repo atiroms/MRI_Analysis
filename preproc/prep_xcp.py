@@ -218,7 +218,7 @@ class PrepXCP():
         suffix_img='_ses-02_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz',
         file_design='fc-aroma_gsr_20200114.dsn',
 
-         #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/401_c1_fmriprep',
+        #path_fmriprep='/media/veracrypt2/MRI_img/pnTTC/preproc/401_c1_fmriprep',
         #path_exp='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/411_c1_xcp_36p',
         #file_id='69_id_c1_t1exist_rsfmriexist.csv',
         #ses='ses-01',
