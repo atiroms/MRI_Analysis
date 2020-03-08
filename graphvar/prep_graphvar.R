@@ -9,14 +9,6 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#list_id_dir<-list("acompcor"=201,
-#                  "aroma"=211,
-#                  "acompcor_gsr"=231,
-#                  "aroma_gsr"=241,
-#                  "acompcor"=301,
-#                  "aroma"=311,
-#                  "acompcor_gsr"=331,
-#                  "aroma_gsr"=341)
 list_id_dir<-list("aroma"=211,
                   "acompcor_gsr"=231,
                   "aroma_gsr"=241,
@@ -25,8 +17,8 @@ list_id_dir<-list("aroma"=211,
                   "acompcor_gsr"=331,
                   "aroma_gsr"=341)
 
-dir_in<-"201_fc_acompcor"
-dir_out<-"400_fc_acompcor"
+dir_in<-"401_fc_acompcor"
+dir_out<-"401_fc_mat_acompcor"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
