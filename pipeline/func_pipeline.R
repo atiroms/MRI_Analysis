@@ -68,8 +68,8 @@ thresh_sign<-0.001
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 #list_id_dir<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
 #list_id_dir<-list("acompcor"=500)
-list_id_dir<-list("acompcor"=400)
-#list_id_dir<-list("acompcor_gsr"=410)
+#list_id_dir<-list("acompcor"=400)
+list_id_dir<-list("acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
