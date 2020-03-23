@@ -15,9 +15,14 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_in<-"202_fp_acompcor"
 #dir_out<-"205_fp_model_acompcor_test"
 dir_in<-"401_fp_acompcor"
-dir_out<-"403_fp_model_acompcor"
+#dir_out<-"403_fp_model_acompcor"
+dir_out<-"404_fp_variance_acompcor"
 
+
+# Parameters for all functions
 list_wave <- c(1,2)
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
+list_atlas<-"aal116"
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
@@ -30,6 +35,12 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
 
+## parameters for variance_fp()
+list_covar_variance<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+                          #"age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                          "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
+
+## Parameters for model_fp()
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                  "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
@@ -83,8 +94,6 @@ list_strat_tanner <-list("5by5"=list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
 #                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
 #list_strat_tanner <-NULL
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
 
 #thr_pvalue <- 0.05
 n_permutation<-1000
@@ -100,7 +109,7 @@ library(rowr)
 library(multcomp)
 library(parallel)
 library(DescTools)
-#library(ggplot2)
+library(ggplot2)
 #library(GGally)
 #library(igraph)
 #library(qgraph)
@@ -141,6 +150,309 @@ source(file.path(paths$script,"util/function.R"))
 #source(file.path(paths$script,util/glm_function.R"))
 source(file.path(paths$script,"util/plot.R"))
 #source(file.path(paths$script,"util/gta_function.R"))
+
+
+#**************************************************
+# Variance attribution ============================
+#**************************************************
+variance_fp<-function(paths_=paths,
+                      list_atlas_=list_atlas,list_wave_=list_wave,
+                      list_covar_variance_=list_covar_variance,
+                      list_mod_=list_mod,list_graph_=list_graph,subset_subj_=subset_subj,
+                      skip_ancova=T
+                      ){
+  print("Starting variance_fp().")
+  nullobj<-func_createdirs(paths_,str_proc="variance_fp()")
+  
+  # Load and subset clinical data according to specified subsetting condition and covariate availability
+  print('Loading clinical data.')
+  #list_covar_variance<-list("age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+  #                          "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
+                                     list_covar=list_covar_variance_,rem_na_clin=T)
+  df_clin<-data_clin$df_clin
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  
+  #df_out_lm<-df_out_aic<-NULL
+  #list_src_ancova<-NULL
+  
+  for (atlas in list_atlas_){
+    # Load fingerprint data
+    df_fp<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep="")))
+    
+    list_measure<-sort(unique(as.character(df_fp$measure)))
+    #df_join<-NULL
+    for (measure in list_measure){
+      print(paste("Atlas: ",atlas,", Measure: ",measure,sep=""))
+      df_fp_meas<-df_fp[df_fp$measure==measure,]
+      
+      # Create list of subjects who meet subsetting condition and whose MRI data exist
+      list_id_subj_exist<-list()
+      for (ses in list_wave_){
+        id_subj_exist_ses<-sort(unique(c(df_fp_meas[df_fp_meas$from_ses==ses,'from_ID_pnTTC'],
+                                         df_fp_meas[df_fp_meas$to_ses==ses,'to_ID_pnTTC'])))
+        id_subj_subset_ses<-df_clin[df_clin$ses==ses,"ID_pnTTC"]
+        id_subj_exist_ses<-intersect(id_subj_exist_ses,id_subj_subset_ses)
+        list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist_ses)
+      }
+      
+      # Identify subjects with longitudinal data
+      #list_id_subj_exist_twice<-sort(intersect(list_id_subj_exist[["1"]],
+      #                                         list_id_subj_exist[["2"]]))
+      #n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
+      #df_fp_meas<-df_fp_meas[df_fp_meas$from_ID_pnTTC %in% list_id_subj_exist_twice
+      #                       & df_fp_meas$to_ID_pnTTC %in% list_id_subj_exist_twice,]
+      
+      # Create list of groups
+      list_group<-sort(unique(c(as.character(df_fp_meas$group_1),
+                                as.character(df_fp_meas$group_2))))
+      if ("whole" %in% list_group){
+        list_group<-c("whole",list_group[list_group!="whole"])
+      }
+      n_group<-length(list_group)
+      
+      df_zr<-data.frame()
+      df_stat_zr<-data.frame()
+      list_groups<-NULL
+      for (idx_group_1 in seq(n_group)){
+        for (idx_group_2 in seq(idx_group_1,n_group)){
+          group_1<-list_group[idx_group_1]
+          group_2<-list_group[idx_group_2]
+          list_groups<-c(list_groups,paste(group_1,group_2,sep="-"))
+          
+          # Prepare dataframe for variance calculation
+          df_fp_group<-df_fp_meas[df_fp_meas$group_1==group_1 & df_fp_meas$group_2==group_2,]
+          df_fp_group<-inner_join(df_fp_group,df_clin,by=c("from_ID_pnTTC"="ID_pnTTC","from_ses"="ses"))
+          colnames(df_fp_group)[colnames(df_fp_group)=="sex"]<-"from_sex"
+          colnames(df_fp_group)[colnames(df_fp_group)=="tanner"]<-"from_tanner"
+          df_fp_group<-inner_join(df_fp_group,df_clin,by=c("to_ID_pnTTC"="ID_pnTTC","to_ses"="ses"))
+          colnames(df_fp_group)[colnames(df_fp_group)=="sex"]<-"to_sex"
+          colnames(df_fp_group)[colnames(df_fp_group)=="tanner"]<-"to_tanner"
+          
+          df_zr_group<-data.frame()
+          df_stat_zr_group<-data.frame()
+          
+          # M+F Group similarity
+          list_zr<-df_fp_group$z_r
+          df_zr_group<-rbind(df_zr_group,data.frame(strat="group",z_r=list_zr))
+          df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat="group",mean_z_r=mean(list_zr),
+                                  n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M+F Group + sex similarity
+          list_zr<-df_fp_group[df_fp_group$from_sex==df_fp_group$to_sex,"z_r"]
+          df_zr_group<-rbind(df_zr_group,data.frame(strat="group+sex",z_r=list_zr))
+          df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat="group+sex",mean_z_r=mean(list_zr),
+                                  n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M+F Group + wave similarity
+          list_zr<-df_fp_group[df_fp_group$from_ses==df_fp_group$to_ses,"z_r"]
+          df_zr_group<-rbind(df_zr_group,data.frame(strat="group+wave",z_r=list_zr))
+          df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat="group+wave",mean_z_r=mean(list_zr),
+                                                              n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M+F Group (+ sex) + individual similarity
+          list_zr<-df_fp_group[df_fp_group$from_ID_pnTTC==df_fp_group$to_ID_pnTTC,"z_r"]
+          df_zr_group<-rbind(df_zr_group,data.frame(strat="group+individual",z_r=list_zr))
+          df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat="group+individual",mean_z_r=mean(list_zr),
+                                  n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M+F Calculate relative mean_z_r
+          max_mean<-max(df_stat_zr_group$mean_z_r)
+          df_stat_zr_group$rel_mean_z_r<-df_stat_zr_group$mean_z_r/max_mean
+          df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=c("sex","wave","individual"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
+                                  rel_mean_z_r=c(df_stat_zr_group[df_stat_zr_group$strat=="group+sex","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group","rel_mean_z_r"],
+                                                 df_stat_zr_group[df_stat_zr_group$strat=="group+wave","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group","rel_mean_z_r"],
+                                                 df_stat_zr_group[df_stat_zr_group$strat=="group+individual","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group+sex","rel_mean_z_r"])))
+          
+          # M prepare dataframe
+          df_fp_male<-df_fp_group[df_fp_group$from_sex==1 & df_fp_group$to_sex==1,]
+          df_zr_male<-data.frame()
+          df_stat_zr_male<-data.frame()
+          # M Group similarity
+          list_zr<-df_fp_male$z_r
+          df_zr_male<-rbind(df_zr_male,data.frame(strat="male_group",z_r=list_zr))
+          df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat="male_group",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M Group + wave similarity
+          list_zr<-df_fp_male[df_fp_male$from_ses==df_fp_male$to_ses,"z_r"]
+          df_zr_male<-rbind(df_zr_male,data.frame(strat="male_group+wave",z_r=list_zr))
+          df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat="male_group+wave",mean_z_r=mean(list_zr),
+                                                              n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M Group + individual similarity
+          list_zr<-df_fp_male[df_fp_male$from_ID_pnTTC==df_fp_male$to_ID_pnTTC,"z_r"]
+          df_zr_male<-rbind(df_zr_male,data.frame(strat="male_group+individual",z_r=list_zr))
+          df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat="male_group+individual",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M Group + Tanner similarity
+          list_zr<-df_fp_male[df_fp_male$from_tanner==df_fp_male$to_tanner,"z_r"]
+          df_zr_male<-rbind(df_zr_male,data.frame(strat="male_group+tanner",z_r=list_zr))
+          df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat="male_group+tanner",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M Group + individual + Tanner similarity
+          list_zr<-df_fp_male[df_fp_male$from_ID_pnTTC==df_fp_male$to_ID_pnTTC 
+                              & df_fp_male$from_tanner==df_fp_male$to_tanner,"z_r"]
+          df_zr_male<-rbind(df_zr_male,data.frame(strat="male_group+individual+tanner",z_r=list_zr))
+          df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat="male_group+individual+tanner",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # M Calculate relative mean_z_r
+          max_mean<-max(df_stat_zr_male$mean_z_r)
+          df_stat_zr_male$rel_mean_z_r<-df_stat_zr_male$mean_z_r/max_mean
+          df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat=c("male_individual","male_wave","male_tanner","male_individual+tanner"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
+                                                            rel_mean_z_r=c(df_stat_zr_male[df_stat_zr_male$strat=="male_group+individual","rel_mean_z_r"]-df_stat_zr_male[df_stat_zr_male$strat=="male_group","rel_mean_z_r"],
+                                                                           df_stat_zr_male[df_stat_zr_male$strat=="male_group+wave","rel_mean_z_r"]-df_stat_zr_male[df_stat_zr_male$strat=="male_group","rel_mean_z_r"],
+                                                                           df_stat_zr_male[df_stat_zr_male$strat=="male_group+tanner","rel_mean_z_r"]-df_stat_zr_male[df_stat_zr_male$strat=="male_group","rel_mean_z_r"],
+                                                                           df_stat_zr_male[df_stat_zr_male$strat=="male_group+individual+tanner","rel_mean_z_r"]-df_stat_zr_male[df_stat_zr_male$strat=="male_group+tanner","rel_mean_z_r"])))
+          
+          # F prepare dataframe
+          df_fp_female<-df_fp_group[df_fp_group$from_sex==2 & df_fp_group$to_sex==2,]
+          df_zr_female<-data.frame()
+          df_stat_zr_female<-data.frame()
+          # F Group similarity
+          list_zr<-df_fp_female$z_r
+          df_zr_female<-rbind(df_zr_female,data.frame(strat="female_group",z_r=list_zr))
+          df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat="female_group",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # F Group + wave similarity
+          list_zr<-df_fp_female[df_fp_female$from_ses==df_fp_female$to_ses,"z_r"]
+          df_zr_female<-rbind(df_zr_female,data.frame(strat="female_group+wave",z_r=list_zr))
+          df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat="female_group+wave",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # F Group + individual similarity
+          list_zr<-df_fp_female[df_fp_female$from_ID_pnTTC==df_fp_female$to_ID_pnTTC,"z_r"]
+          df_zr_female<-rbind(df_zr_female,data.frame(strat="female_group+individual",z_r=list_zr))
+          df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat="female_group+individual",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # F Group + Tanner similarity
+          list_zr<-df_fp_female[df_fp_female$from_tanner==df_fp_female$to_tanner,"z_r"]
+          df_zr_female<-rbind(df_zr_female,data.frame(strat="female_group+tanner",z_r=list_zr))
+          df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat="female_group+tanner",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # F Group + individual + Tanner similarity
+          list_zr<-df_fp_female[df_fp_female$from_ID_pnTTC==df_fp_female$to_ID_pnTTC 
+                              & df_fp_female$from_tanner==df_fp_female$to_tanner,"z_r"]
+          df_zr_female<-rbind(df_zr_female,data.frame(strat="female_group+individual+tanner",z_r=list_zr))
+          df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat="female_group+individual+tanner",mean_z_r=mean(list_zr),
+                                                            n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
+          # F Calculate relative mean_z_r
+          max_mean<-max(df_stat_zr_female$mean_z_r)
+          df_stat_zr_female$rel_mean_z_r<-df_stat_zr_female$mean_z_r/max_mean
+          df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat=c("female_individual","female_wave","female_tanner","female_individual+tanner"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
+                                                            rel_mean_z_r=c(df_stat_zr_female[df_stat_zr_female$strat=="female_group+individual","rel_mean_z_r"]-df_stat_zr_female[df_stat_zr_female$strat=="female_group","rel_mean_z_r"],
+                                                                           df_stat_zr_female[df_stat_zr_female$strat=="female_group+wave","rel_mean_z_r"]-df_stat_zr_female[df_stat_zr_female$strat=="female_group","rel_mean_z_r"],
+                                                                           df_stat_zr_female[df_stat_zr_female$strat=="female_group+tanner","rel_mean_z_r"]-df_stat_zr_female[df_stat_zr_female$strat=="female_group","rel_mean_z_r"],
+                                                                           df_stat_zr_female[df_stat_zr_female$strat=="female_group+individual+tanner","rel_mean_z_r"]-df_stat_zr_female[df_stat_zr_female$strat=="female_group+tanner","rel_mean_z_r"])))
+          
+          # Concatenate dataframe
+          df_zr_group<-data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                  rbind(df_zr_group,df_zr_male,df_zr_female))
+          df_zr<-rbind(df_zr,df_zr_group)
+          df_stat_zr_group<-data.frame(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                       rbind(df_stat_zr_group,df_stat_zr_male,df_stat_zr_female))
+          df_stat_zr<-rbind(df_stat_zr,df_stat_zr_group)
+        }
+      } # End of loop over groups
+      
+      # Save results
+      write.csv(df_zr,file.path(paths_$output,"output",paste("atl-",atlas,"_msr-",measure,"_zr.csv",sep="")),row.names=F)
+      write.csv(df_stat_zr,file.path(paths_$output,"output",paste("atl-",atlas,"_msr-",measure,"_stat_zr.csv",sep="")),row.names=F)
+      
+      # Graphical output
+      df_stat_zr$groups=paste(as.character(df_stat_zr$group_1),as.character(df_stat_zr$group_2),sep="-")
+      label_groups<-NULL
+      for (groups in list_groups){
+        label_groups<-c(label_groups,paste(capitalize(substring(groups,1,gregexpr("-",groups)[[1]][1]-1)),
+                              capitalize(substring(groups,gregexpr("-",groups)[[1]][1]+1)),sep=" - "))
+      }
+      # M+F absolute
+      df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("group","group+sex","group+wave","group+individual"),]
+      plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=mean_z_r,fill=strat))
+             + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+             + geom_errorbar(aes(ymin=mean_z_r-sd_z_r,ymax=mean_z_r+sd_z_r),width=.1,position=position_dodge(0.7))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,max(df_stat_zr_plot$mean_z_r)+max(df_stat_zr_plot$sd_z_r)+0.1))
+             + scale_fill_brewer(palette="Greys",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint similarity attribution, ",atlas,sep=""))
+             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                     legend.position="top",legend.justification="left",legend.direction="vertical")
+             )
+      ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-mf_fp_similarity.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+      # M+F relative
+      df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("group","sex","individual"),]
+      plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=rel_mean_z_r,fill=factor(strat,levels=c("group","sex","individual"))))
+             + geom_bar(stat="identity",color="white",width=0.5,position=position_stack(vjust=0,reverse=T))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
+             + scale_fill_brewer(palette="Greys",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
+             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                     legend.position="top",legend.justification="left",legend.direction="vertical")
+      )
+      ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-mf_fp_similarity_rel.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+      # M absolute
+      df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("male_group","male_group+wave","male_group+individual",
+                                                          "male_group+tanner","male_group+individual+tanner"),]
+      plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=mean_z_r,fill=strat))
+             + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+             + geom_errorbar(aes(ymin=mean_z_r-sd_z_r,ymax=mean_z_r+sd_z_r),width=.1,position=position_dodge(0.7))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,max(df_stat_zr_plot$mean_z_r)+max(df_stat_zr_plot$sd_z_r)+0.1))
+             + scale_fill_brewer(palette="Blues",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint similarity attribution, ",atlas,sep=""))
+             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                     legend.position="top",legend.justification="left",legend.direction="vertical")
+      )
+      ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-m_fp_similarity.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+      # M relative
+      df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("male_group","male_tanner","male_individual+tanner"),]
+      plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=rel_mean_z_r,fill=factor(strat,levels=c("male_group","male_tanner","male_individual+tanner"))))
+             + geom_bar(stat="identity",color="white",width=0.5,position=position_stack(vjust=0,reverse=T))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
+             + scale_fill_brewer(palette="Blues",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
+             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                     legend.position="top",legend.justification="left",legend.direction="vertical")
+      )
+      ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-m_fp_similarity_rel.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+      # F absolute
+      df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("female_group","female_group+wave","female_group+individual",
+                                                          "female_group+tanner","female_group+individual+tanner"),]
+      plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=mean_z_r,fill=strat))
+             + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+             + geom_errorbar(aes(ymin=mean_z_r-sd_z_r,ymax=mean_z_r+sd_z_r),width=.1,position=position_dodge(0.7))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,max(df_stat_zr_plot$mean_z_r)+max(df_stat_zr_plot$sd_z_r)+0.1))
+             + scale_fill_brewer(palette="Reds",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint similarity attribution, ",atlas,sep=""))
+             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                     legend.position="top",legend.justification="left",legend.direction="vertical")
+      )
+      ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-f_fp_similarity.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+      # F relative
+      df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("female_group","female_tanner","female_individual+tanner"),]
+      plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=rel_mean_z_r,fill=factor(strat,levels=c("female_group","female_tanner","female_individual+tanner"))))
+             + geom_bar(stat="identity",color="white",width=0.5,position=position_stack(vjust=0,reverse=T))
+             + scale_x_discrete(limits = list_groups,labels = label_groups)
+             + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
+             + scale_fill_brewer(palette="Reds",direction=-1,name="Stratification")
+             + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
+             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                     legend.position="top",legend.justification="left",legend.direction="vertical")
+      )
+      ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-f_fp_similarity_rel.eps",sep=""),plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+      
+    }
+  }
+  print("Finished variance_fp()")
+}
 
 
 #**************************************************

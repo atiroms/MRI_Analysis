@@ -22,8 +22,12 @@ list_id_dir<-list("acompcor"=201,
 #dir_out<-"901_graph_test"
 #dir_in<-"202_graph_acompcor"
 #dir_out<-"203_graph_acompcor"
-dir_in<-"232_graph_acompcor_gsr"
-dir_out<-"233_graph_acompcor_gsr"
+#dir_in<-"232_graph_acompcor_gsr"
+#dir_out<-"233_graph_acompcor_gsr"
+#dir_in<-"402_graph_acompcor"
+#dir_out<-"404_graph_acompcor"
+dir_in<-"402.1_graph_acompcor"
+dir_out<-"403.1_graph_acompcor"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
@@ -31,9 +35,14 @@ list_atlas<-"power264"
 #list_metric_local=c("degrees_und","efficiency_local_bin","rich_club_bu2")
 #list_metric_global=c("efficiency_bin","charpath_B_radius",
 #                      "charpath_B_diameter","smallworldness_bu")
-list_metric_local=c("degrees_und","efficiency_local_bin")
-list_metric_global=c("efficiency_bin","charpath_B_radius",
-                      "charpath_B_diameter")
+#list_metric_local=c("degrees_und","efficiency_local_bin")
+#list_metric_global=c("efficiency_bin","charpath_B_radius",
+#                      "charpath_B_diameter")
+list_metric_local="efficiency_local_bin"
+list_metric_global="smallworldness_bu"
+#list_metric_local="efficiency_local_bin"
+#list_metric_global=c("modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
+
 
 #**************************************************
 # Libraries =======================================

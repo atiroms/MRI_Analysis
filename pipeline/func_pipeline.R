@@ -50,8 +50,8 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_start<-202
-suffix_dir<-"acompcor"
+id_dir_start<-412
+suffix_dir<-"acompcor_gsr"
 
 #dir_summary<-"300_fp_model_summary"
 dir_summary<-"301_fp_model_summary"
@@ -66,13 +66,19 @@ thresh_sign<-0.001
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-list_id_dir<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
-list_id_dir<-list("acompcor"=500)
+#list_id_dir<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
+#list_id_dir<-list("acompcor"=500)
+#list_id_dir<-list("acompcor"=400)
+#list_id_dir<-list("acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
+list_id_dir<-list("aroma"=420,"aroma_gsr"=430,"36p"=440)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-c("aal116","gordon333","power264","shen268")
-list_atlas<-"aal116"
+list_atlas<-c("aal116","gordon333","power264","shen268")
+#list_atlas<-"aal116"
+#list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
+#              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
+#              "shen268")
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
@@ -283,7 +289,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   }
   
   # #2 Hormone
-  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir,sep='_')
+  dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   for (idx_hormone in names(list_hormone_)){
     id_dir_model_fp<-id_dir_model_fp+0.1
     print(paste("Hormone: ",list_hormone[[idx_hormone]][["label"]],sep=""))
