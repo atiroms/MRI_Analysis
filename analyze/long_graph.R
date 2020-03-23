@@ -11,16 +11,23 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/graph_GV"
 #dir_in <-"203_graph_acompcor"
 #dir_out <-"204_gamm_graph_acompcor"
-dir_in <-"233_graph_acompcor_gsr"
-dir_out <-"234_gamm_graph_acompcor_gsr"
+#dir_in <-"233_graph_acompcor_gsr"
+#dir_out <-"234_gamm_graph_acompcor_gsr"
+dir_in <-"403_graph_acompcor"
+dir_out <-"404_gamm_graph_acompcor"
+
 
 list_wave<-c(1,2)
 
 #list_metric_local<-c("degrees_und","efficiency_local_bin")
 #list_metric_global<-c("efficiency_bin","charpath_B_radius","charpath_B_diameter")
 #list_metric_local<-c("efficiency_local_bin")
-list_metric_local<-NULL
-list_metric_global<-c("efficiency_bin","efficiency_local_bin")
+#list_metric_local<-NULL
+#list_metric_global<-c("efficiency_bin","efficiency_local_bin")
+
+list_metric_local=NULL
+list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
+
 
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
 #                 "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
