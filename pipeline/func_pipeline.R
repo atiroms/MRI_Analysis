@@ -50,8 +50,8 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_start<-412
-suffix_dir<-"acompcor_gsr"
+id_dir_start<-402
+suffix_dir<-"acompcor"
 
 #dir_summary<-"300_fp_model_summary"
 dir_summary<-"301_fp_model_summary"
@@ -82,10 +82,12 @@ list_atlas<-c("aal116","gordon333","power264","shen268")
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
-                             list("key"="W1_Censor","condition"="<126")),
+#                             list("key"="W1_Censor","condition"="<126")),
+                             list("key"="W1_Censor","condition"="<101")),
                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
-                             list("key"="W2_Censor","condition"="<126")))
+#                             list("key"="W2_Censor","condition"="<126")))
+                             list("key"="W2_Censor","condition"="<101")))
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                  "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
@@ -274,7 +276,8 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   # Fingerprint to GLM / ANCOVA of fingerprint difference
   # #1 Tanner stage
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  id_dir_cnt<-id_dir_cnt+1
+  #id_dir_cnt<-id_dir_cnt+1
+  id_dir_cnt<-id_dir_cnt+2
   id_dir_model_fp<-id_dir_cnt
   for (idx_type_tanner in names(list_type_tanner_)){
     id_dir_model_fp<-id_dir_model_fp+0.1
