@@ -50,7 +50,7 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_start<-402
+id_dir_start<-450
 suffix_dir<-"acompcor"
 
 #dir_summary<-"300_fp_model_summary"
@@ -231,7 +231,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
                     list_graph_hormone_=list_graph_hormone,
                     list_hormone_=list_hormone,
                     subset_subj_=subset_subj,n_permutation_=n_permutation,
-                    skip_ts2fc=TRUE,skip_fc2fp=TRUE,skip_fp2id=TRUE){
+                    skip_ts2fc=FALSE,skip_fc2fp=FALSE,skip_fp2id=FALSE){
   
   print('Starting pipe_func().')
   
@@ -276,8 +276,8 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   # Fingerprint to GLM / ANCOVA of fingerprint difference
   # #1 Tanner stage
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
-  #id_dir_cnt<-id_dir_cnt+1
-  id_dir_cnt<-id_dir_cnt+3
+  id_dir_cnt<-id_dir_cnt+1
+  #id_dir_cnt<-id_dir_cnt+3
   id_dir_model_fp<-id_dir_cnt
   for (idx_type_tanner in names(list_type_tanner_)){
     id_dir_model_fp<-id_dir_model_fp+0.1
