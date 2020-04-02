@@ -413,8 +413,8 @@ class ExtractQuality():
         #path_output='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP/395_c1_quality',
         #path_input='J:/MRI_img/pnTTC/preproc/406_c2_xcp_acompcor_gsr',
         #path_output='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP/396_c2_quality',
-        path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/434_c1_xcp_acompcor',
-        path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/454_c1_quality_acompcor',
+        path_input='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/434_c2_xcp_acompcor',
+        path_output='/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc/454_c2_quality_acompcor',
 
         skip_mkdir=False,
         skip_copylog=False,
