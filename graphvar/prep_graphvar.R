@@ -9,13 +9,19 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-list_id_dir<-list("aroma"=211,
-                  "acompcor_gsr"=231,
-                  "aroma_gsr"=241,
-                  "acompcor"=301,
-                  "aroma"=311,
-                  "acompcor_gsr"=331,
-                  "aroma_gsr"=341)
+#list_id_dir<-list("aroma"=211,
+#                  "acompcor_gsr"=231,
+#                  "aroma_gsr"=241,
+#                  "acompcor"=301,
+#                  "aroma"=311,
+#                  "acompcor_gsr"=331,
+#                  "aroma_gsr"=341)
+list_id_dir<-list(#"acompcor"=401,
+                  "acompcor_gsr"=411,
+                  "aroma"=421,
+                  "aroma_gsr"=431,
+                  "36p"=441)
+
 
 dir_in<-"401_fc_acompcor"
 dir_out<-"401_fc_mat_acompcor"
@@ -98,7 +104,7 @@ prep_graphvar<-function(paths_=paths,
                         key_grp="group_3"
                         ){
   print("Starting prep_graphvar()")
-  nullobj<-func_createdirs(paths_)
+  nullobj<-func_createdirs(paths_,"prep_graphvar()")
   dict_roi<-func_dict_roi(paths_)
   
   for (atlas in list_atlas_){
