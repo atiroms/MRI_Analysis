@@ -58,8 +58,8 @@ dir_summary<-"500_fp_model_summary"
 
 #list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
 list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
-#thresh_sign<-0.05
-thresh_sign<-0.001
+thresh_sign<-0.05
+#thresh_sign<-0.001
 
 #list_id_dir<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
 
@@ -196,7 +196,13 @@ summarize_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
       
       # Load GLM/GAM results
       df_fp_glm<-read.csv(file.path(path_dir_in,"fp_glm.csv"))
-      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      
+      # All groups
+      #df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      # Whole-whole only
+      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_
+                         & df_fp_glm$group_1=="whole" & df_fp_glm$group_2=="whole",]
+      
       df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_fp_glm))
       
       if (dim(df_sign)[1]>0){
