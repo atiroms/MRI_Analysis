@@ -302,7 +302,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     id_dir_model_fp<-id_dir_model_fp+0.1
     print(paste("Hormone: ",list_hormone[[idx_hormone]][["label"]],sep=""))
     list_covar_hormone_[["hormone"]]<-list_hormone[[idx_hormone]]
-    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir,idx_hormone,sep='_')
+    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir_,idx_hormone,sep='_')
     paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
     nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
                       list_wave_=list_wave_,list_covar_=list_covar_hormone_,
