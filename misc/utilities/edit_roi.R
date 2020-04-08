@@ -1,5 +1,62 @@
 library(dplyr)
 
+####
+
+dir_exp<-'C:/Users/atiro/Dropbox/MRI_img/pnTTC/puberty/common'
+list_atlas<-c('gordon333','power264','schaefer100x7','schaefer100x17',
+              'schaefer200x7','schaefer200x17','schaefer400x7','schaefer400x17')
+
+df_group<-read.csv(file.path(dir_exp,'convertRoi.csv'))
+df_group<-df_group[,c('atlas','group_1','group_2','group_3')]
+
+
+df_out<-data.frame()
+for (atlas in list_atlas){
+  df_affiliation<-read.csv(file.path(dir_exp,'XCP_default_plus_Shen_2/atlas',atlas,
+                                     paste(atlas,'CommunityAffiliation.1D',sep='')),header=F)
+  df_names_node<-read.csv(file.path(dir_exp,'XCP_default_plus_Shen_2/atlas',atlas,
+                                    paste(atlas,'NodeNames.txt',sep='')),header=F)
+  df_node<-cbind(df_affiliation,df_names_node)
+  colnames(df_node)<-c('id_group','label_short')
+  df_node$atlas<-atlas
+  df_node$number<-seq(dim(df_node)[1])
+  df_node$id<-paste(atlas,sprintf("%05d",df_node$number),sep="_")
+  df_names_com<-read.csv(file.path(dir_exp,'XCP_default_plus_Shen_2/atlas',atlas,
+                               paste(atlas,'CommunityNames.txt',sep='')),header=F)
+  colnames(df_names_com)<-'group_1'
+  df_names_com$id_group<-seq(dim(df_names_com)[1])
+  
+  df_out_add<-left_join(df_node,df_names_com,by='id_group')
+  #df_out_add<-df_out_add[,c('id','group_1')]
+  df_out_add<-left_join(df_out_add,df_group,by=c('atlas','group_1'))
+  if (atlas=="gordon333"){
+    for (number in seq(dim(df_out_add)[1])){
+      label_short<-as.character(df_out_add[number,"label_short"])
+      label<-paste(substr(label_short,1,1),substr(label_short,3,nchar(label_short)),sep=' ')
+      df_out_add[number,"label"]<-label
+    }
+  }else if (atlas=="power264"){
+    df_out_add$label<-df_out_add$label_short
+  }else if (grepl("schaefer",atlas)){
+    for (number in seq(dim(df_out_add)[1])){
+      label_short<-as.character(df_out_add[number,"label_short"])
+      if (startsWith(label_short,"RH_")){
+        label<-paste("R",substr(label_short,4,nchar(label_short)),sep=' ')
+        df_out_add[number,"label"]<-label
+      }else if (startsWith(label_short,"LH_")){
+        label<-paste("L",substr(label_short,4,nchar(label_short)),sep=' ')
+        df_out_add[number,"label"]<-label
+      }
+    }
+  }
+  df_out<-rbind(df_out,df_out_add)
+
+}
+df_out<-df_out[,c('id','atlas','number','label_short','label','group_1','group_2','group_3')]
+write.csv(df_out,file.path(dir_exp,'roi_converted.csv'),row.names=F)
+
+
+####
 
 dir_exp<-"C:/Users/atiro/Dropbox/temp/Shen_to_ICBM/roi_dictionary/source"
 

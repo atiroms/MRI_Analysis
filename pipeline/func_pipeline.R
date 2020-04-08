@@ -67,15 +67,15 @@ thresh_sign<-0.05
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
-#list_id_dir<-list("acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
-#list_id_dir<-list("aroma"=420,"aroma_gsr"=430,"36p"=440)
+
+#list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
+list_id_dir<-list("aroma"=420)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("aal116","gordon333","power264","shen268")
-#list_atlas<-"aal116"
-#list_atlas<-"power264"
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+
 #list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
 #              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
 #              "shen268")
@@ -169,11 +169,11 @@ n_permutation<-1000
 # Summarize model_fp() results ====================
 #**************************************************
 
-summarize_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
+sum_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
                           list_type_tanner_=list_type_tanner,
                           list_term_summary_=list_term_summary,thresh_sign_=thresh_sign
                           ){
-  print("Starting summarize_model().")
+  print("Starting sum_model().")
   
   df_out<-data.frame()
   flag_in_first<-T
@@ -220,8 +220,8 @@ summarize_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
       }
     }
   }
-  write.csv(df_out,file.path(path_dir_out,"summary_model.csv"),row.names=F)
-  print("Finished summarize_model().")
+  write.csv(df_out,file.path(path_dir_out,"sum_model_fp.csv"),row.names=F)
+  print("Finished sum_model().")
 }
 
 
@@ -293,7 +293,8 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
                       list_wave_=list_wave_,list_covar_=list_covar_,
                       list_mod_=list_mod_,list_graph_=list_graph_,list_strat_tanner=list_strat_tanner_,
-                      subset_subj_=subset_subj_,skip_ancova=F)
+                      #subset_subj_=subset_subj_,skip_ancova=F)
+                      subset_subj_=subset_subj_,skip_ancova=T)
   }
   
   # #2 Hormone
