@@ -11,16 +11,17 @@
 #**************************************************
 
 #path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-#path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
-path_in <- "J:/MRI_img/pnTTC/preproc"
+path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+#path_in <- "J:/MRI_img/pnTTC/preproc"
 
 #path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 #path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
-path_out <- "J:/MRI_img/pnTTC/preproc"
+#path_out <- "J:/MRI_img/pnTTC/preproc"
+path_out<- '/media/atiroms/MORITA_HDD8/MRI_img/pnTTC/preproc'
 
-dir_in <-"433_c1_xcp_acompcor"
-dir_out<-"443_c1_ts_acompcor"
-ses<-'ses-01'
+#dir_in <-"433_c1_xcp_acompcor"
+#dir_out<-"443_c1_ts_acompcor"
+#ses<-'ses-01'
 
 #dir_in <-"434_c2_xcp_acompcor"
 #dir_out<-"444_c2_ts_acompcor"
@@ -46,9 +47,9 @@ ses<-'ses-01'
 #dir_out<-"419_c1_ts_aroma_gsr"
 #ses<-'ses-01'
 
-#dir_in <-"410_c2_xcp_aroma_gsr"
-#dir_out<-"420_c2_ts_aroma_gsr"
-#ses<-'ses-02'
+dir_in <-"410_c2_xcp_aroma_gsr"
+dir_out<-"420_c2_ts_aroma_gsr"
+ses<-'ses-02'
 
 #dir_in <-"411_c1_xcp_36p"
 #dir_out<-"421_c1_ts_36p"
@@ -59,11 +60,11 @@ ses<-'ses-01'
 #ses<-'ses-02'
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-c("aal116","gordon333","power264","shen268")
 #list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
 #              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
 #              "shen268")
-list_atlas<-"power264"
+#list_atlas<-"power264"
 
 
 #**************************************************
