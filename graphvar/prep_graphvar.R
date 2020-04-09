@@ -26,7 +26,7 @@ list_id_dir<-list(#"acompcor"=401,
 dir_in<-"401_fc_acompcor"
 dir_out<-"401_fc_mat_acompcor"
 #dir_in<-"421_fc_aroma"
-dir_out<-"421_fc_mat_aroma"
+#dir_out<-"421_fc_mat_aroma"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
