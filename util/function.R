@@ -54,8 +54,8 @@ func_createdirs<-function(paths,str_proc="",copy_log=T){
 #**************************************************
 func_dict_roi<-function(paths,
                         file_roi="ROI.csv"){
-  #output<-read.csv(file.path(paths$common,file_roi))
-  output<-read.csv('/home/atiroms/Dropbox/temp/ROI.csv')
+  output<-read.csv(file.path(paths$common,file_roi))
+  #output<-read.csv('/home/atiroms/Dropbox/temp/ROI.csv')
   return(output)
 }
 
