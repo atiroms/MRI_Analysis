@@ -159,7 +159,7 @@ extract_xcp<-function(paths_=paths,
 #**************************************************
 
 combine_ts<-function(#path_exp="C:/Users/NICT_WS/Dropbox/temp",
-                     path_exp="I:/MRI_img/pnTTC/preproc",
+                     path_exp="D:/MRI_img/pnTTC/preproc",
                      
                      #list_src=list(list("dir"="443_c1_ts_acompcor","ses"=1),
                      #              list("dir"="444_c2_ts_acompcor","ses"=2)),
@@ -169,13 +169,13 @@ combine_ts<-function(#path_exp="C:/Users/NICT_WS/Dropbox/temp",
                      #              list("dir"="416_c2_ts_acompcor_gsr","ses"=2)),
                      #dir_dst="410_ts_acompcor_gsr",
                      
-                     list_src=list(list("dir"="417_c1_ts_aroma","ses"=1),
-                                   list("dir"="418_c2_ts_aroma","ses"=2)),
-                     dir_dst="420_ts_aroma",
+                     #list_src=list(list("dir"="417_c1_ts_aroma","ses"=1),
+                     #              list("dir"="418_c2_ts_aroma","ses"=2)),
+                     #dir_dst="420_ts_aroma",
                      
-                     #list_src=list(list("dir"="419_c1_ts_aroma_gsr","ses"=1),
-                     #              list("dir"="420_c2_ts_aroma_gsr","ses"=2)),
-                     #dir_dst="430_ts_aroma_gsr",
+                     list_src=list(list("dir"="419_c1_ts_aroma_gsr","ses"=1),
+                                   list("dir"="420_c2_ts_aroma_gsr","ses"=2)),
+                     dir_dst="430_ts_aroma_gsr",
                      
                      #list_src=list(list("dir"="421_c1_ts_36p","ses"=1),
                      #              list("dir"="422_c2_ts_36p","ses"=2)),
