@@ -12,12 +12,12 @@
 
 #path_in <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
 path_in <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
-#path_in <- "J:/MRI_img/pnTTC/preproc"
+#path_in <- "I:/MRI_img/pnTTC/preproc"
 
 #path_out <- "/media/veracrypt2/MRI_img/pnTTC/preproc"
-#path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
-#path_out <- "J:/MRI_img/pnTTC/preproc"
-path_out<- '/media/atiroms/MORITA_HDD8/MRI_img/pnTTC/preproc'
+path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
+#path_out <- "I:/MRI_img/pnTTC/preproc"
+#path_out<- '/media/atiroms/MORITA_HDD8/MRI_img/pnTTC/preproc'
 
 #dir_in <-"433_c1_xcp_acompcor"
 #dir_out<-"443_c1_ts_acompcor"
@@ -43,13 +43,13 @@ path_out<- '/media/atiroms/MORITA_HDD8/MRI_img/pnTTC/preproc'
 #dir_out<-"418_c2_ts_aroma"
 #ses<-'ses-02'
 
-#dir_in <-"409_c1_xcp_aroma_gsr"
-#dir_out<-"419_c1_ts_aroma_gsr"
-#ses<-'ses-01'
+dir_in <-"409_c1_xcp_aroma_gsr"
+dir_out<-"419_c1_ts_aroma_gsr"
+ses<-'ses-01'
 
-dir_in <-"410_c2_xcp_aroma_gsr"
-dir_out<-"420_c2_ts_aroma_gsr"
-ses<-'ses-02'
+#dir_in <-"410_c2_xcp_aroma_gsr"
+#dir_out<-"420_c2_ts_aroma_gsr"
+#ses<-'ses-02'
 
 #dir_in <-"411_c1_xcp_36p"
 #dir_out<-"421_c1_ts_36p"
@@ -60,10 +60,10 @@ ses<-'ses-02'
 #ses<-'ses-02'
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("aal116","gordon333","power264","shen268")
-#list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
-#              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
-#              "shen268")
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
+              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
+              "shen268")
 #list_atlas<-"power264"
 
 
@@ -161,9 +161,9 @@ extract_xcp<-function(paths_=paths,
 combine_ts<-function(#path_exp="C:/Users/NICT_WS/Dropbox/temp",
                      path_exp="D:/MRI_img/pnTTC/preproc",
                      
-                     list_src=list(list("dir"="443_c1_ts_acompcor","ses"=1),
-                                   list("dir"="444_c2_ts_acompcor","ses"=2)),
-                     dir_dst="450_ts_acompcor",
+                     #list_src=list(list("dir"="443_c1_ts_acompcor","ses"=1),
+                     #              list("dir"="444_c2_ts_acompcor","ses"=2)),
+                     #dir_dst="450_ts_acompcor",
                      
                      #list_src=list(list("dir"="415_c1_ts_acompcor_gsr","ses"=1),
                      #              list("dir"="416_c2_ts_acompcor_gsr","ses"=2)),
@@ -173,9 +173,9 @@ combine_ts<-function(#path_exp="C:/Users/NICT_WS/Dropbox/temp",
                      #              list("dir"="418_c2_ts_aroma","ses"=2)),
                      #dir_dst="420_ts_aroma",
                      
-                     #list_src=list(list("dir"="419_c1_ts_aroma_gsr","ses"=1),
-                     #              list("dir"="420_c2_ts_aroma_gsr","ses"=2)),
-                     #dir_dst="430_ts_aroma_gsr",
+                     list_src=list(list("dir"="419_c1_ts_aroma_gsr","ses"=1),
+                                   list("dir"="420_c2_ts_aroma_gsr","ses"=2)),
+                     dir_dst="430_ts_aroma_gsr",
                      
                      #list_src=list(list("dir"="421_c1_ts_36p","ses"=1),
                      #              list("dir"="422_c2_ts_36p","ses"=2)),
