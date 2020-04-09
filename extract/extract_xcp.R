@@ -35,17 +35,17 @@ path_out <- "/media/atiroms/SSD_2TB/MRI_img/pnTTC/preproc"
 #dir_out<-"416_c2_ts_acompcor_gsr"
 #ses<-'ses-02'
 
-dir_in <-"407_c1_xcp_aroma"
-dir_out<-"417_c1_ts_aroma"
-ses<-'ses-01'
+#dir_in <-"407_c1_xcp_aroma"
+#dir_out<-"417_c1_ts_aroma"
+#ses<-'ses-01'
 
 #dir_in <-"408_c2_xcp_aroma"
 #dir_out<-"418_c2_ts_aroma"
 #ses<-'ses-02'
 
-#dir_in <-"409_c1_xcp_aroma_gsr"
-#dir_out<-"419_c1_ts_aroma_gsr"
-#ses<-'ses-01'
+dir_in <-"409_c1_xcp_aroma_gsr"
+dir_out<-"419_c1_ts_aroma_gsr"
+ses<-'ses-01'
 
 #dir_in <-"410_c2_xcp_aroma_gsr"
 #dir_out<-"420_c2_ts_aroma_gsr"
