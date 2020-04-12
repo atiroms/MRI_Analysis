@@ -9,12 +9,11 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/graph_GV"
-#dir_in <-"203_graph_acompcor"
-#dir_out <-"204_gamm_graph_acompcor"
-#dir_in <-"233_graph_acompcor_gsr"
-#dir_out <-"234_gamm_graph_acompcor_gsr"
-dir_in <-"403_graph_acompcor"
-dir_out <-"404_gamm_graph_acompcor"
+
+#dir_in <-"403_graph_acompcor"
+#dir_out <-"404_gamm_graph_acompcor"
+dir_in <-"423_graph_aroma"
+dir_out <-"424_gamm_graph_aroma"
 
 
 list_wave<-c(1,2)

@@ -68,8 +68,8 @@ confound2_aroma[2]=1
 confound2_past[2]=0
 confound2_dx[2]=0
 confound2_sq[2]=1
-#confound2_censor[2]=0
-confound2_censor[2]=1
+confound2_censor[2]=0
+#confound2_censor[2]=1
 confound2_censor_contig[2]=0
 # following line added >> deleted
 #confound2_framewise[2]=rmss:0.2,dv:2
@@ -105,7 +105,8 @@ regress_process[3]=DMT-TMP-REG
 
 #fcon_atlas[4]=shen268
 #fcon_atlas[4]=aal116,power264,gordon333,shen268
-fcon_atlas[4]=all
+#fcon_atlas[4]=all
+fcon_atlas[4]=power264
 fcon_metric[4]=corrcoef
 fcon_thr[4]=N
 fcon_window[4]=10

@@ -50,15 +50,16 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_start<-412
-suffix_dir<-"acompcor_gsr"
+id_dir_start<-450
+suffix_dir<-"acompcor"
 
 #dir_summary<-"300_fp_model_summary"
-dir_summary<-"301_fp_model_summary"
+dir_summary<-"500_fp_model_summary"
 
+#list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
 list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
-#thresh_sign<-0.05
-thresh_sign<-0.001
+thresh_sign<-0.05
+#thresh_sign<-0.001
 
 #list_id_dir<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
 
@@ -66,16 +67,15 @@ thresh_sign<-0.001
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-#list_id_dir<-list("acompcor"=302,"aroma"=312,"acompcor_gsr"=332,"aroma_gsr"=342)
-#list_id_dir<-list("acompcor"=500)
-#list_id_dir<-list("acompcor"=400)
-#list_id_dir<-list("acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
-list_id_dir<-list("aroma"=420,"aroma_gsr"=430,"36p"=440)
+
+#list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
+list_id_dir<-list("aroma_gsr"=430)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("aal116","gordon333","power264","shen268")
-#list_atlas<-"aal116"
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+
 #list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
 #              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
 #              "shen268")
@@ -83,9 +83,11 @@ list_atlas<-c("aal116","gordon333","power264","shen268")
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
                              list("key"="W1_Censor","condition"="<126")),
+#                             list("key"="W1_Censor","condition"="<151")),
                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
+#                             list("key"="W2_Censor","condition"="<151")))
 list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
                  "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
@@ -167,11 +169,11 @@ n_permutation<-1000
 # Summarize model_fp() results ====================
 #**************************************************
 
-summarize_model<-function(dir_summary_=dir_summary,
-                          list_id_dir_=list_id_dir,list_type_tanner_=list_type_tanner,
+sum_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
+                          list_type_tanner_=list_type_tanner,
                           list_term_summary_=list_term_summary,thresh_sign_=thresh_sign
                           ){
-  print("Starting summarize_model().")
+  print("Starting sum_model().")
   
   df_out<-data.frame()
   flag_in_first<-T
@@ -182,12 +184,10 @@ summarize_model<-function(dir_summary_=dir_summary,
       
       # Prepare directories
       id_dir_in<-as.character(list_id_dir[[i_id_dir]]+3+0.1*i_type_tanner)
-      dir_in<-paste(id_dir_in,"fp_model",
-                    label_preproc,label_type_tanner,
-                    sep="_")
+      dir_in<-paste(id_dir_in,"fp_model",label_preproc,label_type_tanner,sep="_")
       paths<-func_path(dir_in=dir_in,dir_out=dir_summary_)
       if (flag_in_first){
-        nullobj<-func_createdirs(paths)
+        nullobj<-func_createdirs(paths,str_proc="model_fp()")
         flag_in_first<-F
       }
       
@@ -196,14 +196,21 @@ summarize_model<-function(dir_summary_=dir_summary,
       
       # Load GLM/GAM results
       df_fp_glm<-read.csv(file.path(path_dir_in,"fp_glm.csv"))
-      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      
+      # All groups
+      #df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      # Whole-whole only
+      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_
+                         & df_fp_glm$group_1=="whole" & df_fp_glm$group_2=="whole",]
+      
+      df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_fp_glm))
       
       if (dim(df_sign)[1]>0){
-        df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
+        #df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
         for (i_row in seq(dim(df_sign)[1])){
           filename_src<-paste("atl-",df_sign[i_row,"atlas"],"_msr-",df_sign[i_row,"measure"],
-                              "_grp-",df_sign[i_row,"group"],"_mod-",df_sign[i_row,"model"],
-                               "_plt-tdiff_fp_glm.eps",sep="")
+                              "_grp1-",df_sign[i_row,"group_1"],"_grp2-",df_sign[i_row,"group_2"],
+                              "_mod-",df_sign[i_row,"model"],"_plt-d(t)_fp_glm.eps",sep="")
           filename_dst<-paste("prc-",label_preproc,"_tnr-",label_type_tanner,"_",filename_src,sep="")
           if (!file.exists(file.path(path_dir_out,filename_dst))){
             file.copy(file.path(path_dir_in,filename_src),path_dir_out)
@@ -213,8 +220,8 @@ summarize_model<-function(dir_summary_=dir_summary,
       }
     }
   }
-  write.csv(df_out,file.path(path_dir_out,"summary_model.csv"),row.names=F)
-  print("Finished summarize_model().")
+  write.csv(df_out,file.path(path_dir_out,"sum_model_fp.csv"),row.names=F)
+  print("Finished sum_model().")
 }
 
 
@@ -229,7 +236,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
                     list_graph_hormone_=list_graph_hormone,
                     list_hormone_=list_hormone,
                     subset_subj_=subset_subj,n_permutation_=n_permutation,
-                    skip_ts2fc=TRUE,skip_fc2fp=TRUE,skip_fp2id=TRUE){
+                    skip_ts2fc=FALSE,skip_fc2fp=FALSE,skip_fp2id=FALSE){
   
   print('Starting pipe_func().')
   
@@ -275,6 +282,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
   # #1 Tanner stage
   dir_in<-paste(as.character(id_dir_fp),"fp",suffix_dir_,sep='_')
   id_dir_cnt<-id_dir_cnt+1
+  #id_dir_cnt<-id_dir_cnt+3
   id_dir_model_fp<-id_dir_cnt
   for (idx_type_tanner in names(list_type_tanner_)){
     id_dir_model_fp<-id_dir_model_fp+0.1
@@ -285,7 +293,8 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
                       list_wave_=list_wave_,list_covar_=list_covar_,
                       list_mod_=list_mod_,list_graph_=list_graph_,list_strat_tanner=list_strat_tanner_,
-                      subset_subj_=subset_subj_,skip_ancova=F)
+                      #subset_subj_=subset_subj_,skip_ancova=F)
+                      subset_subj_=subset_subj_,skip_ancova=T)
   }
   
   # #2 Hormone
@@ -294,7 +303,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     id_dir_model_fp<-id_dir_model_fp+0.1
     print(paste("Hormone: ",list_hormone[[idx_hormone]][["label"]],sep=""))
     list_covar_hormone_[["hormone"]]<-list_hormone[[idx_hormone]]
-    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir,idx_hormone,sep='_')
+    dir_out<-paste(as.character(id_dir_model_fp),"fp_model",suffix_dir_,idx_hormone,sep='_')
     paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
     nullobj<-model_fp(paths_=paths,list_atlas_=list_atlas_,
                       list_wave_=list_wave_,list_covar_=list_covar_hormone_,
