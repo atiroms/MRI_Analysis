@@ -25,9 +25,10 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
   path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_in     <- file.path(path_root,path_exp_,dir_in_)
-  path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+  path_io     <- file.path(path_root,path_exp_)
+  path_in     <- file.path(path_io,dir_in_)
+  path_out    <- file.path(path_io,dir_out_)
+  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
                  "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
   return(output)
 }
@@ -56,8 +57,10 @@ suffix_dir<-"acompcor"
 #dir_summary<-"300_fp_model_summary"
 dir_summary<-"500_fp_model_summary"
 
-#list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
-list_term_summary<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
+list_term_summary_tanner<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
+list_term_summary_hormone<-c("diff_hormone","mean_hormone","s(diff_hormone)","s(mean_hormone)")
+list_tanner_hormone<-list("max"=0.1,"full"=0.2,"gonadal"=0.3,"adrenal"=0.4,
+                          "testo"=0.5,"corti"=0.6,"dhea"=0.7,"dheas"=0.8)
 thresh_sign<-0.05
 #thresh_sign<-0.001
 
@@ -68,8 +71,9 @@ thresh_sign<-0.05
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
-list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
-#list_id_dir<-list("aroma_gsr"=430)
+#list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
+#list_id_dir<-list("acompcor"=400,"aroma_gsr"=430,"36p"=440)
+list_id_dir<-list("aroma"=420,"aroma_gsr"=430)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
@@ -165,19 +169,56 @@ n_permutation<-1000
 #**************************************************
 
 
+
+#**************************************************
+# Pickup model_fp() results =======================
+#**************************************************
+
+pickup_model<-function(dir_summary_=dir_summary,
+                       list_id_dir_=list_id_dir,list_tanner_hormone_=list_tanner_hormone,
+                       list_term_summary_tanner_=list_term_summary_tanner,
+                       list_term_summary_hormone_=list_term_summary_hormone,
+                       thresh_sign_=thresh_sign
+                       ){
+  print("Starting pickup_model().")
+  paths<-func_path(dir_in=dir_summary_,dir_out=dir_summary_)
+  df_pickup<-read.csv(file.path(paths$input,"output","sum_model_fp_pickup.csv"))
+  for (i_row in seq(dim(df_pickup)[1])){
+    label_preproc<-as.character(df_pickup[i_row,"preproc"])
+    label_tanner_hormone<-as.character(df_pickup[i_row,"tanner_hormone"])
+    id_dir_in<-as.numeric(list_id_dir_[label_preproc])+3+as.numeric(list_tanner_hormone_[label_tanner_hormone])
+    dir_pickup<-file.path(paste(as.character(id_dir_in),"fp_model",label_preproc,label_tanner_hormone,sep="_"),"output")
+    filename_src<-paste("atl-",df_pickup[i_row,"atlas"],"_msr-",df_pickup[i_row,"measure"],
+                        "_grp1-",df_pickup[i_row,"group_1"],"_grp2-",df_pickup[i_row,"group_2"],
+                        "_mod-",df_pickup[i_row,"model"],"_plt-d(t)_fp_glm.eps",sep="")
+    filename_dst<-paste("prc-",label_preproc,"_tnrhrm-",label_tanner_hormone,"_",filename_src,sep="")
+    dirpath_src<-file.path(paths$io,dir_pickup)
+    dirpath_dst<-file.path(paths$output,"output")
+    if (!file.exists(filepath_dst)){
+      file.copy(file.path(dirpath_src,filename_src),dirpath_dst)
+      file.rename(file.path(dirpath_dst,filename_src),file.path(dirpath_dst,filename_dst))
+    }
+  }
+  print("Finished pickup_model().")
+}
+
 #**************************************************
 # Summarize model_fp() results ====================
 #**************************************************
 
 sum_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
                     list_type_tanner_=list_type_tanner,
-                    list_term_summary_=list_term_summary,thresh_sign_=thresh_sign
+                    list_hormone_=list_hormone,
+                    list_term_summary_tanner_=list_term_summary_tanner,
+                    list_term_summary_hormone_=list_term_summary_hormone,
+                    thresh_sign_=thresh_sign
                     ){
   print("Starting sum_model().")
   
   df_out<-data.frame()
   flag_in_first<-T
   for (i_id_dir in seq(length(list_id_dir_))){
+    # Loop over Tanner stage types
     for (i_type_tanner in seq(length(list_type_tanner_))){
       label_preproc<-names(list_id_dir_)[[i_id_dir]]
       label_type_tanner<-names(list_type_tanner_)[[i_type_tanner]]
@@ -187,9 +228,48 @@ sum_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
       dir_in<-paste(id_dir_in,"fp_model",label_preproc,label_type_tanner,sep="_")
       paths<-func_path(dir_in=dir_in,dir_out=dir_summary_)
       if (flag_in_first){
-        nullobj<-func_createdirs(paths,str_proc="model_fp()")
+        nullobj<-func_createdirs(paths,str_proc="sum_model()")
         flag_in_first<-F
       }
+      
+      path_dir_in<-file.path(paths$input,"output")
+      path_dir_out<-file.path(paths$output,"output")
+      
+      # Load GLM/GAM results
+      df_fp_glm<-read.csv(file.path(path_dir_in,"fp_glm.csv"))
+      
+      # All groups
+      #df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_,]
+      # Whole-whole only
+      df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_tanner_ & df_fp_glm$p<thresh_sign_
+                         & df_fp_glm$group_1=="whole" & df_fp_glm$group_2=="whole",]
+      
+      df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_fp_glm))
+      
+      if (dim(df_sign)[1]>0){
+        #df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
+        for (i_row in seq(dim(df_sign)[1])){
+          filename_src<-paste("atl-",df_sign[i_row,"atlas"],"_msr-",df_sign[i_row,"measure"],
+                              "_grp1-",df_sign[i_row,"group_1"],"_grp2-",df_sign[i_row,"group_2"],
+                              "_mod-",df_sign[i_row,"model"],"_plt-d(t)_fp_glm.eps",sep="")
+          filename_dst<-paste("prc-",label_preproc,"_tnr-",label_type_tanner,"_",filename_src,sep="")
+          if (!file.exists(file.path(path_dir_out,filename_dst))){
+            file.copy(file.path(path_dir_in,filename_src),path_dir_out)
+            file.rename(file.path(path_dir_out,filename_src),file.path(path_dir_out,filename_dst))
+          }
+        }
+      }
+    }
+    
+    # Loop over Hormones
+    for (i_hormone in seq(length(list_hormone_))){
+      label_preproc<-names(list_id_dir_)[[i_id_dir]]
+      label_hormone<-names(list_hormone_)[[i_hormone]]
+      
+      # Prepare directories
+      id_dir_in<-as.character(list_id_dir[[i_id_dir]]+3+0.1*(length(list_type_tanner_)+i_hormone))
+      dir_in<-paste(id_dir_in,"fp_model",label_preproc,label_hormone,sep="_")
+      paths<-func_path(dir_in=dir_in,dir_out=dir_summary_)
       
       path_dir_in<-file.path(paths$input,"output")
       path_dir_out<-file.path(paths$output,"output")
@@ -203,15 +283,15 @@ sum_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
       df_sign<-df_fp_glm[df_fp_glm$term %in% list_term_summary_ & df_fp_glm$p<thresh_sign_
                          & df_fp_glm$group_1=="whole" & df_fp_glm$group_2=="whole",]
       
-      df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_fp_glm))
+      df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_hormone,df_fp_glm))
       
       if (dim(df_sign)[1]>0){
-        #df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_type_tanner,df_sign))
+        #df_out<-rbind(df_out,data.frame(preproc=label_preproc,tanner=label_hormone,df_sign))
         for (i_row in seq(dim(df_sign)[1])){
           filename_src<-paste("atl-",df_sign[i_row,"atlas"],"_msr-",df_sign[i_row,"measure"],
                               "_grp1-",df_sign[i_row,"group_1"],"_grp2-",df_sign[i_row,"group_2"],
                               "_mod-",df_sign[i_row,"model"],"_plt-d(t)_fp_glm.eps",sep="")
-          filename_dst<-paste("prc-",label_preproc,"_tnr-",label_type_tanner,"_",filename_src,sep="")
+          filename_dst<-paste("prc-",label_preproc,"_tnr-",label_hormone,"_",filename_src,sep="")
           if (!file.exists(file.path(path_dir_out,filename_dst))){
             file.copy(file.path(path_dir_in,filename_src),path_dir_out)
             file.rename(file.path(path_dir_out,filename_src),file.path(path_dir_out,filename_dst))
@@ -250,6 +330,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
     nullobj<-fc(paths_=paths,list_atlas_=list_atlas_)
   }else{
+    id_dir_cnt<-id_dir_cnt+1
     id_dir_fc<-id_dir_cnt
   }
   
@@ -262,6 +343,7 @@ pipe_func<-function(id_dir_start_=id_dir_start,suffix_dir_=suffix_dir,list_atlas
     paths<-func_path(dir_in_=dir_in,dir_out_=dir_out)
     nullobj<-fp_fc(paths_=paths,list_atlas_=list_atlas_)
   }else{
+    id_dir_cnt<-id_dir_cnt+1
     id_dir_fp<-id_dir_cnt
   }
   
@@ -325,7 +407,8 @@ pipe_func_multi<-function(list_id_dir_=list_id_dir,
                           list_mod_=list_mod,list_graph_=list_graph,
                           list_strat_tanner_=list_strat_tanner,list_type_tanner_=list_type_tanner,
                           subset_subj_=subset_subj,n_permutation_=n_permutation,
-                          skip_ts2fc=FALSE,skip_fc2fp=FALSE,skip_fp2id=TRUE){
+                          #skip_ts2fc=FALSE,skip_fc2fp=FALSE,skip_fp2id=TRUE){
+                          skip_ts2fc=TRUE,skip_fc2fp=TRUE,skip_fp2id=TRUE){
   
   print("Starting pipe_func_multi()")
   for (suffix_dir in names(list_id_dir_)){
