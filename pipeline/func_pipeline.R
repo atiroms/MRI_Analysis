@@ -68,8 +68,8 @@ thresh_sign<-0.05
 #                    "2"=list(list("key"="W2_T1QC","value"=1),
 #                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
 
-#list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
-list_id_dir<-list("aroma_gsr"=430)
+list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
+#list_id_dir<-list("aroma_gsr"=430)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
@@ -170,9 +170,9 @@ n_permutation<-1000
 #**************************************************
 
 sum_model<-function(dir_summary_=dir_summary,list_id_dir_=list_id_dir,
-                          list_type_tanner_=list_type_tanner,
-                          list_term_summary_=list_term_summary,thresh_sign_=thresh_sign
-                          ){
+                    list_type_tanner_=list_type_tanner,
+                    list_term_summary_=list_term_summary,thresh_sign_=thresh_sign
+                    ){
   print("Starting sum_model().")
   
   df_out<-data.frame()
