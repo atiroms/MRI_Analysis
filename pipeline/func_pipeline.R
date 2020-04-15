@@ -73,12 +73,13 @@ thresh_sign<-0.05
 
 #list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
 #list_id_dir<-list("acompcor"=400,"aroma_gsr"=430,"36p"=440)
-list_id_dir<-list("aroma"=420,"aroma_gsr"=430)
+list_id_dir<-list("acompcor"=400,"aroma_gsr"=430)
+#list_id_dir<-list("aroma"=420,"aroma_gsr"=430)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-c("aal116","gordon333","power264","shen268")
-list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+list_atlas<-c("aal116","gordon333","power264","shen268")
+#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
 #list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
 #              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
