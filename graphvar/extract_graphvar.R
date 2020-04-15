@@ -11,8 +11,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/graph_GV"
 
 #dir_in<-"402.1_graph_acompcor"
 #dir_out<-"403.1_graph_acompcor"
-dir_in<-"422.1_graph_aroma"
-dir_out<-"423.1_graph_aroma"
+dir_in<-"422.2_graph_aroma"
+dir_out<-"423.2_graph_aroma"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
@@ -24,10 +24,10 @@ list_atlas<-"shen268"
 #list_metric_local=c("degrees_und","efficiency_local_bin")
 #list_metric_global=c("efficiency_bin","charpath_B_radius",
 #                      "charpath_B_diameter")
-list_metric_local="efficiency_local_bin"
-list_metric_global="smallworldness_bu"
 #list_metric_local="efficiency_local_bin"
-#list_metric_global=c("modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
+#list_metric_global="smallworldness_bu"
+list_metric_local="efficiency_local_bin"
+list_metric_global=c("modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
 
 
 #**************************************************

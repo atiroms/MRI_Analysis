@@ -66,6 +66,7 @@ list_graph_diff <-list("d(h)"=list("title"="Testosterone diff effect","x_axis"="
                                    "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
 
+
 #**************************************************
 # Libraries =======================================
 #**************************************************
