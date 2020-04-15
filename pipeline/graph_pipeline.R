@@ -149,7 +149,8 @@ gamm_gta_multi<-function(list_id_dir_=list_id_dir_graph,list_wave_=list_wave,sub
   for (suffix_dir in names(list_id_dir_)){
     id_dir_graph<-list_id_dir_[[suffix_dir]]
     dir_in<-paste(as.character(id_dir_graph),"graph",suffix_dir,sep='_')
-    id_dir_gamm<-id_dir_graph+1
+    #id_dir_gamm<-id_dir_graph+1
+    id_dir_gamm<-id_dir_graph+2
     for (idx_tanner in names(list_tanner_)){
       id_dir_gamm<-id_dir_gamm+0.1
       print(paste("Preproc: ",suffix_dir,", Tanner: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
