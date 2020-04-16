@@ -57,7 +57,7 @@ list_wave<-c(1,2)
 #list_metric_global=c("efficiency_bin","efficiency_local_bin")
 
 list_metric_local=NULL
-list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
+list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","efficiency_local_bin","small_world_propensity_bin")
 
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
