@@ -194,7 +194,7 @@ plot_cor_heatmap<-function(input,label=NULL){
   
   if(!is.null(label)){
     plot<-(plot
-           + geom_text(aes(label=label),color="white",fontface="bold"))
+           + geom_text(aes(label=label),color="black",fontface="bold"))
   }
   return(plot)
 }

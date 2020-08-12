@@ -104,9 +104,10 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
   path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_in     <- file.path(path_root,path_exp_,dir_in_)
-  path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+  path_io     <- file.path(path_root,path_exp_)
+  path_in     <- file.path(path_io,dir_in_)
+  path_out    <- file.path(path_io,dir_out_)
+  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
                  "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
   return(output)
 }

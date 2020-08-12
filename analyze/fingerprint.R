@@ -14,15 +14,20 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"202_fp_acompcor"
 #dir_out<-"205_fp_model_acompcor_test"
-dir_in<-"401_fp_acompcor"
+#dir_in<-"401_fp_acompcor"
 #dir_out<-"403_fp_model_acompcor"
-dir_out<-"404_fp_variance_acompcor"
+#dir_out<-"404_fp_variance_acompcor"
+#dir_in<-"422_fp_aroma"
+#dir_out<-"424_fp_variance_aroma"
+dir_in<-"423.3_fp_model_aroma_gonadal"
+dir_out<-"423.3_fp_model_aroma_gonadal"
+
 
 
 # Parameters for all functions
 list_wave <- c(1,2)
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"aal116"
+list_atlas<-"shen268"
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
@@ -133,9 +138,10 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
   path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_in     <- file.path(path_root,path_exp_,dir_in_)
-  path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
+  path_io     <- file.path(path_root,path_exp_)
+  path_in     <- file.path(path_io,dir_in_)
+  path_out    <- file.path(path_io,dir_out_)
+  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
                  "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
   return(output)
 }
@@ -153,13 +159,57 @@ source(file.path(paths$script,"util/plot.R"))
 
 
 #**************************************************
+# heatmap subnetwork gamm fp results ==============
+#**************************************************
+heatmap_gammfp<-function(paths_=paths){
+  df_gammfp<-read.csv(file.path(paths_$input,"output","fp_glm.csv"))
+  df_gammfp<-df_gammfp[df_gammfp$atlas=="shen268" & df_gammfp$sex==2
+                       & df_gammfp$model=="ldm" & df_gammfp$term=="diff_tanner",]
+  list_group<-sort(unique(c(as.character(df_gammfp$group_1),as.character(df_gammfp$group_2))))
+  list_group<-list_group[list_group!="whole"]
+  df_gammfp<-df_gammfp[df_gammfp$group_1 %in% list_group
+                       & df_gammfp$group_2 %in% list_group,]
+  df_plot<-data.frame(matrix(ncol=length(list_group),nrow=length(list_group)))
+  colnames(df_plot)<-rownames(df_plot)<-list_group
+  df_sign<-data.frame(matrix(ncol=length(list_group),nrow=length(list_group)))
+  colnames(df_sign)<-rownames(df_sign)<-list_group
+  for (i_row in seq(dim(df_gammfp)[1])){
+    g1<-as.character(df_gammfp[i_row,"group_1"])
+    g2<-as.character(df_gammfp[i_row,"group_2"])
+    estimate<-as.numeric(df_gammfp[i_row,"estimate"])
+    if (df_gammfp[i_row,"p"]<0.001){
+      sign<-"**"
+    }else if (df_gammfp[i_row,"p"]<0.05){
+      sign<-"*"
+    }else{
+      sign<-""
+    }
+    
+    df_plot[g1,g2]<-df_plot[g2,g1]<-estimate
+    df_sign[g1,g2]<-df_sign[g2,g1]<-sign
+  }
+  plot<-plot_cor_heatmap(df_plot,df_sign)
+  suppressMessages(plot<-(plot
+                          + scale_fill_gradientn(colors = matlab.like2(100),
+                                                 lim=c(-max(max(df_plot),-min(df_plot)),max(max(df_plot),-min(df_plot))),
+                                                 name="beta")
+                          + ggtitle("Subnetwork-wise effect of Tanner difference")
+                          + theme(plot.title = element_text(hjust = 0.5),
+                                  axis.title=element_blank())))
+  ggsave(paste("atl-shen268_msr-fc_gammfp_subnetwork.eps",sep=""),plot=plot,device=cairo_ps,
+         path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+  
+}
+
+
+
+#**************************************************
 # Variance attribution ============================
 #**************************************************
 variance_fp<-function(paths_=paths,
                       list_atlas_=list_atlas,list_wave_=list_wave,
                       list_covar_variance_=list_covar_variance,
-                      list_mod_=list_mod,list_graph_=list_graph,subset_subj_=subset_subj,
-                      skip_ancova=T
+                      subset_subj_=subset_subj
                       ){
   print("Starting variance_fp().")
   nullobj<-func_createdirs(paths_,str_proc="variance_fp()")
@@ -291,8 +341,9 @@ variance_fp<-function(paths_=paths,
           df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat="male_group+individual+tanner",mean_z_r=mean(list_zr),
                                                             n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
           # M Calculate relative mean_z_r
-          max_mean<-max(df_stat_zr_male$mean_z_r)
-          df_stat_zr_male$rel_mean_z_r<-df_stat_zr_male$mean_z_r/max_mean
+          #max_mean<-max(df_stat_zr_male$mean_z_r)
+          #df_stat_zr_male$rel_mean_z_r<-df_stat_zr_male$mean_z_r/max_mean
+          df_stat_zr_male$rel_mean_z_r<-df_stat_zr_male$mean_z_r/df_stat_zr_male[df_stat_zr_male$strat=="male_group+individual+tanner","mean_z_r"]
           df_stat_zr_male<-rbind(df_stat_zr_male,data.frame(strat=c("male_individual","male_wave","male_tanner","male_individual+tanner"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
                                                             rel_mean_z_r=c(df_stat_zr_male[df_stat_zr_male$strat=="male_group+individual","rel_mean_z_r"]-df_stat_zr_male[df_stat_zr_male$strat=="male_group","rel_mean_z_r"],
                                                                            df_stat_zr_male[df_stat_zr_male$strat=="male_group+wave","rel_mean_z_r"]-df_stat_zr_male[df_stat_zr_male$strat=="male_group","rel_mean_z_r"],
@@ -330,8 +381,9 @@ variance_fp<-function(paths_=paths,
           df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat="female_group+individual+tanner",mean_z_r=mean(list_zr),
                                                             n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
           # F Calculate relative mean_z_r
-          max_mean<-max(df_stat_zr_female$mean_z_r)
-          df_stat_zr_female$rel_mean_z_r<-df_stat_zr_female$mean_z_r/max_mean
+          #max_mean<-max(df_stat_zr_female$mean_z_r)
+          #df_stat_zr_female$rel_mean_z_r<-df_stat_zr_female$mean_z_r/max_mean
+          df_stat_zr_female$rel_mean_z_r<-df_stat_zr_female$mean_z_r/df_stat_zr_female[df_stat_zr_female$strat=="female_group+individual+tanner","mean_z_r"]
           df_stat_zr_female<-rbind(df_stat_zr_female,data.frame(strat=c("female_individual","female_wave","female_tanner","female_individual+tanner"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
                                                             rel_mean_z_r=c(df_stat_zr_female[df_stat_zr_female$strat=="female_group+individual","rel_mean_z_r"]-df_stat_zr_female[df_stat_zr_female$strat=="female_group","rel_mean_z_r"],
                                                                            df_stat_zr_female[df_stat_zr_female$strat=="female_group+wave","rel_mean_z_r"]-df_stat_zr_female[df_stat_zr_female$strat=="female_group","rel_mean_z_r"],
@@ -373,7 +425,7 @@ variance_fp<-function(paths_=paths,
                      legend.position="top",legend.justification="left",legend.direction="vertical")
              )
       ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-mf_fp_similarity.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+             path=file.path(paths_$output,"output"),height=7,width=14,limitsize=F)
       # M+F relative
       df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("group","sex","individual"),]
       plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=rel_mean_z_r,fill=factor(strat,levels=c("group","sex","individual"))))
@@ -382,12 +434,12 @@ variance_fp<-function(paths_=paths,
              + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
              + scale_fill_brewer(palette="Greys",direction=-1,name="Stratification")
              + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
-             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + xlab("Subnetworks") + ylab("Relative mean z(r)") + theme_classic()
              + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
                      legend.position="top",legend.justification="left",legend.direction="vertical")
       )
       ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-mf_fp_similarity_rel.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+             path=file.path(paths_$output,"output"),height=7,width=14,limitsize=F)
       # M absolute
       df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("male_group","male_group+wave","male_group+individual",
                                                           "male_group+tanner","male_group+individual+tanner"),]
@@ -403,7 +455,7 @@ variance_fp<-function(paths_=paths,
                      legend.position="top",legend.justification="left",legend.direction="vertical")
       )
       ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-m_fp_similarity.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+             path=file.path(paths_$output,"output"),height=7,width=14,limitsize=F)
       # M relative
       df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("male_group","male_tanner","male_individual+tanner"),]
       plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=rel_mean_z_r,fill=factor(strat,levels=c("male_group","male_tanner","male_individual+tanner"))))
@@ -412,12 +464,12 @@ variance_fp<-function(paths_=paths,
              + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
              + scale_fill_brewer(palette="Blues",direction=-1,name="Stratification")
              + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
-             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + xlab("Subnetworks") + ylab("Relative mean z(r)") + theme_classic()
              + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
                      legend.position="top",legend.justification="left",legend.direction="vertical")
       )
       ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-m_fp_similarity_rel.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+             path=file.path(paths_$output,"output"),height=7,width=14,limitsize=F)
       # F absolute
       df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("female_group","female_group+wave","female_group+individual",
                                                           "female_group+tanner","female_group+individual+tanner"),]
@@ -433,7 +485,7 @@ variance_fp<-function(paths_=paths,
                      legend.position="top",legend.justification="left",legend.direction="vertical")
       )
       ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-f_fp_similarity.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+             path=file.path(paths_$output,"output"),height=7,width=14,limitsize=F)
       # F relative
       df_stat_zr_plot<-df_stat_zr[df_stat_zr$strat %in% c("female_group","female_tanner","female_individual+tanner"),]
       plot<-(ggplot(data=df_stat_zr_plot,aes(x=groups,y=rel_mean_z_r,fill=factor(strat,levels=c("female_group","female_tanner","female_individual+tanner"))))
@@ -442,12 +494,12 @@ variance_fp<-function(paths_=paths,
              + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
              + scale_fill_brewer(palette="Reds",direction=-1,name="Stratification")
              + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
-             + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+             + xlab("Subnetworks") + ylab("Relative mean z(r)") + theme_classic()
              + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
                      legend.position="top",legend.justification="left",legend.direction="vertical")
       )
       ggsave(paste("atl-",atlas,"_msr-",measure,"_sex-f_fp_similarity_rel.eps",sep=""),plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+             path=file.path(paths_$output,"output"),height=7,width=14,limitsize=F)
       
     }
   }

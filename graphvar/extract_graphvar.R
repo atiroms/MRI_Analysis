@@ -9,15 +9,6 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/graph_GV"
 
-list_id_dir<-list("acompcor"=201,
-                  "aroma"=211,
-                  "acompcor_gsr"=231,
-                  "aroma_gsr"=241,
-                  "acompcor"=301,
-                  "aroma"=311,
-                  "acompcor_gsr"=331,
-                  "aroma_gsr"=341)
-
 #dir_in<-"402.1_graph_acompcor"
 #dir_out<-"403.1_graph_acompcor"
 dir_in<-"422.2_graph_aroma"
@@ -25,7 +16,8 @@ dir_out<-"423.2_graph_aroma"
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-"power264"
+#list_atlas<-"power264"
+list_atlas<-"shen268"
 #list_metric_local=c("degrees_und","efficiency_local_bin","rich_club_bu2")
 #list_metric_global=c("efficiency_bin","charpath_B_radius",
 #                      "charpath_B_diameter","smallworldness_bu")

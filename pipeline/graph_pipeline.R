@@ -57,7 +57,7 @@ list_wave<-c(1,2)
 #list_metric_global=c("efficiency_bin","efficiency_local_bin")
 
 list_metric_local=NULL
-list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
+list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","efficiency_local_bin","small_world_propensity_bin")
 
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
@@ -149,7 +149,8 @@ gamm_gta_multi<-function(list_id_dir_=list_id_dir_graph,list_wave_=list_wave,sub
   for (suffix_dir in names(list_id_dir_)){
     id_dir_graph<-list_id_dir_[[suffix_dir]]
     dir_in<-paste(as.character(id_dir_graph),"graph",suffix_dir,sep='_')
-    id_dir_gamm<-id_dir_graph+1
+    #id_dir_gamm<-id_dir_graph+1
+    id_dir_gamm<-id_dir_graph+2
     for (idx_tanner in names(list_tanner_)){
       id_dir_gamm<-id_dir_gamm+0.1
       print(paste("Preproc: ",suffix_dir,", Tanner: ",list_tanner_[[idx_tanner]][["label"]],sep=""))

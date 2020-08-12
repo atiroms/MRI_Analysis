@@ -25,7 +25,7 @@ list_wave<-c(1,2)
 #list_metric_global<-c("efficiency_bin","efficiency_local_bin")
 
 list_metric_local=NULL
-list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","small_world_propensity_bin")
+list_metric_global=c("smallworldness_bu","modularity_QOut_und","modularity_louvain_QOut_und","efficiency_bin","efficiency_local_bin","small_world_propensity_bin")
 
 
 #list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
@@ -65,6 +65,7 @@ list_graph_diff <-list("d(h)"=list("title"="Testosterone diff effect","x_axis"="
                                                  "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                    "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                                 "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
+
 
 #**************************************************
 # Libraries =======================================
@@ -217,7 +218,8 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   
   # Load global graph data
   print('Loading global graph data.')
-  df_gta_global<-read.csv(file.path(paths_$input,"output",paste("atl-power264_graph_global.csv")))
+  #df_gta_global<-read.csv(file.path(paths_$input,"output",paste("atl-power264_graph_global.csv")))
+  df_gta_global<-read.csv(file.path(paths_$input,"output",paste("atl-shen268_graph_global.csv")))
   colnames(df_gta_global)[colnames(df_gta_global)=="ses"]<-"wave"
   
   # Join clinical and global graph data frames
@@ -251,7 +253,8 @@ gamm_gta<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
   if (!is.null(list_metric_local_)){
     # Load local graph data
     print('Loading local graph data.')
-    df_gta_local<-read.csv(file.path(paths_$input,"output",paste("atl-power264_graph_local.csv")))
+    #df_gta_local<-read.csv(file.path(paths_$input,"output",paste("atl-power264_graph_local.csv")))
+    df_gta_local<-read.csv(file.path(paths_$input,"output",paste("atl-shen268_graph_local.csv")))
     colnames(df_gta_local)[colnames(df_gta_local)=="ses"]<-"wave"
     
     # Join clinical and local graph data frames
