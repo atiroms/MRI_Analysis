@@ -1,5 +1,32 @@
 ##
 
+working_dir <- "C:/Users/atiro/Dropbox/MRI_img/pnTTC/puberty/common"
+file_in<-"sdq_1.csv"
+file_out<-"sdq_2.csv"
+file_id<-"CSUB.csv"
+
+df_in<-read.csv(file.path(working_dir,file_in))
+df_id<-read.csv(file.path(working_dir,file_id))
+
+
+df_out<-data.frame(matrix(ncol=ncol(df_in)+1,nrow=nrow(df_id)))
+colnames(df_out)<-c("ID_pnTTC",colnames(df_in))
+df_out[,1:2]<-df_id[,1:2]
+
+for (i in 1:nrow(df_out)){
+  id_ttc<-df_out[i,"ID_TTC"]
+  df_out[i,3:ncol(df_out)]<-df_in[df_in$ID_TTC==id_ttc,2:ncol(df_in)]
+}
+
+write.csv(df_out, file.path(working_dir,file_out),row.names=F)
+
+##
+
+
+
+
+##
+
 working_dir <- "D:/atiroms/Dropbox/MRI/Statistics/CommonData"
 input_filename<-"rsfMRI.csv"
 output_filename<-"rsfMRI2.csv"
