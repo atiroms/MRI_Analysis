@@ -19,15 +19,18 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_out<-"404_fp_variance_acompcor"
 #dir_in<-"422_fp_aroma"
 #dir_out<-"424_fp_variance_aroma"
-dir_in<-"423.3_fp_model_aroma_gonadal"
-dir_out<-"423.3_fp_model_aroma_gonadal"
+#dir_in<-"423.3_fp_model_aroma_gonadal"
+#dir_out<-"423.3_fp_model_aroma_gonadal"
+dir_in<-"422_fp_aroma"
+dir_out<-"426_fp_sdq_aroma"
 
 
 
 # Parameters for all functions
 list_wave <- c(1,2)
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-list_atlas<-"shen268"
+#list_atlas<-"shen268"
+list_atlas<-"aal116"
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
@@ -46,34 +49,57 @@ list_covar_variance<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max",
                           "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
 
 ## Parameters for model_fp()
-list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+list_covar<-list("sdq_td"=list("1"="W1_SDQ_td",     "2"="W2_SDQ_td",      "label"="SDQ_td"),
                  "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
-list_mod <- list("lin_diff"="value ~ diff_age + diff_tanner",
-                 "lin_diff_mean"="value ~ diff_age + diff_tanner + mean_tanner",
-                 "add_diff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
-                 "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+list_mod <- list("ld"= "value ~ diff_age + diff_sdq_td",
+                 "ldm"= "value ~ diff_age + diff_sdq_td + mean_sdq_td")
 list_graph <-list("adiff"=list("title"="Age diff effect","x_axis"="diff_age",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                  "tdiff"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
+                  "sdiff"=list("title"="SDQ diff effect","x_axis"="diff_sdq_td",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
-                  "tmean"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
+                  "smean"=list("title"="SDQ mean effect","x_axis"="mean_sdq_td",
                                "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
                                              "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
                                "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
                                             "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
-list_strat_tanner <-list("5by5"=list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
-                                     "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
-                         "3by3"=list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
-                                     "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
-                         "2by2"=list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
-                                     "2"=list("123"=c(1,2,3),"45"=c(4,5))))
+list_strat_tanner <-NULL
+
+
+#list_covar<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+#                 "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+#                 "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
+#list_mod <- list("lin_diff"="value ~ diff_age + diff_tanner",
+#                 "lin_diff_mean"="value ~ diff_age + diff_tanner + mean_tanner",
+#                 "add_diff"="value ~ s(diff_age,k=3) + s(diff_tanner,k=3)",
+#                 "add_diff_mean"="value ~ s(diff_age,k=3) + s(mean_tanner,k=3) + s(diff_tanner,k=3)")
+#list_graph <-list("adiff"=list("title"="Age diff effect","x_axis"="diff_age",
+#                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+#                  "tdiff"=list("title"="Tanner diff effect","x_axis"="diff_tanner",
+#                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))),
+#                  "tmean"=list("title"="Tanner mean effect","x_axis"="mean_tanner",
+#                               "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                             "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                               "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                            "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1))))
+#list_strat_tanner <-list("5by5"=list("1"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5),
+#                                     "2"=list("1"=1,"2"=2,"3"=3,"4"=4,"5"=5)),
+#                         "3by3"=list("1"=list("12"=c(1,2),"3"=3,"45"=c(4,5)),
+#                                     "2"=list("12"=c(1,2),"3"=3,"45"=c(4,5))),
+#                         "2by2"=list("1"=list("12"=c(1,2),"345"=c(3,4,5)),
+#                                     "2"=list("123"=c(1,2,3),"45"=c(4,5))))
 
 #list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
 #                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
