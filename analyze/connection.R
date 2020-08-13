@@ -41,7 +41,7 @@ list_wave <- c(1,2)
 #                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
 #                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
 
-list_covar<-list("sdq_td"=list("1"="W1_SDQ_td",     "2"="W2_SDQ_td",      "label"="SDQ_td"),
+list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
                  "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
                  "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
 
