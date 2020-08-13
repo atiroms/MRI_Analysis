@@ -10,10 +10,15 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-dir_in<-"201_fc_acompcor"
+#dir_in<-"201_fc_acompcor"
 #dir_out<-"401_fp_acompcor"
-dir_out<-"405_fc_diff_acompcor"
+#dir_out<-"405_fc_diff_acompcor"
+#list_atlas<-"aal116"
+
+dir_in<-"421_fc_aroma"
+dir_out<-"425_fc_gamm"
 list_atlas<-"aal116"
+#list_atlas<-"shen268"
 
 #dir_in<-"450_fc_test"
 #dir_out<-"451_gammfc_test"
@@ -29,12 +34,17 @@ list_atlas<-"aal116"
 
 list_wave <- c(1,2)
 
-list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-                 "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-                 "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
+#list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+#                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+#                 "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+#                 "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
+#                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
+#                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
+
+list_covar<-list("sdq_td"=list("1"="W1_SDQ_td",     "2"="W2_SDQ_td",      "label"="SDQ_td"),
                  "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
                  "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
+
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
@@ -43,20 +53,24 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
 
-list_mod <- list("l"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
+#list_mod <- list("l"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
                  #"a"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
                  #"q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
 
-list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
+list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
+
+#list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
                  #"sa"=list("title"="Age effect","var_exp"="s(age)"),
                  #"pa1"=list("title"="Age effect","var_exp"="poly(age, 2)1"),
                  #"pa2"=list("title"="Age effect","var_exp"="poly(age, 2)2"),
-                 "t"=list("title"="Testosterone effect","var_exp"="testo")
+                 #"t"=list("title"="Testosterone effect","var_exp"="testo")
                  #"st"=list("title"="Testosterone effect","var_exp"="s(testo)")
                  #"st"=list("title"="Testosterone effect","var_exp"="s(testo)"),
                  #"pt1"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)1"),
                  #"pt2"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)2")
-                 )
+                 #)
+
+list_plot <-list("sdq"=list("title"="SDQ effect","var_exp"="sdq_td"))
 
 
 list_type_p=c("p","p_bh","seed_p_bh")
