@@ -22,15 +22,15 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_in<-"423.3_fp_model_aroma_gonadal"
 #dir_out<-"423.3_fp_model_aroma_gonadal"
 dir_in<-"422_fp_aroma"
-dir_out<-"426_fp_sdq_aroma"
+dir_out<-"426_fp_model_aroma_sdq"
 
 
 
 # Parameters for all functions
 list_wave <- c(1,2)
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"shen268"
-list_atlas<-"aal116"
+#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
+list_atlas<-c("power264","shen268")
+#list_atlas<-"aal116"
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
 #                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
@@ -49,7 +49,7 @@ list_covar_variance<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max",
                           "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
 
 ## Parameters for model_fp()
-list_covar<-list("sdq_td"=list("1"="W1_SDQ_td",     "2"="W2_SDQ_td",      "label"="SDQ_td"),
+list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
                  "age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                  "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
 list_mod <- list("ld"= "value ~ diff_age + diff_sdq_td",
