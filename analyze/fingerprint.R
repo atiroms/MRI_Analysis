@@ -22,14 +22,14 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_in<-"423.3_fp_model_aroma_gonadal"
 #dir_out<-"423.3_fp_model_aroma_gonadal"
 dir_in<-"422_fp_aroma"
-dir_out<-"426_fp_model_aroma_sdq"
+dir_out<-"426.1_fp_model_aroma_sdq"
 
 
 
 # Parameters for all functions
 list_wave <- c(1,2)
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("power264","shen268")
+list_atlas<-c("aal116","gordon333","power264","shen268")
 #list_atlas<-"aal116"
 
 #subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
@@ -777,11 +777,13 @@ model_fp<-function(paths_=paths,
                                                list_id_subj_exist[["2"]]))
       n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
       
-      #list_group<-sort(unique(as.character(df_fp_meas$group)))
-      list_group<-sort(unique(c(as.character(df_fp_meas$group_1),as.character(df_fp_meas$group_2))))
-      if ("whole" %in% list_group){
-        list_group<-c("whole",list_group[list_group!="whole"])
-      }
+      # Disable subgroup-wise analysis
+      #list_group<-sort(unique(c(as.character(df_fp_meas$group_1),as.character(df_fp_meas$group_2))))
+      #if ("whole" %in% list_group){
+      #  list_group<-c("whole",list_group[list_group!="whole"])
+      #}
+      
+      list_group<-"whole"
       
       n_group<-length(list_group)
       for (idx_group_1 in seq(n_group)){
