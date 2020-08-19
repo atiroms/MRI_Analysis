@@ -13,6 +13,7 @@ library(dplyr)
 library(Hmisc)
 library(FactoMineR)
 library(missMDA)
+library(ica)
 #library(DescTools)
 
 
@@ -476,13 +477,11 @@ func_cor<-function(input){
 #**************************************************
 # General PCA calculation =========================
 #**************************************************
-func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
+func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   
   if (sum(is.na(df_src))>0){
     # Estimate number of dimensions
-    print("Estimating PCA dimension for data with missing values.")
     n_comp<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
-    print(paste("PCA dimension: ",as.character(n_comp),sep=""))
     
     # Impute data
     df_conn<-imputePCA(df_src,ncp=n_comp)$completeObs
@@ -490,6 +489,13 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
     n_comp<-nrow(df_src)-1
     df_conn<-df_src
   }
+  
+  if (!is.null(dim_ca)){
+    if(dim_ca<n_comp){
+      n_comp<-dim_ca
+    }
+  }
+  print(paste("PCA dimension: ",as.character(n_comp),sep=""))
 
   # PCA calculation
   data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = n_comp, graph = FALSE)
@@ -533,68 +539,56 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
 #**************************************************
 # General ICA calculation =========================
 #**************************************************
-func_ica<-function(df_src,df_var=NULL,df_indiv=NULL){
+func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   
-  #  dirname<-ExpDir("ICA")
-  #  data<-structural_data[-1]
-  #  indexcolumn<-structural_data[1]
-  #  ica <-icafast(data, nc=n_components,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
-  #  varfactor<-data.frame(ica$M)
-  #  varfactor<-cbind(colnames(data),ConvertID(colnames(data),roi_data,"ID_long","label_proper"),varfactor)
-  #  colnames(varfactor)<-c("ROI_ID","ROI_proper",sprintf("Dim_%02d",1:n_components))
-  #  rownames(varfactor)<-NULL
-  #  indfactor<-data.frame(ica$S)
-  #  colnames(indfactor)<-sprintf("Dim_%02d",1:n_components)
-  #  indfactor<-cbind(indexcolumn,indfactor)
-  #  varianceaccounted<-ica$vafs
-  #  
-  #  write.csv(varfactor, file.path(dirname,"VariableFactor.csv"),row.names=F)
-  #  write.csv(indfactor, file.path(dirname,"IndividualFactor.csv"),row.names=F)
-  #  write.csv(varianceaccounted, file.path(dirname,"VarianceAccounted.csv"))
-  #  clincorr<-MeasClinicalCorr(indfactor,dirname)
-  #  
-  #  return(list(varfactor,indfactor,varianceaccounted,clincorr))
-  
-
   n_comp<-nrow(df_src)-1
+  if (!is.null(dim_ca)){
+    if(dim_ca<n_comp){
+      n_comp<-dim_ca
+    }
+  }
+  
+  df_conn<-data.matrix(df_src)
   
   # ICA calculation
-  data_ica <-icafast(data, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
-  
+  #data_ica <-icafast(df_conn, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
+  data_ica <-icaimax(df_conn, nc=n_comp,center=TRUE)
   
   # Variable-Component matrix
   # Row: variable, Column: component(factor)
-  df_fac_var<-data.frame(data_pca$var$coord)
+  df_fac_var<-data.frame(data_ica$M)
   if(!is.null(df_var)){
     df_fac_var<-cbind(df_var,df_fac_var)
-    colnames(df_fac_var)<-c(colnames(df_var),sprintf("dim_%03d",1:ncp_estimate))
+    colnames(df_fac_var)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
   }else{
-    colnames(df_fac_var)<-sprintf("dim_%03d",1:ncp_estimate)
+    colnames(df_fac_var)<-sprintf("dim_%03d",1:n_comp)
   }
   rownames(df_fac_var)<-NULL
   
   # Component-Individual matrix
   # Row: subject, Column: component(factor)
-  df_fac_indiv<-data.frame(data_pca$ind$coord)
+  df_fac_indiv<-data.frame(data_ica$S)
   if(!is.null(df_indiv)){
     df_fac_indiv<-cbind(df_indiv,df_fac_indiv)
-    colnames(df_fac_indiv)<-c(colnames(df_indiv),sprintf("dim_%03d",1:ncp_estimate))
+    colnames(df_fac_indiv)<-c(colnames(df_indiv),sprintf("dim_%03d",1:n_comp))
   }else{
-    colnames(df_fac_indiv)<-sprintf("dim_%03d",1:ncp_estimate)
+    colnames(df_fac_indiv)<-sprintf("dim_%03d",1:n_comp)
   }
   rownames(df_fac_indiv)<-NULL
   
   # Matrix of variance accounted
   # Row: component(factor)
-  df_var_accounted<-data.frame(data_pca$eig)
-  colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
-  df_var_accounted$var_accounted<-df_var_accounted$var_accounted/100
-  df_var_accounted$cumul_var_accounted<-df_var_accounted$cumul_var_accounted/100
+  df_var_accounted<-data.frame(data_ica$vafs)
+  colnames(df_var_accounted)<-"var_accounted"
+  df_var_accounted[1,"cumul_var_accounted"]<-df_var_accounted[1,"var_accounted"]
+  for (idx_row in 2:nrow(df_var_accounted)){
+    df_var_accounted[idx_row,"cumul_var_accounted"]<-df_var_accounted[idx_row-1,"cumul_var_accounted"]+df_var_accounted[idx_row,"var_accounted"]
+  }
   df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
-  df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
+  df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted")]
   rownames(df_var_accounted)<-NULL
   
-  return(list('df_fac_var'=df_fac_var,'df_fac_indiv'=df_fac_indiv,'df_var_accounted'=df_var_accounted,'n_dim'=ncp_estimate))
+  return(list('df_fac_var'=df_fac_var,'df_fac_indiv'=df_fac_indiv,'df_var_accounted'=df_var_accounted,'n_dim'=n_comp))
 }
 
 
