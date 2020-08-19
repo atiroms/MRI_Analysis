@@ -15,15 +15,20 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #dir_out<-"405_fc_diff_acompcor"
 #list_atlas<-"aal116"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_gamm_aroma"
-list_atlas<-"aal116"
+#dir_in<-"421_fc_aroma"
+#dir_out<-"425_fc_gamm_aroma"
+#list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
 #dir_in<-"450_fc_test"
 #dir_out<-"451_gammfc_test"
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
+
+dir_in<-"421_fc_aroma"
+dir_out<-"426_fc_diff_aroma"
+list_atlas<-"aal116"
+
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -71,7 +76,6 @@ list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
                  #)
 
 list_plot <-list("sdq"=list("title"="SDQ effect","var_exp"="sdq_td"))
-
 
 list_type_p=c("p","p_bh","seed_p_bh")
 #list_type_p="p"
@@ -122,6 +126,8 @@ diff_fc<-function(paths_=paths,
   for (atlas in list_atlas_){
     # Load connection data
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    
+    # Create dataframe of existing graph edges
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     df_edge$from<-as.character(df_edge$from)
@@ -134,14 +140,15 @@ diff_fc<-function(paths_=paths,
       df_ses_subj<-rbind(df_ses_subj,
                          data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
     }
-    list_ses_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
-                                   df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
+    list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
+                                    df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
     print(paste("Atlas: ",atlas,", ",
-                as.character(length(list_ses_exist_long))," subjects with longitudinal data."))
+                as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
+                sep=""))
     
     # Calculate longitudinal fc difference
     df_out<-data.frame()
-    for (id_subj in list_ses_exist_long){
+    for (id_subj in list_subj_exist_long){
       df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
       colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
       colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
@@ -149,12 +156,12 @@ diff_fc<-function(paths_=paths,
       colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
       colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
       df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
-      df_diff$diff_r<-df_diff$ses2_r-df_diff$ses1_r
-      df_diff$diff_z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
-      df_diff<-data.frame(ID_pnTTC=id_subj,df_diff[,c("from","to","diff_r","diff_z_r")])
+      df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
+      df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
+      df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
       df_out<-rbind(df_out,df_diff)
     }
-    write.csv(df_out,file.path(paths_$output,"output",paste("atl-",atlas,"_fc_diff.csv",sep="")),row.names=F)
+    write.csv(df_out,file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
   }
   print('Finished diff_fc()')
 }
@@ -310,7 +317,7 @@ pca_fc<-function(paths_=paths,
                  list_wave_=list_wave,
                  list_covar_=list_covar,
                  subset_subj_=subset_subj){
-  print("Starting pca_fc().")
+  print("Starting pca_fc().",str_proc="pca_fc()",copy_log=T)
   nullobj<-func_createdirs(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability

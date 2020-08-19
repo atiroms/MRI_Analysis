@@ -19,9 +19,8 @@ library(Hmisc)
 # Create path list ================================
 #**************************************************
 func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
+                    path_exp_,dir_in_,dir_out_
+                    ){
   path_root<-NA
   for(p in list_path_root){
     if(file.exists(p)){
