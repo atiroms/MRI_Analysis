@@ -89,7 +89,7 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
   for (i_dim in 1:(n_dim-1)){
     list_plot_dim<-list()
     for (name_covar in list_name_covar){
-      df_plot_subset<-df_plot[,c("ses","ID_pnTTC",name_covar,sprintf("dim_%02d",i_dim),sprintf("dim_%02d",i_dim+1))]
+      df_plot_subset<-df_plot[,c("ses","ID_pnTTC",name_covar,sprintf("dim_%03d",i_dim),sprintf("dim_%03d",i_dim+1))]
       colnames(df_plot_subset)<-c("ses","ID_pnTTC","color","x","y")
       plot<-(ggplot(df_plot_subset)
              + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
@@ -99,8 +99,8 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
              #+ geom_text_repel(size=2)
              + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
              #+ ggtitle("PCA of FC")
-             + xlab(sprintf("Dimension %02d",i_dim))
-             + ylab(sprintf("Dimension %02d",i_dim+1))
+             + xlab(sprintf("Dimension %03d",i_dim))
+             + ylab(sprintf("Dimension %03d",i_dim+1))
              + theme_light()
              + theme(plot.title = element_text(hjust = 0.5))
       )

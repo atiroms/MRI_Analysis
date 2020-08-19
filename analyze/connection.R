@@ -25,10 +25,13 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
 #list_atlas<-"aal116"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"426_fc_diff_aroma"
-list_atlas<-"aal116"
+#dir_in<-"421_fc_aroma"
+#dir_out<-"426_fc_diff_aroma"
+#list_atlas<-"aal116"
 
+dir_in<-"421_fc_aroma"
+dir_out<-"428_fc_ca_aroma"
+list_atlas<-"aal116"
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -93,8 +96,6 @@ library(ggplot2)
 library(GGally)
 library(igraph)
 library(qgraph)
-library(FactoMineR)
-library(missMDA)
 library(ggrepel)
 library(colorRamps)
 library(tidyverse)
@@ -310,15 +311,18 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
 
 
 #**************************************************
-# Principal component analysis of FC ==============
+# Component analyses of FC ========================
 #**************************************************
-pca_fc<-function(paths_=paths,
-                 list_atlas_=list_atlas,
-                 list_wave_=list_wave,
-                 list_covar_=list_covar,
-                 subset_subj_=subset_subj){
-  print("Starting pca_fc().",str_proc="pca_fc()",copy_log=T)
-  nullobj<-func_createdirs(paths_)
+paths_=paths
+list_atlas_=list_atlas
+list_wave_=list_wave
+list_covar_=list_covar
+subset_subj_=subset_subj
+
+ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
+                list_covar_=list_covar,subset_subj_=subset_subj){
+  print("Starting ca_fc().")
+  nullobj<-func_createdirs(paths_,str_proc="ca_fc()",copy_log=T)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
@@ -329,6 +333,8 @@ pca_fc<-function(paths_=paths,
   for (atlas in list_atlas_){
     # Load and examine FC data
     print(paste("Loding FC of atlas: ",atlas,sep=""))
+    
+    # Create graph edge dataframe and node list
     df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to")]
@@ -365,7 +371,7 @@ pca_fc<-function(paths_=paths,
     # Calculate PCA of FC
     print("Starting to calculate PCA of FC.")
     # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
-    df_conn<-t(df_conn_cbind)
+    df_conn<-as.data.frame(t(df_conn_cbind))
     data_pca<-func_pca(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist)
     write.csv(data_pca$df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable_factor.csv",sep="")),row.names=F)
     write.csv(data_pca$df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_individual_factor.csv",sep="")),row.names=F)
@@ -380,13 +386,13 @@ pca_fc<-function(paths_=paths,
         plot<-list_plot_pca[[i_dim]][[name_covar]]
         plot<-(plot
                + ggtitle("PCA of FC"))
-        ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",as.numeric(i_dim)),"-",sprintf("%02d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_dim-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
     print("Finished plotting PCA of FC")
   }
-  print("Finished pca_fc().")
+  print("Finished ca_fc().")
 }
 
 
