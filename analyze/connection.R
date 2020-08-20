@@ -364,54 +364,50 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
-    
-    # Calculate PCA of FC
-    print("Starting to calculate PCA of FC.")
     # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
     df_conn<-as.data.frame(t(df_conn_cbind))
+    
+    # Calculate PCA of FC
+    print("Calculating PCA of FC.")
     data_pca<-func_pca(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca_)
-    write.csv(data_pca$df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable_factor.csv",sep="")),row.names=F)
-    write.csv(data_pca$df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_individual_factor.csv",sep="")),row.names=F)
-    write.csv(data_pca$df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variance_accounted.csv",sep="")),row.names=F)
-    print("Finished calculating PCA of FC")
+    write.csv(data_pca$df_comp_mri,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_comp_subj,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_subject.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_variance,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variance.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_comp_clin_flat,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_correlation.csv",sep="")),row.names=F)
     
     # Plot PCA results
-    print("Sarting to plot PCA of FC.")
-    list_plot_pca<-plot_ca(df_src=data_pca$df_fac_indiv,list_name_covar=names(list_covar_),n_dim=data_pca$n_dim)
+    print("Plotting PCA of FC.")
+    list_plot_pca<-plot_ca(df_src=data_pca$df_comp_subj,list_name_covar=names(list_covar_),n_dim=data_pca$n_dim)
     for (i_dim in names(list_plot_pca)){
       for (name_covar in names(list_plot_pca[[i_dim]])){
         plot<-list_plot_pca[[i_dim]][[name_covar]]
         plot<-(plot
                + ggtitle("PCA of FC"))
-        ggsave(paste("atl-",atlas,"_dim-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_dim-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca.eps",sep=""),plot=plot,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
-    print("Finished plotting PCA of FC")
     
     # Calculate ICA of FC
-    print("Starting to calculate ICA of FC.")
-    # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
-    df_conn<-as.data.frame(t(df_conn_cbind))
+    print("Calculating ICA of FC.")
     data_ica<-func_ica(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca_)
-    write.csv(data_ica$df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_variable_factor.csv",sep="")),row.names=F)
-    write.csv(data_ica$df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_individual_factor.csv",sep="")),row.names=F)
-    write.csv(data_ica$df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_variance_accounted.csv",sep="")),row.names=F)
-    print("Finished calculating ICA of FC")
+    write.csv(data_ica$df_comp_mri,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_variable.csv",sep="")),row.names=F)
+    write.csv(data_ica$df_comp_subj,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_subject.csv",sep="")),row.names=F)
+    write.csv(data_ica$df_variance,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_variance.csv",sep="")),row.names=F)
+    write.csv(data_ica$df_comp_clin_flat,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_correlation.csv",sep="")),row.names=F)
     
     # Plot ICA results
-    print("Sarting to plot ICA of FC.")
-    list_plot_ica<-plot_ca(df_src=data_ica$df_fac_indiv,list_name_covar=names(list_covar_),n_dim=data_ica$n_dim)
+    print("Plotting ICA of FC.")
+    list_plot_ica<-plot_ca(df_src=data_ica$df_comp_subj,list_name_covar=names(list_covar_),n_dim=data_ica$n_dim)
     for (i_dim in names(list_plot_ica)){
       for (name_covar in names(list_plot_ica[[i_dim]])){
         plot<-list_plot_ica[[i_dim]][[name_covar]]
         plot<-(plot
                + ggtitle("ICA of FC"))
-        ggsave(paste("atl-",atlas,"_dim-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_ica_fc.eps",sep=""),plot=plot,device=cairo_ps,
+        ggsave(paste("atl-",atlas,"_dim-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_ica.eps",sep=""),plot=plot,device=cairo_ps,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
-    print("Finished plotting ICA of FC")
   }
   print("Finished ca_fc().")
 }

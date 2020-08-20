@@ -14,7 +14,7 @@ library(Hmisc)
 library(FactoMineR)
 library(missMDA)
 library(ica)
-#library(DescTools)
+library(DescTools)
 
 
 #**************************************************
@@ -500,39 +500,56 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   # PCA calculation
   data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = n_comp, graph = FALSE)
   
-  # Variable-Component matrix
-  # Row: variable, Column: component(factor)
-  df_fac_var<-data.frame(data_pca$var$coord)
+  # Component-imaging variable matrix
+  # Row: MRI variable, Column: component(factor)
+  df_comp_mri<-data.frame(data_pca$var$coord)
   if(!is.null(df_var)){
-    df_fac_var<-cbind(df_var,df_fac_var)
-    colnames(df_fac_var)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
+    df_comp_mri<-cbind(df_var,df_comp_mri)
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
   }else{
-    colnames(df_fac_var)<-sprintf("dim_%03d",1:n_comp)
+    colnames(df_comp_mri)<-sprintf("dim_%03d",1:n_comp)
   }
-  rownames(df_fac_var)<-NULL
+  rownames(df_comp_mri)<-NULL
   
   # Component-Individual matrix
-  # Row: subject, Column: component(factor)
-  df_fac_indiv<-data.frame(data_pca$ind$coord)
+  # Row: subject, Column: (clinical variable +) component(factor)
+  df_comp_subj<-data.frame(data_pca$ind$coord)
+  colnames(df_comp_subj)<-sprintf("dim_%03d",1:n_comp)
+
   if(!is.null(df_indiv)){
-    df_fac_indiv<-cbind(df_indiv,df_fac_indiv)
-    colnames(df_fac_indiv)<-c(colnames(df_indiv),sprintf("dim_%03d",1:n_comp))
+    df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
+    n_covar<-ncol(df_covar)
+    
+    # Calculate correlation between component attribution and clinical covariate
+    df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
+    data_cor<-func_cor(df_comp_subj_covar)
+    df_cor<-data_cor$cor
+    df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+    df_cor_flat<-data_cor$cor_flat
+    df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
+    df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+    colnames(df_cor_flat)<-c("covar","component","r","p")
+    
+    df_comp_subj<-cbind(df_indiv,df_comp_subj)
   }else{
-    colnames(df_fac_indiv)<-sprintf("dim_%03d",1:n_comp)
+    df_cor<-NULL
+    df_cor_flat<-NULL
   }
-  rownames(df_fac_indiv)<-NULL
+  rownames(df_comp_subj)<-NULL
   
   # Matrix of variance accounted
   # Row: component(factor)
-  df_var_accounted<-data.frame(data_pca$eig)
-  colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
-  df_var_accounted$var_accounted<-df_var_accounted$var_accounted/100
-  df_var_accounted$cumul_var_accounted<-df_var_accounted$cumul_var_accounted/100
-  df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
-  df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
-  rownames(df_var_accounted)<-NULL
+  df_variance<-data.frame(data_pca$eig)
+  colnames(df_variance)<-c("eigenvalue","var_accounted","cumul_var_accounted")
+  df_variance$var_accounted<-df_variance$var_accounted/100
+  df_variance$cumul_var_accounted<-df_variance$cumul_var_accounted/100
+  df_variance$dim<-seq(1,dim(df_variance)[1])
+  df_variance<-df_variance[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
+  rownames(df_variance)<-NULL
   
-  return(list('df_fac_var'=df_fac_var,'df_fac_indiv'=df_fac_indiv,'df_var_accounted'=df_var_accounted,'n_dim'=n_comp))
+  return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
+              'df_variance'=df_variance,'n_dim'=n_comp,
+              'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
 
@@ -547,6 +564,7 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
       n_comp<-dim_ca
     }
   }
+  print(paste("ICA dimension: ",as.character(n_comp),sep=""))
   
   df_conn<-data.matrix(df_src)
   
@@ -554,41 +572,59 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   #data_ica <-icafast(df_conn, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
   data_ica <-icaimax(df_conn, nc=n_comp,center=TRUE)
   
-  # Variable-Component matrix
-  # Row: variable, Column: component(factor)
-  df_fac_var<-data.frame(data_ica$M)
+  # Component-imaging variable matrix
+  # Row: MRI variable, Column: component(factor)
+  df_comp_mri<-data.frame(data_ica$M)
   if(!is.null(df_var)){
-    df_fac_var<-cbind(df_var,df_fac_var)
-    colnames(df_fac_var)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
+    df_comp_mri<-cbind(df_var,df_comp_mri)
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
   }else{
-    colnames(df_fac_var)<-sprintf("dim_%03d",1:n_comp)
+    colnames(df_comp_mri)<-sprintf("dim_%03d",1:n_comp)
   }
-  rownames(df_fac_var)<-NULL
+  rownames(df_comp_mri)<-NULL
   
   # Component-Individual matrix
-  # Row: subject, Column: component(factor)
-  df_fac_indiv<-data.frame(data_ica$S)
+  # Row: subject, Column: (clinical variable +) component(factor)
+  df_comp_subj<-data.frame(data_ica$S)
+  colnames(df_comp_subj)<-sprintf("dim_%03d",1:n_comp)
+  
   if(!is.null(df_indiv)){
-    df_fac_indiv<-cbind(df_indiv,df_fac_indiv)
-    colnames(df_fac_indiv)<-c(colnames(df_indiv),sprintf("dim_%03d",1:n_comp))
+    df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
+    n_covar<-ncol(df_covar)
+    
+    # Calculate correlation between component attribution and clinical covariate
+    df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
+    data_cor<-func_cor(df_comp_subj_covar)
+    df_cor<-data_cor$cor
+    df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+    df_cor_flat<-data_cor$cor_flat
+    df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
+    df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+    colnames(df_cor_flat)<-c("covar","component","r","p")
+    
+    df_comp_subj<-cbind(df_indiv,df_comp_subj)
   }else{
-    colnames(df_fac_indiv)<-sprintf("dim_%03d",1:n_comp)
+    df_cor<-NULL
+    df_cor_flat<-NULL
   }
-  rownames(df_fac_indiv)<-NULL
+  rownames(df_comp_subj)<-NULL
+  
   
   # Matrix of variance accounted
   # Row: component(factor)
-  df_var_accounted<-data.frame(data_ica$vafs)
-  colnames(df_var_accounted)<-"var_accounted"
-  df_var_accounted[1,"cumul_var_accounted"]<-df_var_accounted[1,"var_accounted"]
-  for (idx_row in 2:nrow(df_var_accounted)){
-    df_var_accounted[idx_row,"cumul_var_accounted"]<-df_var_accounted[idx_row-1,"cumul_var_accounted"]+df_var_accounted[idx_row,"var_accounted"]
+  df_variance<-data.frame(data_ica$vafs)
+  colnames(df_variance)<-"var_accounted"
+  df_variance[1,"cumul_var_accounted"]<-df_variance[1,"var_accounted"]
+  for (idx_row in 2:nrow(df_variance)){
+    df_variance[idx_row,"cumul_var_accounted"]<-df_variance[idx_row-1,"cumul_var_accounted"]+df_variance[idx_row,"var_accounted"]
   }
-  df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
-  df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted")]
-  rownames(df_var_accounted)<-NULL
+  df_variance$dim<-seq(1,dim(df_variance)[1])
+  df_variance<-df_variance[c("dim","var_accounted","cumul_var_accounted")]
+  rownames(df_variance)<-NULL
   
-  return(list('df_fac_var'=df_fac_var,'df_fac_indiv'=df_fac_indiv,'df_var_accounted'=df_var_accounted,'n_dim'=n_comp))
+  return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
+              'df_variance'=df_variance,'n_dim'=n_comp,
+              'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
 
