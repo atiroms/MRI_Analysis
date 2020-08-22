@@ -10,6 +10,7 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+
 #dir_in<-"201_fc_acompcor"
 #dir_out<-"401_fp_acompcor"
 #dir_out<-"405_fc_diff_acompcor"
@@ -20,18 +21,14 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-#dir_in<-"450_fc_test"
-#dir_out<-"451_gammfc_test"
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
-
 #dir_in<-"421_fc_aroma"
-#dir_out<-"426_fc_diff_aroma"
-#list_atlas<-"aal116"
+#dir_out<-"421.1_fc_diff_aroma"
+#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
 dir_in<-"421_fc_aroma"
-dir_out<-"428_fc_ca_aroma"
-list_atlas<-"aal116"
+dir_out<-"425_fc_ca_aroma"
+list_atlas<-"gordon333"
+#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -52,7 +49,6 @@ list_wave <- c(1,2)
 list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
                  "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
                  "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
@@ -366,6 +362,8 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
     rownames(df_conn_cbind)<-NULL
     # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
     df_conn<-as.data.frame(t(df_conn_cbind))
+    df_conn_cbind<-NULL
+    gc()
     
     # Calculate PCA of FC
     print("Calculating PCA of FC.")
@@ -387,6 +385,9 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
+    data_pca<-NULL
+    list_plot_pca<-NULL
+    gc()
     
     # Calculate ICA of FC
     print("Calculating ICA of FC.")
@@ -408,6 +409,9 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
                path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
       }
     }
+    data_ica<-NULL
+    list_plot_ica<-NULL
+    gc()
   }
   print("Finished ca_fc().")
 }

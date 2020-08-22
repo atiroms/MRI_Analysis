@@ -484,10 +484,9 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
     n_comp<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
     
     # Impute data
-    df_conn<-imputePCA(df_src,ncp=n_comp)$completeObs
+    df_src<-imputePCA(df_src,ncp=n_comp)$completeObs
   }else{
     n_comp<-nrow(df_src)-1
-    df_conn<-df_src
   }
   
   if (!is.null(dim_ca)){
@@ -498,7 +497,7 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   print(paste("PCA dimension: ",as.character(n_comp),sep=""))
 
   # PCA calculation
-  data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = n_comp, graph = FALSE)
+  data_pca<-PCA(df_src,scale.unit = TRUE, ncp = n_comp, graph = FALSE)
   
   # Component-imaging variable matrix
   # Row: MRI variable, Column: component(factor)
@@ -566,11 +565,11 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   }
   print(paste("ICA dimension: ",as.character(n_comp),sep=""))
   
-  df_conn<-data.matrix(df_src)
+  df_src<-data.matrix(df_src)
   
   # ICA calculation
-  #data_ica <-icafast(df_conn, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
-  data_ica <-icaimax(df_conn, nc=n_comp,center=TRUE)
+  #data_ica <-icafast(df_src, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
+  data_ica <-icaimax(df_src, nc=n_comp,center=TRUE)
   
   # Component-imaging variable matrix
   # Row: MRI variable, Column: component(factor)
