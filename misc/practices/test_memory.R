@@ -7,7 +7,7 @@ memory.size(F)   # The amount currently in use
 memory.size(NA)  # Memory limit
 
 # Set memory limit
-memory.limit(100000)
+memory.limit(200000)
 
 # Test memory limit
 x <- data.frame(x = runif(1000000000*4))

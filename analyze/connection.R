@@ -103,6 +103,7 @@ library(parallel)
 library(mgcv)
 library(car)
 library(plyr)
+library(data.table)
 
 
 #**************************************************
@@ -331,7 +332,8 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
     print(paste("Loding FC of atlas: ",atlas,sep=""))
     
     # Create graph edge dataframe and node list
-    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to")]
     n_edge<-dim(df_edge)[1]

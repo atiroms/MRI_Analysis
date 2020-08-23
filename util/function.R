@@ -490,6 +490,7 @@ func_cor<-function(input){
 func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   
   if (sum(is.na(df_src))>0){
+    print("Imputing missing data.")
     # Estimate number of dimensions
     n_comp<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
     
