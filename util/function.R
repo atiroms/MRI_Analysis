@@ -504,16 +504,16 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   df_comp_mri<-data.frame(data_pca$var$coord)
   if(!is.null(df_var)){
     df_comp_mri<-cbind(df_var,df_comp_mri)
-    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:n_comp))
   }else{
-    colnames(df_comp_mri)<-sprintf("dim_%03d",1:n_comp)
+    colnames(df_comp_mri)<-sprintf("comp_%03d",1:n_comp)
   }
   rownames(df_comp_mri)<-NULL
   
   # Component-Individual matrix
   # Row: subject, Column: (clinical variable +) component(factor)
   df_comp_subj<-data.frame(data_pca$ind$coord)
-  colnames(df_comp_subj)<-sprintf("dim_%03d",1:n_comp)
+  colnames(df_comp_subj)<-sprintf("comp_%03d",1:n_comp)
 
   if(!is.null(df_indiv)){
     df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
@@ -542,12 +542,12 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   colnames(df_variance)<-c("eigenvalue","var_accounted","cumul_var_accounted")
   df_variance$var_accounted<-df_variance$var_accounted/100
   df_variance$cumul_var_accounted<-df_variance$cumul_var_accounted/100
-  df_variance$dim<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
+  df_variance$comp<-seq(1,dim(df_variance)[1])
+  df_variance<-df_variance[c("comp","var_accounted","cumul_var_accounted","eigenvalue")]
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
-              'df_variance'=df_variance,'n_dim'=n_comp,
+              'df_variance'=df_variance,'dim'=n_comp,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
@@ -576,16 +576,16 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   df_comp_mri<-data.frame(data_ica$M)
   if(!is.null(df_var)){
     df_comp_mri<-cbind(df_var,df_comp_mri)
-    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("dim_%03d",1:n_comp))
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:n_comp))
   }else{
-    colnames(df_comp_mri)<-sprintf("dim_%03d",1:n_comp)
+    colnames(df_comp_mri)<-sprintf("comp_%03d",1:n_comp)
   }
   rownames(df_comp_mri)<-NULL
   
   # Component-Individual matrix
   # Row: subject, Column: (clinical variable +) component(factor)
   df_comp_subj<-data.frame(data_ica$S)
-  colnames(df_comp_subj)<-sprintf("dim_%03d",1:n_comp)
+  colnames(df_comp_subj)<-sprintf("comp_%03d",1:n_comp)
   
   if(!is.null(df_indiv)){
     df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
@@ -617,12 +617,12 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   for (idx_row in 2:nrow(df_variance)){
     df_variance[idx_row,"cumul_var_accounted"]<-df_variance[idx_row-1,"cumul_var_accounted"]+df_variance[idx_row,"var_accounted"]
   }
-  df_variance$dim<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("dim","var_accounted","cumul_var_accounted")]
+  df_variance$comp<-seq(1,dim(df_variance)[1])
+  df_variance<-df_variance[c("comp","var_accounted","cumul_var_accounted")]
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
-              'df_variance'=df_variance,'n_dim'=n_comp,
+              'df_variance'=df_variance,'dim'=n_comp,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
