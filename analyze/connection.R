@@ -21,15 +21,16 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-dir_in<-"421_fc_aroma"
-dir_out<-""
+#dir_in<-"421_fc_aroma"
+#dir_out<-""
 #list_atlas<-"aal116"
-list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
+#list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"425_fc_ca_aroma"
-#list_atlas<-"aal116"
+dir_in<-"421_fc_aroma"
+dir_out<-"426_fc_ca_aroma"
+list_atlas<-"power264"
+path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
@@ -114,7 +115,7 @@ library(data.table)
 source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/gta_function.R"))
-paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out)
+paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
 #**************************************************
@@ -325,6 +326,7 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
                 list_covar_=list_covar,subset_subj_=subset_subj,list_dim_ca_=list_dim_ca,
                 plot_result=F){
   print("Starting ca_fc().")
+  memory.limit(200000)
   nullobj<-func_createdirs(paths_,str_proc="ca_fc()",copy_log=T)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
