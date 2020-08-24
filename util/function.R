@@ -197,19 +197,25 @@ as.numeric.factor <- function(x) {
 func_createdirs<-function(paths,str_proc="",copy_log=T){
   list_createdirs<-c(paths$output,file.path(paths$output,"output"))
   for(d in list_createdirs){
-    if (!file.exists(d)){
+    if (file.exists(d)){
+      print(paste("Destination folder already exists:",d,sep=" "))
+    }else{
       dir.create(d)
     }
   }
   if (copy_log){
     if (file.exists(file.path(paths$input,"log"))){
-      file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
-      list_log<-readLines(file.path(paths$output,"log","pipeline.log"))
-      list_log<-c(list_log,paste("\t",str_proc,sep=""))
-      list_log<-c(list_log,paths$dir_out)
-      writeLines(list_log,file.path(paths$output,"log","pipeline.log"))
+      if (file.exists(file.path(paths$output,"log"))){
+        print("Destination log folder already exists.")
+      }else{
+        file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+        list_log<-readLines(file.path(paths$output,"log","pipeline.log"))
+        list_log<-c(list_log,paste("\t",str_proc,sep=""))
+        list_log<-c(list_log,paths$dir_out)
+        writeLines(list_log,file.path(paths$output,"log","pipeline.log"))
+      }
     }else{
-      print("Log folder does not exist.")
+      print("Source log folder does not exist.")
     }
   }
 }
@@ -310,7 +316,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
     list_id_subset_wave<-list(list_id_subset_wave)
     names(list_id_subset_wave)<-str_wave
     list_id_subset<-c(list_id_subset,list_id_subset_wave)
-  }
+  } # Finished looping over waves
   colnames(df_clin_subset)<-colnames(df_clin_long)
   
   # Subset unused columns of clinical data
