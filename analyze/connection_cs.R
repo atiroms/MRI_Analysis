@@ -138,19 +138,27 @@ gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subse
       list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
       suffix<-paste("_wave-",waves,"_var-",idx_tanner,sep="")
       
-      gam_fc_cs<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
-                           wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
-                           list_mod_=list_mod_tanner_,list_plot_=list_plot_tanner_,
-                           key_group_='group_3',list_type_p_=list_type_p_,thr_p_=thr_p_,
-                           suffix_=suffix
-                           )
-
+      nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
+                         wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
+                         list_mod_=list_mod_tanner_,list_plot_=list_plot_tanner_,
+                         key_group_='group_3',list_type_p_=list_type_p_,thr_p_=thr_p_,
+                         suffix_=suffix)
     } # finished looping over Tanner stages
     
     
     #2 Hormones
-    
-
+    for (idx_hormone in names(list_hormone_)){
+      print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
+      list_covar<-list_covar_hormone_
+      list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
+      suffix<-paste("_wave-",waves,"_var-",idx_hormone,sep="")
+      
+      nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
+                         wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
+                         list_mod_=list_mod_hormone_,list_plot_=list_plot_hormone_,
+                         key_group_='group_3',list_type_p_=list_type_p_,thr_p_=thr_p_,
+                         suffix_=suffix)
+    } # finished looping over Hormones
     
   } # finished looping over waves
   print("Finished gam_fc_cs_multi()")
@@ -243,7 +251,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     
     # Graphical output of ROI-wise GAMM of FC
     plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
-                list_type_p_,thr_p,paths_)
+                list_type_p_,thr_p,paths_,suffix_)
     
   }
   print('Finished gam_fc_cs().')
