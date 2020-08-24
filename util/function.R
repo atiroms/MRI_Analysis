@@ -29,7 +29,7 @@ func_fisherz<-function(rho){
 # Create path list ================================
 #**************************************************
 func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_,dir_in_,dir_out_
+                    path_exp_,dir_in_,dir_out_,path_exp_full_=NULL
                     ){
   path_root<-NA
   for(p in list_path_root){
@@ -42,7 +42,11 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
   path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_io     <- file.path(path_root,path_exp_)
+  if (is.null(path_exp_full_)){
+    path_io     <- file.path(path_root,path_exp_)
+  }else{
+    path_io     <- path_exp_full_
+  }
   path_in     <- file.path(path_io,dir_in_)
   path_out    <- file.path(path_io,dir_out_)
   output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
