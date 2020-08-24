@@ -21,14 +21,16 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"421.1_fc_diff_aroma"
+dir_in<-"421_fc_aroma"
+dir_out<-""
+#list_atlas<-"aal116"
+list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
-dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_ca_aroma"
+#dir_in<-"421_fc_aroma"
+#dir_out<-"425_fc_ca_aroma"
 #list_atlas<-"aal116"
-list_atlas<-"gordon333"
+#list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
@@ -119,15 +121,18 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out)
 # Calculate longitudinal FC difference ============
 #**************************************************
 
-diff_fc<-function(paths_=paths,
-                  list_atlas_=list_atlas,
+diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
                   key_roigroup="group_3"){
   print("Starting diff_fc().")
-  nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
+  #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
   
   for (atlas in list_atlas_){
     # Load connection data
-    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    dt_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_conn<-as.data.frame(dt_conn)
+    dt_conn<-NULL
+    gc()
     
     # Create dataframe of existing graph edges
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
@@ -163,7 +168,8 @@ diff_fc<-function(paths_=paths,
       df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
       df_out<-rbind(df_out,df_diff)
     }
-    write.csv(df_out,file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
+    df_out<-rbind.fill(df_conn,df_out)
+    write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
   }
   print('Finished diff_fc()')
 }
