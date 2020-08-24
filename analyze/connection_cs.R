@@ -250,8 +250,8 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
               file.path(paths_$output,"output",paste("atl-",atlas,suffix_,"_gam_plt.csv",sep="")),row.names = F)
     
     # Graphical output of ROI-wise GAMM of FC
-    plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
-                list_type_p_,thr_p,paths_,suffix_)
+    plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod_,list_plot_,
+                list_type_p_,thr_p_,paths_,suffix_)
     
   }
   print('Finished gam_fc_cs().')
