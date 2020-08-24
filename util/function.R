@@ -265,7 +265,7 @@ print_log<-function(str_in,str_add){
 }
 
 func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_clin,
-                                  file_clin= "CSUB.csv"
+                                  file_clin= "CSUB.csv",suffix=""
                                   ){
   df_src <- read.csv(file.path(paths$common,file_clin))
   
@@ -374,7 +374,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
   rownames(df_clin_exist)<-NULL
   
-  writeLines(list_log, file.path(paths$output,"output","clin_long.txt"))
+  writeLines(list_log, file.path(paths$output,"output",paste(suffix,"clin_long.txt",sep="_")))
   
   output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)

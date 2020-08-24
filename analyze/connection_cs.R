@@ -136,7 +136,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subse
       print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
       list_covar<-list_covar_tanner_
       list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
-      suffix<-paste("_wave-",waves,"_var-",idx_tanner,sep="")
+      suffix<-paste("wave-",waves,"_var-",idx_tanner,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
@@ -239,15 +239,15 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
     data_gamm<-iterate_gamm(df_join,df_roi,list_mod_)
     write.csv(data_gamm$df_out_gamm,
-              file.path(paths_$output,"output",paste("atl-",atlas,suffix_,"_gam.csv",sep="")),row.names = F)
+              file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam.csv",sep="")),row.names = F)
     write.csv(data_gamm$df_out_aic,
-              file.path(paths_$output,"output",paste("atl-",atlas,suffix_,"_gam_aic.csv",sep="")),row.names = F)
+              file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_aic.csv",sep="")),row.names = F)
     
     # Calculate multiple comparison-corrected p values
     df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
                              list_mod_,list_plot_,calc_seed_level=T)
     write.csv(df_plot_gamm,
-              file.path(paths_$output,"output",paste("atl-",atlas,suffix_,"_gam_plt.csv",sep="")),row.names = F)
+              file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_plt.csv",sep="")),row.names = F)
     
     # Graphical output of ROI-wise GAMM of FC
     plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod_,list_plot_,
