@@ -14,6 +14,7 @@ library(Hmisc)
 library(FactoMineR)
 library(missMDA)
 library(ica)
+library(parallel)
 #library(DescTools)
 
 
@@ -61,7 +62,115 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
 # Iterate GAM/GLM over ROI paiers in FC ===========
 #**************************************************
 
+gamm_core<-function(data_src){
+  df_src<-data_src$df_src
+  id_from<-data_src$id_from
+  id_to<-data_src$id_to
+  label_from<-data_src$label_from
+  label_to<-data_src$label_to
+  
+  #print(paste("GLM/GAM: ",id_from," - ",id_to," (",label_from," - ",label_to,")",sep=""))
+  df_out_aic_add<-df_out_gamm_add<-data.frame()
+  for (idx_mod in names(list_mod_)){
+    list_plot<-list()
+    list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
+    for (idx_sex in list_sex){
+      df_src_sex<-df_src[df_src$sex==idx_sex,]
+      #mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
+      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+      if (class(mod)[1]=="try-error"){
+        #print(paste("Error fiting ",idx_mod, ", sex= ",idx_sex,".",sep=''))
+      }else{
+        p_table<-summary.gam(mod)$p.table
+        if (is.null(summary.gam(mod)$s.table)){
+          df_out_gamm_add_add<-data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                          #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                          sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                          estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                          t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+          
+        }else{
+          s_table<-summary.gam(mod)$s.table
+          df_out_gamm_add_add<-rbind(data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                                #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                                sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                                estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                                t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                                     data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                                #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                                sex=idx_sex,model=idx_mod,term=rownames(s_table),
+                                                estimate=NA,se=NA,F=s_table[,'F'],
+                                                t=NA,p=s_table[,'p-value']))
+        }
+        df_out_gamm_add<-rbind(df_out_gamm_add,df_out_gamm_add_add)
+        df_out_aic_add<-rbind(df_out_aic_add,
+                              data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                         #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                         sex=idx_sex,
+                                         model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+      }
+    }
+  }
+  
+  # Compare AICs of GAMM models
+  df_out_aic_add_sex_rbind<-data.frame()
+  for (idx_sex in list_sex){
+    df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
+    df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
+                       'aic_best_among_models']<-1
+    df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
+  }
+  
+  #df_out_gamm<-rbind(df_out_gamm,df_out_gamm_add)
+  #df_out_aic<-rbind(df_out_aic,df_out_aic_add_sex_rbind)
+  
+  return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind))
+}
+
+
 iterate_gamm<-function(df_join,df_roi,list_mod_){
+  list_roi<-df_roi$id
+  df_out_gamm<-df_out_aic<-NULL
+  
+  # Prepare dataset for multi-core processing
+  print("Preparing dataset for parallel processing.")
+  list_src_gamm<-list()
+  for (id_from in list_roi[-length(list_roi)]){
+    for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+      label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+      df_src=df_join[df_join$from==id_from & df_join$to==id_to,]
+      list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,
+                                               "id_from"=id_from,"id_to"=id_to,
+                                               "label_from"=label_from,"label_to"=label_to)))
+    }
+  }
+  
+  # Parallel processing
+  n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
+  clust<-makeCluster(n_cluster)
+  print(paste("Parallel processing,",as.character(n_cluster),"cores.",sep=" "))
+  clusterExport(clust,
+                varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
+                          "as.numeric.factor"),
+                envir=environment())
+  list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
+  stopCluster(clust)
+  
+  # Collect data into dataframes
+  print("Combining parallel processing reulsts.")
+  for (dst_gamm in list_dst_gamm){
+    df_out_gamm<-rbind(df_out_gamm,dst_gamm$df_out_gamm_add)
+    df_out_aic<-rbind(df_out_aic,dst_gamm$df_out_aic_add)
+  }
+  
+  rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
+  output<-list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic)
+  return(output)
+}
+
+
+iterate_gamm_old<-function(df_join,df_roi,list_mod_){
   list_roi<-df_roi$id
   df_out_gamm<-df_out_aic<-NULL
   for (id_from in list_roi[-length(list_roi)]){
