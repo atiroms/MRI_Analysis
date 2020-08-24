@@ -136,10 +136,11 @@ iterate_gamm<-function(df_join,df_roi,list_mod_){
   print("Preparing dataset for parallel processing.")
   list_src_gamm<-list()
   for (id_from in list_roi[-length(list_roi)]){
+    df_join_from<-df_join[df_join$from==id_from,]
+    label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
     for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
-      label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
       label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-      df_src=df_join[df_join$from==id_from & df_join$to==id_to,]
+      df_src<-df_join_from[df_join_from$to==id_to,]
       list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,
                                                "id_from"=id_from,"id_to"=id_to,
                                                "label_from"=label_from,"label_to"=label_to)))
