@@ -29,7 +29,7 @@ list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-list_atlas<-"aal116"
+list_atlas<-"power264"
 
 list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
                         "age"   =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
@@ -191,7 +191,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
   data_clin<-func_clinical_data_long(paths_,list_wave=wave_clin_,subset_subj_,
-                                     list_covar=list_covar_,rem_na_clin=T)
+                                     list_covar=list_covar_,rem_na_clin=T,suffix=suffix_)
   df_clin<-data_clin$df_clin
   
   
