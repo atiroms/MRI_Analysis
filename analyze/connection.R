@@ -33,6 +33,7 @@ list_atlas<-"power264"
 path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
