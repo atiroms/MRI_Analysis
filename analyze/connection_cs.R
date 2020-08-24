@@ -12,12 +12,13 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_gam_aroma"
+dir_out<-"425_fc_gam_cs_aroma"
 list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
                  "c1m2" =list("wave_clin"="1","wave_mri"="2"),
-                 #"c1m21"=list("wave_clin"="1","wave_mri"="2-1"),
+                 "c1m21"=list("wave_clin"="1","wave_mri"="2-1"),
                  "c2m1" =list("wave_clin"="2","wave_mri"="1"),
-                 "c2m2" =list("wave_clin"="2","wave_mri"="2"))
+                 "c2m2" =list("wave_clin"="2","wave_mri"="2"),
+                 "c2m21"=list("wave_clin"="2","wave_mri"="2-1"))
 #wave_clin<-1
 #wave_mri<-2
 
@@ -97,21 +98,6 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out)
 # Iterate gam_fc_cs() over clinical variables =====
 # and waves =======================================
 #**************************************************
-
-paths_=paths
-list_waves_=list_waves
-subset_subj_=subset_subj
-list_covar_tanner_=list_covar_tanner
-list_tanner_=list_tanner
-list_mod_tanner_=list_mod_tanner
-list_plot_tanner_=list_plot_tanner
-list_covar_hormone_=list_covar_hormone
-list_hormone_=list_hormone
-list_mod_hormone_=list_mod_hormone
-list_plot_hormone_=list_plot_hormone
-list_type_p_=list_type_p
-thr_p_=thr_p
-
 gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_subj,
                           list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
                           list_mod_tanner_=list_mod_tanner,list_plot_tanner_=list_plot_tanner,
@@ -192,19 +178,6 @@ join_fc_clin<-function(df_fc,df_clin,wave_clin,wave_mri){
   }
   return(df_join)
 }
-
-paths_=paths_
-subset_subj_=subset_subj_temp
-list_covar_=list_covar
-wave_clin_=wave_clin
-wave_mri_=wave_mri
-list_atlas_=list_atlas
-list_mod_=list_mod_tanner_
-list_plot_=list_plot_tanner_
-key_group_='group_3'
-list_type_p_=list_type_p_
-thr_p_=thr_p_
-suffix_=suffix
 
 gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                     wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
