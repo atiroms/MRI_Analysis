@@ -31,6 +31,7 @@ list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 list_atlas<-"power264"
 #list_atlas<-"aal116"
+#list_atlas<-"shen268"
 
 list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
                         "age"   =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
@@ -99,20 +100,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out)
 # Iterate gam_fc_cs() over clinical variables =====
 # and waves =======================================
 #**************************************************
-paths_=paths
-list_waves_=list_waves
-subset_subj_=subset_subj
-list_atlas_=list_atlas
-list_covar_tanner_=list_covar_tanner
-list_tanner_=list_tanner
-list_mod_tanner_=list_mod_tanner
-list_plot_tanner_=list_plot_tanner
-list_covar_hormone_=list_covar_hormone
-list_hormone_=list_hormone
-list_mod_hormone_=list_mod_hormone
-list_plot_hormone_=list_plot_hormone
-list_type_p_=list_type_p
-thr_p_=thr_p
+
 gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_subj,
                           list_atlas_=list_atlas,
                           list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
@@ -209,7 +197,6 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
   data_clin<-func_clinical_data_long(paths_,list_wave=wave_clin_,subset_subj_,
                                      list_covar=list_covar_,rem_na_clin=T,suffix=suffix_)
   df_clin<-data_clin$df_clin
-  
   
   for (atlas in list_atlas_){
     
