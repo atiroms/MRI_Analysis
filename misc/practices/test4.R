@@ -154,18 +154,16 @@ rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
 data_gamm<-list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic)
 
 
-write.csv(data_gamm$df_out_gamm,
-          file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam.csv",sep="")),row.names = F)
-write.csv(data_gamm$df_out_aic,
-          file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_aic.csv",sep="")),row.names = F)
+#write.csv(data_gamm$df_out_gamm,
+#          file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam.csv",sep="")),row.names = F)
+#write.csv(data_gamm$df_out_aic,
+#          file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_aic.csv",sep="")),row.names = F)
 
 # Calculate multiple comparison-corrected p values
 df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
                          list_mod_,list_plot_,calc_seed_level=T)
-write.csv(df_plot_gamm,
-          file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_plt.csv",sep="")),row.names = F)
-
-
+#write.csv(df_plot_gamm,
+#          file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_plt.csv",sep="")),row.names = F)
 
 
 analysis="roi"
@@ -230,6 +228,10 @@ ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
              "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.eps",sep=""),
        plot=plot,device=cairo_ps,path=file.path(paths_$output,"output"),
        dpi=300,height=10,width=10,limitsize=F)
+
+ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
+             "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.png",sep=""),
+       plot=plot,path=file.path(paths_$output,"output"),height=10,width=10,dpi=600)
 
 library(ggplot2)
 library(colorRamps)

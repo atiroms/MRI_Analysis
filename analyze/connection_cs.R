@@ -92,7 +92,7 @@ library(data.table)
 #**************************************************
 source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
-source(file.path(getwd(),"analyze/connection.R"))
+#source(file.path(getwd(),"analyze/connection.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out)
 
 
