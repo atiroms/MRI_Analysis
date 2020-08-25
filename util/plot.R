@@ -65,8 +65,9 @@ plot_gam_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
                               "\nanalysis: ",analysis," threshold: ",type_p,sep="")) +
                 theme(plot.title = element_text(hjust = 0.5))
               ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
-                           "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.eps",sep=""),
-                     plot=plot,device=cairo_ps,path=file.path(paths_$output,"output"),
+#                           "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.eps",sep=""),
+                           "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.png",sep=""),
+              plot=plot,device=cairo_ps,path=file.path(paths_$output,"output"),
                      dpi=300,height=10,width=10,limitsize=F)
             }
           }
@@ -359,9 +360,11 @@ plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=label, angle = angle, hjust=hjust,vjust=0.2),
                    size=min(5,10/log(nrow(df_node))), alpha=1) +
+    #               size=min(5,20/log(nrow(df_node))), alpha=1) +
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
     scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+
+    #expand_limits(x = c(-1.5, 1.5), y = c(-1.5, 1.5))+
     #ggtitle(input_title) +
     theme_void() +
     #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))

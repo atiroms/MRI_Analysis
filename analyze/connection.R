@@ -21,18 +21,19 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-""
+dir_in<-"421_fc_aroma"
+dir_out<-""
 #list_atlas<-"aal116"
 #list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
-#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+path_exp_full<-NULL
 
-dir_in<-"421_fc_aroma"
-dir_out<-"426_fc_ca_aroma"
-list_atlas<-"power264"
+#dir_in<-"421_fc_aroma"
+#dir_out<-"426_fc_ca_aroma"
+#list_atlas<-"power264"
 #list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -169,6 +170,7 @@ diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
       df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
       df_out<-rbind(df_out,df_diff)
     }
+    df_out<-transform(df_out,ses=as.character(ses))
     df_out<-rbind.fill(df_conn,df_out)
     write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
   }

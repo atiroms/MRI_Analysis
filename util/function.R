@@ -127,10 +127,17 @@ gamm_core<-function(data_src){
   return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind))
 }
 
+combine_gamm<-function(list_dst_sub){
+  df_gamm<-df_aic<-data.frame()
+  for (dst_sub in list_dst_sub){
+    df_gamm<-rbind(df_gamm,dst_sub$df_out_gamm_add)
+    df_aic<-rbind(df_aic,dst_sub$df_out_aic_add)
+  }
+  return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic))
+}
 
 iterate_gamm<-function(df_join,df_roi,list_mod_){
   list_roi<-df_roi$id
-  df_out_gamm<-df_out_aic<-NULL
   
   # Prepare dataset for multi-core processing
   print("Preparing dataset for parallel processing.")
@@ -159,15 +166,44 @@ iterate_gamm<-function(df_join,df_roi,list_mod_){
   stopCluster(clust)
   
   # Collect data into dataframes
-  print("Combining parallel processing reulsts.")
+  len_list<-length(list_dst_gamm)
+  len_sublist<-floor(sqrt(len_list)*2)
+  n_sublist<-ceil(len_list/len_sublist)
+  print(paste("Dividing results into", as.character(n_sublist), "sublists.",sep=" "))
+  list_dst_gamm_sub<-list()
+  for (idx_sublist in 1:n_sublist){
+    #print(paste("Subgroup",as.character(idx_sublist),sep=" "))
+    if (idx_sublist!=n_sublist){
+      list_dst_gamm_sub<-c(list_dst_gamm_sub,
+                           list(list_dst_gamm[((idx_sublist-1)*len_sublist+1):(idx_sublist*len_sublist)]))
+    }else{
+      list_dst_gamm_sub<-c(list_dst_gamm_sub,
+                           list(list_dst_gamm[((idx_sublist-1)*len_sublist+1):len_list]))
+    }
+  }
+  list_dst_gamm<-NULL
+  gc()
+  
+  n_cluster<-floor(detectCores()*3/4)
+  clust<-makeCluster(n_cluster)
+  print(paste("Combining within sublists,",as.character(n_cluster),"cores.",sep=" "))
+  clusterExport(clust,
+                varlist=NULL,
+                envir=environment())
+  list_dst_gamm<-parLapply(clust,list_dst_gamm_sub,combine_gamm)
+  stopCluster(clust)
+  
+  print("Combining sublists.")
+  df_out_gamm<-df_out_aic<-NULL
   for (dst_gamm in list_dst_gamm){
     df_out_gamm<-rbind(df_out_gamm,dst_gamm$df_out_gamm_add)
     df_out_aic<-rbind(df_out_aic,dst_gamm$df_out_aic_add)
   }
+  list_dst_gamm<-NULL
+  gc()
   
   rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
-  output<-list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic)
-  return(output)
+  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic))
 }
 
 
