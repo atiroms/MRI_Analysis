@@ -29,8 +29,8 @@ list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-list_atlas<-"power264"
-#list_atlas<-"aal116"
+#list_atlas<-"power264"
+list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
 list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
@@ -141,7 +141,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subse
       print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
       list_covar<-list_covar_hormone_
       list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
-      suffix<-paste("_wave-",waves,"_var-",idx_hormone,sep="")
+      suffix<-paste("wave-",waves,"_var-",idx_hormone,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
