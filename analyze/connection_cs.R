@@ -29,8 +29,8 @@ list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-list_atlas<-"power264"
-#list_atlas<-"aal116"
+#list_atlas<-"power264"
+list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
 list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
