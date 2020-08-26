@@ -21,3 +21,6 @@ install.packages("rowr")
 install.packages("missMDA")
 install.packages("rlist")
 install.packages("DescTools")
+install.packages("data.table")
+install.packages("qgraph") # ERROR: dependencies ‘psych’, ‘lavaan’ are not available for package ‘qgraph’
+install.packages("dplyr")
