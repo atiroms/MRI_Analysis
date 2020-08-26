@@ -141,7 +141,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subse
       print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
       list_covar<-list_covar_hormone_
       list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
-      suffix<-paste("_wave-",waves,"_var-",idx_hormone,sep="")
+      suffix<-paste("wave-",waves,"_var-",idx_hormone,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
