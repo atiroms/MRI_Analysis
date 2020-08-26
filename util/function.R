@@ -42,7 +42,7 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
     print("Error: root path could not be found.")
   }
   path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
+  path_common <- file.path(path_root,"Dropbox/MRI_img/pnTTC/puberty/common")
   if (is.null(path_exp_full_)){
     path_io     <- file.path(path_root,path_exp_)
   }else{

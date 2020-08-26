@@ -21,19 +21,18 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-dir_in<-"421_fc_aroma"
-dir_out<-""
-#list_atlas<-"aal116"
-#list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
-list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-path_exp_full<-NULL
-
 #dir_in<-"421_fc_aroma"
-#dir_out<-"426_fc_ca_aroma"
-#list_atlas<-"power264"
+#dir_out<-""
+#list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
+#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+#path_exp_full<-NULL
+
+dir_in<-"421_fc_aroma"
+dir_out<-"426_fc_ca_aroma"
+list_atlas<-"power264"
 #list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-#path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
