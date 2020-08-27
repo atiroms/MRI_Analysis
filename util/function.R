@@ -441,7 +441,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
     #print(paste('Clinical: checking wave ',str_wave,sep=''))
     df_clin_wave<-df_clin_long[df_clin_long['wave']==wave,]
     #print(paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified.',sep=''))
     id_intersect<-df_clin_wave[,'ID_pnTTC']
     list_id_subset_wave<-list("src"=id_intersect)
     for (key_condition in subset_subj[[str_wave]]){
@@ -453,12 +453,12 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
       id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
       #print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
-      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, condition_subset,sep=''))
+      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_meet_cond)),' subjects satisfying ',key_subset, condition_subset,sep=''))
       id_meet_cond<-list(id_meet_cond)
       names(id_meet_cond)<-key_subset
       list_id_subset_wave<-c(list_id_subset_wave,id_meet_cond)
     }
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_intersect)),' subjects meeting all conditions.',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_intersect)),' subjects satisfying all conditions.',sep=''))
     df_clin_wave<-df_clin_wave[df_clin_wave$ID_pnTTC %in% id_intersect,]
     df_clin_subset<-rbind(df_clin_subset,df_clin_wave)
     id_intersect<-list('intersect'=id_intersect)
@@ -687,7 +687,7 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   if(!is.null(df_indiv)){
     df_comp_subj<-cbind(df_indiv,df_comp_subj)
     
-    if (!calc_corr){
+    if (calc_corr){
       # Calculate correlation between component attribution and clinical covariate
       df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
       n_covar<-ncol(df_covar)
@@ -759,7 +759,7 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   if(!is.null(df_indiv)){
     df_comp_subj<-cbind(df_indiv,df_comp_subj)
     
-    if (!calc_corr){
+    if (calc_corr){
       # Calculate correlation between component attribution and clinical covariate
       df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
       n_covar<-ncol(df_covar)

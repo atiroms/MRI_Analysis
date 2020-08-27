@@ -15,7 +15,7 @@ atlas<-"aal116"
 
 
 
-waves<-names(list_waves_)[[2]]
+waves<-names(list_waves_)[[3]]
 
 
 
