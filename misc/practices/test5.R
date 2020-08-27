@@ -11,6 +11,10 @@ plot_result=F
 
 
 
+atlas<-"aal116"
+
+
+
 waves<-names(list_waves_)[[2]]
 
 
@@ -28,7 +32,3 @@ subset_subj_=subset_subj_temp
 list_dim_ca_=list_dim_ca_
 plot_result=plot_result
 suffix_=suffix
-
-
-
-atlas<-"aal116"

@@ -415,7 +415,7 @@ print_log<-function(str_in,str_add){
 }
 
 func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_clin,
-                                  file_clin= "CSUB.csv",suffix=""
+                                  file_clin= "CSUB.csv",prefix=""
                                   ){
   df_src <- read.csv(file.path(paths$common,file_clin))
   
@@ -524,7 +524,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
   rownames(df_clin_exist)<-NULL
   
-  writeLines(list_log, file.path(paths$output,"output",paste(suffix,"clin_long.txt",sep="_")))
+  writeLines(list_log, file.path(paths$output,"output",paste(prefix,"clin_long.txt",sep="_")))
   
   output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)
@@ -643,7 +643,7 @@ func_cor<-function(input){
 #**************************************************
 # General PCA calculation =========================
 #**************************************************
-func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
+func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   
   if (sum(is.na(df_src))>0){
     print("Imputing missing data.")
@@ -682,24 +682,24 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   df_comp_subj<-data.frame(data_pca$ind$coord)
   colnames(df_comp_subj)<-sprintf("comp_%03d",1:n_comp)
 
+  df_cor<-NULL
+  df_cor_flat<-NULL
   if(!is.null(df_indiv)){
-    df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
-    n_covar<-ncol(df_covar)
-    
-    # Calculate correlation between component attribution and clinical covariate
-    df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
-    data_cor<-func_cor(df_comp_subj_covar)
-    df_cor<-data_cor$cor
-    df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
-    df_cor_flat<-data_cor$cor_flat
-    df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
-    df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
-    colnames(df_cor_flat)<-c("covar","component","r","p")
-    
     df_comp_subj<-cbind(df_indiv,df_comp_subj)
-  }else{
-    df_cor<-NULL
-    df_cor_flat<-NULL
+    
+    if (!calc_corr){
+      # Calculate correlation between component attribution and clinical covariate
+      df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
+      n_covar<-ncol(df_covar)
+      df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
+      data_cor<-func_cor(df_comp_subj_covar)
+      df_cor<-data_cor$cor
+      df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+      df_cor_flat<-data_cor$cor_flat
+      df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
+      df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+      colnames(df_cor_flat)<-c("covar","component","r","p")
+    }
   }
   rownames(df_comp_subj)<-NULL
   
@@ -722,7 +722,7 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
 #**************************************************
 # General ICA calculation =========================
 #**************************************************
-func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
+func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   
   n_comp<-nrow(df_src)-1
   if (!is.null(dim_ca)){
@@ -754,27 +754,26 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL){
   df_comp_subj<-data.frame(data_ica$S)
   colnames(df_comp_subj)<-sprintf("comp_%03d",1:n_comp)
   
+  df_cor<-NULL
+  df_cor_flat<-NULL
   if(!is.null(df_indiv)){
-    df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
-    n_covar<-ncol(df_covar)
-    
-    # Calculate correlation between component attribution and clinical covariate
-    df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
-    data_cor<-func_cor(df_comp_subj_covar)
-    df_cor<-data_cor$cor
-    df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
-    df_cor_flat<-data_cor$cor_flat
-    df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
-    df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
-    colnames(df_cor_flat)<-c("covar","component","r","p")
-    
     df_comp_subj<-cbind(df_indiv,df_comp_subj)
-  }else{
-    df_cor<-NULL
-    df_cor_flat<-NULL
+    
+    if (!calc_corr){
+      # Calculate correlation between component attribution and clinical covariate
+      df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
+      n_covar<-ncol(df_covar)
+      df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
+      data_cor<-func_cor(df_comp_subj_covar)
+      df_cor<-data_cor$cor
+      df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+      df_cor_flat<-data_cor$cor_flat
+      df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
+      df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+      colnames(df_cor_flat)<-c("covar","component","r","p")
+    }
   }
   rownames(df_comp_subj)<-NULL
-  
   
   # Matrix of variance accounted
   # Row: component(factor)
