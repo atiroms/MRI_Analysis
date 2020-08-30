@@ -645,42 +645,42 @@ func_cor<-function(input){
 #**************************************************
 func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   
-  if (sum(is.na(df_src))>0){
-    print("Imputing missing data.")
-    # Estimate number of dimensions
-    n_comp<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
-    
-    # Impute data
-    df_src<-imputePCA(df_src,ncp=n_comp)$completeObs
+  # Estimate number of dimensions
+  if (is.null(dim_ca)){
+    ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+    ncp_calc<-ncp_estim
   }else{
-    n_comp<-nrow(df_src)-1
+    ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
+    if (ncp_estim==dim_ca){
+      print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
+    }
+    ncp_calc<-dim_ca
   }
   
-  if (!is.null(dim_ca)){
-    if(dim_ca<n_comp){
-      n_comp<-dim_ca
-    }
+  if (sum(is.na(df_src))>0){
+    # Impute data
+    df_src<-imputePCA(df_src,ncp=ncp_calc)$completeObs
   }
-  print(paste("PCA dimension: ",as.character(n_comp),sep=""))
-
+  
+  print(paste("Calculating PCA, dimension: ",as.character(ncp_calc),sep=""))
   # PCA calculation
-  data_pca<-PCA(df_src,scale.unit = TRUE, ncp = n_comp, graph = FALSE)
+  data_pca<-PCA(df_src,scale.unit = TRUE, ncp = ncp_calc, graph = FALSE)
   
   # Component-imaging variable matrix
   # Row: MRI variable, Column: component(factor)
   df_comp_mri<-data.frame(data_pca$var$coord)
   if(!is.null(df_var)){
     df_comp_mri<-cbind(df_var,df_comp_mri)
-    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:n_comp))
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:ncp_calc))
   }else{
-    colnames(df_comp_mri)<-sprintf("comp_%03d",1:n_comp)
+    colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
   }
   rownames(df_comp_mri)<-NULL
   
   # Component-Individual matrix
   # Row: subject, Column: (clinical variable +) component(factor)
   df_comp_subj<-data.frame(data_pca$ind$coord)
-  colnames(df_comp_subj)<-sprintf("comp_%03d",1:n_comp)
+  colnames(df_comp_subj)<-sprintf("comp_%03d",1:ncp_calc)
 
   df_cor<-NULL
   df_cor_flat<-NULL
@@ -714,7 +714,7 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
-              'df_variance'=df_variance,'dim'=n_comp,
+              'df_variance'=df_variance,'dim'=ncp_calc,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
