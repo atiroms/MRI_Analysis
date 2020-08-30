@@ -11,7 +11,323 @@
 library(tidyverse)
 library(dplyr)
 library(Hmisc)
+library(FactoMineR)
+library(missMDA)
+library(ica)
+library(parallel)
 #library(DescTools)
+
+
+#**************************************************
+# Fisher transofrmation of Correlation to Z =======
+#**************************************************
+func_fisherz<-function(rho){
+  return((log((1+rho)/(1-rho)))/2)
+}
+
+
+#**************************************************
+# Create path list ================================
+#**************************************************
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
+                    path_exp_,dir_in_,dir_out_,path_exp_full_=NULL
+                    ){
+  path_root<-NA
+  for(p in list_path_root){
+    if(file.exists(p)){
+      path_root<-p
+    }
+  }
+  if(is.na(path_root)){
+    print("Error: root path could not be found.")
+  }
+  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
+  path_common <- file.path(path_root,"Dropbox/MRI_img/pnTTC/puberty/common")
+  if (is.null(path_exp_full_)){
+    path_io     <- file.path(path_root,path_exp_)
+  }else{
+    path_io     <- path_exp_full_
+  }
+  path_in     <- file.path(path_io,dir_in_)
+  path_out    <- file.path(path_io,dir_out_)
+  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
+                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
+  return(output)
+}
+
+#paths<-func_path()
+
+
+#**************************************************
+# Iterate GAM/GLM over ROI paiers in FC ===========
+#**************************************************
+
+gamm_core<-function(data_src){
+  df_src<-data_src$df_src
+  id_from<-data_src$id_from
+  id_to<-data_src$id_to
+  label_from<-data_src$label_from
+  label_to<-data_src$label_to
+  
+  #print(paste("GLM/GAM: ",id_from," - ",id_to," (",label_from," - ",label_to,")",sep=""))
+  df_out_aic_add<-df_out_gamm_add<-data.frame()
+  for (idx_mod in names(list_mod_)){
+    list_plot<-list()
+    list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
+    for (idx_sex in list_sex){
+      df_src_sex<-df_src[df_src$sex==idx_sex,]
+      #mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
+      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+      if (class(mod)[1]=="try-error"){
+        #print(paste("Error fiting ",idx_mod, ", sex= ",idx_sex,".",sep=''))
+      }else{
+        p_table<-summary.gam(mod)$p.table
+        if (is.null(summary.gam(mod)$s.table)){
+          df_out_gamm_add_add<-data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                          #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                          sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                          estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                          t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+          
+        }else{
+          s_table<-summary.gam(mod)$s.table
+          df_out_gamm_add_add<-rbind(data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                                #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                                sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                                estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                                t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                                     data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                                #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                                sex=idx_sex,model=idx_mod,term=rownames(s_table),
+                                                estimate=NA,se=NA,F=s_table[,'F'],
+                                                t=NA,p=s_table[,'p-value']))
+        }
+        df_out_gamm_add<-rbind(df_out_gamm_add,df_out_gamm_add_add)
+        df_out_aic_add<-rbind(df_out_aic_add,
+                              data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                         #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                         sex=idx_sex,
+                                         model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+      }
+    }
+  }
+  
+  # Compare AICs of GAMM models
+  df_out_aic_add_sex_rbind<-data.frame()
+  for (idx_sex in list_sex){
+    df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
+    df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
+                       'aic_best_among_models']<-1
+    df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
+  }
+  
+  #df_out_gamm<-rbind(df_out_gamm,df_out_gamm_add)
+  #df_out_aic<-rbind(df_out_aic,df_out_aic_add_sex_rbind)
+  
+  return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind))
+}
+
+combine_gamm<-function(list_dst_sub){
+  df_gamm<-df_aic<-data.frame()
+  for (dst_sub in list_dst_sub){
+    df_gamm<-rbind(df_gamm,dst_sub$df_out_gamm_add)
+    df_aic<-rbind(df_aic,dst_sub$df_out_aic_add)
+  }
+  return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic))
+}
+
+iterate_gamm<-function(df_join,df_roi,list_mod_){
+  list_roi<-df_roi$id
+  
+  # Prepare dataset for multi-core processing
+  print("Preparing dataset for parallel processing.")
+  list_src_gamm<-list()
+  for (id_from in list_roi[-length(list_roi)]){
+    df_join_from<-df_join[df_join$from==id_from,]
+    label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+    for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+      df_src<-df_join_from[df_join_from$to==id_to,]
+      list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,
+                                               "id_from"=id_from,"id_to"=id_to,
+                                               "label_from"=label_from,"label_to"=label_to)))
+    }
+  }
+  
+  # Parallel processing
+  n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
+  clust<-makeCluster(n_cluster)
+  print(paste("Parallel processing,",as.character(n_cluster),"cores.",sep=" "))
+  clusterExport(clust,
+                varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
+                          "as.numeric.factor"),
+                envir=environment())
+  list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
+  stopCluster(clust)
+  
+  # Collect data into dataframes
+  len_list<-length(list_dst_gamm)
+  len_sublist<-floor(sqrt(len_list)*2)
+  n_sublist<-ceil(len_list/len_sublist)
+  print(paste("Dividing results into", as.character(n_sublist), "sublists.",sep=" "))
+  list_dst_gamm_sub<-list()
+  for (idx_sublist in 1:n_sublist){
+    #print(paste("Subgroup",as.character(idx_sublist),sep=" "))
+    if (idx_sublist!=n_sublist){
+      list_dst_gamm_sub<-c(list_dst_gamm_sub,
+                           list(list_dst_gamm[((idx_sublist-1)*len_sublist+1):(idx_sublist*len_sublist)]))
+    }else{
+      list_dst_gamm_sub<-c(list_dst_gamm_sub,
+                           list(list_dst_gamm[((idx_sublist-1)*len_sublist+1):len_list]))
+    }
+  }
+  list_dst_gamm<-NULL
+  gc()
+  
+  n_cluster<-floor(detectCores()*3/4)
+  clust<-makeCluster(n_cluster)
+  print(paste("Combining within sublists,",as.character(n_cluster),"cores.",sep=" "))
+  clusterExport(clust,
+                varlist=NULL,
+                envir=environment())
+  list_dst_gamm<-parLapply(clust,list_dst_gamm_sub,combine_gamm)
+  stopCluster(clust)
+  
+  print("Combining sublists.")
+  df_out_gamm<-df_out_aic<-NULL
+  for (dst_gamm in list_dst_gamm){
+    df_out_gamm<-rbind(df_out_gamm,dst_gamm$df_out_gamm_add)
+    df_out_aic<-rbind(df_out_aic,dst_gamm$df_out_aic_add)
+  }
+  list_dst_gamm<-NULL
+  gc()
+  
+  rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
+  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic))
+}
+
+
+iterate_gamm_old<-function(df_join,df_roi,list_mod_){
+  list_roi<-df_roi$id
+  df_out_gamm<-df_out_aic<-NULL
+  for (id_from in list_roi[-length(list_roi)]){
+    for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+      label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+      df_src=df_join[df_join$from==id_from & df_join$to==id_to,]
+      
+      print(paste("GLM/GAM: ",id_from," - ",id_to," (",label_from," - ",label_to,")",sep=""))
+      df_out_aic_add<-df_out_gamm_add<-data.frame()
+      for (idx_mod in names(list_mod_)){
+        list_plot<-list()
+        list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
+        for (idx_sex in list_sex){
+          df_src_sex<-df_src[df_src$sex==idx_sex,]
+          #mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
+          mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+          if (class(mod)[1]=="try-error"){
+            print(paste("Error fiting ",idx_mod, ", sex= ",idx_sex,".",sep=''))
+          }else{
+            p_table<-summary.gam(mod)$p.table
+            if (is.null(summary.gam(mod)$s.table)){
+              df_out_gamm_add_add<-data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                              #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                              sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                              estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                              t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
+              
+            }else{
+              s_table<-summary.gam(mod)$s.table
+              df_out_gamm_add_add<-rbind(data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                                    #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                                    sex=idx_sex,model=idx_mod,term=rownames(p_table),
+                                                    estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
+                                                    t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
+                                         data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                                    #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                                    sex=idx_sex,model=idx_mod,term=rownames(s_table),
+                                                    estimate=NA,se=NA,F=s_table[,'F'],
+                                                    t=NA,p=s_table[,'p-value']))
+            }
+            df_out_gamm_add<-rbind(df_out_gamm_add,df_out_gamm_add_add)
+            df_out_aic_add<-rbind(df_out_aic_add,
+                                  data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                             #roi=roi,label_roi=label_roi,group=group,measure=measure,
+                                             sex=idx_sex,
+                                             model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+          }
+        }
+      }
+      
+      # Compare AICs of GAMM models
+      df_out_aic_add_sex_rbind<-data.frame()
+      for (idx_sex in list_sex){
+        df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
+        df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
+                           'aic_best_among_models']<-1
+        df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
+      }
+      
+      df_out_gamm<-rbind(df_out_gamm,df_out_gamm_add)
+      df_out_aic<-rbind(df_out_aic,df_out_aic_add_sex_rbind)
+    }
+  }
+  rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
+  output<-list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic)
+  return(output)
+}
+
+
+#**************************************************
+# Add multiple comparison-corrected p values ======
+#**************************************************
+
+add_mltcmp<-function(df_out_gamm,df_roi,analysis,atlas,list_mod,list_plot,calc_seed_level=TRUE){
+  df_plot_gamm_concat<-NULL
+  for (idx_mod in names(list_mod)){
+    for (idx_plot in names(list_plot)){
+      var_exp<-list_plot[[idx_plot]][["var_exp"]]
+      for (idx_sex in c(1,2)){
+        # Subset GAMM result dataframe for plotting
+        if (idx_sex==1){
+          label_sex<-"m"
+        }else{
+          label_sex<-"f"
+        }
+        df_plot_gamm<-df_out_gamm[df_out_gamm$model==idx_mod 
+                                  & df_out_gamm$term==var_exp
+                                  & df_out_gamm$sex==idx_sex,]
+        if (nrow(df_plot_gamm)>0){
+          # Calculate graph-level multiple comparison-corrected p values
+          df_plot_gamm<-cbind(df_plot_gamm,mltcomp_corr(df_plot_gamm))
+          
+          # Calculate seed-level multiple comparison-corrected p values
+          if (calc_seed_level){
+            for (idx_roi in as.character(df_roi$id)){
+              list_row_seed<-sort(union(which(df_plot_gamm$from==idx_roi),
+                                        which(df_plot_gamm$to==idx_roi)))
+              df_plot_gamm_seed<-df_plot_gamm[list_row_seed,]
+              df_p_seed<-mltcomp_corr(df_plot_gamm_seed)
+              for (idx_edge in seq(length(list_row_seed))){# iterate over edges which starts / ends at idx_roi
+                for (type_p in colnames(df_p_seed)){  # iterate over types of p values
+                  # Enter corrected p to df_plot_gamm if empty or new value is smaller
+                  df_plot_gamm[list_row_seed[idx_edge],
+                               paste("seed",type_p,sep="_")]<-min(df_plot_gamm[list_row_seed[idx_edge],
+                                                                               paste("seed",type_p,sep="_")],
+                                                                  df_p_seed[idx_edge,type_p],
+                                                                  na.rm=T)
+                }
+              }
+            }
+          }
+        }
+        df_plot_gamm_concat<-rbind(df_plot_gamm_concat,df_plot_gamm)
+      }
+    }
+  }
+  return(df_plot_gamm_concat)
+}
+
 
 #**************************************************
 # Factor to numeric function ======================
@@ -31,19 +347,25 @@ as.numeric.factor <- function(x) {
 func_createdirs<-function(paths,str_proc="",copy_log=T){
   list_createdirs<-c(paths$output,file.path(paths$output,"output"))
   for(d in list_createdirs){
-    if (!file.exists(d)){
+    if (file.exists(d)){
+      print(paste("Destination folder already exists:",d,sep=" "))
+    }else{
       dir.create(d)
     }
   }
   if (copy_log){
     if (file.exists(file.path(paths$input,"log"))){
-      file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
-      list_log<-readLines(file.path(paths$output,"log","pipeline.log"))
-      list_log<-c(list_log,paste("\t",str_proc,sep=""))
-      list_log<-c(list_log,paths$dir_out)
-      writeLines(list_log,file.path(paths$output,"log","pipeline.log"))
+      if (file.exists(file.path(paths$output,"log"))){
+        print("Destination log folder already exists.")
+      }else{
+        file.copy(file.path(paths$input,"log"),paths$output,recursive=T)
+        list_log<-readLines(file.path(paths$output,"log","pipeline.log"))
+        list_log<-c(list_log,paste("\t",str_proc,sep=""))
+        list_log<-c(list_log,paths$dir_out)
+        writeLines(list_log,file.path(paths$output,"log","pipeline.log"))
+      }
     }else{
-      print("Log folder does not exist.")
+      print("Source log folder does not exist.")
     }
   }
 }
@@ -93,9 +415,11 @@ print_log<-function(str_in,str_add){
 }
 
 func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_clin,
-                                  file_clin= "CSUB.csv"
+                                  file_clin= "CSUB.csv",prefix=""
                                   ){
   df_src <- read.csv(file.path(paths$common,file_clin))
+  
+  # Vertically concatenate wave-wise clinical data
   df_clin_long <- data.frame(matrix(nrow=0,ncol=ncol(df_src)+1))
   for (wave in list_wave){
     df_tmp<-df_src['ID_pnTTC']
@@ -117,7 +441,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
     #print(paste('Clinical: checking wave ',str_wave,sep=''))
     df_clin_wave<-df_clin_long[df_clin_long['wave']==wave,]
     #print(paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified.',sep=''))
     id_intersect<-df_clin_wave[,'ID_pnTTC']
     list_id_subset_wave<-list("src"=id_intersect)
     for (key_condition in subset_subj[[str_wave]]){
@@ -129,12 +453,12 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
       id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
       #print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
-      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, condition_subset,sep=''))
+      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_meet_cond)),' subjects satisfying ',key_subset, condition_subset,sep=''))
       id_meet_cond<-list(id_meet_cond)
       names(id_meet_cond)<-key_subset
       list_id_subset_wave<-c(list_id_subset_wave,id_meet_cond)
     }
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_intersect)),' subjects meeting all conditions.',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_intersect)),' subjects satisfying all conditions.',sep=''))
     df_clin_wave<-df_clin_wave[df_clin_wave$ID_pnTTC %in% id_intersect,]
     df_clin_subset<-rbind(df_clin_subset,df_clin_wave)
     id_intersect<-list('intersect'=id_intersect)
@@ -142,7 +466,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
     list_id_subset_wave<-list(list_id_subset_wave)
     names(list_id_subset_wave)<-str_wave
     list_id_subset<-c(list_id_subset,list_id_subset_wave)
-  }
+  } # Finished looping over waves
   colnames(df_clin_subset)<-colnames(df_clin_long)
   
   # Subset unused columns of clinical data
@@ -200,7 +524,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
   rownames(df_clin_exist)<-NULL
   
-  writeLines(list_log, file.path(paths$output,"output","clin_long.txt"))
+  writeLines(list_log, file.path(paths$output,"output",paste(prefix,"clin_long.txt",sep="_")))
   
   output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)
@@ -308,7 +632,9 @@ func_cor<-function(input){
   #mean_cor<-mean(cor$r,na.rm=TRUE)
   #sd_cor<-sd(cor$r,na.rm=TRUE)
   #cor_flat$z_r<-(as.numeric(cor_flat$r)-mean_cor)/sd_cor
-  cor_flat$z_r<-FisherZ(as.numeric(cor_flat$r))
+  
+  #cor_flat$z_r<-FisherZ(as.numeric(cor_flat$r))
+  cor_flat$z_r<-func_fisherz(as.numeric(cor_flat$r))
   output<-list("cor"=data.frame(cor$r),"cor_flat"=cor_flat)
   return(output)
 }
@@ -317,44 +643,159 @@ func_cor<-function(input){
 #**************************************************
 # General PCA calculation =========================
 #**************************************************
-func_pca<-function(df_src,df_var=NULL,df_indiv=NULL){
+func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
+  
   # Estimate number of dimensions
-  print("Estimating PCA dimension.")
-  ncp_estimate<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
-  print(paste("PCA dimension: ",as.character(ncp_estimate),sep=""))
-  # Ismpute data
-  df_conn<-imputePCA(df_src,ncp=ncp_estimate)$completeObs
+  if (is.null(dim_ca)){
+    ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+    ncp_calc<-ncp_estim
+  }else{
+    ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
+    if (ncp_estim==dim_ca){
+      print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
+    }
+    ncp_calc<-dim_ca
+  }
   
+  # Impute data
+  if (sum(is.na(df_src))>0){
+    df_src<-imputePCA(df_src,ncp=ncp_calc)$completeObs
+  }
+  
+  print(paste("Calculating PCA, dimension: ",as.character(ncp_calc),sep=""))
   # PCA calculation
-  data_pca<-PCA(df_conn,scale.unit = TRUE, ncp = ncp_estimate, graph = FALSE)
+  data_pca<-PCA(df_src,scale.unit = TRUE, ncp = ncp_calc, graph = FALSE)
   
-  df_fac_var<-data.frame(data_pca$var$coord)
+  # Component-imaging variable matrix
+  # Row: MRI variable, Column: component(factor)
+  df_comp_mri<-data.frame(data_pca$var$coord)
   if(!is.null(df_var)){
-    df_fac_var<-cbind(df_var,df_fac_var)
-    colnames(df_fac_var)<-c(colnames(df_var),sprintf("dim_%02d",1:ncp_estimate))
+    df_comp_mri<-cbind(df_var,df_comp_mri)
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:ncp_calc))
   }else{
-    colnames(df_fac_var)<-sprintf("dim_%02d",1:ncp_estimate)
+    colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
   }
-  rownames(df_fac_var)<-NULL
+  rownames(df_comp_mri)<-NULL
   
-  df_fac_indiv<-data.frame(data_pca$ind$coord)
+  # Component-Individual matrix
+  # Row: subject, Column: (clinical variable +) component(factor)
+  df_comp_subj<-data.frame(data_pca$ind$coord)
+  colnames(df_comp_subj)<-sprintf("comp_%03d",1:ncp_calc)
+
+  df_cor<-NULL
+  df_cor_flat<-NULL
   if(!is.null(df_indiv)){
-    df_fac_indiv<-cbind(df_indiv,df_fac_indiv)
-    colnames(df_fac_indiv)<-c(colnames(df_indiv),sprintf("dim_%02d",1:ncp_estimate))
-  }else{
-    colnames(df_fac_indiv)<-sprintf("dim_%02d",1:ncp_estimate)
+    df_comp_subj<-cbind(df_indiv,df_comp_subj)
+    
+    if (calc_corr){
+      # Calculate correlation between component attribution and clinical covariate
+      df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
+      n_covar<-ncol(df_covar)
+      df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
+      data_cor<-func_cor(df_comp_subj_covar)
+      df_cor<-data_cor$cor
+      df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+      df_cor_flat<-data_cor$cor_flat
+      df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
+      df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+      colnames(df_cor_flat)<-c("covar","component","r","p")
+    }
   }
-  rownames(df_fac_indiv)<-NULL
+  rownames(df_comp_subj)<-NULL
   
-  df_var_accounted<-data.frame(data_pca$eig)
-  colnames(df_var_accounted)<-c("eigenvalue","var_accounted","cumul_var_accounted")
-  df_var_accounted$var_accounted<-df_var_accounted$var_accounted/100
-  df_var_accounted$cumul_var_accounted<-df_var_accounted$cumul_var_accounted/100
-  df_var_accounted$dim<-seq(1,dim(df_var_accounted)[1])
-  df_var_accounted<-df_var_accounted[c("dim","var_accounted","cumul_var_accounted","eigenvalue")]
-  rownames(df_var_accounted)<-NULL
+  # Matrix of variance accounted
+  # Row: component(factor)
+  df_variance<-data.frame(data_pca$eig)
+  colnames(df_variance)<-c("eigenvalue","vaf","cumul_vaf")
+  df_variance$vaf<-df_variance$vaf/100
+  df_variance$cumul_vaf<-df_variance$cumul_vaf/100
+  df_variance$comp<-seq(1,dim(df_variance)[1])
+  df_variance<-df_variance[c("comp","vaf","cumul_vaf","eigenvalue")]
+  rownames(df_variance)<-NULL
   
-  return(list('df_fac_var'=df_fac_var,'df_fac_indiv'=df_fac_indiv,'df_var_accounted'=df_var_accounted,'n_dim'=ncp_estimate))
+  return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
+              'df_variance'=df_variance,'dim'=ncp_calc,
+              'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
+}
+
+
+#**************************************************
+# General ICA calculation =========================
+#**************************************************
+func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
+  
+  if (is.null(dim_ca)){
+    ncp_calc<-nrow(df_src)-1
+  }else{
+    ncp_calc<-dim_ca
+  }
+  
+  print(paste("Calculating ICA, dimension: ",as.character(ncp_calc),sep=""))
+  
+  # Imputation using means
+  if (sum(is.na(df_src))>0){
+    df_src<-impute(df_src,mean)
+  }
+  
+  df_src<-data.matrix(df_src)
+  
+  # ICA calculation
+  #data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
+  #data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE)
+  data_ica <-icaimax(df_src, nc=ncp_calc,center=TRUE)
+  
+  # Component-imaging variable matrix
+  # Row: MRI variable, Column: component(factor)
+  df_comp_mri<-data.frame(data_ica$M)
+  if(!is.null(df_var)){
+    df_comp_mri<-cbind(df_var,df_comp_mri)
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:ncp_calc))
+  }else{
+    colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
+  }
+  rownames(df_comp_mri)<-NULL
+  
+  # Component-Individual matrix
+  # Row: subject, Column: (clinical variable +) component(factor)
+  df_comp_subj<-data.frame(data_ica$S)
+  colnames(df_comp_subj)<-sprintf("comp_%03d",1:ncp_calc)
+  
+  df_cor<-NULL
+  df_cor_flat<-NULL
+  if(!is.null(df_indiv)){
+    df_comp_subj<-cbind(df_indiv,df_comp_subj)
+    
+    if (calc_corr){
+      # Calculate correlation between component attribution and clinical covariate
+      df_covar<-df_indiv[,-which(colnames(df_indiv) %in% c("ID_pnTTC","ses"))]
+      n_covar<-ncol(df_covar)
+      df_comp_subj_covar<-cbind(df_covar,df_comp_subj)
+      data_cor<-func_cor(df_comp_subj_covar)
+      df_cor<-data_cor$cor
+      df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+      df_cor_flat<-data_cor$cor_flat
+      df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_covar) & df_cor_flat$to %in% colnames(df_comp_subj),]
+      df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+      colnames(df_cor_flat)<-c("covar","component","r","p")
+    }
+  }
+  rownames(df_comp_subj)<-NULL
+  
+  # Matrix of variance accounted
+  # Row: component(factor)
+  df_variance<-data.frame(data_ica$vafs)
+  colnames(df_variance)<-"vaf"
+  df_variance[1,"cumul_vaf"]<-df_variance[1,"vaf"]
+  for (idx_row in 2:nrow(df_variance)){
+    df_variance[idx_row,"cumul_vaf"]<-df_variance[idx_row-1,"cumul_vaf"]+df_variance[idx_row,"vaf"]
+  }
+  df_variance$comp<-seq(1,dim(df_variance)[1])
+  df_variance<-df_variance[c("comp","vaf","cumul_vaf")]
+  rownames(df_variance)<-NULL
+  
+  return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
+              'df_variance'=df_variance,'dim'=ncp_calc,
+              'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
 

@@ -11,7 +11,7 @@
 #**************************************************
 
 # parameters for fc()
-#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in <-"300_ts_acompcor"
 #dir_out <-"301_fc_acompcor"
@@ -26,11 +26,11 @@
 #list_atlas<-c("aal116","gordon333","power264","shen268")
 # list_atlas<-"aal116"
 
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
-dir_in <-"56.1_ts_conn"
-dir_out <-"56.3_fc_conn"
+#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
+#dir_in <-"56.1_ts_conn"
+#dir_out <-"56.3_fc_conn"
 #list_atlas<-"cnn"
-list_atlas<-"hoa"
+#list_atlas<-"hoa"
 
 #**************************************************
 # Libraries =======================================
@@ -44,39 +44,11 @@ library(parallel)
 
 
 #**************************************************
-# Create path list ================================
-#**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
-  path_root<-NA
-  for(p in list_path_root){
-    if(file.exists(p)){
-      path_root<-p
-    }
-  }
-  if(is.na(path_root)){
-    print("Error: root path could not be found.")
-  }
-  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_io     <- file.path(path_root,path_exp_)
-  path_in     <- file.path(path_io,dir_in_)
-  path_out    <- file.path(path_io,dir_out_)
-  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
-  return(output)
-}
-
-paths<-func_path()
-
-
-#**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"util/function.R"))
-source(file.path(paths$script,"util/plot.R"))
+source(file.path(getwd(),"util/function.R"))
+source(file.path(getwd(),"util/plot.R"))
+paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
 #**************************************************

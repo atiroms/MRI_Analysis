@@ -5,45 +5,13 @@
 
 
 #**************************************************
-# Create path list ================================
-#**************************************************
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-dir_in<-dir_out<-NULL
-
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
-  path_root<-NA
-  for(p in list_path_root){
-    if(file.exists(p)){
-      path_root<-p
-    }
-  }
-  if(is.na(path_root)){
-    print("Error: root path could not be found.")
-  }
-  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_io     <- file.path(path_root,path_exp_)
-  path_in     <- file.path(path_io,dir_in_)
-  path_out    <- file.path(path_io,dir_out_)
-  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
-  return(output)
-}
-
-paths<-func_path()
-
-
-#**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"util/function.R"))
-source(file.path(paths$script,"util/plot.R"))
-source(file.path(paths$script,"analyze/timeseries.R"))
-source(file.path(paths$script,"analyze/connection.R"))
-source(file.path(paths$script,"analyze/fingerprint.R"))
+source(file.path(getwd(),"util/function.R"))
+source(file.path(getwd(),"util/plot.R"))
+source(file.path(getwd(),"analyze/timeseries.R"))
+source(file.path(getwd(),"analyze/connection.R"))
+source(file.path(getwd(),"analyze/fingerprint.R"))
 
 
 #**************************************************
@@ -51,17 +19,22 @@ source(file.path(paths$script,"analyze/fingerprint.R"))
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-id_dir_start<-450
-suffix_dir<-"acompcor"
+id_dir_fc<-421
+id_dir_ca<-425
+suffix_dir<-"aroma"
+dim_ca<-20
+
+#id_dir_start<-450
+#suffix_dir<-"acompcor"
 
 #dir_summary<-"300_fp_model_summary"
-dir_summary<-"501_fp_model_summary"
+#dir_summary<-"501_fp_model_summary"
 
-list_term_summary_tanner<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
-list_term_summary_hormone<-c("diff_hormone","mean_hormone","s(diff_hormone)","s(mean_hormone)")
-list_tanner_hormone<-list("max"=0.1,"full"=0.2,"gonadal"=0.3,"adrenal"=0.4,
-                          "testo"=0.5,"corti"=0.6,"dhea"=0.7,"dheas"=0.8)
-thresh_sign<-0.05
+#list_term_summary_tanner<-c("diff_tanner","mean_tanner","s(diff_tanner)","s(mean_tanner)")
+#list_term_summary_hormone<-c("diff_hormone","mean_hormone","s(diff_hormone)","s(mean_hormone)")
+#list_tanner_hormone<-list("max"=0.1,"full"=0.2,"gonadal"=0.3,"adrenal"=0.4,
+#                          "testo"=0.5,"corti"=0.6,"dhea"=0.7,"dheas"=0.8)
+#thresh_sign<-0.05
 #thresh_sign<-0.001
 
 #list_id_dir<-list("acompcor"=202,"aroma"=212,"acompcor_gsr"=232,"aroma_gsr"=242)
@@ -73,12 +46,12 @@ thresh_sign<-0.05
 
 #list_id_dir<-list("acompcor"=400,"acompcor_gsr"=410,"aroma"=420,"aroma_gsr"=430,"36p"=440)
 #list_id_dir<-list("acompcor"=400,"aroma_gsr"=430,"36p"=440)
-list_id_dir<-list("acompcor"=400,"aroma"=420,"aroma_gsr"=430)
+#list_id_dir<-list("acompcor"=400,"aroma"=420,"aroma_gsr"=430)
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100","schaefer200","schaefer400","shen268")
-list_atlas<-c("aal116","gordon333","power264","shen268")
-#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+#list_atlas<-c("aal116","gordon333","power264","shen268")
+list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 
 #list_atlas<-c("aal116","desikanKilliany","glasser360","gordon333","HarvardOxford","power264",
 #              "schaefer100x7","schaefer100x17","schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
@@ -163,11 +136,44 @@ list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","lab
 n_permutation<-1000
 #n_permutation<-100
 
-
 #**************************************************
-# Libraries =======================================
+# ca_fc() for multiple clinical covariates ========
 #**************************************************
 
+ca_fc_multi<-function(path_exp_=path_exp,
+                      id_dir_fc_=id_dir_fc,id_dir_ca_=id_dir_ca,suffix_dir_=suffix_dir,
+                      list_atlas_=list_atlas,list_wave_=list_wave,subset_subj_=subset_subj,
+                      list_covar_=list_covar,list_type_tanner_=list_type_tanner,
+                      list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
+                      dim_ca_=dim_ca){
+  
+  print('Starting ca_fc_multi().')
+  dir_in<-paste(as.character(id_dir_fc_),"fc",suffix_dir_,sep="_")
+  id_dir<-id_dir_ca_
+  
+  for (idx_type_tanner in names(list_type_tanner_)){
+    id_dir<-id_dir+0.1
+    print(paste("Tanner type: ",idx_type_tanner,sep=""))
+    list_covar_[["tanner"]]<-list_type_tanner_[[idx_type_tanner]]
+    dir_out<-paste(as.character(id_dir),"fc_ca",suffix_dir_,idx_type_tanner,sep='_')
+    paths<-func_path(path_exp_=path_exp_,dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-ca_fc(paths_=paths,list_atlas_=list_atlas_,
+                   list_wave_=list_wave_,list_covar_=list_covar_,
+                   subset_subj_=subset_subj_,dim_ca_=dim_ca_)
+  }
+  
+  for (idx_hormone in names(list_hormone_)){
+    id_dir<-id_dir+0.1
+    print(paste("Hormone: ",idx_hormone,sep=""))
+    list_covar_hormone_[["hormone"]]<-list_hormone_[[idx_hormone]]
+    dir_out<-paste(as.character(id_dir),"fc_ca",suffix_dir_,idx_hormone,sep='_')
+    paths<-func_path(path_exp_=path_exp_,dir_in_=dir_in,dir_out_=dir_out)
+    nullobj<-ca_fc(paths_=paths,list_atlas_=list_atlas_,
+                   list_wave_=list_wave_,list_covar_=list_covar_,
+                   subset_subj_=subset_subj_,dim_ca_=dim_ca_)
+  }
+  print('Finished ca_fc_multi().')
+}
 
 
 #**************************************************
@@ -204,6 +210,7 @@ pickup_model<-function(dir_summary_=dir_summary,
   }
   print("Finished pickup_model().")
 }
+
 
 #**************************************************
 # Summarize model_fp() results ====================

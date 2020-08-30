@@ -10,20 +10,29 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+
 #dir_in<-"201_fc_acompcor"
 #dir_out<-"401_fp_acompcor"
 #dir_out<-"405_fc_diff_acompcor"
 #list_atlas<-"aal116"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_gamm_aroma"
-list_atlas<-"aal116"
+#dir_in<-"421_fc_aroma"
+#dir_out<-"425_fc_gamm_aroma"
+#list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-#dir_in<-"450_fc_test"
-#dir_out<-"451_gammfc_test"
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400")
-#list_atlas<-"aal116"
+dir_in<-"401_fc_acompcor"
+dir_out<-""
+#list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
+list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+path_exp_full<-NULL
+
+#dir_in<-"421_fc_aroma"
+#dir_out<-"426_fc_ca_aroma"
+#list_atlas<-"power264"
+#list_atlas<-"gordon333"
+#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+#path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -44,7 +53,6 @@ list_wave <- c(1,2)
 list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
                  "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
                  "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
 
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
@@ -72,7 +80,6 @@ list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
 
 list_plot <-list("sdq"=list("title"="SDQ effect","var_exp"="sdq_td"))
 
-
 list_type_p=c("p","p_bh","seed_p_bh")
 #list_type_p="p"
 thr_p <- 0.05
@@ -81,6 +88,8 @@ list_cost<-seq(0.15,0.40,0.01)
 absolute<-T
 threshold<-NA
 
+list_dim_ca<-c(5,10,20,40)
+
 
 #**************************************************
 # Libraries =======================================
@@ -88,9 +97,7 @@ threshold<-NA
 library(ggplot2)
 library(GGally)
 library(igraph)
-library(qgraph)
-library(FactoMineR)
-library(missMDA)
+#library(qgraph)
 library(ggrepel)
 library(colorRamps)
 library(tidyverse)
@@ -98,61 +105,37 @@ library(dplyr)
 library(parallel)
 library(mgcv)
 library(car)
-
-
-#**************************************************
-# Create path list ================================
-#**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
-  path_root<-NA
-  for(p in list_path_root){
-    if(file.exists(p)){
-      path_root<-p
-    }
-  }
-  if(is.na(path_root)){
-    print("Error: root path could not be found.")
-  }
-  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_io     <- file.path(path_root,path_exp_)
-  path_in     <- file.path(path_io,dir_in_)
-  path_out    <- file.path(path_io,dir_out_)
-  output <- list("script"=path_script,"io"=path_io,"input"=path_in,"output"=path_out,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
-  return(output)
-}
-
-paths<-func_path()
+library(plyr)
+library(data.table)
 
 
 #**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"util/function.R"))
-#source(file.path(paths$script,"util/glm_function.R"))
-source(file.path(paths$script,"util/plot.R"))
-source(file.path(paths$script,"util/gta_function.R"))
+source(file.path(getwd(),"util/function.R"))
+source(file.path(getwd(),"util/plot.R"))
+source(file.path(getwd(),"util/gta_function.R"))
+paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
 #**************************************************
 # Calculate longitudinal FC difference ============
 #**************************************************
-paths_=paths
-list_atlas_=list_atlas
-key_roigroup="group_3"
-diff_fc<-function(paths_=paths,
-                  list_atlas_=list_atlas,
+
+diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
                   key_roigroup="group_3"){
   print("Starting diff_fc().")
-  nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
+  #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
   
   for (atlas in list_atlas_){
     # Load connection data
-    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    dt_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_conn<-as.data.frame(dt_conn)
+    dt_conn<-NULL
+    gc()
+    
+    # Create dataframe of existing graph edges
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     df_edge$from<-as.character(df_edge$from)
@@ -165,14 +148,15 @@ diff_fc<-function(paths_=paths,
       df_ses_subj<-rbind(df_ses_subj,
                          data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
     }
-    list_ses_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
-                                   df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
+    list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
+                                    df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
     print(paste("Atlas: ",atlas,", ",
-                as.character(length(list_ses_exist_long))," subjects with longitudinal data."))
+                as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
+                sep=""))
     
     # Calculate longitudinal fc difference
     df_out<-data.frame()
-    for (id_subj in list_ses_exist_long){
+    for (id_subj in list_subj_exist_long){
       df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
       colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
       colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
@@ -180,12 +164,14 @@ diff_fc<-function(paths_=paths,
       colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
       colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
       df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
-      df_diff$diff_r<-df_diff$ses2_r-df_diff$ses1_r
-      df_diff$diff_z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
-      df_diff<-data.frame(ID_pnTTC=id_subj,df_diff[,c("from","to","diff_r","diff_z_r")])
+      df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
+      df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
+      df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
       df_out<-rbind(df_out,df_diff)
     }
-    write.csv(df_out,file.path(paths_$output,"output",paste("atl-",atlas,"_fc_diff.csv",sep="")),row.names=F)
+    df_out<-transform(df_out,ses=as.character(ses))
+    df_out<-rbind.fill(df_conn,df_out)
+    write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
   }
   print('Finished diff_fc()')
 }
@@ -194,75 +180,6 @@ diff_fc<-function(paths_=paths,
 #**************************************************
 # GLM/GAM of FCs ==================================
 #**************************************************
-iterate_gamm<-function(df_join,df_roi,list_mod_){
-  list_roi<-df_roi$id
-  df_out_gamm<-df_out_aic<-NULL
-  for (id_from in list_roi[-length(list_roi)]){
-    for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
-      label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-      df_src=df_join[df_join$from==id_from & df_join$to==id_to,]
-      
-      print(paste("GLM/GAM: ",id_from," - ",id_to," (",label_from," - ",label_to,")",sep=""))
-      df_out_aic_add<-df_out_gamm_add<-data.frame()
-      for (idx_mod in names(list_mod_)){
-        list_plot<-list()
-        list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
-        for (idx_sex in list_sex){
-          df_src_sex<-df_src[df_src$sex==idx_sex,]
-          #mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
-          mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
-          if (class(mod)[1]=="try-error"){
-            print(paste("Error fiting ",idx_mod, ", sex= ",idx_sex,".",sep=''))
-          }else{
-            p_table<-summary.gam(mod)$p.table
-            if (is.null(summary.gam(mod)$s.table)){
-              df_out_gamm_add_add<-data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                              #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                              sex=idx_sex,model=idx_mod,term=rownames(p_table),
-                                              estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                              t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
-              
-            }else{
-              s_table<-summary.gam(mod)$s.table
-              df_out_gamm_add_add<-rbind(data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                                    #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                                    sex=idx_sex,model=idx_mod,term=rownames(p_table),
-                                                    estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                                    t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                                         data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                                    #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                                    sex=idx_sex,model=idx_mod,term=rownames(s_table),
-                                                    estimate=NA,se=NA,F=s_table[,'F'],
-                                                    t=NA,p=s_table[,'p-value']))
-            }
-            df_out_gamm_add<-rbind(df_out_gamm_add,df_out_gamm_add_add)
-            df_out_aic_add<-rbind(df_out_aic_add,
-                                  data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                             #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                             sex=idx_sex,
-                                             model=idx_mod,aic=mod$aic,aic_best_among_models=0))
-          }
-        }
-      }
-      
-      # Compare AICs of GAMM models
-      df_out_aic_add_sex_rbind<-data.frame()
-      for (idx_sex in list_sex){
-        df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
-        df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
-                           'aic_best_among_models']<-1
-        df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
-      }
-      
-      df_out_gamm<-rbind(df_out_gamm,df_out_gamm_add)
-      df_out_aic<-rbind(df_out_aic,df_out_aic_add)
-    }
-  }
-  rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
-  output<-list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic)
-  return(output)
-}
 
 join_fc_clin<-function(df_fc,df_clin){
   df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
@@ -280,109 +197,6 @@ join_fc_clin<-function(df_fc,df_clin){
     }
   }
   return(df_join)
-}
-
-add_mltcmp<-function(df_out_gamm,df_roi,analysis,atlas,list_mod,list_plot,calc_seed_level=TRUE){
-  df_plot_gamm_concat<-NULL
-  for (idx_mod in names(list_mod)){
-    for (idx_plot in names(list_plot)){
-      var_exp<-list_plot[[idx_plot]][["var_exp"]]
-      for (idx_sex in c(1,2)){
-        # Subset GAMM result dataframe for plotting
-        if (idx_sex==1){
-          label_sex<-"m"
-        }else{
-          label_sex<-"f"
-        }
-        df_plot_gamm<-df_out_gamm[df_out_gamm$model==idx_mod 
-                                  & df_out_gamm$term==var_exp
-                                  & df_out_gamm$sex==idx_sex,]
-        if (nrow(df_plot_gamm)>0){
-          # Calculate graph-level multiple comparison-corrected p values
-          df_plot_gamm<-cbind(df_plot_gamm,mltcomp_corr(df_plot_gamm))
-          
-          # Calculate seed-level multiple comparison-corrected p values
-          if (calc_seed_level){
-            for (idx_roi in as.character(df_roi$id)){
-              list_row_seed<-sort(union(which(df_plot_gamm$from==idx_roi),
-                                        which(df_plot_gamm$to==idx_roi)))
-              df_plot_gamm_seed<-df_plot_gamm[list_row_seed,]
-              df_p_seed<-mltcomp_corr(df_plot_gamm_seed)
-              for (idx_edge in seq(length(list_row_seed))){# iterate over edges which starts / ends at idx_roi
-                for (type_p in colnames(df_p_seed)){  # iterate over types of p values
-                  # Enter corrected p to df_plot_gamm if empty or new value is smaller
-                  df_plot_gamm[list_row_seed[idx_edge],
-                               paste("seed",type_p,sep="_")]<-min(df_plot_gamm[list_row_seed[idx_edge],
-                                                                               paste("seed",type_p,sep="_")],
-                                                                  df_p_seed[idx_edge,type_p],
-                                                                  na.rm=T)
-                }
-              }
-            }
-          }
-        }
-        df_plot_gamm_concat<-rbind(df_plot_gamm_concat,df_plot_gamm)
-      }
-    }
-  }
-  return(df_plot_gamm_concat)
-}
-
-plot_gamm_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
-                       list_type_p,thr_p,paths_){
-  for (idx_mod in names(list_mod)){
-    for (idx_plot in names(list_plot)){
-      var_exp<-list_plot[[idx_plot]][["var_exp"]]
-      for (idx_sex in c(1,2)){
-        # Subset GAMM result dataframe for plotting
-        if (idx_sex==1){
-          label_sex<-"m"
-        }else{
-          label_sex<-"f"
-        }
-        df_plot_gamm_subset<-df_plot_gamm[df_plot_gamm$model==idx_mod 
-                                  & df_plot_gamm$term==var_exp
-                                  & df_plot_gamm$sex==idx_sex,]
-        if (nrow(df_plot_gamm_subset)>0){
-          print(paste("GAMM output, atlas: ",atlas,", model: ",idx_mod,", plot: ",var_exp,", sex: ",label_sex,sep=""))
-          # Convert GAMM rseult into igraph object
-          if (!is.na(df_plot_gamm_subset[1,"estimate"])){
-            df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="estimate")
-          }else{
-            df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="F")
-          }
-          
-          # Convert FC dataframe into iGraph object
-          list_roi<-as.character(df_roi$id)
-          df_node<-data.frame(id=list_roi,stringsAsFactors = F)
-          for (idx_node in seq(dim(df_node)[1])){
-            df_node[idx_node,"label"]<-as.character(df_roi[df_roi$id==df_node[idx_node,"id"],"label"])
-          }
-          df_edge<-df_plot_gamm_subset
-          df_edge$from<-as.character(df_edge$from)
-          df_edge$to<-as.character(df_edge$to)
-          igraph_gamm <- graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
-          
-          # Plot and save circular graph
-          for (type_p in list_type_p){
-            if(type_p %in% colnames(df_plot_gamm_subset)){
-              plot<-plot_circular(igraph_in=igraph_gamm,
-                                  type_p=type_p,thr_p=thr_p,
-                                  limit_color=NULL)
-              plot<-plot +
-                ggtitle(paste("GLM/GAM sex: ",label_sex, ", model: ",idx_mod,", expvar: ",var_exp,
-                              "\nanalysis: ",analysis," threshold: ",type_p,sep="")) +
-                theme(plot.title = element_text(hjust = 0.5))
-              ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
-                           "_sex-",label_sex,"_pval-",type_p,"_gamm_fc.eps",sep=""),
-                     plot=plot,device=cairo_ps,path=file.path(paths_$output,"output"),
-                     dpi=300,height=10,width=10,limitsize=F)
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
@@ -432,7 +246,7 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
               file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm_plt.csv",sep="")),row.names = F)
     
     # Graphical output of ROI-wise GAMM of FC
-    plot_gamm_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
+    plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
                  list_type_p_,thr_p,paths_)
     
     #****************************
@@ -463,7 +277,7 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
               file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm_plt.csv",sep="")),row.names = F)
     
     # Graphical output of group-wise GAMM of FC
-    plot_gamm_fc(df_plot_gamm_grp,df_roi_grp,analysis="grp",atlas,list_mod,list_plot,
+    plot_gam_fc(df_plot_gamm_grp,df_roi_grp,analysis="grp",atlas,list_mod,list_plot,
                  list_type_p_,thr_p,paths_)
     
     #****************************
@@ -497,7 +311,7 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                    list_type_p_,thr_p,paths_)
     }
     df_plot_gamm_ms_split<-df_plot_gamm_ms[df_plot_gamm_ms$group=="group",-1]
-    plot_gamm_fc(df_plot_gamm_ms_split,df_roi_grp,analysis="ms_grp-group",atlas,list_mod,list_plot,
+    plot_gam_fc(df_plot_gamm_ms_split,df_roi_grp,analysis="ms_grp-group",atlas,list_mod,list_plot,
                  list_type_p_,thr_p,paths_)
 
   }
@@ -506,15 +320,15 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
 
 
 #**************************************************
-# Principal component analysis of FC ==============
+# Component analyses of FC ========================
 #**************************************************
-pca_fc<-function(paths_=paths,
-                 list_atlas_=list_atlas,
-                 list_wave_=list_wave,
-                 list_covar_=list_covar,
-                 subset_subj_=subset_subj){
-  print("Starting pca_fc().")
-  nullobj<-func_createdirs(paths_)
+
+ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
+                list_covar_=list_covar,subset_subj_=subset_subj,list_dim_ca_=list_dim_ca,
+                plot_result=F){
+  print("Starting ca_fc().")
+  memory.limit(200000)
+  nullobj<-func_createdirs(paths_,str_proc="ca_fc()",copy_log=T)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
@@ -525,7 +339,10 @@ pca_fc<-function(paths_=paths,
   for (atlas in list_atlas_){
     # Load and examine FC data
     print(paste("Loding FC of atlas: ",atlas,sep=""))
-    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    
+    # Create graph edge dataframe and node list
+    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to")]
     n_edge<-dim(df_edge)[1]
@@ -557,32 +374,75 @@ pca_fc<-function(paths_=paths,
     }
     colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
     rownames(df_conn_cbind)<-NULL
+    # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
+    df_conn<-as.data.frame(t(df_conn_cbind))
+    df_conn_cbind<-NULL
+    gc()
     
     # Calculate PCA of FC
-    print("Starting to calculate PCA of FC.")
-    # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
-    df_conn<-t(df_conn_cbind)
-    data_pca<-func_pca(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist)
-    write.csv(data_pca$df_fac_var,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable_factor.csv",sep="")),row.names=F)
-    write.csv(data_pca$df_fac_indiv,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_individual_factor.csv",sep="")),row.names=F)
-    write.csv(data_pca$df_var_accounted,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variance_accounted.csv",sep="")),row.names=F)
-    print("Finished calculating PCA of FC")
+    print("Calculating PCA of FC.")
+    dim_ca<-max(list_dim_ca_)
+    data_pca<-func_pca(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca)
+    write.csv(data_pca$df_comp_mri,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variable.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_comp_subj,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_subject.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_variance,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_variance.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_comp_clin_flat,file.path(paths_$output,"output",paste("atl-",atlas,"_pca_correlation.csv",sep="")),row.names=F)
     
     # Plot PCA results
-    print("Sarting to plot PCA of FC.")
-    list_plot_pca<-plot_ca(df_src=data_pca$df_fac_indiv,list_name_covar=names(list_covar_),n_dim=data_pca$n_dim)
-    for (i_dim in names(list_plot_pca)){
-      for (name_covar in names(list_plot_pca[[i_dim]])){
-        plot<-list_plot_pca[[i_dim]][[name_covar]]
-        plot<-(plot
-               + ggtitle("PCA of FC"))
-        ggsave(paste("atl-",atlas,"_dim-",sprintf("%02d",as.numeric(i_dim)),"-",sprintf("%02d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca_fc.eps",sep=""),plot=plot,device=cairo_ps,
-               path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+    if (plot_result){
+      print("Plotting PCA of FC.")
+      list_plot_pca<-plot_ca(df_src=data_pca$df_comp_subj,list_name_covar=names(list_covar_),n_dim=data_pca$dim)
+      for (i_dim in names(list_plot_pca)){
+        for (name_covar in names(list_plot_pca[[i_dim]])){
+          plot<-list_plot_pca[[i_dim]][[name_covar]]
+          plot<-(plot
+                 + ggtitle("PCA of FC"))
+          ggsave(paste("atl-",atlas,"_comp-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_pca.eps",sep=""),plot=plot,device=cairo_ps,
+                 path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+        }
       }
     }
-    print("Finished plotting PCA of FC")
+    data_pca<-NULL
+    list_plot_pca<-NULL
+    gc()
+    
+    # Calculate ICA of FC
+    print("Calculating ICA of FC.")
+    df_comp_mri_rbind<-data.frame()
+    df_comp_subj_rbind<-data.frame()
+    df_variance_rbind<-data.frame()
+    df_comp_clin_flat_rbind<-data.frame()
+    for (dim_ca in list_dim_ca_){
+      data_ica<-func_ica(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca)
+      df_comp_mri_rbind<-rbind.fill(df_comp_mri_rbind,cbind(dim=dim_ca,data_ica$df_comp_mri))
+      df_comp_subj_rbind<-rbind.fill(df_comp_subj_rbind,cbind(dim=dim_ca,data_ica$df_comp_subj))
+      df_variance_rbind<-rbind.fill(df_variance_rbind,cbind(dim=dim_ca,data_ica$df_variance))
+      df_comp_clin_flat_rbind<-rbind.fill(df_comp_clin_flat_rbind,cbind(dim=dim_ca,data_ica$df_comp_clin_flat))
+    }
+    write.csv(df_comp_mri_rbind,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_variable.csv",sep="")),row.names=F)
+    write.csv(df_comp_subj_rbind,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_subject.csv",sep="")),row.names=F)
+    write.csv(df_variance_rbind,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_variance.csv",sep="")),row.names=F)
+    write.csv(df_comp_clin_flat_rbind,file.path(paths_$output,"output",paste("atl-",atlas,"_ica_correlation.csv",sep="")),row.names=F)
+    
+    # Plot ICA results
+    if (plot_result){
+      print("Plotting ICA of FC.")
+      list_plot_ica<-plot_ca(df_src=data_ica$df_comp_subj,list_name_covar=names(list_covar_),n_dim=data_ica$dim)
+      for (i_dim in names(list_plot_ica)){
+        for (name_covar in names(list_plot_ica[[i_dim]])){
+          plot<-list_plot_ica[[i_dim]][[name_covar]]
+          plot<-(plot
+                 + ggtitle("ICA of FC"))
+          ggsave(paste("atl-",atlas,"_comp-",sprintf("%03d",as.numeric(i_dim)),"-",sprintf("%03d",as.numeric(i_dim)+1),"_cov-",name_covar,"_ica.eps",sep=""),plot=plot,device=cairo_ps,
+                 path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+        }
+      }
+    }
+    data_ica<-NULL
+    list_plot_ica<-NULL
+    gc()
   }
-  print("Finished pca_fc().")
+  print("Finished ca_fc().")
 }
 
 

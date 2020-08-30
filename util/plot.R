@@ -16,6 +16,71 @@ library(purrr)
 
 
 #**************************************************
+# Plot GAM of FC ==================================
+#**************************************************
+
+plot_gam_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
+                      list_type_p,thr_p,paths_,suffix_){
+  for (idx_mod in names(list_mod)){
+    for (idx_plot in names(list_plot)){
+      var_exp<-list_plot[[idx_plot]][["var_exp"]]
+      for (idx_sex in c(1,2)){
+        # Subset GAMM result dataframe for plotting
+        if (idx_sex==1){
+          label_sex<-"m"
+        }else{
+          label_sex<-"f"
+        }
+        df_plot_gamm_subset<-df_plot_gamm[df_plot_gamm$model==idx_mod 
+                                          & df_plot_gamm$term==var_exp
+                                          & df_plot_gamm$sex==idx_sex,]
+        if (nrow(df_plot_gamm_subset)>0){
+          print(paste("GAMM output, atlas: ",atlas,", model: ",idx_mod,", plot: ",var_exp,", sex: ",label_sex,sep=""))
+          # Convert GAMM rseult into igraph object
+          if (!is.na(df_plot_gamm_subset[1,"estimate"])){
+            df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="estimate")
+          }else{
+            df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="F")
+          }
+          
+          # Convert FC dataframe into iGraph object
+          list_roi<-as.character(df_roi$id)
+          df_node<-data.frame(id=list_roi,stringsAsFactors = F)
+          for (idx_node in seq(dim(df_node)[1])){
+            df_node[idx_node,"label"]<-as.character(df_roi[df_roi$id==df_node[idx_node,"id"],"label"])
+          }
+          df_edge<-df_plot_gamm_subset
+          df_edge$from<-as.character(df_edge$from)
+          df_edge$to<-as.character(df_edge$to)
+          igraph_gamm <- graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+          
+          # Plot and save circular graph
+          for (type_p in list_type_p){
+            if(type_p %in% colnames(df_plot_gamm_subset)){
+              plot<-plot_circular(igraph_in=igraph_gamm,
+                                  type_p=type_p,thr_p=thr_p,
+                                  limit_color=NULL)
+              plot<-plot +
+                ggtitle(paste("GLM/GAM sex: ",label_sex, ", model: ",idx_mod,", expvar: ",var_exp,
+                              "\nanalysis: ",analysis," threshold: ",type_p,sep="")) +
+                theme(plot.title = element_text(hjust = 0.5))
+              #ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
+              #             "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.eps",sep=""),
+              #       plot=plot,device=cairo_ps,path=file.path(paths_$output,"output"),
+              #       dpi=300,height=10,width=10,limitsize=F)
+              ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
+                           "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.png",sep=""),
+                     plot=plot,path=file.path(paths_$output,"output"),height=10,width=10,dpi=600)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+#**************************************************
 # Plot PCA/ICA result =============================
 #**************************************************
 
@@ -27,7 +92,7 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
   for (i_dim in 1:(n_dim-1)){
     list_plot_dim<-list()
     for (name_covar in list_name_covar){
-      df_plot_subset<-df_plot[,c("ses","ID_pnTTC",name_covar,sprintf("dim_%02d",i_dim),sprintf("dim_%02d",i_dim+1))]
+      df_plot_subset<-df_plot[,c("ses","ID_pnTTC",name_covar,sprintf("comp_%03d",i_dim),sprintf("comp_%03d",i_dim+1))]
       colnames(df_plot_subset)<-c("ses","ID_pnTTC","color","x","y")
       plot<-(ggplot(df_plot_subset)
              + aes(x=x,y=y,label=ID_pnTTC,shape=ses)
@@ -37,8 +102,8 @@ plot_ca<-function(df_src,list_name_covar,n_dim){
              #+ geom_text_repel(size=2)
              + geom_path(aes(group=ID_pnTTC),size=0.5,alpha=0.5)
              #+ ggtitle("PCA of FC")
-             + xlab(sprintf("Dimension %02d",i_dim))
-             + ylab(sprintf("Dimension %02d",i_dim+1))
+             + xlab(sprintf("Component %03d",i_dim))
+             + ylab(sprintf("Component %03d",i_dim+1))
              + theme_light()
              + theme(plot.title = element_text(hjust = 0.5))
       )
@@ -297,9 +362,11 @@ plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
     geom_node_text(aes(x = x*1.03, y=y*1.03,
                        label=label, angle = angle, hjust=hjust,vjust=0.2),
                    size=min(5,10/log(nrow(df_node))), alpha=1) +
+    #               size=min(5,20/log(nrow(df_node))), alpha=1) +
     geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
     scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
     expand_limits(x = c(-2, 2), y = c(-2, 2))+
+    #expand_limits(x = c(-1.5, 1.5), y = c(-1.5, 1.5))+
     #ggtitle(input_title) +
     theme_void() +
     #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
