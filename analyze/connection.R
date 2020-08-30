@@ -118,63 +118,6 @@ source(file.path(getwd(),"util/gta_function.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
-#**************************************************
-# Calculate longitudinal FC difference ============
-#**************************************************
-
-diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
-                  key_roigroup="group_3"){
-  print("Starting diff_fc().")
-  #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
-  
-  for (atlas in list_atlas_){
-    # Load connection data
-    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    dt_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    df_conn<-as.data.frame(dt_conn)
-    dt_conn<-NULL
-    gc()
-    
-    # Create dataframe of existing graph edges
-    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
-    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
-    df_edge$from<-as.character(df_edge$from)
-    df_edge$to<-as.character(df_edge$to)
-    
-    # Examine existing subject IDs and sessions in connection data
-    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    for (ses in c(1,2)){
-      df_ses_subj<-rbind(df_ses_subj,
-                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
-    }
-    list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
-                                    df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
-    print(paste("Atlas: ",atlas,", ",
-                as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
-                sep=""))
-    
-    # Calculate longitudinal fc difference
-    df_out<-data.frame()
-    for (id_subj in list_subj_exist_long){
-      df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
-      colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
-      colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
-      df_ses2<-df_conn[(df_conn$ses==2 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
-      colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
-      colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
-      df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
-      df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
-      df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
-      df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
-      df_out<-rbind(df_out,df_diff)
-    }
-    df_out<-transform(df_out,ses=as.character(ses))
-    df_out<-rbind.fill(df_conn,df_out)
-    write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
-  }
-  print('Finished diff_fc()')
-}
 
 
 #**************************************************
@@ -197,6 +140,72 @@ join_fc_clin<-function(df_fc,df_clin){
     }
   }
   return(df_join)
+}
+
+gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wave,
+                        list_atlas_=list_atlas,key_group_='group_3',
+                        list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
+                        list_mod_tanner_=list_mod_tanner,
+                        list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
+                        list_mod_hormone_=list_mod_hormone){
+  
+  print("Starting gamm_fc_multi().")
+  nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
+  dict_roi <- func_dict_roi(paths_)
+  
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    
+    print(paste("Loading FC of atlas: ",atlas,sep=""))
+    df_fc<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_fc<-as.data.frame(df_fc)
+    
+    # Prepare dataframe of ROIs
+    list_roi<-sort(unique(c(as.character(df_join$from),as.character(df_join$to))))
+    df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
+    colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
+    
+    # Loop over clinical variables
+    df_out_gamm<-df_out_aic<-df_plot_gamm<-data.frame()
+    #1 Tanner stage
+    for (idx_tanner in names(list_tanner_)){
+      print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
+      list_covar<-list_covar_tanner_
+      list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
+      n_covar<-length(list_covar)
+      data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,
+                                         rem_na_clin=T,prefix=paste("var-",idx_tanner,sep=""))
+      df_clin<-data_clin$df_clin
+      
+      df_join<-join_fc_clin(df_fc,df_clin)
+      
+      # Calculate and save ROI-wise GAMM of FC
+      data_gamm<-iterate_gamm(df_join,df_roi,list_mod_tanner_)
+      
+      df_out_gamm<-rbind(df_out_gamm,cbind(atlas=atlas,variable=idx_tanner,data_gamm$df_out_gamm))
+      df_out_aic<-rbind(df_out_aic,cbind(atlas=atlas,variable=idx_tanner,data_gamm$df_out_aic))
+      
+      # Calculate multiple comparison-corrected p values
+      df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
+                               list_mod_,list_plot,calc_seed_level=T)
+      write.csv(df_plot_gamm,
+                file.path(paths_$output,"output",paste("atl-",atlas,"_var-",idx_tanner,"_gamm_plt.csv",sep="")),row.names = F)
+      
+      # Graphical output of ROI-wise GAMM of FC
+      plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
+                  list_type_p_,thr_p,paths_)
+    
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(list_hormone_)){
+      
+    } # Finished looping over Hormones
+    
+    
+  } # Finished looping over atlas
+  
 }
 
 gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
@@ -320,9 +329,68 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
 
 
 #**************************************************
-# Component analyses of FC ========================
+# Calculate longitudinal FC difference ============
 #**************************************************
 
+diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
+                  key_roigroup="group_3"){
+  print("Starting diff_fc().")
+  #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
+  
+  for (atlas in list_atlas_){
+    # Load connection data
+    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    dt_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_conn<-as.data.frame(dt_conn)
+    dt_conn<-NULL
+    gc()
+    
+    # Create dataframe of existing graph edges
+    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+    df_edge$from<-as.character(df_edge$from)
+    df_edge$to<-as.character(df_edge$to)
+    
+    # Examine existing subject IDs and sessions in connection data
+    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+    for (ses in c(1,2)){
+      df_ses_subj<-rbind(df_ses_subj,
+                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
+    }
+    list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
+                                    df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
+    print(paste("Atlas: ",atlas,", ",
+                as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
+                sep=""))
+    
+    # Calculate longitudinal fc difference
+    df_out<-data.frame()
+    for (id_subj in list_subj_exist_long){
+      df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
+      colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
+      colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
+      df_ses2<-df_conn[(df_conn$ses==2 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
+      colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
+      colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
+      df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
+      df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
+      df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
+      df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
+      df_out<-rbind(df_out,df_diff)
+    }
+    df_out<-transform(df_out,ses=as.character(ses))
+    df_out<-rbind.fill(df_conn,df_out)
+    write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
+  }
+  print('Finished diff_fc()')
+}
+
+
+#**************************************************
+# Component analyses of FC ========================
+#**************************************************
+# OBSOLETE
 ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
                 list_covar_=list_covar,subset_subj_=subset_subj,list_dim_ca_=list_dim_ca,
                 plot_result=F){

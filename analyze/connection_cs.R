@@ -310,7 +310,7 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
 #**************************************************
 # Component analyses of FC in cross section =======
 #**************************************************
-
+# OBSOLETE
 ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,wave_clin_=wave_clin,wave_mri_=wave_mri,
                    list_covar_=list_covar,subset_subj_=subset_subj,list_dim_ca_=list_dim_ca,
                    plot_result=F,suffix_=""){
