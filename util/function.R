@@ -648,7 +648,11 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   if (sum(is.na(df_src))>0){
     print("Imputing missing data.")
     # Estimate number of dimensions
-    n_comp<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+    if (is.null(dim_ca)){
+      n_comp<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+    }else{
+      n_comp<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
+    }
     
     # Impute data
     df_src<-imputePCA(df_src,ncp=n_comp)$completeObs
@@ -732,10 +736,14 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   }
   print(paste("ICA dimension: ",as.character(n_comp),sep=""))
   
+  # Imputation using means
+  df_src<-impute(df_src,mean)
+  
   df_src<-data.matrix(df_src)
   
   # ICA calculation
   #data_ica <-icafast(df_src, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
+  #data_ica <-icafast(df_src, nc=n_comp,center=TRUE)
   data_ica <-icaimax(df_src, nc=n_comp,center=TRUE)
   
   # Component-imaging variable matrix

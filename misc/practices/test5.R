@@ -11,11 +11,19 @@ plot_result=F
 
 
 
-atlas<-"aal116"
+atlas<-"power264"
 
 
 
-waves<-names(list_waves_)[[3]]
+waves<-names(list_waves_)[[1]]
+
+
+
+df_src=df_conn_calc
+df_var=df_edge
+df_indiv=df_clin_exist
+dim_ca=dim_ca
+calc_corr=F
 
 
 
