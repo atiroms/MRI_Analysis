@@ -657,8 +657,8 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
     ncp_calc<-dim_ca
   }
   
+  # Impute data
   if (sum(is.na(df_src))>0){
-    # Impute data
     df_src<-imputePCA(df_src,ncp=ncp_calc)$completeObs
   }
   
@@ -706,11 +706,11 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   # Matrix of variance accounted
   # Row: component(factor)
   df_variance<-data.frame(data_pca$eig)
-  colnames(df_variance)<-c("eigenvalue","var_accounted","cumul_var_accounted")
-  df_variance$var_accounted<-df_variance$var_accounted/100
-  df_variance$cumul_var_accounted<-df_variance$cumul_var_accounted/100
+  colnames(df_variance)<-c("eigenvalue","vaf","cumul_vaf")
+  df_variance$vaf<-df_variance$vaf/100
+  df_variance$cumul_vaf<-df_variance$cumul_vaf/100
   df_variance$comp<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("comp","var_accounted","cumul_var_accounted","eigenvalue")]
+  df_variance<-df_variance[c("comp","vaf","cumul_vaf","eigenvalue")]
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
@@ -724,39 +724,41 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
 #**************************************************
 func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   
-  n_comp<-nrow(df_src)-1
-  if (!is.null(dim_ca)){
-    if(dim_ca<n_comp){
-      n_comp<-dim_ca
-    }
+  if (is.null(dim_ca)){
+    ncp_calc<-nrow(df_src)-1
+  }else{
+    ncp_calc<-dim_ca
   }
-  print(paste("ICA dimension: ",as.character(n_comp),sep=""))
+  
+  print(paste("Calculating ICA, dimension: ",as.character(ncp_calc),sep=""))
   
   # Imputation using means
-  df_src<-impute(df_src,mean)
+  if (sum(is.na(df_src))>0){
+    df_src<-impute(df_src,mean)
+  }
   
   df_src<-data.matrix(df_src)
   
   # ICA calculation
-  #data_ica <-icafast(df_src, nc=n_comp,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
-  #data_ica <-icafast(df_src, nc=n_comp,center=TRUE)
-  data_ica <-icaimax(df_src, nc=n_comp,center=TRUE)
+  #data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
+  #data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE)
+  data_ica <-icaimax(df_src, nc=ncp_calc,center=TRUE)
   
   # Component-imaging variable matrix
   # Row: MRI variable, Column: component(factor)
   df_comp_mri<-data.frame(data_ica$M)
   if(!is.null(df_var)){
     df_comp_mri<-cbind(df_var,df_comp_mri)
-    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:n_comp))
+    colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:ncp_calc))
   }else{
-    colnames(df_comp_mri)<-sprintf("comp_%03d",1:n_comp)
+    colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
   }
   rownames(df_comp_mri)<-NULL
   
   # Component-Individual matrix
   # Row: subject, Column: (clinical variable +) component(factor)
   df_comp_subj<-data.frame(data_ica$S)
-  colnames(df_comp_subj)<-sprintf("comp_%03d",1:n_comp)
+  colnames(df_comp_subj)<-sprintf("comp_%03d",1:ncp_calc)
   
   df_cor<-NULL
   df_cor_flat<-NULL
@@ -782,17 +784,17 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   # Matrix of variance accounted
   # Row: component(factor)
   df_variance<-data.frame(data_ica$vafs)
-  colnames(df_variance)<-"var_accounted"
-  df_variance[1,"cumul_var_accounted"]<-df_variance[1,"var_accounted"]
+  colnames(df_variance)<-"vaf"
+  df_variance[1,"cumul_vaf"]<-df_variance[1,"vaf"]
   for (idx_row in 2:nrow(df_variance)){
-    df_variance[idx_row,"cumul_var_accounted"]<-df_variance[idx_row-1,"cumul_var_accounted"]+df_variance[idx_row,"var_accounted"]
+    df_variance[idx_row,"cumul_vaf"]<-df_variance[idx_row-1,"cumul_vaf"]+df_variance[idx_row,"vaf"]
   }
   df_variance$comp<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("comp","var_accounted","cumul_var_accounted")]
+  df_variance<-df_variance[c("comp","vaf","cumul_vaf")]
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
-              'df_variance'=df_variance,'dim'=n_comp,
+              'df_variance'=df_variance,'dim'=ncp_calc,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 

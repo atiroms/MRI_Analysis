@@ -208,7 +208,6 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
         gc()
         
         # Calculate PCA of FC
-        print("Calculating PCA of FC.")
         dim_ca<-max(list_dim_ca_)
         data_pca<-func_pca(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
         df_pca_mri<-cbind(dim=dim_ca,data_pca$df_comp_mri)
@@ -216,14 +215,14 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
         df_pca_variance<-cbind(dim=dim_ca,data_pca$df_variance)
         write.csv(df_pca_mri,
                   file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_variable.csv",sep="")),
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_var.csv",sep="")),
                   row.names=F)
         write.csv(df_pca_subj,
                   file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_subject.csv",sep="")),row.names=F)
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_subj.csv",sep="")),row.names=F)
         write.csv(df_pca_variance,
                   file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_variance.csv",sep="")),row.names=F)
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_vaf.csv",sep="")),row.names=F)
         
         # Circular plot of component attribution to FC
         data_pca<-NULL
@@ -231,7 +230,6 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
         gc()
         
         # Calculate ICA of FC
-        print("Calculating ICA of FC.")
         df_ica_mri<-data.frame()
         df_ica_subj<-data.frame()
         df_ica_variance<-data.frame()
@@ -243,13 +241,13 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
         }
         write.csv(df_ica_mri,
                   file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_variable.csv",sep="")),row.names=F)
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_var.csv",sep="")),row.names=F)
         write.csv(df_ica_subj,
                   file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_subject.csv",sep="")),row.names=F)
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_subj.csv",sep="")),row.names=F)
         write.csv(df_ica_variance,
                   file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_variance.csv",sep="")),row.names=F)
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_vaf.csv",sep="")),row.names=F)
 
         # Circular plot of component attribution to FC
         data_ica<-NULL
