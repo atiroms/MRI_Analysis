@@ -16,6 +16,7 @@ library(missMDA)
 library(ica)
 library(parallel)
 #library(DescTools)
+library(pbapply)
 
 
 #**************************************************
@@ -64,53 +65,38 @@ func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atir
 
 gamm_core<-function(data_src){
   df_src<-data_src$df_src
-  id_from<-data_src$id_from
-  id_to<-data_src$id_to
-  label_from<-data_src$label_from
-  label_to<-data_src$label_to
-  
-  #print(paste("GLM/GAM: ",id_from," - ",id_to," (",label_from," - ",label_to,")",sep=""))
+  list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
   df_out_aic_add<-df_out_gamm_add<-data.frame()
   for (idx_mod in names(list_mod_)){
     list_plot<-list()
-    list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
     for (idx_sex in list_sex){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
-      #mod<-gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex)
+
       mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
       if (class(mod)[1]=="try-error"){
-        #print(paste("Error fiting ",idx_mod, ", sex= ",idx_sex,".",sep=''))
+
       }else{
         p_table<-summary.gam(mod)$p.table
         if (is.null(summary.gam(mod)$s.table)){
-          df_out_gamm_add_add<-data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                          #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                          sex=idx_sex,model=idx_mod,term=rownames(p_table),
-                                          estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                          t=p_table[,'t value'],p=p_table[,'Pr(>|t|)'])
-          
+          df_out_gamm_add_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                          se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                          p=p_table[,'Pr(>|t|)'])
         }else{
           s_table<-summary.gam(mod)$s.table
-          df_out_gamm_add_add<-rbind(data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                                #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                                sex=idx_sex,model=idx_mod,term=rownames(p_table),
-                                                estimate=p_table[,'Estimate'],se=p_table[,'Std. Error'],F=NA,
-                                                t=p_table[,'t value'],p=p_table[,'Pr(>|t|)']),
-                                     data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                                #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                                sex=idx_sex,model=idx_mod,term=rownames(s_table),
-                                                estimate=NA,se=NA,F=s_table[,'F'],
+          df_out_gamm_add_add<-rbind(data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                                se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                                p=p_table[,'Pr(>|t|)']),
+                                     data.frame(term=rownames(s_table),estimate=NA,se=NA,F=s_table[,'F'],
                                                 t=NA,p=s_table[,'p-value']))
         }
-        df_out_gamm_add<-rbind(df_out_gamm_add,df_out_gamm_add_add)
+        
+        df_out_gamm_add<-rbind(df_out_gamm_add,
+                               cbind(sex=idx_sex,model=idx_mod,df_out_gamm_add_add))
         df_out_aic_add<-rbind(df_out_aic_add,
-                              data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                         #roi=roi,label_roi=label_roi,group=group,measure=measure,
-                                         sex=idx_sex,
-                                         model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+                              data.frame(sex=idx_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
       }
-    }
-  }
+    } # Finished looping over sex
+  }# Finished looping over model
   
   # Compare AICs of GAMM models
   df_out_aic_add_sex_rbind<-data.frame()
@@ -121,8 +107,15 @@ gamm_core<-function(data_src){
     df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
   }
   
-  #df_out_gamm<-rbind(df_out_gamm,df_out_gamm_add)
-  #df_out_aic<-rbind(df_out_aic,df_out_aic_add_sex_rbind)
+  # Prepare output dataframe
+  id_from<-data_src$id_from
+  id_to<-data_src$id_to
+  label_from<-data_src$label_from
+  label_to<-data_src$label_to
+  df_out_gamm_add<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                         df_out_gamm_add)
+  df_out_aic_add_sex_rbind<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                  df_out_aic_add_sex_rbind)
   
   return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind))
 }
@@ -162,7 +155,8 @@ iterate_gamm<-function(df_join,df_roi,list_mod_){
                 varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
                           "as.numeric.factor"),
                 envir=environment())
-  list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
+  #list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
+  list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
   stopCluster(clust)
   
   # Collect data into dataframes
@@ -282,7 +276,7 @@ iterate_gamm_old<-function(df_join,df_roi,list_mod_){
 # Add multiple comparison-corrected p values ======
 #**************************************************
 
-add_mltcmp<-function(df_out_gamm,df_roi,analysis,atlas,list_mod,list_plot,calc_seed_level=TRUE){
+add_mltcmp<-function(df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE){
   df_plot_gamm_concat<-NULL
   for (idx_mod in names(list_mod)){
     for (idx_plot in names(list_plot)){

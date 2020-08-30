@@ -38,9 +38,9 @@ plot_gam_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
           print(paste("GAMM output, atlas: ",atlas,", model: ",idx_mod,", plot: ",var_exp,", sex: ",label_sex,sep=""))
           # Convert GAMM rseult into igraph object
           if (!is.na(df_plot_gamm_subset[1,"estimate"])){
-            df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="estimate")
+            df_plot_gamm_subset<-rename(df_plot_gamm_subset,c("estimate"="weight"))
           }else{
-            df_plot_gamm_subset<-rename(df_plot_gamm_subset,"weight"="F")
+            df_plot_gamm_subset<-rename(df_plot_gamm_subset,c("F"="weight"))
           }
           
           # Convert FC dataframe into iGraph object

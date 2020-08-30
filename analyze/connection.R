@@ -21,18 +21,20 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-""
+#dir_in<-"401_fc_acompcor"
+#dir_out<-""
 #list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
-list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-path_exp_full<-NULL
+#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
+#path_exp_full<-NULL
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"426_fc_ca_aroma"
+dir_in<-"421_fc_aroma"
+dir_out<-"427_fc_gamm_aroma"
+list_atlas<-"aal116"
 #list_atlas<-"power264"
 #list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 #path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -42,18 +44,6 @@ path_exp_full<-NULL
 #list_atlas<-"hoa"
 
 list_wave <- c(1,2)
-
-#list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-#                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-#                 "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-#                 "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
-#                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
-#                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
-list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
-                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
-                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
 subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W1_rsfMRIexist","condition"="==1"),
                              list("key"="W1_Censor","condition"="<126")),
@@ -61,11 +51,48 @@ subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                              list("key"="W2_rsfMRIexist","condition"="==1"),
                              list("key"="W2_Censor","condition"="<126")))
 
+list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
+                        "age"   =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
+                        "sex"   =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
+list_tanner<-list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+                  "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
+                  "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+                                 "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                 "label"="Tanner stage (gonadal)"),
+                  "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
+                                 "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+                                 "label"="Tanner stage (adrenal)"))
+list_mod_tanner <- list("l"= "value ~ age + tanner + s(ID_pnTTC,bs='re')",
+                        "a"= "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')",
+                        "q"="value ~ poly(age,2) + poly(tanner,2) + s(ID_pnTTC,bs='re')")
+list_plot_tanner <- list("a"=list("title"="Age effect","var_exp"="age"),
+                         "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
+                         "t"=list("title"="Tanner stage effect","var_exp"="tanner"),
+                         "s(t)"=list("title"="Tanner stage effect","var_exp"="s(tanner)"))
+list_covar_hormone<-list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
+                         "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                         "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
+list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                   "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                   "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                   "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
+list_mod_hormone <- list("l"= "value ~ age + hormone + s(ID_pnTTC,bs='re')",
+                         "a"= "value ~ s(age,k=3) + s(hormone,k=3) + s(ID_pnTTC,bs='re')",
+                         "q"="value ~ poly(age,2) + poly(hormone,2) + s(ID_pnTTC,bs='re')")
+list_plot_hormone <- list("a"=list("title"="Age effect","var_exp"="age"),
+                          "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
+                          "h"=list("title"="Hormone effect","var_exp"="hormone"),
+                          "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)"))
+
+#list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
+#                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
+#                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
+
 #list_mod <- list("l"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
                  #"a"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
                  #"q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
 
-list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
+#list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
 
 #list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
                  #"sa"=list("title"="Age effect","var_exp"="s(age)"),
@@ -78,7 +105,7 @@ list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
                  #"pt2"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)2")
                  #)
 
-list_plot <-list("sdq"=list("title"="SDQ effect","var_exp"="sdq_td"))
+#list_plot <-list("sdq"=list("title"="SDQ effect","var_exp"="sdq_td"))
 
 list_type_p=c("p","p_bh","seed_p_bh")
 #list_type_p="p"
@@ -101,11 +128,11 @@ library(igraph)
 library(ggrepel)
 library(colorRamps)
 library(tidyverse)
-library(dplyr)
 library(parallel)
 library(mgcv)
 library(car)
 library(plyr)
+library(dplyr)
 library(data.table)
 
 
@@ -124,12 +151,142 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # GLM/GAM of FCs ==================================
 #**************************************************
 
+gamm_fc_core<-function(paths_,df_fc,df_roi,list_wave_,subset_subj_,
+                       list_covar,list_mod,list_plot,idx_var,
+                       list_type_p_=list_type_p,thr_p_=thr_p
+                       ){
+  # Prepare clinical data
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,
+                                     rem_na_clin=T,prefix=paste("var-",idx_var,sep=""))
+  df_clin<-data_clin$df_clin
+  
+  # Join fc and clinical data
+  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
+  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
+  colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
+  df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
+                  -which(colnames(df_fc)=="p"))]
+  df_clin$wave<-as.character(df_clin$wave)
+  df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
+  for (key in c('ID_pnTTC','wave','sex')){
+    if (key %in% colnames(df_join)){
+      df_join[,key]<-as.factor(df_join[,key])
+    }
+  }
+  
+  # Calculate ROI-wise GAMM of FC
+  data_gamm<-iterate_gamm(df_join,df_roi,list_mod)
+  
+  # Calculate multiple comparison-corrected p values
+  df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,
+                           list_plot,calc_seed_level=T)
+  
+  # Save results
+  write.csv(data_gamm$df_out_gamm,
+            file.path(paths_$output,"output",
+                      paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+  write.csv(data_gamm$df_out_aic,
+            file.path(paths_$output,"output",
+                      paste("atl-",atlas,"_var-",idx_var,"_aic.csv",sep="")),row.names = F)
+  write.csv(df_plot_gamm,
+            file.path(paths_$output,"output",
+                      paste("atl-",atlas,"_var-",idx_var,"_gamm_plt.csv",sep="")),row.names = F)
+  
+  # Graphical output of ROI-wise GAMM of FC
+  plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
+              list_type_p_,thr_p,paths_,suffix_=paste("var-",idx_var,sep=""))
+}
+
+gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wave,
+                        list_atlas_=list_atlas,key_group_='group_3',
+                        list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
+                        list_mod_tanner_=list_mod_tanner,list_plot_tanner_=list_plot_tanner,
+                        list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
+                        list_mod_hormone_=list_mod_hormone,list_plot_hormone_=list_plot_hormone){
+  
+  print("Starting gamm_fc_multi().")
+  nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
+  dict_roi <- func_dict_roi(paths_)
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    print(paste("Loading FC of atlas: ",atlas,sep=""))
+    df_fc<-as.data.frame(fread(file.path(paths_$input,"output",
+                                         paste("atl-",atlas,"_fc.csv",sep=""))))
+    
+    # Prepare dataframe of ROIs
+    list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
+    df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
+    colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
+    
+    # Loop over clinical variables
+    #1 Tanner stage
+    for (idx_tanner in names(list_tanner_)){
+      print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
+      list_covar<-list_covar_tanner_
+      list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
+      gamm_fc_core(paths_,df_fc,df_roi,list_wave_,subset_subj_,
+                   list_covar,list_mod_tanner_,list_plot_tanner_,idx_tanner)
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(list_hormone_)){
+      print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
+      list_covar<-list_covar_hormone_
+      list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
+      gamm_fc_core(paths_,df_fc,df_roi,list_wave_,subset_subj_,
+                   list_covar,list_mod_hormone_,list_plot_hormone_,idx_hormone)
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  print("Combining results.")
+  df_gamm<-df_aic<-df_gamm_plot<-data.frame()
+  for (atlas in list_atlas_){
+    #1 Tanner stage
+    for (idx_tanner in names(list_tanner_)){
+      df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                 paste("atl-",atlas,"_var-",idx_tanner,
+                                                       "_gamm.csv",sep=""))))
+      df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_tanner,df_gamm_add))
+      df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                paste("atl-",atlas,"_var-",idx_tanner,
+                                                      "_aic.csv",sep=""))))
+      df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_tanner,df_aic_add))
+      df_gamm_plot_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                      paste("atl-",atlas,"_var-",idx_tanner,
+                                                            "_gamm_plot.csv",sep=""))))
+      df_gamm_plot<-rbind(df_gamm_plot,cbind(atlas=atlas,variable=idx_tanner,df_gamm_plot_add))
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(list_hormone_)){
+      df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                 paste("atl-",atlas,"_var-",idx_hormone,
+                                                       "_gamm.csv",sep=""))))
+      df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_hormone,df_gamm_add))
+      df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                paste("atl-",atlas,"_var-",idx_hormone,
+                                                      "_aic.csv",sep=""))))
+      df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_hormone,df_aic_add))
+      df_gamm_plot_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                      paste("atl-",atlas,"_var-",idx_hormone,
+                                                            "_gamm_plot.csv",sep=""))))
+      df_gamm_plot<-rbind(df_gamm_plot,cbind(atlas=atlas,variable=idx_hormone,df_gamm_plot_add))
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  write.csv(df_gamm,file.path(paths_$output,"output","gamm.csv"),row.names = F)
+  write.csv(df_aic,file.path(paths_$output,"output","aic.csv"),row.names = F)
+  write.csv(df_gamm_plot,file.path(paths_$output,"output","gamm_plot.csv"),row.names = F)
+}
+
 join_fc_clin<-function(df_fc,df_clin){
   df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
   colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
   colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
   df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
                   -which(colnames(df_fc)=="p"))]
+  df_clin$wave<-as.character(df_clin$wave)
   
   # Join clinical and FC data frames
   print('Joining clinical and FC data.')
@@ -140,72 +297,6 @@ join_fc_clin<-function(df_fc,df_clin){
     }
   }
   return(df_join)
-}
-
-gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wave,
-                        list_atlas_=list_atlas,key_group_='group_3',
-                        list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
-                        list_mod_tanner_=list_mod_tanner,
-                        list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                        list_mod_hormone_=list_mod_hormone){
-  
-  print("Starting gamm_fc_multi().")
-  nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
-  dict_roi <- func_dict_roi(paths_)
-  
-  
-  # Loop over atlases
-  for (atlas in list_atlas_){
-    
-    print(paste("Loading FC of atlas: ",atlas,sep=""))
-    df_fc<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    df_fc<-as.data.frame(df_fc)
-    
-    # Prepare dataframe of ROIs
-    list_roi<-sort(unique(c(as.character(df_join$from),as.character(df_join$to))))
-    df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
-    colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
-    
-    # Loop over clinical variables
-    df_out_gamm<-df_out_aic<-df_plot_gamm<-data.frame()
-    #1 Tanner stage
-    for (idx_tanner in names(list_tanner_)){
-      print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
-      list_covar<-list_covar_tanner_
-      list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
-      n_covar<-length(list_covar)
-      data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,
-                                         rem_na_clin=T,prefix=paste("var-",idx_tanner,sep=""))
-      df_clin<-data_clin$df_clin
-      
-      df_join<-join_fc_clin(df_fc,df_clin)
-      
-      # Calculate and save ROI-wise GAMM of FC
-      data_gamm<-iterate_gamm(df_join,df_roi,list_mod_tanner_)
-      
-      df_out_gamm<-rbind(df_out_gamm,cbind(atlas=atlas,variable=idx_tanner,data_gamm$df_out_gamm))
-      df_out_aic<-rbind(df_out_aic,cbind(atlas=atlas,variable=idx_tanner,data_gamm$df_out_aic))
-      
-      # Calculate multiple comparison-corrected p values
-      df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
-                               list_mod_,list_plot,calc_seed_level=T)
-      write.csv(df_plot_gamm,
-                file.path(paths_$output,"output",paste("atl-",atlas,"_var-",idx_tanner,"_gamm_plt.csv",sep="")),row.names = F)
-      
-      # Graphical output of ROI-wise GAMM of FC
-      plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
-                  list_type_p_,thr_p,paths_)
-    
-    } # Finished looping over Tanner stages
-    
-    #2 Hormones
-    for (idx_hormone in names(list_hormone_)){
-      
-    } # Finished looping over Hormones
-    
-    
-  } # Finished looping over atlas
-  
 }
 
 gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,

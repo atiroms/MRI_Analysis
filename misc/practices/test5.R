@@ -1,42 +1,21 @@
 paths_=paths
-list_waves_=list_waves
 subset_subj_=subset_subj
+list_wave_=list_wave
 list_atlas_=list_atlas
+key_group_='group_3'
 list_covar_tanner_=list_covar_tanner
 list_tanner_=list_tanner
+list_mod_tanner_=list_mod_tanner
+list_plot_tanner_=list_plot_tanner
 list_covar_hormone_=list_covar_hormone
 list_hormone_=list_hormone
-list_dim_ca_=list_dim_ca
-plot_result=F
+list_mod_hormone_=list_mod_hormone
+list_plot_hormone_=list_plot_hormone
+list_type_p_=list_type_p
+thr_p_=thr_p
 
 
-
-atlas<-"power264"
-
+atlas<-list_atlas_[1]
 
 
-waves<-names(list_waves_)[[1]]
-
-
-
-df_src=df_conn_calc
-df_var=df_edge
-df_indiv=df_clin_exist
-dim_ca=dim_ca
-calc_corr=F
-
-
-
-idx_tanner<-names(list_tanner_)[1]
-
-
-
-paths_=paths_
-list_atlas_=list_atlas_
-wave_clin_=wave_clin
-wave_mri_=wave_mri
-list_covar_=list_covar
-subset_subj_=subset_subj_temp
-list_dim_ca_=list_dim_ca_
-plot_result=plot_result
-suffix_=suffix
+idx_tanner<-names(list_tanner_)[[1]]
