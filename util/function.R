@@ -433,7 +433,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   df_clin_subset<-data.frame(matrix(nrow=0,ncol=ncol(df_clin_long)))
   
   # Subset clinical data according to subsetting condition
-  print('Clinical: subsetting clinical data according to specified condition.')
+  #print('Clinical: subsetting clinical data according to specified condition.')
   list_id_subset<-list()
   for (wave in list_wave){
     str_wave<-as.character(wave)
@@ -643,22 +643,22 @@ func_cor<-function(input){
 # General PCA calculation =========================
 #**************************************************
 func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
-  
-  # Estimate number of dimensions
-  if (is.null(dim_ca)){
-    ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
-    ncp_calc<-ncp_estim
-  }else{
-    ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
-    if (ncp_estim==dim_ca){
-      print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
-    }
-    ncp_calc<-dim_ca
-  }
-  
-  # Impute data
   if (sum(is.na(df_src))>0){
+    # Estimate number of dimensions
+    if (is.null(dim_ca)){
+      ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+      ncp_calc<-ncp_estim
+    }else{
+      ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
+      if (ncp_estim==dim_ca){
+        print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
+      }
+      ncp_calc<-dim_ca
+    }
+    # Impute data
     df_src<-imputePCA(df_src,ncp=ncp_calc)$completeObs
+  }else{
+    ncp_calc<-dim_ca
   }
   
   print(paste("Calculating PCA, dimension: ",as.character(ncp_calc),sep=""))
@@ -709,7 +709,7 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   df_variance$vaf<-df_variance$vaf/100
   df_variance$cumul_vaf<-df_variance$cumul_vaf/100
   df_variance$comp<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("comp","vaf","cumul_vaf","eigenvalue")]
+  df_variance<-df_variance[1:ncp_calc,c("comp","vaf","cumul_vaf","eigenvalue")]
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,

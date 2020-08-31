@@ -4,9 +4,61 @@
 # R script for commonly used parameters in MRI data analysis
 
 
+#**************************************************
+# ca_fc_cs_multi() ===================================
+#**************************************************
+ca_fc_subset_subj <- list("1"  =list(list("key"="W1_T1QC","condition"="==1"),
+                                     list("key"="W1_rsfMRIexist","condition"="==1"),
+                                     list("key"="W1_Censor","condition"="<126")),
+                          "2"  =list(list("key"="W2_T1QC","condition"="==1"),
+                                     list("key"="W2_rsfMRIexist","condition"="==1"),
+                                     list("key"="W2_Censor","condition"="<126")),
+                          "2-1"=list(list("key"="W1_T1QC","condition"="==1"),
+                                     list("key"="W1_rsfMRIexist","condition"="==1"),
+                                     list("key"="W1_Censor","condition"="<126"),
+                                     list("key"="W2_T1QC","condition"="==1"),
+                                     list("key"="W2_rsfMRIexist","condition"="==1"),
+                                     list("key"="W2_Censor","condition"="<126")))
+ca_fc_list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
+                       "c1m2" =list("wave_clin"="1","wave_mri"="2"),
+                       "c1m21"=list("wave_clin"="1","wave_mri"="2-1"),
+                       "c2m1" =list("wave_clin"="2","wave_mri"="1"),
+                       "c2m2" =list("wave_clin"="2","wave_mri"="2"),
+                       "c2m21"=list("wave_clin"="2","wave_mri"="2-1"))
+ca_fc_list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
+                              "age"   =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
+                              "sex"   =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
+ca_fc_list_tanner<-list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+                        "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
+                        "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+                                       "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                       "label"="Tanner stage (gonadal)"),
+                        "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
+                                       "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+                                       "label"="Tanner stage (adrenal)"))
+ca_fc_list_covar_hormone<-list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
+                               "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                               "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
+ca_fc_list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                         "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                         "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                         "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
+
 
 #**************************************************
-# model_fp_multi() =================================
+# gam_fc_multi() ==================================
+#**************************************************
+list_mod_tanner <- list("l"= "value ~ age + tanner")
+list_mod_hormone <- list("l"= "value ~ age + hormone")
+#"a"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
+#"q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
+
+list_plot_tanner <-list("t"=list("title"="Tanner effect","var_exp"="tanner"))
+list_plot_hormone <-list("h"=list("title"="Hormone effect","var_exp"="hormone"))
+
+
+#**************************************************
+# model_fp_multi() ================================
 #**************************************************
 model_fp_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                                       list("key"="W1_rsfMRIexist","condition"="==1"),

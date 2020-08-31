@@ -15,8 +15,6 @@ path_exp_full <-NULL
 
 dir_in<-"422_fp_aroma"
 dir_out<-"428_fp_glm_aroma"
-source(file.path(getwd(),"util/parameter.R"))
-
 
 # Parameters for all functions
 list_wave <- c(1,2)
@@ -56,6 +54,7 @@ library(data.table)
 #**************************************************
 source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
+source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
