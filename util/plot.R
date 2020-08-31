@@ -70,7 +70,7 @@ plot_gam_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
               #       dpi=300,height=10,width=10,limitsize=F)
               ggsave(paste("atl-",atlas,"_anl-",analysis,"_mod-",idx_mod,"_plt-",var_exp,
                            "_sex-",label_sex,"_pval-",type_p,"_",suffix_,"_gamm_fc.png",sep=""),
-                     plot=plot,path=file.path(paths_$output,"output"),height=10,width=10,dpi=600)
+                     plot=plot,path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
             }
           }
         }

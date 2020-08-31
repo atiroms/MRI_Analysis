@@ -27,6 +27,7 @@ list_atlas<-"aal116"
 #path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 source(file.path(getwd(),"util/parameter.R"))
 
+
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
 #dir_out<-"56.3_gamm_fc"
@@ -124,12 +125,12 @@ gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
               list_type_p_,thr_p,paths_,suffix_=paste("var-",idx_var,sep=""))
 }
 
-gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wave,
+gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
                         list_atlas_=list_atlas,key_group_='group_3',
-                        list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
-                        list_mod_tanner_=list_mod_tanner,list_plot_tanner_=list_plot_tanner,
-                        list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                        list_mod_hormone_=list_mod_hormone,list_plot_hormone_=list_plot_hormone){
+                        list_covar_tanner_=gamm_fc_list_covar_tanner,list_tanner_=gamm_fc_list_tanner,
+                        list_mod_tanner_=gamm_fc_list_mod_tanner,list_plot_tanner_=gamm_fc_list_plot_tanner,
+                        list_covar_hormone_=gamm_fc_list_covar_hormone,list_hormone_=gamm_fc_list_hormone,
+                        list_mod_hormone_=gamm_fc_list_mod_hormone,list_plot_hormone_=gamm_fc_list_plot_hormone){
   
   print("Starting gamm_fc_multi().")
   nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
