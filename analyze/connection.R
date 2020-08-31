@@ -151,7 +151,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # GLM/GAM of FCs ==================================
 #**************************************************
 
-gamm_fc_core<-function(paths_,df_fc,df_roi,list_wave_,subset_subj_,
+gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
                        list_covar,list_mod,list_plot,idx_var,
                        list_type_p_=list_type_p,thr_p_=thr_p
                        ){
@@ -225,7 +225,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wa
       print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
       list_covar<-list_covar_tanner_
       list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
-      gamm_fc_core(paths_,df_fc,df_roi,list_wave_,subset_subj_,
+      gamm_fc_core(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
                    list_covar,list_mod_tanner_,list_plot_tanner_,idx_tanner)
     } # Finished looping over Tanner stages
     
@@ -234,7 +234,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wa
       print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
       list_covar<-list_covar_hormone_
       list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
-      gamm_fc_core(paths_,df_fc,df_roi,list_wave_,subset_subj_,
+      gamm_fc_core(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
                    list_covar,list_mod_hormone_,list_plot_hormone_,idx_hormone)
     } # Finished looping over Hormones
   } # Finished looping over atlas

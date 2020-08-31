@@ -148,7 +148,8 @@ iterate_gamm<-function(df_join,df_roi,list_mod_){
   }
   
   # Parallel processing
-  n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
+  #n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
+  n_cluster<-min(floor(detectCores()*1/4),length(list_src_gamm))
   clust<-makeCluster(n_cluster)
   print(paste("Parallel processing,",as.character(n_cluster),"cores.",sep=" "))
   clusterExport(clust,
