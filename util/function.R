@@ -340,7 +340,9 @@ as.numeric.factor <- function(x) {
 # Experiment folder preparation ===================
 #**************************************************
 func_createdirs<-function(paths,str_proc="",copy_log=T){
-  list_createdirs<-c(paths$output,file.path(paths$output,"output"))
+  list_createdirs<-c(paths$output,
+                     file.path(paths$output,"output"),
+                     file.path(paths$output,"output","plot"))
   for(d in list_createdirs){
     if (file.exists(d)){
       print(paste("Destination folder already exists:",d,sep=" "))
@@ -403,14 +405,16 @@ func_clinical_data<-function(paths,
 #**************************************************
 # Longitudinal clinical data loading ==============
 #**************************************************
-print_log<-function(str_in,str_add){
-  print(str_add)
+print_log<-function(str_in,str_add,print_terminal=T){
+  if(print_terminal){
+    print(str_add)
+  }
   str_out<-c(str_in,str_add)
   return(str_out)
 }
 
 func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_clin,
-                                  file_clin= "CSUB.csv",prefix=""
+                                  file_clin= "CSUB.csv",prefix="",print_terminal=T
                                   ){
   df_src <- read.csv(file.path(paths$common,file_clin))
   
@@ -429,14 +433,14 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   df_clin_subset<-data.frame(matrix(nrow=0,ncol=ncol(df_clin_long)))
   
   # Subset clinical data according to subsetting condition
-  print('Clinical: subsetting clinical data frame according to specified condition.')
+  #print('Clinical: subsetting clinical data according to specified condition.')
   list_id_subset<-list()
   for (wave in list_wave){
     str_wave<-as.character(wave)
     #print(paste('Clinical: checking wave ',str_wave,sep=''))
     df_clin_wave<-df_clin_long[df_clin_long['wave']==wave,]
     #print(paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified.',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified.',sep=''),print_terminal)
     id_intersect<-df_clin_wave[,'ID_pnTTC']
     list_id_subset_wave<-list("src"=id_intersect)
     for (key_condition in subset_subj[[str_wave]]){
@@ -448,12 +452,12 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
       id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
       #print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))
-      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_meet_cond)),' subjects satisfying ',key_subset, condition_subset,sep=''))
+      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_meet_cond)),' subjects satisfying ',key_subset, condition_subset,sep=''),print_terminal)
       id_meet_cond<-list(id_meet_cond)
       names(id_meet_cond)<-key_subset
       list_id_subset_wave<-c(list_id_subset_wave,id_meet_cond)
     }
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_intersect)),' subjects satisfying all conditions.',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_intersect)),' subjects satisfying all conditions.',sep=''),print_terminal)
     df_clin_wave<-df_clin_wave[df_clin_wave$ID_pnTTC %in% id_intersect,]
     df_clin_subset<-rbind(df_clin_subset,df_clin_wave)
     id_intersect<-list('intersect'=id_intersect)
@@ -466,15 +470,15 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   
   # Subset unused columns of clinical data
   # Subset clinical data with missing covariate value
-  list_log<-print_log(list_log,'Clinical: subsetting clinical data with missing covariate value.')
+  list_log<-print_log(list_log,'Clinical: subsetting clinical data with missing covariate value.',print_terminal)
   df_clin_exist<-data.frame(matrix(nrow=0,ncol=length(list_covar)+2))
   list_id_exist<-list()
   for (wave in list_wave){
     str_wave<-as.character(wave)
-    list_log<-print_log(list_log,paste('Clinical: checking wave ',str_wave,sep=''))
+    list_log<-print_log(list_log,paste('Clinical: checking wave ',str_wave,sep=''),print_terminal)
     df_clin_exist_wave<-df_clin_subset[df_clin_subset$wave==wave,c('ID_pnTTC','wave')]
     id_exist_intersect<-df_clin_exist_wave$ID_pnTTC
-    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_exist_intersect)),' source clinical data identified.',sep=''))
+    list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_exist_intersect)),' source clinical data identified.',sep=''),print_terminal)
     list_id_exist_wave<-list('src'=id_exist_intersect)
     if (length(list_covar)>0){
       for (id_covar in seq(length(list_covar))){
@@ -494,21 +498,21 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
         df_clin_exist_wave<-cbind(df_clin_exist_wave,df_clin_exist_wave_add)
         id_exist<-df_clin_exist_wave[!is.na(df_clin_exist_wave[name_covar_dst]),'ID_pnTTC']
         id_exist_intersect<-intersect(id_exist_intersect,id_exist)
-        list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_exist)),' subjects with non-NA values of covariate: ',paste(list_name_covar_src,collapse="/"),sep=''))
+        list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_exist)),' subjects with non-NA values of covariate: ',paste(list_name_covar_src,collapse="/"),sep=''),print_terminal)
         id_exist<-list(id_exist)
         names(id_exist)<-name_covar_dst
         list_id_exist_wave<-c(list_id_exist_wave,id_exist)
       }
-      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_exist_intersect)),' subjects with non-NA values of all convariates.',sep=''))
+      list_log<-print_log(list_log,paste('Clinical: ',as.character(length(id_exist_intersect)),' subjects with non-NA values of all convariates.',sep=''),print_terminal)
     }
     n_subj_pre<-nrow(df_clin_exist_wave)
     if (rem_na_clin){
       df_clin_exist_wave<-df_clin_exist_wave[df_clin_exist_wave$ID_pnTTC %in% id_exist_intersect,]
       n_subj_deleted<-n_subj_pre-nrow(df_clin_exist_wave)
-      list_log<-print_log(list_log,paste('Clinical: ',as.character(n_subj_deleted),' subjects with NA values in any covariate >> deleted.',sep=''))
+      list_log<-print_log(list_log,paste('Clinical: ',as.character(n_subj_deleted),' subjects with NA values in any covariate >> deleted.',sep=''),print_terminal)
     }else{
       n_subj_na<-n_subj_pre-nrow(df_clin_exist_wave[df_clin_exist_wave$ID_pnTTC %in% id_exist_intersect,])
-      list_log<-print_log(list_log,paste('Clinical: ',as.character(n_subj_na),' subjects with NA values in any covariate >> NOT deleted.',sep=''))
+      list_log<-print_log(list_log,paste('Clinical: ',as.character(n_subj_na),' subjects with NA values in any covariate >> NOT deleted.',sep=''),print_terminal)
     }
     list_id_exist_wave<-c(list_id_exist_wave,list('intersect'=id_exist_intersect))
     df_clin_exist<-rbind(df_clin_exist,df_clin_exist_wave)
@@ -639,22 +643,22 @@ func_cor<-function(input){
 # General PCA calculation =========================
 #**************************************************
 func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
-  
-  # Estimate number of dimensions
-  if (is.null(dim_ca)){
-    ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
-    ncp_calc<-ncp_estim
-  }else{
-    ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
-    if (ncp_estim==dim_ca){
-      print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
-    }
-    ncp_calc<-dim_ca
-  }
-  
-  # Impute data
   if (sum(is.na(df_src))>0){
+    # Estimate number of dimensions
+    if (is.null(dim_ca)){
+      ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
+      ncp_calc<-ncp_estim
+    }else{
+      ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
+      if (ncp_estim==dim_ca){
+        print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
+      }
+      ncp_calc<-dim_ca
+    }
+    # Impute data
     df_src<-imputePCA(df_src,ncp=ncp_calc)$completeObs
+  }else{
+    ncp_calc<-dim_ca
   }
   
   print(paste("Calculating PCA, dimension: ",as.character(ncp_calc),sep=""))
@@ -705,7 +709,7 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   df_variance$vaf<-df_variance$vaf/100
   df_variance$cumul_vaf<-df_variance$cumul_vaf/100
   df_variance$comp<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("comp","vaf","cumul_vaf","eigenvalue")]
+  df_variance<-df_variance[1:ncp_calc,c("comp","vaf","cumul_vaf","eigenvalue")]
   rownames(df_variance)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,

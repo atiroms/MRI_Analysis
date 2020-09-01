@@ -25,7 +25,6 @@ list_atlas<-"aal116"
 #list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 #path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
-source(file.path(getwd(),"util/parameter.R"))
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in<-"56.2_fc"
@@ -71,6 +70,7 @@ library(data.table)
 source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/gta_function.R"))
+source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
@@ -83,8 +83,8 @@ gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
                        list_type_p_=list_type_p,thr_p_=thr_p
                        ){
   # Prepare clinical data
-  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,
-                                     rem_na_clin=T,prefix=paste("var-",idx_var,sep=""))
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T,
+                                     prefix=paste("var-",idx_var,sep=""),print_terminal=F)
   df_clin<-data_clin$df_clin
   
   # Join fc and clinical data
@@ -124,12 +124,12 @@ gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
               list_type_p_,thr_p,paths_,suffix_=paste("var-",idx_var,sep=""))
 }
 
-gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wave,
+gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
                         list_atlas_=list_atlas,key_group_='group_3',
-                        list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
-                        list_mod_tanner_=list_mod_tanner,list_plot_tanner_=list_plot_tanner,
-                        list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                        list_mod_hormone_=list_mod_hormone,list_plot_hormone_=list_plot_hormone){
+                        list_covar_tanner_=gamm_fc_list_covar_tanner,list_tanner_=gamm_fc_list_tanner,
+                        list_mod_tanner_=gamm_fc_list_mod_tanner,list_plot_tanner_=gamm_fc_list_plot_tanner,
+                        list_covar_hormone_=gamm_fc_list_covar_hormone,list_hormone_=gamm_fc_list_hormone,
+                        list_mod_hormone_=gamm_fc_list_mod_hormone,list_plot_hormone_=gamm_fc_list_plot_hormone){
   
   print("Starting gamm_fc_multi().")
   nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
