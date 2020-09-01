@@ -111,13 +111,13 @@ gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
   # Save results
   write.csv(data_gamm$df_out_gamm,
             file.path(paths_$output,"output",
-                      paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+                      paste("atl-",atlas,"_var-",idx_var,"_fc_gamm.csv",sep="")),row.names = F)
   write.csv(data_gamm$df_out_aic,
             file.path(paths_$output,"output",
-                      paste("atl-",atlas,"_var-",idx_var,"_aic.csv",sep="")),row.names = F)
+                      paste("atl-",atlas,"_var-",idx_var,"_fc_gamm_aic.csv",sep="")),row.names = F)
   write.csv(df_plot_gamm,
             file.path(paths_$output,"output",
-                      paste("atl-",atlas,"_var-",idx_var,"_gamm_plt.csv",sep="")),row.names = F)
+                      paste("atl-",atlas,"_var-",idx_var,"_fc_gamm_plot.csv",sep="")),row.names = F)
   
   # Graphical output of ROI-wise GAMM of FC
   plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
@@ -173,15 +173,15 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wa
     for (idx_tanner in names(list_tanner_)){
       df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output",
                                                  paste("atl-",atlas,"_var-",idx_tanner,
-                                                       "_gamm.csv",sep=""))))
+                                                       "_fc_gamm.csv",sep=""))))
       df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_tanner,df_gamm_add))
       df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output",
                                                 paste("atl-",atlas,"_var-",idx_tanner,
-                                                      "_aic.csv",sep=""))))
+                                                      "_fc_gamm_aic.csv",sep=""))))
       df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_tanner,df_aic_add))
       df_gamm_plot_add<-as.data.frame(fread(file.path(paths_$output,"output",
                                                       paste("atl-",atlas,"_var-",idx_tanner,
-                                                            "_gamm_plot.csv",sep=""))))
+                                                            "_fc_gamm_plot.csv",sep=""))))
       df_gamm_plot<-rbind(df_gamm_plot,cbind(atlas=atlas,variable=idx_tanner,df_gamm_plot_add))
     } # Finished looping over Tanner stages
     
@@ -189,22 +189,22 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=subset_subj,list_wave_=list_wa
     for (idx_hormone in names(list_hormone_)){
       df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output",
                                                  paste("atl-",atlas,"_var-",idx_hormone,
-                                                       "_gamm.csv",sep=""))))
+                                                       "_fc_gamm.csv",sep=""))))
       df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_hormone,df_gamm_add))
       df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output",
                                                 paste("atl-",atlas,"_var-",idx_hormone,
-                                                      "_aic.csv",sep=""))))
+                                                      "_fc_gamm_aic.csv",sep=""))))
       df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_hormone,df_aic_add))
       df_gamm_plot_add<-as.data.frame(fread(file.path(paths_$output,"output",
                                                       paste("atl-",atlas,"_var-",idx_hormone,
-                                                            "_gamm_plot.csv",sep=""))))
+                                                            "_fc_gamm_plot.csv",sep=""))))
       df_gamm_plot<-rbind(df_gamm_plot,cbind(atlas=atlas,variable=idx_hormone,df_gamm_plot_add))
     } # Finished looping over Hormones
   } # Finished looping over atlas
   
-  write.csv(df_gamm,file.path(paths_$output,"output","gamm.csv"),row.names = F)
-  write.csv(df_aic,file.path(paths_$output,"output","aic.csv"),row.names = F)
-  write.csv(df_gamm_plot,file.path(paths_$output,"output","gamm_plot.csv"),row.names = F)
+  write.csv(df_gamm,file.path(paths_$output,"output","fc_gamm.csv"),row.names = F)
+  write.csv(df_aic,file.path(paths_$output,"output","fc_gamm_aic.csv"),row.names = F)
+  write.csv(df_gamm_plot,file.path(paths_$output,"output","fc_gamm_plot.csv"),row.names = F)
 }
 
 join_fc_clin<-function(df_fc,df_clin){
