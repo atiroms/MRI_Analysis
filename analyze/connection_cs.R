@@ -31,8 +31,8 @@ list_dim_ca<-5
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-list_atlas<-"power264"
-#list_atlas<-"aal116"
+#list_atlas<-"power264"
+list_atlas<-"aal116"
 #list_atlas<-"shen268"
 
 list_type_p=c("p","p_bh","seed_p_bh")
