@@ -12,17 +12,13 @@
 
 # parameters for fc()
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
 
-#dir_in <-"300_ts_acompcor"
-#dir_out <-"301_fc_acompcor"
-#dir_in <-"310_ts_aroma"
-#dir_out <-"311_fc_aroma"
-#dir_in <-"330_ts_acompcor_gsr"
-#dir_out <-"331_fc_acompcor_gsr"
-#dir_in <-"340_ts_aroma_gsr"
-#dir_out <-"341_fc_aroma_gsr"
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100","schaefer200","schaefer400","shen268")
+
+dir_in <-"400_ts_acompcor"
+dir_out <-"401_fc_acompcor"
+list_atlas<-c("glasser360","schaefer100x7","schaefer100x17",
+              "schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17")
 #list_atlas<-c("aal116","gordon333","power264","shen268")
 # list_atlas<-"aal116"
 
@@ -41,6 +37,7 @@ library(ica)
 library(tidyverse)
 library(ggplot2)
 library(parallel)
+library(data.table)
 
 
 #**************************************************
@@ -57,7 +54,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 #func_data_timeseries<-function(paths,data_clinical,subset_roi,atlas_=atlas){
 func_data_timeseries<-function(paths__,atlas_=atlas,key_group="group_3"){
   #print("Starting to load timeseries data.")
-  df_timeseries <- read.csv(file.path(paths__$input,"output",paste("atl-",atlas_,"_ts.csv",sep="")))
+  df_timeseries <- as.data.frame(fread(file.path(paths__$input,"output",paste("atl-",atlas_,"_ts.csv",sep=""))))
   #df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
   #                                          data_clinical_$list_id_subj),]
   list_id_roi <- colnames(df_timeseries)[c(-1,-2,-3)]
@@ -149,7 +146,7 @@ fc_core<-function(data_ts){
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),suffix_file,".eps",sep=""),
          plot=plot_fc_heatmap,device=cairo_ps,
-         path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+         path=file.path(paths_$output,"output","plot"),dpi=300,height=10,width=10,limitsize=F)
   
   #print(paste("Finished Wave: ",as.character(ses),", Subject: ",as.character(id_subj),sep=""))
   
@@ -189,7 +186,7 @@ fc<-function(paths_=paths,
     print(paste("Atlas: ",atlas,", calculating ROI-wise FC in parallel.",sep=""))
     clust<-makeCluster(floor(detectCores()*3/4))
     clusterExport(clust,
-                  varlist=c("paths_","atlas","list_label_roi","func_cor","FisherZ",
+                  varlist=c("paths_","atlas","list_label_roi","func_cor","func_fisherz",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                             "ggplot","aes","geom_tile","scale_fill_gradientn",
                             "matlab.like2","scale_y_discrete","scale_x_discrete",
@@ -217,7 +214,7 @@ fc<-function(paths_=paths,
     print(paste("Atlas: ",atlas,", calculating group-wise FC in parallel.",sep=""))
     clust<-makeCluster(floor(detectCores()*3/4))
     clusterExport(clust,
-                  varlist=c("paths_","atlas","list_label_roi","func_cor","FisherZ",
+                  varlist=c("paths_","atlas","list_label_roi","func_cor","func_fisherz",
                             "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                             "ggplot","aes","geom_tile","scale_fill_gradientn",
                             "matlab.like2","scale_y_discrete","scale_x_discrete",
