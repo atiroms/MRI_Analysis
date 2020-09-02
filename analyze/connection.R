@@ -12,17 +12,15 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
-#dir_in<-"401_fc_acompcor"
-#dir_out<-""
-#list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
-#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-#path_exp_full<-NULL
+dir_in<-dir_out<-"421_fc_aroma"
+list_atlas<-c("aal116","gordon333","glasser360","schaefer100x7","schaefer100x17",
+              "schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
+              "power264","shen268")
 
-dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_gamm_aroma"
-list_atlas<-"aal116"
+#dir_in<-"421_fc_aroma"
+#dir_out<-"427_fc_gamm_aroma"
+#list_atlas<-"aal116"
 #list_atlas<-"power264"
-#list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 #path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 
@@ -351,56 +349,65 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
 # Calculate longitudinal FC difference ============
 #**************************************************
 
-diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
-                  key_roigroup="group_3"){
+diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_roigroup="group_3"){
   print("Starting diff_fc().")
   #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
   
   for (atlas in list_atlas_){
-    # Load connection data
-    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    dt_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    df_conn<-as.data.frame(dt_conn)
-    dt_conn<-NULL
-    gc()
+    path_file_fc<-file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))
+    if (!file.exists(path_file_fc)){
+      print(paste("Atlas:",atlas,"FC data does not exist.",sep=" "))
+    }else{
     
-    # Create dataframe of existing graph edges
-    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
-    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
-    df_edge$from<-as.character(df_edge$from)
-    df_edge$to<-as.character(df_edge$to)
-    
-    # Examine existing subject IDs and sessions in connection data
-    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    for (ses in c(1,2)){
-      df_ses_subj<-rbind(df_ses_subj,
-                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
+      # Load connection data
+      dt_conn<-fread(path_file_fc)
+      df_conn<-as.data.frame(dt_conn)
+      dt_conn<-NULL
+      gc()
+      
+      if (sum(df_conn$ses=="2-1")>0){
+        print(paste("Atlas:",atlas,"FC difference already calculated.",sep=" "))
+      }else{
+        
+        # Create dataframe of existing graph edges
+        df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+        df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+        df_edge$from<-as.character(df_edge$from)
+        df_edge$to<-as.character(df_edge$to)
+        
+        # Examine existing subject IDs and sessions in connection data
+        df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+        colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+        for (ses in c(1,2)){
+          df_ses_subj<-rbind(df_ses_subj,
+                             data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
+        }
+        list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
+                                        df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
+        print(paste("Atlas: ",atlas,", ",
+                    as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
+                    sep=""))
+        
+        # Calculate longitudinal fc difference
+        df_out<-data.frame()
+        for (id_subj in list_subj_exist_long){
+          df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
+          colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
+          colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
+          df_ses2<-df_conn[(df_conn$ses==2 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
+          colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
+          colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
+          df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
+          df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
+          df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
+          df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
+          df_out<-rbind(df_out,df_diff)
+        }
+        df_out<-transform(df_out,ses=as.character(ses))
+        df_out<-rbind.fill(df_conn,df_out)
+        write.csv(df_out,file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
+      }
     }
-    list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
-                                    df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
-    print(paste("Atlas: ",atlas,", ",
-                as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
-                sep=""))
-    
-    # Calculate longitudinal fc difference
-    df_out<-data.frame()
-    for (id_subj in list_subj_exist_long){
-      df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
-      colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
-      colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
-      df_ses2<-df_conn[(df_conn$ses==2 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
-      colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
-      colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
-      df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
-      df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
-      df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
-      df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
-      df_out<-rbind(df_out,df_diff)
-    }
-    df_out<-transform(df_out,ses=as.character(ses))
-    df_out<-rbind.fill(df_conn,df_out)
-    write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
   }
   print('Finished diff_fc()')
 }
