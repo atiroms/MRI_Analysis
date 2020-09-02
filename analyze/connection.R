@@ -13,9 +13,10 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
 dir_in<-dir_out<-"421_fc_aroma"
-list_atlas<-c("aal116","gordon333","glasser360","schaefer100x7","schaefer100x17",
-              "schaefer200x7","schaefer200x17","schaefer400x7","schaefer400x17",
-              "power264","shen268")
+list_atlas<-c("aal116","gordon333","glasser360","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 
 #dir_in<-"421_fc_aroma"
 #dir_out<-"427_fc_gamm_aroma"
