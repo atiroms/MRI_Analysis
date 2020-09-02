@@ -62,6 +62,7 @@ library(car)
 library(plyr)
 library(dplyr)
 library(data.table)
+library(pbapply)
 
 
 #**************************************************
@@ -599,7 +600,7 @@ fp_fc<-function(paths_=paths,
   
   for (atlas in list_atlas_){
     # Load connection data
-    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
+    df_conn<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))))
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
     df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
     df_edge$from<-as.character(df_edge$from)
@@ -693,13 +694,13 @@ fp_fc<-function(paths_=paths,
     clust<-makeCluster(n_cluster)
     clusterExport(clust,
                   varlist=c("paths_","atlas","func_cor",
-                            "plot_cor_heatmap","rcorr","FisherZ","rownames_to_column","gather",
+                            "plot_cor_heatmap","rcorr","func_fisherz","rownames_to_column","gather",
                             "ggplot","aes","geom_tile","scale_fill_gradientn",
                             "matlab.like2","scale_y_discrete","scale_x_discrete",
                             "theme_light","theme","element_text","element_blank",
                             "ggtitle","ggsave"),
                   envir=environment())
-    list_df_fp<-parLapply(clust,list_data_zr,fp_fc_core)
+    list_df_fp<-pblapply(list_data_zr,fp_fc_core,cl=clust)
     stopCluster(clust)
     
     # Output dataframe
