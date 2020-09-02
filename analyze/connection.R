@@ -590,9 +590,7 @@ fp_fc_core<-function(data_zr){
 
 # Main function for fingerprint computing
 
-fp_fc<-function(paths_=paths,
-                list_atlas_=list_atlas,
-                key_roigroup="group_3"){
+fp_fc<-function(paths_=paths,list_atlas_=list_atlas,key_roigroup="group_3"){
   print("Starting fp_fc().")
   nullobj<-func_createdirs(paths_,str_proc="fp_fc()")
   dict_roi<-func_dict_roi(paths_)
