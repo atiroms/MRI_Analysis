@@ -12,12 +12,15 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
-dir_in<-dir_out<-"401_fc_acompcor"
+
+#dir_in<-dir_out<-"401_fc_acompcor"
+dir_in<-"431_fc_aroma_gsr"
+dir_out<-"432_fp_aroma_gsr"
 list_atlas<-c("aal116","glasser360","gordon333","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
-#path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"421_fc_aroma"
 #dir_out<-"427_fc_gamm_aroma"
@@ -549,6 +552,7 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
 # Core function for parallelization of fp_fc()
 fp_fc_core<-function(data_zr){
   measure<-"fc"
+  atlas<-data_zr$atlas
   group_1<-data_zr$group[[1]]
   group_2<-data_zr$group[[2]]
   df_zr<-data_zr$df_zr
@@ -592,7 +596,7 @@ fp_fc_core<-function(data_zr){
   
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_msr-",measure,"_grp1-",group_1,"_grp2-",group_2,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
-         path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+         path=file.path(paths_$output,"output","plot"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
 }
@@ -693,17 +697,17 @@ fp_fc<-function(paths_=paths,list_wave_=list_wave,list_atlas_=list_atlas,key_roi
             colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
             rownames(df_conn_cbind)<-NULL
             
-            list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
+            list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"atlas"=atlas,"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
           }
         }
       }
       
       # Parallel fingerprint correlation computing over groups of subnetworks
-      print(paste("atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
+      print(paste("Atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
       n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
       clust<-makeCluster(n_cluster)
       clusterExport(clust,
-                    varlist=c("paths_","atlas","func_cor",
+                    varlist=c("paths_","func_cor",
                               "plot_cor_heatmap","rcorr","func_fisherz","rownames_to_column","gather",
                               "ggplot","aes","geom_tile","scale_fill_gradientn",
                               "matlab.like2","scale_y_discrete","scale_x_discrete",
