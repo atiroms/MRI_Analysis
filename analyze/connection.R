@@ -598,7 +598,7 @@ fp_fc_core<-function(data_zr){
 
 # Main function for fingerprint computing
 
-fp_fc<-function(paths_=paths,list_atlas_=list_atlas,key_roigroup="group_3"){
+fp_fc<-function(paths_=paths,list_wave_=list_wave,list_atlas_=list_atlas,key_roigroup="group_3"){
   print("Starting fp_fc().")
   nullobj<-func_createdirs(paths_,str_proc="fp_fc()")
   dict_roi<-func_dict_roi(paths_)
@@ -615,8 +615,8 @@ fp_fc<-function(paths_=paths,list_atlas_=list_atlas,key_roigroup="group_3"){
     # Examine existing subject IDs and sessions in connection data
     df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
     colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    list_ses_exist <- sort(unique(df_conn$ses))
-    for (ses in list_ses_exist){
+    #list_ses_exist <- sort(unique(df_conn$ses))
+    for (ses in list_wave_){
       df_ses_subj<-rbind(df_ses_subj,
                          data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
     }
