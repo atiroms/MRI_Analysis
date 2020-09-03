@@ -14,13 +14,13 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
-dir_in <-"420_ts_aroma"
-dir_out <-"421_fc_aroma"
+dir_in <-"430_ts_aroma_gsr"
+dir_out <-"431_fc_aroma_gsr"
 list_atlas<-c("aal116","gordon333","glasser360","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
-path_exp_full<-'/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP'
+path_exp_full<-'/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP'
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in <-"56.1_ts_conn"
