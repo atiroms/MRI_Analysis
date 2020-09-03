@@ -16,7 +16,7 @@ path_exp_full<-NULL
 
 dir_in <-"430_ts_aroma_gsr"
 dir_out <-"431_fc_aroma_gsr"
-list_atlas<-c("aal116","gordon333","glasser360","power264",
+list_atlas<-c("aal116","glasser360","gordon333","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
@@ -27,6 +27,7 @@ path_exp_full<-'/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP'
 #dir_out <-"56.3_fc_conn"
 #list_atlas<-"cnn"
 #list_atlas<-"hoa"
+
 
 #**************************************************
 # Libraries =======================================

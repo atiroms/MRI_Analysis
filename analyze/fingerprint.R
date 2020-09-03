@@ -15,19 +15,17 @@ path_exp_full <-NULL
 
 dir_in<-"422_fp_aroma"
 dir_out<-"428_fp_glm_aroma"
-
-# Parameters for all functions
-list_wave <- c(1,2)
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-c("aal116","gordon333","power264","shen268")
-#list_atlas<-"aal116"
-list_atlas<-"power264"
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 
 ## parameters for variance_fp()
 #list_covar_variance<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
 #                          #"age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
 #                          "sex"=list("1"="Sex","2"="Sex","label"="Sex"))
 
+list_wave <- c(1,2)
 #thr_pvalue <- 0.05
 #n_permutation<-1000
 #n_permutation<-100
@@ -56,7 +54,6 @@ source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
-
 
 
 #**************************************************

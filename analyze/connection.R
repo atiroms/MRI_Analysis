@@ -13,7 +13,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
 dir_in<-dir_out<-"401_fc_acompcor"
-list_atlas<-c("aal116","gordon333","glasser360","power264",
+list_atlas<-c("aal116","glasser360","gordon333","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
@@ -606,120 +606,124 @@ fp_fc<-function(paths_=paths,list_wave_=list_wave,list_atlas_=list_atlas,key_roi
   dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi[,key_roigroup]),stringsAsFactors = F)
   
   for (atlas in list_atlas_){
-    # Load connection data
-    df_conn<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))))
-    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
-    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
-    df_edge$from<-as.character(df_edge$from)
-    df_edge$to<-as.character(df_edge$to)
-    
-    # Examine existing subject IDs and sessions in connection data
-    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    #list_ses_exist <- sort(unique(df_conn$ses))
-    for (ses in list_wave_){
-      df_ses_subj<-rbind(df_ses_subj,
-                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
-    }
-    
-    # Add node subgroup column to df_edge
-    df_edge<-left_join(df_edge,dict_roi,by=c("from"="id"))
-    colnames(df_edge)[colnames(df_edge)=="group"]<-"from_group"
-    df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
-    colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
-    
-    # List groups of existing nodes
-    list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
-    if (!("whole" %in% list_group)){
-      list_group<-c("whole",list_group)
-    }
-    n_group<-length(list_group)
-    print(paste("Atlas: ",atlas, ", ", as.character(n_group)," groups:",sep=""))
-    print(list_group)
-    
-    # Split and combine z_r data for each subgroup of networks for parallel computing
-    list_data_zr<-list()
-    
-    for (idx_group_1 in seq(n_group)){
-      for (idx_group_2 in seq(idx_group_1,n_group)){
-        group_1<-list_group[idx_group_1]
-        group_2<-list_group[idx_group_2]
-        # 1. whole <-> whole
-        # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
-        # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
-        if (group_1=="whole"){
-          if (group_2=="whole"){
-            # 1. whole <-> whole
-            df_edge_group<-df_edge
-          }else{
-            # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
-            df_edge_group<-rbind(df_edge[df_edge$from_group!=group_2 & df_edge$to_group==group_2,],
-                                 df_edge[df_edge$from_group==group_2 & df_edge$to_group!=group_2,])
-          }
-        }else{
+    if (file.exists(file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")))){
+      print(paste("Atlas: ",atlas,", fingerprint already calculated.",sep=""))
+    }else{
+      # Load connection data
+      df_conn<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))))
+      df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+      df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+      df_edge$from<-as.character(df_edge$from)
+      df_edge$to<-as.character(df_edge$to)
+      
+      # Examine existing subject IDs and sessions in connection data
+      df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+      colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+      #list_ses_exist <- sort(unique(df_conn$ses))
+      for (ses in list_wave_){
+        df_ses_subj<-rbind(df_ses_subj,
+                           data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
+      }
+      
+      # Add node subgroup column to df_edge
+      df_edge<-left_join(df_edge,dict_roi,by=c("from"="id"))
+      colnames(df_edge)[colnames(df_edge)=="group"]<-"from_group"
+      df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
+      colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
+      
+      # List groups of existing nodes
+      list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
+      if (!("whole" %in% list_group)){
+        list_group<-c("whole",list_group)
+      }
+      n_group<-length(list_group)
+      print(paste("Atlas: ",atlas, ", ", as.character(n_group)," groups:",sep=""))
+      print(list_group)
+      
+      # Split and combine z_r data for each subgroup of networks for parallel computing
+      list_data_zr<-list()
+      
+      for (idx_group_1 in seq(n_group)){
+        for (idx_group_2 in seq(idx_group_1,n_group)){
+          group_1<-list_group[idx_group_1]
+          group_2<-list_group[idx_group_2]
+          # 1. whole <-> whole
+          # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
           # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
-          if (group_1==group_2){
-            df_edge_group<-df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_1,]
+          if (group_1=="whole"){
+            if (group_2=="whole"){
+              # 1. whole <-> whole
+              df_edge_group<-df_edge
+            }else{
+              # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
+              df_edge_group<-rbind(df_edge[df_edge$from_group!=group_2 & df_edge$to_group==group_2,],
+                                   df_edge[df_edge$from_group==group_2 & df_edge$to_group!=group_2,])
+            }
           }else{
-            df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
-                                 df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
+            # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
+            if (group_1==group_2){
+              df_edge_group<-df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_1,]
+            }else{
+              df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
+                                   df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
+            }
+          }
+          
+          df_edge_group$idx<-seq(nrow(df_edge_group))
+          n_edge_group<-dim(df_edge_group)[1]
+          
+          if (n_edge_group<5){
+            print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
+          }else{
+            # Create combined dataframe of Z-transformed correlation coefficients
+            # according to pre-calculated edge and subject data
+            print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2,", preparing data.",sep=""))
+            df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
+            
+            for (idx_subj in seq(nrow(df_ses_subj))){
+              #print(paste("Ses: ",df_ses_subj[idx_subj,"ses"],", Subj: ",df_ses_subj[idx_subj,"ID_pnTTC"],sep=""))
+              df_conn_subset<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,"ID_pnTTC"]
+                                      & df_conn$ses==df_ses_subj[idx_subj,"ses"],c("from","to","z_r")]
+              df_conn_subset$from<-as.character(df_conn_subset$from)
+              df_conn_subset$to<-as.character(df_conn_subset$to)
+              df_conn_subset<-inner_join(df_conn_subset,df_edge_group,by=c("from","to"))
+              df_conn_subset<-df_conn_subset[order(df_conn_subset$idx),"z_r"]
+              df_conn_cbind<-cbind(df_conn_cbind,df_conn_subset)
+            }
+            colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+            rownames(df_conn_cbind)<-NULL
+            
+            list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
           }
         }
-        
-        df_edge_group$idx<-seq(nrow(df_edge_group))
-        n_edge_group<-dim(df_edge_group)[1]
-        
-        if (n_edge_group<5){
-          print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
-        }else{
-          # Create combined dataframe of Z-transformed correlation coefficients
-          # according to pre-calculated edge and subject data
-          print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2,", preparing data.",sep=""))
-          df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
-          
-          for (idx_subj in seq(nrow(df_ses_subj))){
-            #print(paste("Ses: ",df_ses_subj[idx_subj,"ses"],", Subj: ",df_ses_subj[idx_subj,"ID_pnTTC"],sep=""))
-            df_conn_subset<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,"ID_pnTTC"]
-                                    & df_conn$ses==df_ses_subj[idx_subj,"ses"],c("from","to","z_r")]
-            df_conn_subset$from<-as.character(df_conn_subset$from)
-            df_conn_subset$to<-as.character(df_conn_subset$to)
-            df_conn_subset<-inner_join(df_conn_subset,df_edge_group,by=c("from","to"))
-            df_conn_subset<-df_conn_subset[order(df_conn_subset$idx),"z_r"]
-            df_conn_cbind<-cbind(df_conn_cbind,df_conn_subset)
-          }
-          colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
-          rownames(df_conn_cbind)<-NULL
-          
-          list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
+      }
+      
+      # Parallel fingerprint correlation computing over groups of subnetworks
+      print(paste("atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
+      n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
+      clust<-makeCluster(n_cluster)
+      clusterExport(clust,
+                    varlist=c("paths_","atlas","func_cor",
+                              "plot_cor_heatmap","rcorr","func_fisherz","rownames_to_column","gather",
+                              "ggplot","aes","geom_tile","scale_fill_gradientn",
+                              "matlab.like2","scale_y_discrete","scale_x_discrete",
+                              "theme_light","theme","element_text","element_blank",
+                              "ggtitle","ggsave"),
+                    envir=environment())
+      list_df_fp<-pblapply(list_data_zr,fp_fc_core,cl=clust)
+      stopCluster(clust)
+      
+      # Output dataframe
+      df_fp<-NULL
+      for (df_fp_subnet in list_df_fp){
+        if (!is.null(df_fp_subnet)){
+          df_fp<-rbind(df_fp,df_fp_subnet)
         }
       }
+      
+      # Save fingerprint correlation
+      write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
     }
-    
-    # Parallel fingerprint correlation computing over groups of subnetworks
-    print(paste("atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
-    n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
-    clust<-makeCluster(n_cluster)
-    clusterExport(clust,
-                  varlist=c("paths_","atlas","func_cor",
-                            "plot_cor_heatmap","rcorr","func_fisherz","rownames_to_column","gather",
-                            "ggplot","aes","geom_tile","scale_fill_gradientn",
-                            "matlab.like2","scale_y_discrete","scale_x_discrete",
-                            "theme_light","theme","element_text","element_blank",
-                            "ggtitle","ggsave"),
-                  envir=environment())
-    list_df_fp<-pblapply(list_data_zr,fp_fc_core,cl=clust)
-    stopCluster(clust)
-    
-    # Output dataframe
-    df_fp<-NULL
-    for (df_fp_subnet in list_df_fp){
-      if (!is.null(df_fp_subnet)){
-        df_fp<-rbind(df_fp,df_fp_subnet)
-      }
-    }
-    
-    # Save fingerprint correlation
-    write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
   }
   print("Finished fp_fc().")
 }
