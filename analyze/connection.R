@@ -14,13 +14,13 @@ path_exp_full<-NULL
 
 
 #dir_in<-dir_out<-"401_fc_acompcor"
-dir_in<-"421_fc_aroma"
-dir_out<-"422_fp_aroma"
+dir_in<-"431_fc_aroma_gsr"
+dir_out<-"432_fp_aroma_gsr"
 list_atlas<-c("aal116","glasser360","gordon333","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
-path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"421_fc_aroma"
 #dir_out<-"427_fc_gamm_aroma"
