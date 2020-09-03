@@ -22,17 +22,18 @@ path_exp_full<-NULL
 #dir_in<-"421_fc_aroma"
 #dir_out<-"425_fc_gam_cs_aroma"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"426_fc_ca_aroma"
+dir_in<-"411_fc_acompcor_gsr"
+dir_out<-"416_fc_ca_acompcor_gsr"
 
-list_dim_ca<-c(5,10,20,40)
+#list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
-#list_dim_ca<-5
+list_dim_ca<-5
 
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100x7","schaefer200x7","schaefer400x7",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100x7","schaefer200x7","schaefer400x7",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+list_atlas<-"aal116"
 
 list_type_p=c("p","p_bh","seed_p_bh")
 thr_p <- 0.05
@@ -166,15 +167,11 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         df_pca_mri<-cbind(dim=dim_ca,data_pca$df_comp_mri)
         df_pca_subj<-cbind(dim=dim_ca,data_pca$df_comp_subj)
         df_pca_variance<-cbind(dim=dim_ca,data_pca$df_variance)
-        write.csv(df_pca_mri,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_pca_var.csv",sep="")),
-                  row.names=F)
-        write.csv(df_pca_subj,
-                  file.path(paths_$output,"output",
+        write.csv(df_pca_mri,file.path(paths_$output,"output",
+                            paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_pca_var.csv",sep="")),row.names=F)
+        write.csv(df_pca_subj,file.path(paths_$output,"output",
                             paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_pca_subj.csv",sep="")),row.names=F)
-        write.csv(df_pca_variance,
-                  file.path(paths_$output,"output",
+        write.csv(df_pca_variance,file.path(paths_$output,"output",
                             paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_pca_vaf.csv",sep="")),row.names=F)
         df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,wave=waves,method="pca",df_pca_mri))
         df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,wave=waves,method="pca",df_pca_subj))
@@ -195,14 +192,11 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
           df_ica_subj<-rbind.fill(df_ica_subj,cbind(dim=dim_ca,data_ica$df_comp_subj))
           df_ica_variance<-rbind.fill(df_ica_variance,cbind(dim=dim_ca,data_ica$df_variance))
         }
-        write.csv(df_ica_mri,
-                  file.path(paths_$output,"output",
+        write.csv(df_ica_mri,file.path(paths_$output,"output",
                             paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_ica_var.csv",sep="")),row.names=F)
-        write.csv(df_ica_subj,
-                  file.path(paths_$output,"output",
+        write.csv(df_ica_subj,file.path(paths_$output,"output",
                             paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_ica_subj.csv",sep="")),row.names=F)
-        write.csv(df_ica_variance,
-                  file.path(paths_$output,"output",
+        write.csv(df_ica_variance,file.path(paths_$output,"output",
                             paste("atl-",atlas,"_wave-",label_wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
         df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,wave=waves,method="ica",df_ica_mri))
         df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,wave=waves,method="ica",df_ica_subj))

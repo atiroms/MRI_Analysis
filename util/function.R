@@ -693,6 +693,17 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
     colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
   }
   rownames(df_comp_mri)<-NULL
+  df_comp_mri<-rownames_to_column(df_comp_mri,"id")
+  df_comp_mri$id<-as.numeric(df_comp_mri$id)
+  for (id_comp in 1:ncp_calc){
+    df_comp_mri$abs<-abs(df_comp_mri[[sprintf("comp_%03d",id_comp)]])
+    df_comp_mri<-df_comp_mri[order(df_comp_mri$abs,decreasing=T),]
+    df_comp_mri[[sprintf("rank_%03d",id_comp)]]<-1:nrow(df_comp_mri)
+  }
+  df_comp_mri<-df_comp_mri[order(df_comp_mri$id),]
+  df_comp_mri<-df_comp_mri[c(colnames(df_var),
+                             sprintf("comp_%03d",1:ncp_calc),
+                             sprintf("rank_%03d",1:ncp_calc))]
   
   # Component-Individual matrix
   # Row: subject, Column: (clinical variable +) component(factor)
@@ -771,6 +782,17 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
     colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
   }
   rownames(df_comp_mri)<-NULL
+  df_comp_mri<-rownames_to_column(df_comp_mri,"id")
+  df_comp_mri$id<-as.numeric(df_comp_mri$id)
+  for (id_comp in 1:ncp_calc){
+    df_comp_mri$abs<-abs(df_comp_mri[[sprintf("comp_%03d",id_comp)]])
+    df_comp_mri<-df_comp_mri[order(df_comp_mri$abs,decreasing=T),]
+    df_comp_mri[[sprintf("rank_%03d",id_comp)]]<-1:nrow(df_comp_mri)
+  }
+  df_comp_mri<-df_comp_mri[order(df_comp_mri$id),]
+  df_comp_mri<-df_comp_mri[c(colnames(df_var),
+                             sprintf("comp_%03d",1:ncp_calc),
+                             sprintf("rank_%03d",1:ncp_calc))]
   
   # Component-Individual matrix
   # Row: subject, Column: (clinical variable +) component(factor)
