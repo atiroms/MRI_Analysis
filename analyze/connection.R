@@ -553,6 +553,7 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
 fp_fc_core<-function(data_zr){
   measure<-"fc"
   atlas<-data_zr$atlas
+  paths<-data_zr$paths
   group_1<-data_zr$group[[1]]
   group_2<-data_zr$group[[2]]
   df_zr<-data_zr$df_zr
@@ -596,7 +597,7 @@ fp_fc_core<-function(data_zr){
   
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_msr-",measure,"_grp1-",group_1,"_grp2-",group_2,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
-         path=file.path(paths_$output,"output","plot"),dpi=300,height=10,width=10,limitsize=F)
+         path=file.path(paths$output,"output","plot"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
 }
@@ -697,7 +698,8 @@ fp_fc<-function(paths_=paths,list_wave_=list_wave,list_atlas_=list_atlas,key_roi
             colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
             rownames(df_conn_cbind)<-NULL
             
-            list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"atlas"=atlas,"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
+            list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"atlas"=atlas,"paths"=paths_,
+                                                   "df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
           }
         }
       }
@@ -707,7 +709,7 @@ fp_fc<-function(paths_=paths,list_wave_=list_wave,list_atlas_=list_atlas,key_roi
       n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
       clust<-makeCluster(n_cluster)
       clusterExport(clust,
-                    varlist=c("paths_","func_cor",
+                    varlist=c("func_cor",
                               "plot_cor_heatmap","rcorr","func_fisherz","rownames_to_column","gather",
                               "ggplot","aes","geom_tile","scale_fill_gradientn",
                               "matlab.like2","scale_y_discrete","scale_x_discrete",
