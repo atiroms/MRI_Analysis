@@ -19,12 +19,13 @@ ca_fc_subset_subj <- list("1"  =list(list("key"="W1_T1QC","condition"="==1"),
                                      list("key"="W2_T1QC","condition"="==1"),
                                      list("key"="W2_rsfMRIexist","condition"="==1"),
                                      list("key"="W2_Censor","condition"="<126")))
+ca_fc_list_sex <- list("male"="==1","female"="==2","all"=" %in% c(1,2)")
 ca_fc_list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
                        "c1m2" =list("wave_clin"="1","wave_mri"="2"),
-                       "c1m21"=list("wave_clin"="1","wave_mri"="2-1"),
+                       "c1m2-1"=list("wave_clin"="1","wave_mri"="2-1"),
                        "c2m1" =list("wave_clin"="2","wave_mri"="1"),
                        "c2m2" =list("wave_clin"="2","wave_mri"="2"),
-                       "c2m21"=list("wave_clin"="2","wave_mri"="2-1"))
+                       "c2m2-1"=list("wave_clin"="2","wave_mri"="2-1"))
 ca_fc_list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
                               "age"   =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
                               "sex"   =list("1"="Sex",            "2"="Sex",            "label"="Sex"))

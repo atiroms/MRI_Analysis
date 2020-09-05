@@ -733,16 +733,16 @@ func_pca<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr=F){
   
   # Matrix of variance accounted
   # Row: component(factor)
-  df_variance<-data.frame(data_pca$eig)
-  colnames(df_variance)<-c("eigenvalue","vaf","cumul_vaf")
-  df_variance$vaf<-df_variance$vaf/100
-  df_variance$cumul_vaf<-df_variance$cumul_vaf/100
-  df_variance$comp<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[1:ncp_calc,c("comp","vaf","cumul_vaf","eigenvalue")]
-  rownames(df_variance)<-NULL
+  df_vaf<-data.frame(data_pca$eig)
+  colnames(df_vaf)<-c("eigenvalue","vaf","cumul_vaf")
+  df_vaf$vaf<-df_vaf$vaf/100
+  df_vaf$cumul_vaf<-df_vaf$cumul_vaf/100
+  df_vaf$comp<-seq(1,dim(df_vaf)[1])
+  df_vaf<-df_vaf[1:ncp_calc,c("comp","vaf","cumul_vaf","eigenvalue")]
+  rownames(df_vaf)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
-              'df_variance'=df_variance,'dim'=ncp_calc,
+              'df_vaf'=df_vaf,'dim'=ncp_calc,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
@@ -822,18 +822,18 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   
   # Matrix of variance accounted
   # Row: component(factor)
-  df_variance<-data.frame(data_ica$vafs)
-  colnames(df_variance)<-"vaf"
-  df_variance[1,"cumul_vaf"]<-df_variance[1,"vaf"]
-  for (idx_row in 2:nrow(df_variance)){
-    df_variance[idx_row,"cumul_vaf"]<-df_variance[idx_row-1,"cumul_vaf"]+df_variance[idx_row,"vaf"]
+  df_vaf<-data.frame(data_ica$vafs)
+  colnames(df_vaf)<-"vaf"
+  df_vaf[1,"cumul_vaf"]<-df_vaf[1,"vaf"]
+  for (idx_row in 2:nrow(df_vaf)){
+    df_vaf[idx_row,"cumul_vaf"]<-df_vaf[idx_row-1,"cumul_vaf"]+df_vaf[idx_row,"vaf"]
   }
-  df_variance$comp<-seq(1,dim(df_variance)[1])
-  df_variance<-df_variance[c("comp","vaf","cumul_vaf")]
-  rownames(df_variance)<-NULL
+  df_vaf$comp<-seq(1,dim(df_vaf)[1])
+  df_vaf<-df_vaf[c("comp","vaf","cumul_vaf")]
+  rownames(df_vaf)<-NULL
   
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
-              'df_variance'=df_variance,'dim'=ncp_calc,
+              'df_vaf'=df_vaf,'dim'=ncp_calc,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
 }
 
