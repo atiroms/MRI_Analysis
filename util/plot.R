@@ -16,6 +16,112 @@ library(purrr)
 
 
 #**************************************************
+# Plot PCA/ICA of FC ==============================
+#**************************************************
+
+plot_ca_fc_core<-function(data_plot){
+  file<-data_plot$file
+  plot<-data_plot$plot
+  path<-data_plot$path
+  ggsave(file,plot=plot,path=path,height=10,width=10,dpi=600)
+  return(T)
+}
+
+plot_ca_fc<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,label_sex,ses){
+  df_node<-func_dict_roi(paths=paths)
+  df_node<-df_node[df_node$atlas==atlas,c("id","label")]
+  n_vis<-floor(nrow(df_comp_mri)*ratio_vis)
+  list_plot<-list()
+  for (idx_comp in 1:dim_ca){
+    df_edge<-df_comp_mri[,c("from","to",sprintf("comp_%03d",idx_comp),sprintf("rank_%03d",idx_comp))]
+    colnames(df_edge)<-c("from","to","weight","rank")
+    
+    igraph_ca<- graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+    plot<-plot_circular(igraph_in=igraph_ca,type_p="rank",thr_p=n_vis,limit_color=NULL)
+    plot<-plot +
+      ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
+                    ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
+                    ", Sex: ",label_sex,sep="")) +
+      theme(plot.title = element_text(hjust = 0.5))
+    
+    list_plot<-c(list_plot,list(list("file"=paste("atl-",atlas,"_method-",method,"_ses-",as.character(ses),
+                                                  "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
+                                                  "_comp-",sprintf("%03d",idx_comp),"_fc_ca.png",sep=""),
+                                     "path"=file.path(paths_$output,"output","plot"),
+                                     "plot"=plot)))
+    
+    #ggsave(paste("atl-",atlas,"_method-",method,"_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),"_comp-",sprintf("%03d",idx_comp),
+    #             "_fc_ca.png",sep=""),
+    #       plot=plot,path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
+  }
+  
+  n_cluster<-floor(detectCores()*3/4)
+  clust<-makeCluster(n_cluster)
+  clusterExport(clust,
+                varlist=c("ggsave","guide_edge_colourbar"),
+                envir=environment())
+  list_dst_gamm<-pblapply(list_plot,plot_ca_fc_core,cl=clust)
+  stopCluster(clust)
+}
+
+
+#**************************************************
+# Circular graph ==================================
+#**************************************************
+plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
+  
+  # Subset edges according to p value criteria
+  df_edge<-get.data.frame(igraph_in,what="edges")
+  df_edge<-df_edge[which(df_edge[,type_p]<thr_p),]
+  
+  # Change order of nodes for circular plot aesthetics
+  df_node<-get.data.frame(igraph_in,what="vertices")
+  idx_node_r<-grep("^R ",df_node$label)
+  idx_node_l<-rev(grep("^L ",df_node$label))
+  if (length(idx_node_r)+length(idx_node_l)>0){
+    df_node<-rbind(df_node[idx_node_r,],
+                   df_node[c(-idx_node_r,-idx_node_l),],
+                   df_node[idx_node_l,])
+  }
+  
+  # Add circular plot specs 
+  df_node$angle <- 90 - 360 * ((1:nrow(df_node))-0.5) / nrow(df_node)
+  df_node$hjust<-ifelse(df_node$angle < -90, 1, 0)
+  df_node$angle<-ifelse(df_node$angle < -90, df_node$angle+180, df_node$angle)
+  
+  # Convert edge/node dataframes into igraph object again
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  # Calculate color limit if not specified
+  if(is.null(limit_color)){
+    if (nrow(df_edge)>0){
+      limit_color <- max(abs(max(df_edge$weight)),abs(min(df_edge$weight)))
+      limit_color <- c(-limit_color,limit_color)
+    }
+  }
+  
+  plot<-ggraph(igraph_plot, layout = "linear",circular = T) +
+    geom_node_text(aes(x = x*1.03, y=y*1.03,
+                       label=label, angle = angle, hjust=hjust,vjust=0.2),
+                   size=min(5,10/log(nrow(df_node))), alpha=1) +
+    #               size=min(5,20/log(nrow(df_node))), alpha=1) +
+    geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
+    scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
+    expand_limits(x = c(-2, 2), y = c(-2, 2))+
+    #expand_limits(x = c(-1.5, 1.5), y = c(-1.5, 1.5))+
+    #ggtitle(input_title) +
+    theme_void() +
+    #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
+    theme(legend.justification=c(1,1), legend.position=c(1,1))
+  if (nrow(df_edge)>0){
+    plot<-plot+
+      geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
+  }
+  return(plot)
+}
+
+
+#**************************************************
 # Plot GAM of FC ==================================
 #**************************************************
 
@@ -83,8 +189,8 @@ plot_gam_fc<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
 #**************************************************
 # Plot PCA/ICA result =============================
 #**************************************************
-
-plot_ca<-function(df_src,list_name_covar,n_dim){
+#OBSOLETE
+plot_ca_old<-function(df_src,list_name_covar,n_dim){
   df_plot<-df_src
   df_plot$ses<-as.factor(df_plot$ses)
   df_plot$ID_pnTTC<-as.factor(df_plot$ID_pnTTC)
@@ -320,60 +426,4 @@ custom_densityDiag <- function(data, mapping, ...){
     scale_y_continuous() +
     xlim(-1,1) +
     geom_density(linetype="blank", fill=I("grey"),...)
-}
-
-
-#**************************************************
-# circular graph ==================================
-#**************************************************
-plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
-  
-  # Subset edges according to p value criteria
-  df_edge<-get.data.frame(igraph_in,what="edges")
-  df_edge<-df_edge[which(df_edge[,type_p]<thr_p),]
-  
-  # Change order of nodes for circular plot aesthetics
-  df_node<-get.data.frame(igraph_in,what="vertices")
-  idx_node_r<-grep("^R ",df_node$label)
-  idx_node_l<-rev(grep("^L ",df_node$label))
-  if (length(idx_node_r)+length(idx_node_l)>0){
-    df_node<-rbind(df_node[idx_node_r,],
-                   df_node[c(-idx_node_r,-idx_node_l),],
-                   df_node[idx_node_l,])
-  }
-  
-  # Add circular plot specs 
-  df_node$angle <- 90 - 360 * ((1:nrow(df_node))-0.5) / nrow(df_node)
-  df_node$hjust<-ifelse(df_node$angle < -90, 1, 0)
-  df_node$angle<-ifelse(df_node$angle < -90, df_node$angle+180, df_node$angle)
-  
-  # Convert edge/node dataframes into igraph object again
-  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
-  
-  # Calculate color limit if not specified
-  if(is.null(limit_color)){
-    if (nrow(df_edge)>0){
-      limit_color <- max(abs(max(df_edge$weight)),abs(min(df_edge$weight)))
-      limit_color <- c(-limit_color,limit_color)
-    }
-  }
-  
-  plot<-ggraph(igraph_plot, layout = "linear",circular = T) +
-    geom_node_text(aes(x = x*1.03, y=y*1.03,
-                       label=label, angle = angle, hjust=hjust,vjust=0.2),
-                   size=min(5,10/log(nrow(df_node))), alpha=1) +
-    #               size=min(5,20/log(nrow(df_node))), alpha=1) +
-    geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
-    scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
-    expand_limits(x = c(-2, 2), y = c(-2, 2))+
-    #expand_limits(x = c(-1.5, 1.5), y = c(-1.5, 1.5))+
-    #ggtitle(input_title) +
-    theme_void() +
-    #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
-    theme(legend.justification=c(1,1), legend.position=c(1,1))
-  if (nrow(df_edge)>0){
-    plot<-plot+
-          geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
-  }
-  return(plot)
 }

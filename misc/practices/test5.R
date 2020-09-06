@@ -43,10 +43,9 @@ waves<-names(list_waves_)[[1]]
 
 wave_clin<-list_waves_[[waves]]$wave_clin
 wave_mri<-list_waves_[[waves]]$wave_mri
-print(paste("Clinical wave: ", wave_clin,", MRI wave: ",wave_mri,sep=""))
 
 if (wave_mri %in% wave_mri_done){
-  print("Loading pre-calculated PCA/ICA results.")
+  print(paste("Clinical: ", wave_clin,", MRI: ",wave_mri,", loading PCA/ICA results.",sep=""))
   df_pca_subj<-read.csv(file.path(paths_$output,"output",
                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")))
   df_ica_subj<-read.csv(file.path(paths_$output,"output",
@@ -63,10 +62,11 @@ if (wave_mri %in% wave_mri_done){
     data_clin<-func_clinical_data_long(paths_,wave_mri,subset_subj_temp,list_covar=NULL,
                                        rem_na_clin=F,
                                        prefix=paste("ses-m",wave_mri,"_sex-",label_sex,sep=""),
-    #                                   print_terminal=F)
-    print_terminal=T)
+                                       print_terminal=F)
     df_clin<-data_clin$df_clin
     colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+    print(paste("Clinical: ", wave_clin,", MRI: ",wave_mri,
+                ", Sex: ",label_sex," PCA/ICA.",sep=""))
     
     # Create list of subjects who meet subsetting condition and whose MRI data exist
     df_conn_ses<-df_conn[df_conn$ses==wave_mri,]
@@ -96,9 +96,9 @@ if (wave_mri %in% wave_mri_done){
     df_pca_mri<-rbind(df_pca_mri,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_mri))
     df_pca_subj<-rbind(df_pca_subj,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_subj))
     df_pca_vaf<-rbind(df_pca_vaf,cbind(sex=label_sex,dim=dim_ca,data_pca$df_vaf))
-    df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_mri))
-    df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_subj))
-    df_ca_vaf_bind<-rbind(df_ca_vaf_bind,cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_vaf))
+    df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,method="pca",ses=wave_mri,df_pca_mri))
+    df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,method="pca",ses=wave_mri,df_pca_subj))
+    df_ca_vaf_bind<-rbind(df_ca_vaf_bind,cbind(atlas=atlas,method="pca",ses=wave_mri,df_pca_vaf))
     
     data_pca<-NULL
     gc()
@@ -110,9 +110,9 @@ if (wave_mri %in% wave_mri_done){
       df_ica_subj<-rbind.fill(df_ica_subj,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_subj))
       df_ica_vaf<-rbind.fill(df_ica_vaf,cbind(sex=label_sex,dim=dim_ca,data_ica$df_vaf))
     }
-    df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_mri))
-    df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_subj))
-    df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_vaf))
+    df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,method="ica",ses=wave_mri,df_ica_mri))
+    df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,method="ica",ses=wave_mri,df_ica_subj))
+    df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,cbind(atlas=atlas,method="ica",ses=wave_mri,df_ica_vaf))
     
     data_ica<-NULL
     gc()
@@ -130,3 +130,55 @@ if (wave_mri %in% wave_mri_done){
   write.csv(df_ica_vaf,file.path(paths_$output,"output",
                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
 } # end if wave_mri is not in wave_mri_done
+
+
+
+subset_subj_temp<-list(subset_subj_[[as.character(wave_mri)]])
+names(subset_subj_temp)<-wave_clin
+idx_tanner<-names(list_tanner_)[[1]]
+
+
+
+print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
+list_covar<-list_covar_tanner_
+list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
+n_covar<-length(list_covar)
+suffix<-paste("ses-",waves,"_var-",idx_tanner,sep="")
+
+data_clin<-func_clinical_data_long(paths_,wave_clin,subset_subj_temp,list_covar,
+                                   rem_na_clin=T,prefix=suffix,print_terminal=F)
+df_clin<-data_clin$df_clin
+df_clin$wave<-NULL
+
+
+
+df_comp_subj=df_pca_subj
+list_sex<-list_sex_
+
+
+list_dim<-sort(unique(df_comp_subj$dim))
+df_cor_rbind<-df_cor_flat_rbind<-NULL
+
+dim<-list_dim[1]
+label_sex<-names(list_sex)[[1]]
+
+
+
+df_comp_subj_subset<-df_comp_subj[df_comp_subj$dim==dim & df_comp_subj$sex==label_sex,
+                                  c("ID_pnTTC",sprintf("comp_%03d",1:dim))]
+df_join<-inner_join(df_clin,df_comp_subj_subset,by="ID_pnTTC")
+df_join$ID_pnTTC<-NULL
+data_cor<-func_cor(df_join)
+df_cor<-data_cor$cor
+df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+df_cor<-rownames_to_column(df_cor,"comp")
+df_cor$comp<-sapply(sapply(df_cor$comp,substr,start=6,stop=8),as.integer)
+df_cor<-cbind(dim=dim,df_cor)
+df_cor_flat<-data_cor$cor_flat
+df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_clin) & df_cor_flat$to %in% colnames(df_comp_subj_dim),]
+df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+colnames(df_cor_flat)<-c("covar","comp","r","p")
+df_cor_flat$comp<-sapply(sapply(df_cor_flat$comp,substr,start=6,stop=8),as.integer)
+df_cor_flat<-cbind(dim=dim,df_cor_flat)
+df_cor_rbind<-rbind(df_cor_rbind,cbind(sex=label_sex,df_cor))
+df_cor_flat_rbind<-rbind(df_cor_flat_rbind,cbind(sex=label_sex,df_cor_flat))
