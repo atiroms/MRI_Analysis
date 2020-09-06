@@ -23,18 +23,18 @@ path_exp_full<-NULL
 #dir_out<-"403_fc_gam_acompcor"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"405_fc_ca_aroma"
+dir_out<-"425_fc_ca_aroma"
 
 list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
 #list_dim_ca<-5
 ratio_vis<-0.01
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100x7","schaefer200x7","schaefer400x7",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
-list_atlas<-"aal116"
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+#list_atlas<-"aal116"
 
 list_type_p=c("p","p_bh","seed_p_bh")
 thr_p <- 0.05
