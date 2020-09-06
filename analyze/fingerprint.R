@@ -19,6 +19,7 @@ list_atlas<-c("aal116","glasser360","gordon333","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
+#list_atlas<-"schaefer100x17"
 
 ## parameters for variance_fp()
 #list_covar_variance<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
@@ -604,9 +605,22 @@ heatmap_gammfp<-function(paths_,df_out_lm,list_atlas,list_mod){
                                             & df_out_lm$term==term
                                             & df_out_lm$group_1==group_1
                                             & df_out_lm$group_2==group_2,c("estimate","F","p")]
-                name_static<-colnames(df_out_lm_subset[,c("estimate","F")])[!is.na(df_out_lm_subset[1,c("estimate","F")])]
-                mat_static[group_1,group_2]<-mat_static[group_2,group_1]<-df_out_lm_subset[[1,name_static]]
-                mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-df_out_lm_subset[[1,"p"]]
+                if (nrow(df_out_lm_subset)>0){
+                  name_static<-colnames(df_out_lm_subset[,c("estimate","F")])[!is.na(df_out_lm_subset[1,c("estimate","F")])]
+                  mat_static[group_1,group_2]<-mat_static[group_2,group_1]<-df_out_lm_subset[[1,name_static]]
+                  #mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-df_out_lm_subset[[1,"p"]]
+                  pval<-df_out_lm_subset[[1,"p"]]
+                  if (pval<0.001){
+                    mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-"**"
+                  }else if (pval<0.05){
+                    mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-"*"
+                  }else{
+                    mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-""
+                  }
+                }else{
+                  mat_static[group_1,group_2]<-mat_static[group_2,group_1]<-NA
+                  mat_pval[group_1,group_2]<-mat_pval[group_2,group_1]<-""
+                }
               }
             }
             
@@ -617,7 +631,7 @@ heatmap_gammfp<-function(paths_,df_out_lm,list_atlas,list_mod){
             }else{
               label_sex<-"female"
             }
-            mat_pval<-round(mat_pval,3)
+            #mat_pval<-round(mat_pval,3)
             plot_stat<-plot_cor_heatmap(mat_static,mat_pval)
             suppressMessages(plot_stat<-(plot_stat
                                          + scale_fill_gradientn(colors = matlab.like2(100),
@@ -634,7 +648,6 @@ heatmap_gammfp<-function(paths_,df_out_lm,list_atlas,list_mod){
       }
     }
   }
-  
 }
 
 model_fp_multi<-function(paths_=paths,subset_subj_=model_fp_subset_subj,list_atlas_=list_atlas,
@@ -737,9 +750,13 @@ model_fp<-function(paths_=paths,
           df_fp_meas_grp2<-df_fp_meas_grp1[df_fp_meas_grp1$group_2==group_2,]
           df_cor_fp<-data.frame(ID_pnTTC=list_id_subj_exist_twice)
           for (id_subj in list_id_subj_exist_twice){
-            df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas_grp2[df_fp_meas_grp2$from_ID_pnTTC==id_subj
-                                                                            & df_fp_meas_grp2$to_ID_pnTTC==id_subj,
-                                                                            "z_r"]
+            if (any(df_fp_meas_grp2$from_ID_pnTTC==id_subj & df_fp_meas_grp2$to_ID_pnTTC==id_subj)){
+              df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-df_fp_meas_grp2[df_fp_meas_grp2$from_ID_pnTTC==id_subj
+                                                                              & df_fp_meas_grp2$to_ID_pnTTC==id_subj,
+                                                                              "z_r"]
+            }else{
+              df_cor_fp[df_cor_fp$ID_pnTTC==id_subj,"value"]<-NA
+            }
           }
           
           # Subset those without longitudinal fp correlation
@@ -749,21 +766,23 @@ model_fp<-function(paths_=paths,
           #print(paste("Atlas: ",atlas,", Measure: ",measure,", Group: ",group_1," and ",group_2,
           #            ", ",as.character(n_id_subj_exist_twice)," subjects with longitudinal non-NA data.",sep=""))
           
-          # Create dataframe for GLM analysis
-          df_src_glm<-func_clinical_data_join(df_src=df_clin,
-                                               list_id_subj=list_id_subj_nonna,
-                                               list_covar=list_covar_)
-          df_src_glm<-inner_join(df_src_glm,df_cor_fp,by="ID_pnTTC")
-          df_src_glm$ID_pnTTC<-as.factor(df_src_glm$ID_pnTTC)
-          df_src_glm$sex<-as.factor(df_src_glm$sex)
-          
-          df_src_glm_bind<-rbind(df_src_glm_bind,
-                                 cbind(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
-                                       df_src_glm))
-          
-          list_src_glm<-c(list_src_glm,
-                          list(list("df_src"=df_src_glm,"atlas"=atlas,"measure"=measure,
-                                    "group_1"=group_1,"group_2"=group_2)))
+          if (n_id_subj_exist_twice>0){
+            # Create dataframe for GLM analysis
+            df_src_glm<-func_clinical_data_join(df_src=df_clin,
+                                                list_id_subj=list_id_subj_nonna,
+                                                list_covar=list_covar_)
+            df_src_glm<-inner_join(df_src_glm,df_cor_fp,by="ID_pnTTC")
+            df_src_glm$ID_pnTTC<-as.factor(df_src_glm$ID_pnTTC)
+            df_src_glm$sex<-as.factor(df_src_glm$sex)
+            
+            df_src_glm_bind<-rbind(df_src_glm_bind,
+                                   cbind(atlas=atlas,measure=measure,group_1=group_1,group_2=group_2,
+                                         df_src_glm))
+            
+            list_src_glm<-c(list_src_glm,
+                            list(list("df_src"=df_src_glm,"atlas"=atlas,"measure"=measure,
+                                      "group_1"=group_1,"group_2"=group_2)))
+          }
           
           # Calculate GLM
           #out_glm<-glm_core(df_src=df_join_grp,atlas,measure,group_1,group_2,
