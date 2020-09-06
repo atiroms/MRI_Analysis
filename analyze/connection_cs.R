@@ -22,8 +22,8 @@ path_exp_full<-NULL
 #dir_in<-"421_fc_aroma"
 #dir_out<-"425_fc_gam_cs_aroma"
 
-dir_in<-"411_fc_acompcor_gsr"
-dir_out<-"416_fc_ca_acompcor_gsr"
+dir_in<-"401_fc_acompcor"
+dir_out<-"406_fc_ca_acompcor"
 
 #list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
@@ -125,7 +125,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
           
           # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified mri wave
           subset_subj_temp<-list(c(subset_subj_[[as.character(wave_mri)]],
-                                   list("key"="Sex","condition"=list_sex[[label_sex]])))
+                                   list(list("key"="Sex","condition"=list_sex_[[label_sex]]))))
           names(subset_subj_temp)<-wave_mri
           data_clin<-func_clinical_data_long(paths_,wave_mri,subset_subj_temp,list_covar=NULL,
                                              rem_na_clin=F,

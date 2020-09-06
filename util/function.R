@@ -466,7 +466,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
       #value_subset<-key_condition$value
       condition_subset<-key_condition$condition
       #id_meet_cond<-df_clin_wave[df_clin_wave[key_subset]==value_subset,'ID_pnTTC']
-      id_meet_cond<-df_clin_wave[eval(parse(text=paste('df_clin_wave[key_subset]',condition_subset,sep=''))),'ID_pnTTC']
+      id_meet_cond<-df_clin_wave[eval(parse(text=paste('df_clin_wave[[key_subset]]',condition_subset,sep=''))),'ID_pnTTC']
       id_meet_cond<-id_meet_cond[!is.na(id_meet_cond)]
       id_intersect<-intersect(id_intersect,id_meet_cond)
       #print(paste('Clinical: ',as.character(length(id_meet_cond)),' subjects meeting ',key_subset, ' = ',as.character(value_subset),sep=''))

@@ -1,6 +1,7 @@
 paths_=paths
 list_waves_=ca_fc_list_waves
 subset_subj_=ca_fc_subset_subj
+list_sex_=ca_fc_list_sex
 list_atlas_=list_atlas
 list_covar_tanner_=ca_fc_list_covar_tanner
 list_tanner_=ca_fc_list_tanner
@@ -43,108 +44,89 @@ waves<-names(list_waves_)[[1]]
 wave_clin<-list_waves_[[waves]]$wave_clin
 wave_mri<-list_waves_[[waves]]$wave_mri
 print(paste("Clinical wave: ", wave_clin,", MRI wave: ",wave_mri,sep=""))
-if (wave_mri=="2-1"){
-  label_wave_mri<-"m21"
+
+if (wave_mri %in% wave_mri_done){
+  print("Loading pre-calculated PCA/ICA results.")
+  df_pca_subj<-read.csv(file.path(paths_$output,"output",
+                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")))
+  df_ica_subj<-read.csv(file.path(paths_$output,"output",
+                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")))
 }else{
-  label_wave_mri<-paste("m",wave_mri,sep="")
-}
-
-
-wave_mri_done<-c(wave_mri_done,wave_mri)
-
-# Prepare subject subsetting condition (MRI QC criteria) according to specified waves
-subset_subj_temp<-list(subset_subj_[[as.character(wave_mri)]])
-names(subset_subj_temp)<-wave_mri
-data_clin<-func_clinical_data_long(paths_,wave_mri,subset_subj_temp,list_covar=NULL,
-                                   rem_na_clin=F,prefix=paste("wave-",label_wave_mri,sep=""),
-                                   print_terminal=F)
-df_clin<-data_clin$df_clin
-colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
-
-# Create list of subjects who meet subsetting condition and whose MRI data exist
-df_conn_ses<-df_conn[df_conn$ses==wave_mri,]
-list_subj_mri<-unique(df_conn_ses$ID_pnTTC)
-list_subj_qc<-unique(df_clin[df_clin$ses==wave_mri,]$ID_pnTTC)
-list_subj_calc<-intersect(list_subj_mri,list_subj_qc)
-n_subj_del<-length(list_subj_qc)-length(list_subj_calc)
-if (n_subj_del>0){
-  print(paste("MRI data absent in",as.character(n_subj_del),"subjects.",sep=" "))
-}
-
-# Cbind FC data (Fisher-z transform of FC) as input for PCA function
-df_conn_calc<-data.frame(matrix(nrow=n_edge,ncol=0))
-df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
-colnames(df_clin_exist)<-colnames(df_clin)
-for (id_subj in list_subj_calc){
-  df_conn_subj<-df_conn_ses[which(df_conn_ses$ID_pnTTC==id_subj),]
-  df_conn_calc<-cbind(df_conn_calc,df_conn_subj[["z_r"]])
-  df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
-}
-colnames(df_conn_calc)<-as.character(seq(ncol(df_conn_calc)))
-rownames(df_conn_calc)<-NULL
-# Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
-df_conn_calc<-as.data.frame(t(df_conn_calc))
-df_conn_ses<-NULL
-gc()
-
-# Calculate PCA of FC
-dim_ca<-max(list_dim_ca_)
-
-
-
-df_src=df_conn_calc
-df_var=df_edge
-df_indiv=df_clin_exist
-dim_ca=dim_ca
-calc_corr=F
-
-
-
-if (sum(is.na(df_src))>0){
-  # Estimate number of dimensions
-  if (is.null(dim_ca)){
-    ncp_estim<-estim_ncpPCA(df_src,ncp.max=ncol(df_src))$ncp
-    ncp_calc<-ncp_estim
-  }else{
-    ncp_estim<-estim_ncpPCA(df_src,ncp.max=dim_ca)$ncp
-    if (ncp_estim==dim_ca){
-      print(paste("PCA data dimension may be greater than: ",as.character(ncp_estim),sep=""))
+  wave_mri_done<-c(wave_mri_done,wave_mri)
+  df_pca_mri<-df_pca_subj<-df_pca_vaf<-df_ica_mri<-df_ica_subj<-df_ica_vaf<-NULL
+  for (label_sex in names(list_sex_)){
+    
+    # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified mri wave
+    subset_subj_temp<-list(c(subset_subj_[[as.character(wave_mri)]],
+                             list(list("key"="Sex","condition"=list_sex_[[label_sex]]))))
+    names(subset_subj_temp)<-wave_mri
+    data_clin<-func_clinical_data_long(paths_,wave_mri,subset_subj_temp,list_covar=NULL,
+                                       rem_na_clin=F,
+                                       prefix=paste("ses-m",wave_mri,"_sex-",label_sex,sep=""),
+    #                                   print_terminal=F)
+    print_terminal=T)
+    df_clin<-data_clin$df_clin
+    colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+    
+    # Create list of subjects who meet subsetting condition and whose MRI data exist
+    df_conn_ses<-df_conn[df_conn$ses==wave_mri,]
+    list_subj_mri<-unique(df_conn_ses$ID_pnTTC)
+    list_subj_qc<-unique(df_clin[df_clin$ses==wave_mri,]$ID_pnTTC)
+    list_subj_calc<-intersect(list_subj_mri,list_subj_qc)
+    
+    # Cbind FC data (Fisher-z transform of FC) as input for PCA function
+    df_conn_calc<-data.frame(matrix(nrow=n_edge,ncol=0))
+    df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
+    colnames(df_clin_exist)<-colnames(df_clin)
+    for (id_subj in list_subj_calc){
+      df_conn_subj<-df_conn_ses[which(df_conn_ses$ID_pnTTC==id_subj),]
+      df_conn_calc<-cbind(df_conn_calc,df_conn_subj[["z_r"]])
+      df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
     }
-    ncp_calc<-dim_ca
-  }
-  # Impute data
-  df_src<-imputePCA(df_src,ncp=ncp_calc)$completeObs
-}else{
-  ncp_calc<-dim_ca
-}
-
-print(paste("Calculating PCA, dimension: ",as.character(ncp_calc),sep=""))
-# PCA calculation
-data_pca<-PCA(df_src,scale.unit = TRUE, ncp = ncp_calc, graph = FALSE)
-
-# Component-imaging variable matrix
-# Row: MRI variable, Column: component(factor)
-df_comp_mri<-data.frame(data_pca$var$coord)
-if(!is.null(df_var)){
-  df_comp_mri<-cbind(df_var,df_comp_mri)
-  colnames(df_comp_mri)<-c(colnames(df_var),sprintf("comp_%03d",1:ncp_calc))
-}else{
-  colnames(df_comp_mri)<-sprintf("comp_%03d",1:ncp_calc)
-}
-rownames(df_comp_mri)<-NULL
-
-
-
-
-
-df_comp_mri<-rownames_to_column(df_comp_mri,"id")
-df_comp_mri$id<-as.numeric(df_comp_mri$id)
-for (id_comp in 1:ncp_calc){
-  df_comp_mri$abs<-abs(df_comp_mri[[sprintf("comp_%03d",id_comp)]])
-  df_comp_mri<-df_comp_mri[order(df_comp_mri$abs,decreasing=T),]
-  df_comp_mri[[sprintf("rank_%03d",id_comp)]]<-1:nrow(df_comp_mri)
-}
-df_comp_mri<-df_comp_mri[order(df_comp_mri$id),]
-df_comp_mri<-df_comp_mri[c(colnames(df_var),
-                            sprintf("comp_%03d",1:ncp_calc),
-                            sprintf("rank_%03d",1:ncp_calc))]
+    colnames(df_conn_calc)<-as.character(seq(ncol(df_conn_calc)))
+    rownames(df_conn_calc)<-NULL
+    # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
+    df_conn_calc<-as.data.frame(t(df_conn_calc))
+    df_conn_ses<-NULL
+    gc()
+    
+    # Calculate PCA of FC
+    dim_ca<-max(list_dim_ca_)
+    data_pca<-func_pca(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
+    df_pca_mri<-rbind(df_pca_mri,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_mri))
+    df_pca_subj<-rbind(df_pca_subj,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_subj))
+    df_pca_vaf<-rbind(df_pca_vaf,cbind(sex=label_sex,dim=dim_ca,data_pca$df_vaf))
+    df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_mri))
+    df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_subj))
+    df_ca_vaf_bind<-rbind(df_ca_vaf_bind,cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_vaf))
+    
+    data_pca<-NULL
+    gc()
+    
+    # Calculate ICA of FC
+    for (dim_ca in list_dim_ca_){
+      data_ica<-func_ica(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
+      df_ica_mri<-rbind.fill(df_ica_mri,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_mri))
+      df_ica_subj<-rbind.fill(df_ica_subj,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_subj))
+      df_ica_vaf<-rbind.fill(df_ica_vaf,cbind(sex=label_sex,dim=dim_ca,data_ica$df_vaf))
+    }
+    df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_mri))
+    df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_subj))
+    df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_vaf))
+    
+    data_ica<-NULL
+    gc()
+  } # end of loop over sex
+  write.csv(df_pca_mri,file.path(paths_$output,"output",
+                                 paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")),row.names=F)
+  write.csv(df_pca_subj,file.path(paths_$output,"output",
+                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")),row.names=F)
+  write.csv(df_pca_vaf,file.path(paths_$output,"output",
+                                 paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep="")),row.names=F)
+  write.csv(df_ica_mri,file.path(paths_$output,"output",
+                                 paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")),row.names=F)
+  write.csv(df_ica_subj,file.path(paths_$output,"output",
+                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")),row.names=F)
+  write.csv(df_ica_vaf,file.path(paths_$output,"output",
+                                 paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
+} # end if wave_mri is not in wave_mri_done
