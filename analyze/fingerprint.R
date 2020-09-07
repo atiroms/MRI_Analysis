@@ -13,14 +13,14 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
 path_exp_full <-NULL
 
-dir_in<-"432_fp_aroma_gsr"
-dir_out<-"436_fp_gam_aroma_gsr"
+dir_in<-"412_fp_acompcor_gsr"
+dir_out<-"416_fp_gam_acompcor_gsr"
 list_atlas<-c("aal116","glasser360","gordon333","power264",
               "schaefer100x7","schaefer200x7","schaefer400x7",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
 #list_atlas<-"schaefer100x17"
-path_exp_full <-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full <-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 ## parameters for variance_fp()
 #list_covar_variance<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
