@@ -28,7 +28,7 @@ dir_out<-"435_fc_ca_aroma_gsr"
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
-list_dim_ca<-5
+#list_dim_ca<-5
 ratio_vis<-0.01
 
 list_atlas<-c("aal116","glasser360","gordon333","power264",
