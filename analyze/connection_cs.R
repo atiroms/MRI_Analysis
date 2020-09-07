@@ -16,14 +16,14 @@ source(file.path(getwd(),"analyze/connection.R"))
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"401_fc_acompcor"
 #dir_out<-"403_fc_gam_acompcor"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-"405_fc_ca_acompcor"
+dir_in<-"421_fc_aroma"
+dir_out<-"425_fc_ca_aroma"
 
 list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
