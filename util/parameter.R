@@ -47,7 +47,7 @@ ca_fc_list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone
 
 
 #**************************************************
-# gam_fc_multi() ==================================
+# gam_fc_cs_multi() ==================================
 #**************************************************
 list_mod_tanner <- list("l"= "value ~ age + tanner")
 list_mod_hormone <- list("l"= "value ~ age + hormone")
