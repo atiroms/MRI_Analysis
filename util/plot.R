@@ -28,6 +28,7 @@ plot_ca_fc_core<-function(data_plot){
 }
 
 plot_ca_fc<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,label_sex,ses){
+  print("Calculating graphics of components.")
   df_node<-func_dict_roi(paths=paths)
   df_node<-df_node[df_node$atlas==atlas,c("id","label")]
   n_vis<-floor(nrow(df_comp_mri)*ratio_vis)

@@ -16,28 +16,28 @@ source(file.path(getwd(),"analyze/connection.R"))
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"401_fc_acompcor"
 #dir_out<-"403_fc_gam_acompcor"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"435_fc_ca_aroma_gsr"
+dir_in<-"421_fc_aroma"
+dir_out<-"425_fc_ca_aroma"
 
-list_dim_ca<-c(10,20,40)
+#list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
-#list_dim_ca<-5
+list_dim_ca<-10
 ratio_vis<-0.01
 
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100x7","schaefer200x7","schaefer400x7",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100x7","schaefer200x7","schaefer400x7",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
 #list_atlas<-"aal116"
-#list_atlas<-"schaefer400x7"
+list_atlas<-"schaefer400x7"
 
 list_type_p=c("p","p_bh","seed_p_bh")
 thr_p <- 0.05
@@ -139,7 +139,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
           df_clin<-data_clin$df_clin
           colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
           print(paste("Clinical: ", wave_clin,", MRI: ",wave_mri,
-                      ", Sex: ",label_sex,", PCA/ICA.",sep=""))
+                      ", Sex: ",label_sex,", preaparing data.",sep=""))
           
           # Create list of subjects who meet subsetting condition and whose MRI data exist
           df_conn_ses<-df_conn[df_conn$ses==wave_mri,]
