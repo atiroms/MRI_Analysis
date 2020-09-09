@@ -16,14 +16,14 @@ source(file.path(getwd(),"analyze/connection.R"))
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
-
-#dir_in<-"401_fc_acompcor"
-#dir_out<-"403_fc_gam_acompcor"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_ca_aroma"
+dir_out<-"423_fc_gam_aroma"
+
+#dir_in<-"421_fc_aroma"
+#dir_out<-"425_fc_ca_aroma"
 
 #list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
@@ -36,8 +36,8 @@ ratio_vis<-0.01
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
-#list_atlas<-"aal116"
-list_atlas<-"schaefer400x7"
+list_atlas<-"aal116"
+#list_atlas<-"schaefer400x7"
 
 list_type_p=c("p","p_bh","seed_p_bh")
 thr_p <- 0.05
@@ -417,12 +417,12 @@ ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,wave_clin_=wave_clin,wave
 # and waves =======================================
 #**************************************************
 
-gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_subj,
-                          list_atlas_=list_atlas,
-                          list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
-                          list_mod_tanner_=list_mod_tanner,list_plot_tanner_=list_plot_tanner,
-                          list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                          list_mod_hormone_=list_mod_hormone,list_plot_hormone_=list_plot_hormone,
+gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
+                          list_waves_=gam_fc_list_waves,subset_subj_=gam_fc_subset_subj,
+                          list_covar_tanner_=gam_fc_list_covar_tanner,list_tanner_=gam_fc_list_tanner,
+                          list_mod_tanner_=gam_fc_list_mod_tanner,list_plot_tanner_=gam_fc_list_plot_tanner,
+                          list_covar_hormone_=gam_fc_list_covar_hormone,list_hormone_=gam_fc_list_hormone,
+                          list_mod_hormone_=gam_fc_list_mod_hormone,list_plot_hormone_=gam_fc_list_plot_hormone,
                           list_type_p_=list_type_p,thr_p_=thr_p){
   print("Starting gam_fc_cs_multi()")
   nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs_multi()",copy_log=T)
@@ -442,7 +442,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subse
       print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
       list_covar<-list_covar_tanner_
       list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
-      suffix<-paste("wave-",waves,"_var-",idx_tanner,sep="")
+      suffix<-paste("ses-",waves,"_var-",idx_tanner,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas_,
@@ -457,7 +457,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subse
       print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
       list_covar<-list_covar_hormone_
       list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
-      suffix<-paste("wave-",waves,"_var-",idx_hormone,sep="")
+      suffix<-paste("ses-",waves,"_var-",idx_hormone,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
@@ -505,13 +505,13 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
                     list_type_p_=list_type_p,thr_p_=thr_p,suffix_=suffix
                     ){
   print("Starting gam_fc_cs().")
-  nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs()",copy_log=T)
+  #nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs()",copy_log=T)
   dict_roi <- func_dict_roi(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
   data_clin<-func_clinical_data_long(paths_,list_wave=wave_clin_,subset_subj_,
-                                     list_covar=list_covar_,rem_na_clin=T,suffix=suffix_)
+                                     list_covar=list_covar_,rem_na_clin=T,prefix=suffix_,print_terminal=F)
   df_clin<-data_clin$df_clin
   
   for (atlas in list_atlas_){
@@ -519,7 +519,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     # Load ROI-wise FC data
     print(paste('Loading FC data, atlas:',atlas,sep=' '))
     #df_fc<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
-    df_fc<-fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
+    df_fc<-as.data.frame(fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep=''))))
     df_join<-join_fc_clin(df_fc,df_clin,wave_clin_,wave_mri_)
     write.csv(df_join,file.path(paths_$output,"output",paste("atl-",atlas,suffix_,"_src.csv",sep="")),
               row.names=F)
@@ -536,8 +536,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
               file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_aic.csv",sep="")),row.names = F)
     
     # Calculate multiple comparison-corrected p values
-    df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
-                             list_mod_,list_plot_,calc_seed_level=T)
+    df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod_,list_plot_,calc_seed_level=T)
     write.csv(df_plot_gamm,
               file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_plt.csv",sep="")),row.names = F)
     

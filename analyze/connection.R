@@ -128,7 +128,7 @@ gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
               list_type_p_,thr_p,paths_,suffix_=paste("var-",idx_var,sep=""))
 }
 
-gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
+  gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
                         list_atlas_=list_atlas,key_group_='group_3',
                         list_covar_tanner_=gamm_fc_list_covar_tanner,list_tanner_=gamm_fc_list_tanner,
                         list_mod_tanner_=gamm_fc_list_mod_tanner,list_plot_tanner_=gamm_fc_list_plot_tanner,
