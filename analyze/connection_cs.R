@@ -31,12 +31,12 @@ dir_out<-"423_fc_gam_aroma"
 list_dim_ca<-10
 ratio_vis<-0.01
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100x7","schaefer200x7","schaefer400x7",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
-list_atlas<-"aal116"
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400x7"
 
 list_type_p=c("p","p_bh","seed_p_bh")
