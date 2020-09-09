@@ -30,7 +30,7 @@ func_fisherz<-function(rho){
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
+func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","D:/NICT_WS"),
                     path_exp_,dir_in_,dir_out_,path_exp_full_=NULL
                     ){
   path_root<-NA
@@ -130,54 +130,53 @@ combine_gamm<-function(list_dst_sub){
   return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic))
 }
 
-iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T){
+iterate_gamm<-function(df_join,df_roi,list_mod_){
   list_roi<-df_roi$id
-  list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
   
-  if (calc_parallel){
-    # Prepare dataset for multi-core processing
-    print("Preparing dataset for parallel processing.")
-    list_src_gamm<-list()
-    for (id_from in list_roi[-length(list_roi)]){
-      df_join_from<-df_join[df_join$from==id_from,]
-      label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-      for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
-        label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-        df_src<-df_join_from[df_join_from$to==id_to,]
-        list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
-                                                 "label_from"=label_from,"label_to"=label_to,
-                                                 "list_mod"=list_mod_,"list_sex"=list_sex)))
-      }
-    }
-    
-    # Parallel processing
-    n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
-    #n_cluster<-min(floor(detectCores()*1/8),length(list_src_gamm))
-    clust<-makeCluster(n_cluster)
-    print(paste("Parallel processing,",as.character(n_cluster),"cores.",sep=" "))
-    clusterExport(clust,
-                  varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
-                            "as.numeric.factor"),
-                  envir=environment())
-    #list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
-    list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
-    stopCluster(clust)
-  }else{
-    list_dst_gamm<-list()
-    for (id_from in list_roi[-length(list_roi)]){
-      df_join_from<-df_join[df_join$from==id_from,]
-      label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-      for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
-        label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-        #print(paste("Calculating",label_from,"and",label_to,sep=" "))
-        df_src<-df_join_from[df_join_from$to==id_to,]
-        list_dst_gamm<-c(list_dst_gamm,
-                         list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
-                                             "label_from"=label_from,"label_to"=label_to,
-                                             "list_mod"=list_mod_,"list_sex"=list_sex))))
-      }
+  ## Prepare dataset for multi-core processing
+  #print("Preparing dataset for parallel processing.")
+  #list_src_gamm<-list()
+  #for (id_from in list_roi[-length(list_roi)]){
+  #  df_join_from<-df_join[df_join$from==id_from,]
+  #  label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+  #  for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+  #    label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+  #    df_src<-df_join_from[df_join_from$to==id_to,]
+  #    list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,
+  #                                             "id_from"=id_from,"id_to"=id_to,
+  #                                             "label_from"=label_from,"label_to"=label_to)))
+  #  }
+  #}
+  #
+  ## Parallel processing
+  #n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
+  ##n_cluster<-min(floor(detectCores()*1/8),length(list_src_gamm))
+  #clust<-makeCluster(n_cluster)
+  #print(paste("Parallel processing,",as.character(n_cluster),"cores.",sep=" "))
+  #clusterExport(clust,
+  #              varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
+  #                        "as.numeric.factor"),
+  #              envir=environment())
+  ##list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
+  #list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
+  #stopCluster(clust)
+  
+  list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
+  list_dst_gamm<-list()
+  for (id_from in list_roi[-length(list_roi)]){
+    df_join_from<-df_join[df_join$from==id_from,]
+    label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+    for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+      #print(paste("Calculating",label_from,"and",label_to,sep=" "))
+      df_src<-df_join_from[df_join_from$to==id_to,]
+      list_dst_gamm<-c(list_dst_gamm,
+                       list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
+                                           "label_from"=label_from,"label_to"=label_to,
+                                           "list_mod"=list_mod_,"list_sex"=list_sex))))
     }
   }
+  
   
   # Collect data into dataframes
   len_list<-length(list_dst_gamm)
