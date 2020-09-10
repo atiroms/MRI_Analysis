@@ -31,8 +31,11 @@ list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
 ratio_vis<-0.01
 
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100x7","schaefer200x7","schaefer400x7",
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100x7","schaefer200x7","schaefer400x7",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+list_atlas<-c("aal116","gordon333","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
 #list_atlas<-c("aal116","power264","shen268")
@@ -101,7 +104,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
   nullobj<-func_createdirs(paths_,str_proc="ca_fc_cs_multi()",copy_log=T)
   # Increase memory limit
   memory.limit(1000000)
-  df_cor<-df_ca_subj_bind<-df_ca_var_bind<-df_ca_vaf_bind<-NULL
+  df_cor<-NULL
   for (atlas in list_atlas_){
     # Load and examine FC data
     print(paste("Loading FC of atlas: ",atlas,sep=""))
@@ -177,13 +180,9 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
           df_pca_mri<-rbind(df_pca_mri,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_mri))
           df_pca_subj<-rbind(df_pca_subj,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_subj))
           df_pca_vaf<-rbind(df_pca_vaf,cbind(sex=label_sex,dim=dim_ca,data_pca$df_vaf))
-          df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,method="pca",df_pca_mri))
-          df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,method="pca",df_pca_subj))
-          df_ca_vaf_bind<-rbind(df_ca_vaf_bind,cbind(atlas=atlas,method="pca",df_pca_vaf))
-        
           data_pca<-NULL
           gc()
-          
+        
           # Calculate ICA of FC
           for (dim_ca in list_dim_ca_){
             data_ica<-func_ica(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
@@ -196,13 +195,10 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
             df_ica_mri<-rbind.fill(df_ica_mri,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_mri))
             df_ica_subj<-rbind.fill(df_ica_subj,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_subj))
             df_ica_vaf<-rbind.fill(df_ica_vaf,cbind(sex=label_sex,dim=dim_ca,data_ica$df_vaf))
+            data_ica<-NULL
+            gc()
           }
-          df_ca_var_bind<-rbind(df_ca_var_bind,cbind(atlas=atlas,method="ica",df_ica_mri))
-          df_ca_subj_bind<-rbind(df_ca_subj_bind,cbind(atlas=atlas,method="ica",df_ica_subj))
-          df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,cbind(atlas=atlas,method="ica",df_ica_vaf))
   
-          data_ica<-NULL
-          gc()
         } # end of loop over sex
         write.csv(df_pca_mri,file.path(paths_$output,"output",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")),row.names=F)
@@ -270,6 +266,41 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
       } # finished looping over Hormones
     } # finished looping over waves
   } # finished looping over atlases
+  
+  # Reload and bind all results
+  print("Binding component analysis results.")
+  df_ca_subj_bind<-df_ca_var_bind<-df_ca_vaf_bind<-NULL
+  for (atlas in list_atlas_){
+    wave_mri_done<-NULL
+    for (waves in names(list_waves_)){
+      wave_mri<-list_waves_[[waves]]$wave_mr
+      if (!(wave_mri %in% wave_mri_done)){
+        df_pca_subj<-as.data.frame(fread(file.path(paths_$output,"output",
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep=""))))
+        df_ica_subj<-as.data.frame(fread(file.path(paths_$output,"output",
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep=""))))
+        df_ca_subj_bind<-rbind.fill(df_ca_subj_bind,
+                                    cbind(atlas=atlas,method="pca",df_pca_subj),
+                                    cbind(atlas=atlas,method="ica",df_ica_subj))
+        
+        df_pca_var<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
+        df_ica_var<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
+        df_ca_var_bind<-rbind.fill(df_ca_var_bind,
+                                   cbind(atlas=atlas,method="pca",df_pca_var),
+                                   cbind(atlas=atlas,method="ica",df_ica_var))
+        
+        df_pca_vaf<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep=""))))
+        df_ica_vaf<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep=""))))
+        df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,
+                                   cbind(atlas=atlas,method="pca",df_pca_vaf),
+                                   cbind(atlas=atlas,method="ica",df_ica_vaf))
+      } # End if wave_mri is not in wave_mri_done
+    } # End of loop ove  waves
+  } # End of loop over atlases
   
   # Add ROI label to component-MRI variable matrix
   df_roi<-func_dict_roi(paths=paths_)
