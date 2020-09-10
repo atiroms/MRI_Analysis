@@ -769,8 +769,8 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   
   # ICA calculation
   #data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE,maxit=100,tol=1e-6,alg="par",fun="logcosh",alpha=1)
-  data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE)
-  #data_ica <-icaimax(df_src, nc=ncp_calc,center=TRUE)
+  #data_ica <-icafast(df_src, nc=ncp_calc,center=TRUE)
+  data_ica <-icaimax(df_src, nc=ncp_calc,center=TRUE)
   
   # Component-imaging variable matrix
   # Row: MRI variable, Column: component(factor)

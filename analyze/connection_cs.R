@@ -16,19 +16,19 @@ source(file.path(getwd(),"analyze/connection.R"))
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
-
-dir_in<-"421_fc_aroma"
-dir_out<-"423_fc_gam_aroma"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"421_fc_aroma"
-#dir_out<-"425_fc_ca_aroma"
+#dir_out<-"423_fc_gam_aroma"
 
-#list_dim_ca<-c(10,20,40)
+dir_in<-"421_fc_aroma"
+dir_out<-"425_fc_ca_aroma"
+
+list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
-list_dim_ca<-10
+#list_dim_ca<-10
 ratio_vis<-0.01
 
 list_atlas<-c("aal116","glasser360","gordon333","power264",
@@ -99,6 +99,8 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
                          list_dim_ca_=list_dim_ca,ratio_vis_=ratio_vis){
   print("Starting ca_fc_cs_multi()")
   nullobj<-func_createdirs(paths_,str_proc="ca_fc_cs_multi()",copy_log=T)
+  # Increase memory limit
+  memory.limit(1000000)
   df_cor<-df_ca_subj_bind<-df_ca_var_bind<-df_ca_vaf_bind<-NULL
   for (atlas in list_atlas_){
     # Load and examine FC data
