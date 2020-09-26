@@ -16,71 +16,31 @@ source(file.path(getwd(),"analyze/connection.R"))
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
+
+dir_in<-"431_fc_aroma_gsr"
+dir_out<-"433_fc_gam_aroma_gsr"
 
 #dir_in<-"421_fc_aroma"
-#dir_out<-"425_fc_gam_cs_aroma"
+#dir_out<-"425_fc_ca_aroma"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"426_fc_ca_aroma"
-list_dim_ca<-c(5,10,20,40)
-path_exp_full<-NULL
-#path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
+list_dim_ca<-c(10,20,40)
+#list_dim_ca<-c(5,10,20,40)
+#list_dim_ca<-c(5,10)
+#list_dim_ca<-10
+ratio_vis<-0.01
 
-#list_atlas<-c("aal116","glasser360","gordon333","power264","schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-list_atlas<-"power264"
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+#list_atlas<-c("aal116","gordon333","power264",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+#list_atlas<-c("aal116","power264","shen268")
 #list_atlas<-"aal116"
-#list_atlas<-"shen268"
-
-list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
-                 "c1m2" =list("wave_clin"="1","wave_mri"="2"),
-                 "c1m21"=list("wave_clin"="1","wave_mri"="2-1"),
-                 "c2m1" =list("wave_clin"="2","wave_mri"="1"),
-                 "c2m2" =list("wave_clin"="2","wave_mri"="2"),
-                 "c2m21"=list("wave_clin"="2","wave_mri"="2-1"))
-
-list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
-                        "age"   =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
-                        "sex"   =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
-list_tanner<-list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
-                  "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
-                  "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
-                                 "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-                                 "label"="Tanner stage (gonadal)"),
-                  "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
-                                 "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-                                 "label"="Tanner stage (adrenal)"))
-
-list_covar_hormone<-list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
-                         "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
-                         "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-
-list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-                   "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-                   "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-                   "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
-
-subset_subj <- list("1"  =list(list("key"="W1_T1QC","condition"="==1"),
-                               list("key"="W1_rsfMRIexist","condition"="==1"),
-                               list("key"="W1_Censor","condition"="<126")),
-                    "2"  =list(list("key"="W2_T1QC","condition"="==1"),
-                               list("key"="W2_rsfMRIexist","condition"="==1"),
-                               list("key"="W2_Censor","condition"="<126")),
-                    "2-1"=list(list("key"="W1_T1QC","condition"="==1"),
-                               list("key"="W1_rsfMRIexist","condition"="==1"),
-                               list("key"="W1_Censor","condition"="<126"),
-                               list("key"="W2_T1QC","condition"="==1"),
-                               list("key"="W2_rsfMRIexist","condition"="==1"),
-                               list("key"="W2_Censor","condition"="<126")))
-
-list_mod_tanner <- list("l"= "value ~ age + tanner")
-list_mod_hormone <- list("l"= "value ~ age + hormone")
-#"a"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
-#"q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
-
-list_plot_tanner <-list("t"=list("title"="Tanner effect","var_exp"="tanner"))
-list_plot_hormone <-list("h"=list("title"="Hormone effect","var_exp"="hormone"))
+#list_atlas<-"schaefer400x7"
 
 list_type_p=c("p","p_bh","seed_p_bh")
 thr_p <- 0.05
@@ -98,6 +58,7 @@ library(data.table)
 #**************************************************
 source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
+source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 
@@ -106,45 +67,48 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # and waves =======================================
 #**************************************************
 
-comp_clin_cor<-function(df_comp_subj,df_clin,n_covar){
+comp_clin_cor<-function(df_comp_subj,df_clin,n_covar,list_sex){
   list_dim<-sort(unique(df_comp_subj$dim))
   df_cor_rbind<-df_cor_flat_rbind<-NULL
   for (dim in list_dim){
-    df_comp_subj_dim<-df_comp_subj[df_comp_subj$dim==dim,1:(dim+3)]
-    df_comp_subj_dim$dim<-df_comp_subj_dim$ses<-NULL
-    df_join<-inner_join(df_clin,df_comp_subj_dim,by="ID_pnTTC")
-    df_join$ID_pnTTC<-NULL
-    data_cor<-func_cor(df_join)
-    df_cor<-data_cor$cor
-    df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
-    df_cor<-rownames_to_column(df_cor,"comp")
-    df_cor$comp<-sapply(sapply(df_cor$comp,substr,start=6,stop=8),as.integer)
-    df_cor<-cbind(dim=dim,df_cor)
-    df_cor_flat<-data_cor$cor_flat
-    df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_clin) & df_cor_flat$to %in% colnames(df_comp_subj_dim),]
-    df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
-    colnames(df_cor_flat)<-c("covar","comp","r","p")
-    df_cor_flat$comp<-sapply(sapply(df_cor_flat$comp,substr,start=6,stop=8),as.integer)
-    df_cor_flat<-cbind(dim=dim,df_cor_flat)
-    df_cor_rbind<-rbind(df_cor_rbind,df_cor)
-    df_cor_flat_rbind<-rbind(df_cor_flat_rbind,df_cor_flat)
+    for (label_sex in names(list_sex)){
+      df_comp_subj_subset<-df_comp_subj[df_comp_subj$dim==dim & df_comp_subj$sex==label_sex,
+                                        c("ID_pnTTC",sprintf("comp_%03d",1:dim))]
+      df_join<-inner_join(df_clin,df_comp_subj_subset,by="ID_pnTTC")
+      df_join$ID_pnTTC<-NULL
+      data_cor<-func_cor(df_join)
+      df_cor<-data_cor$cor
+      df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
+      df_cor<-rownames_to_column(df_cor,"comp")
+      df_cor$comp<-sapply(sapply(df_cor$comp,substr,start=6,stop=8),as.integer)
+      df_cor<-cbind(dim=dim,df_cor)
+      df_cor_flat<-data_cor$cor_flat
+      df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_clin) & df_cor_flat$to %in% colnames(df_comp_subj_subset),]
+      df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
+      colnames(df_cor_flat)<-c("covar","comp","r","p")
+      df_cor_flat$comp<-sapply(sapply(df_cor_flat$comp,substr,start=6,stop=8),as.integer)
+      df_cor_flat<-cbind(dim=dim,df_cor_flat)
+      df_cor_rbind<-rbind(df_cor_rbind,cbind(sex=label_sex,df_cor))
+      df_cor_flat_rbind<-rbind(df_cor_flat_rbind,cbind(sex=label_sex,df_cor_flat))
+    }
   }
   return(list("df_cor"=df_cor_rbind,"df_cor_flat"=df_cor_flat_rbind))
 }
 
-ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_subj,
-                      list_atlas_=list_atlas,
-                      list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
-                      list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                      list_dim_ca_=list_dim_ca,plot_result=F){
-  print("Starting ca_fc_multi()")
-  nullobj<-func_createdirs(paths_,str_proc="ca_fc_multi()",copy_log=T)
+ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=ca_fc_subset_subj,
+                         list_sex_=ca_fc_list_sex,list_atlas_=list_atlas,
+                         list_covar_tanner_=ca_fc_list_covar_tanner,list_tanner_=ca_fc_list_tanner,
+                         list_covar_hormone_=ca_fc_list_covar_hormone,list_hormone_=ca_fc_list_hormone,
+                         list_dim_ca_=list_dim_ca,ratio_vis_=ratio_vis){
+  print("Starting ca_fc_cs_multi()")
+  nullobj<-func_createdirs(paths_,str_proc="ca_fc_cs_multi()",copy_log=T)
+  # Increase memory limit
+  memory.limit(1000000)
   df_cor<-NULL
   for (atlas in list_atlas_){
     # Load and examine FC data
     print(paste("Loading FC of atlas: ",atlas,sep=""))
-    df_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    df_conn<-as.data.frame(df_conn)
+    df_conn<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))))
     
     # Create graph edge dataframe and node list
     df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
@@ -157,105 +121,101 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
     for (waves in names(list_waves_)){
       wave_clin<-list_waves_[[waves]]$wave_clin
       wave_mri<-list_waves_[[waves]]$wave_mri
-      print(paste("Clinical wave: ", wave_clin,", MRI wave: ",wave_mri,sep=""))
-      if (wave_mri=="2-1"){
-        label_wave_mri<-"m21"
-      }else{
-        label_wave_mri<-paste("m",wave_mri,sep="")
-      }
-      
+
       if (wave_mri %in% wave_mri_done){
-        print("Loading pre-calculated PCA/ICA results.")
+        print(paste("Clinical: ", wave_clin,", MRI: ",wave_mri,", loading PCA/ICA results.",sep=""))
         df_pca_subj<-read.csv(file.path(paths_$output,"output",
-                                        paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_subject.csv",sep="")))
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")))
         df_ica_subj<-read.csv(file.path(paths_$output,"output",
-                                        paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_subject.csv",sep="")))
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")))
       }else{
         wave_mri_done<-c(wave_mri_done,wave_mri)
+        df_pca_mri<-df_pca_subj<-df_pca_vaf<-df_ica_mri<-df_ica_subj<-df_ica_vaf<-NULL
+        for (label_sex in names(list_sex_)){
+          
+          # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified mri wave
+          subset_subj_temp<-list(c(subset_subj_[[as.character(wave_mri)]],
+                                   list(list("key"="Sex","condition"=list_sex_[[label_sex]]))))
+          names(subset_subj_temp)<-wave_mri
+          data_clin<-func_clinical_data_long(paths_,wave_mri,subset_subj_temp,list_covar=NULL,
+                                             rem_na_clin=F,
+                                             prefix=paste("ses-m",wave_mri,"_sex-",label_sex,sep=""),
+                                             print_terminal=F)
+          df_clin<-data_clin$df_clin
+          colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+          print(paste("Clinical: ", wave_clin,", MRI: ",wave_mri,
+                      ", Sex: ",label_sex,", preaparing data.",sep=""))
+          
+          # Create list of subjects who meet subsetting condition and whose MRI data exist
+          df_conn_ses<-df_conn[df_conn$ses==wave_mri,]
+          list_subj_mri<-unique(df_conn_ses$ID_pnTTC)
+          list_subj_qc<-unique(df_clin[df_clin$ses==wave_mri,]$ID_pnTTC)
+          list_subj_calc<-intersect(list_subj_mri,list_subj_qc)
+          
+          # Cbind FC data (Fisher-z transform of FC) as input for PCA function
+          df_conn_calc<-data.frame(matrix(nrow=n_edge,ncol=0))
+          df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
+          colnames(df_clin_exist)<-colnames(df_clin)
+          for (id_subj in list_subj_calc){
+            df_conn_subj<-df_conn_ses[which(df_conn_ses$ID_pnTTC==id_subj),]
+            df_conn_calc<-cbind(df_conn_calc,df_conn_subj[["z_r"]])
+            df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
+          }
+          colnames(df_conn_calc)<-as.character(seq(ncol(df_conn_calc)))
+          rownames(df_conn_calc)<-NULL
+          # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
+          df_conn_calc<-as.data.frame(t(df_conn_calc))
+          df_conn_ses<-NULL
+          gc()
+          
+          # Calculate PCA of FC
+          dim_ca<-max(list_dim_ca_)
+          data_pca<-func_pca(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
+          
+          # Visualize component-FC matrix in circular plot
+          plot_ca_fc(paths_=paths_,data_pca$df_comp_mri,atlas=atlas,dim_ca=dim_ca,
+                     ratio_vis=ratio_vis,method="pca",label_sex=label_sex,ses=wave_mri)
+          
+          # Save results
+          df_pca_mri<-rbind(df_pca_mri,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_mri))
+          df_pca_subj<-rbind(df_pca_subj,cbind(sex=label_sex,dim=dim_ca,data_pca$df_comp_subj))
+          df_pca_vaf<-rbind(df_pca_vaf,cbind(sex=label_sex,dim=dim_ca,data_pca$df_vaf))
+          data_pca<-NULL
+          gc()
         
-        # Prepare subject subsetting condition (MRI QC criteria) according to specified waves
-        subset_subj_temp<-list(subset_subj_[[as.character(wave_mri)]])
-        names(subset_subj_temp)<-wave_mri
-        data_clin<-func_clinical_data_long(paths_,wave_mri,subset_subj_temp,list_covar=NULL,
-                                           rem_na_clin=F,prefix=paste("wave-",label_wave_mri,sep=""))
-        df_clin<-data_clin$df_clin
-        colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
-        
-        # Create list of subjects who meet subsetting condition and whose MRI data exist
-        df_conn_ses<-df_conn[df_conn$ses==wave_mri,]
-        list_subj_mri<-unique(df_conn_ses$ID_pnTTC)
-        list_subj_qc<-unique(df_clin[df_clin$ses==wave_mri,]$ID_pnTTC)
-        list_subj_calc<-intersect(list_subj_mri,list_subj_qc)
-        n_subj_del<-length(list_subj_qc)-length(list_subj_calc)
-        if (n_subj_del>0){
-          print(paste("MRI data absent in",as.character(n_subj_del),"subjects.",sep=" "))
-        }
-        
-        # Cbind FC data (Fisher-z transform of FC) as input for PCA function
-        df_conn_calc<-data.frame(matrix(nrow=n_edge,ncol=0))
-        df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
-        colnames(df_clin_exist)<-colnames(df_clin)
-        for (id_subj in list_subj_calc){
-          df_conn_subj<-df_conn_ses[which(df_conn_ses$ID_pnTTC==id_subj),]
-          df_conn_calc<-cbind(df_conn_calc,df_conn_subj[["z_r"]])
-          df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
-        }
-        colnames(df_conn_calc)<-as.character(seq(ncol(df_conn_calc)))
-        rownames(df_conn_calc)<-NULL
-        # Transpose connection dataframe (rows >> data for each subject/session, columns >> data for each edge)
-        df_conn_calc<-as.data.frame(t(df_conn_calc))
-        df_conn_ses<-NULL
-        gc()
-        
-        # Calculate PCA of FC
-        dim_ca<-max(list_dim_ca_)
-        data_pca<-func_pca(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
-        df_pca_mri<-cbind(dim=dim_ca,data_pca$df_comp_mri)
-        df_pca_subj<-cbind(dim=dim_ca,data_pca$df_comp_subj)
-        df_pca_variance<-cbind(dim=dim_ca,data_pca$df_variance)
-        write.csv(df_pca_mri,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_var.csv",sep="")),
-                  row.names=F)
-        write.csv(df_pca_subj,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_subj.csv",sep="")),row.names=F)
-        write.csv(df_pca_variance,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_pca_vaf.csv",sep="")),row.names=F)
-        
-        # Circular plot of component attribution to FC
-        data_pca<-NULL
-        list_plot_pca<-NULL
-        gc()
-        
-        # Calculate ICA of FC
-        df_ica_mri<-data.frame()
-        df_ica_subj<-data.frame()
-        df_ica_variance<-data.frame()
-        for (dim_ca in list_dim_ca_){
-          data_ica<-func_ica(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
-          df_ica_mri<-rbind.fill(df_ica_mri,cbind(dim=dim_ca,data_ica$df_comp_mri))
-          df_ica_subj<-rbind.fill(df_ica_subj,cbind(dim=dim_ca,data_ica$df_comp_subj))
-          df_ica_variance<-rbind.fill(df_ica_variance,cbind(dim=dim_ca,data_ica$df_variance))
-        }
-        write.csv(df_ica_mri,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_var.csv",sep="")),row.names=F)
-        write.csv(df_ica_subj,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_subj.csv",sep="")),row.names=F)
-        write.csv(df_ica_variance,
-                  file.path(paths_$output,"output",
-                            paste("atl-",atlas,"_wave-",label_wave_mri,"_ica_vaf.csv",sep="")),row.names=F)
-
-        # Circular plot of component attribution to FC
-        data_ica<-NULL
-        list_plot_ica<-NULL
-        gc()
-      }
+          # Calculate ICA of FC
+          for (dim_ca in list_dim_ca_){
+            data_ica<-func_ica(df_src=df_conn_calc,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca,calc_corr=F)
+            
+            # Visualize component-FC matrix in circular plot
+            plot_ca_fc(paths_=paths_,data_ica$df_comp_mri,atlas=atlas,dim_ca=dim_ca,
+                       ratio_vis=ratio_vis,method="ica",label_sex=label_sex,ses=wave_mri)
+            
+            # Save results
+            df_ica_mri<-rbind.fill(df_ica_mri,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_mri))
+            df_ica_subj<-rbind.fill(df_ica_subj,cbind(sex=label_sex,dim=dim_ca,data_ica$df_comp_subj))
+            df_ica_vaf<-rbind.fill(df_ica_vaf,cbind(sex=label_sex,dim=dim_ca,data_ica$df_vaf))
+            data_ica<-NULL
+            gc()
+          }
+  
+        } # end of loop over sex
+        write.csv(df_pca_mri,file.path(paths_$output,"output",
+                                       paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")),row.names=F)
+        write.csv(df_pca_subj,file.path(paths_$output,"output",
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")),row.names=F)
+        write.csv(df_pca_vaf,file.path(paths_$output,"output",
+                                            paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep="")),row.names=F)
+        write.csv(df_ica_mri,file.path(paths_$output,"output",
+                                       paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")),row.names=F)
+        write.csv(df_ica_subj,file.path(paths_$output,"output",
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")),row.names=F)
+        write.csv(df_ica_vaf,file.path(paths_$output,"output",
+                                            paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
+      } # end if wave_mri is not in wave_mri_done
       
       # Calculate component-clinical correlation
+      subset_subj_temp<-list(subset_subj_[[as.character(wave_mri)]])
       names(subset_subj_temp)<-wave_clin
       #1 Tanner stage
       for (idx_tanner in names(list_tanner_)){
@@ -263,19 +223,21 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
         list_covar<-list_covar_tanner_
         list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
         n_covar<-length(list_covar)
-        suffix<-paste("wave-",waves,"_var-",idx_tanner,sep="")
+        suffix<-paste("ses-",waves,"_var-",idx_tanner,sep="")
         
         data_clin<-func_clinical_data_long(paths_,wave_clin,subset_subj_temp,list_covar,
-                                           rem_na_clin=T,prefix=suffix)
+                                           rem_na_clin=T,prefix=suffix,print_terminal=F)
         df_clin<-data_clin$df_clin
         df_clin$wave<-NULL
         
         # Calculate correlation between component attribution and clinical covariate
-        data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,n_covar=n_covar)
-        df_cor<-rbind(df_cor,cbind(atlas=atlas,wave=waves,model=idx_tanner,
+        data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,
+                                n_covar=n_covar,list_sex=list_sex_)
+        df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_tanner,
                                    method="pca",data_cor$df_cor_flat))
-        data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,n_covar=n_covar)
-        df_cor<-rbind(df_cor,cbind(atlas=atlas,wave=waves,model=idx_tanner,
+        data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,
+                                n_covar=n_covar,list_sex=list_sex_)
+        df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_tanner,
                                    method="ica",data_cor$df_cor_flat))
       } # finished looping over Tanner stages
       
@@ -285,32 +247,83 @@ ca_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_su
         list_covar<-list_covar_hormone_
         list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
         n_covar<-length(list_covar)
-        suffix<-paste("wave-",waves,"_var-",idx_hormone,sep="")
+        suffix<-paste("ses-",waves,"_var-",idx_hormone,sep="")
 
         data_clin<-func_clinical_data_long(paths_,wave_clin,subset_subj_temp,list_covar,
-                                           rem_na_clin=T,prefix=suffix)
+                                           rem_na_clin=T,prefix=suffix,print_terminal=F)
         df_clin<-data_clin$df_clin
         df_clin$wave<-NULL
         
         # Calculate correlation between component attribution and clinical covariate
-        data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,n_covar=n_covar)
-        df_cor<-rbind(df_cor,cbind(atlas=atlas,wave=waves,model=idx_hormone,
+        data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,
+                                n_covar=n_covar,list_sex=list_sex_)
+        df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_hormone,
                                    method="pca",data_cor$df_cor_flat))
-        data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,n_covar=n_covar)
-        df_cor<-rbind(df_cor,cbind(atlas=atlas,wave=waves,model=idx_hormone,
+        data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,
+                                n_covar=n_covar,list_sex=list_sex_)
+        df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_hormone,
                                    method="ica",data_cor$df_cor_flat))
       } # finished looping over Hormones
     } # finished looping over waves
   } # finished looping over atlases
-  write.csv(df_cor,file.path(paths_$output,"output",paste("correlation.csv",sep="")),row.names=F)
-  print("Finished ca_fc_multi()")
+  
+  # Reload and bind all results
+  print("Binding component analysis results.")
+  df_ca_subj_bind<-df_ca_var_bind<-df_ca_vaf_bind<-NULL
+  for (atlas in list_atlas_){
+    wave_mri_done<-NULL
+    for (waves in names(list_waves_)){
+      wave_mri<-list_waves_[[waves]]$wave_mr
+      if (!(wave_mri %in% wave_mri_done)){
+        df_pca_subj<-as.data.frame(fread(file.path(paths_$output,"output",
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep=""))))
+        df_ica_subj<-as.data.frame(fread(file.path(paths_$output,"output",
+                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep=""))))
+        df_ca_subj_bind<-rbind.fill(df_ca_subj_bind,
+                                    cbind(atlas=atlas,method="pca",df_pca_subj),
+                                    cbind(atlas=atlas,method="ica",df_ica_subj))
+        
+        df_pca_var<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
+        df_ica_var<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
+        df_ca_var_bind<-rbind.fill(df_ca_var_bind,
+                                   cbind(atlas=atlas,method="pca",df_pca_var),
+                                   cbind(atlas=atlas,method="ica",df_ica_var))
+        
+        df_pca_vaf<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep=""))))
+        df_ica_vaf<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep=""))))
+        df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,
+                                   cbind(atlas=atlas,method="pca",df_pca_vaf),
+                                   cbind(atlas=atlas,method="ica",df_ica_vaf))
+      } # End if wave_mri is not in wave_mri_done
+    } # End of loop ove  waves
+  } # End of loop over atlases
+  
+  # Add ROI label to component-MRI variable matrix
+  df_roi<-func_dict_roi(paths=paths_)
+  df_roi<-df_roi[,c("id","label")]
+  df_ca_var_bind<-left_join(df_ca_var_bind,df_roi,by=c("from"="id"))
+  df_ca_var_bind<-rename(df_ca_var_bind,c("label"="from_label"))
+  df_ca_var_bind<-left_join(df_ca_var_bind,df_roi,by=c("to"="id"))
+  df_ca_var_bind<-rename(df_ca_var_bind,c("label"="to_label"))
+  
+  # Save results
+  write.csv(df_ca_var_bind,file.path(paths_$output,"output",paste("fc_ca_var.csv",sep="")),row.names=F)
+  write.csv(df_ca_subj_bind,file.path(paths_$output,"output",paste("fc_ca_subj.csv",sep="")),row.names=F)
+  write.csv(df_ca_vaf_bind,file.path(paths_$output,"output",paste("fc_ca_vaf.csv",sep="")),row.names=F)
+  write.csv(df_cor,file.path(paths_$output,"output",paste("fc_ca_cor.csv",sep="")),row.names=F)
+  
+  print("Finished ca_fc_cs_multi()")
 }
 
 
 #**************************************************
 # Component analyses of FC in cross section =======
 #**************************************************
-
+# OBSOLETE
 ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,wave_clin_=wave_clin,wave_mri_=wave_mri,
                    list_covar_=list_covar,subset_subj_=subset_subj,list_dim_ca_=list_dim_ca,
                    plot_result=F,suffix_=""){
@@ -370,7 +383,7 @@ ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,wave_clin_=wave_clin,wave
     data_pca<-func_pca(df_src=df_conn,df_var=df_edge,df_indiv=df_clin_exist,dim_ca=dim_ca)
     write.csv(data_pca$df_comp_mri,file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_pca_variable.csv",sep="")),row.names=F)
     write.csv(data_pca$df_comp_subj,file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_pca_subject.csv",sep="")),row.names=F)
-    write.csv(data_pca$df_variance,file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_pca_variance.csv",sep="")),row.names=F)
+    write.csv(data_pca$df_vaf,file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_pca_variance.csv",sep="")),row.names=F)
     write.csv(data_pca$df_comp_clin_flat,file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_pca_correlation.csv",sep="")),row.names=F)
     
     # Plot PCA results
@@ -437,15 +450,15 @@ ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,wave_clin_=wave_clin,wave
 # and waves =======================================
 #**************************************************
 
-gam_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_subj,
-                          list_atlas_=list_atlas,
-                          list_covar_tanner_=list_covar_tanner,list_tanner_=list_tanner,
-                          list_mod_tanner_=list_mod_tanner,list_plot_tanner_=list_plot_tanner,
-                          list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                          list_mod_hormone_=list_mod_hormone,list_plot_hormone_=list_plot_hormone,
+gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
+                          list_waves_=gam_fc_list_waves,subset_subj_=gam_fc_subset_subj,
+                          list_covar_tanner_=gam_fc_list_covar_tanner,list_tanner_=gam_fc_list_tanner,
+                          list_mod_tanner_=gam_fc_list_mod_tanner,list_plot_tanner_=gam_fc_list_plot_tanner,
+                          list_covar_hormone_=gam_fc_list_covar_hormone,list_hormone_=gam_fc_list_hormone,
+                          list_mod_hormone_=gam_fc_list_mod_hormone,list_plot_hormone_=gam_fc_list_plot_hormone,
                           list_type_p_=list_type_p,thr_p_=thr_p){
-  print("Starting gam_fc_multi()")
-  nullobj<-func_createdirs(paths_,str_proc="gam_fc_multi()",copy_log=T)
+  print("Starting gam_fc_cs_multi()")
+  nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs_multi()",copy_log=T)
   
   for (waves in names(list_waves_)){
     wave_clin<-list_waves_[[waves]]$wave_clin
@@ -462,7 +475,7 @@ gam_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_s
       print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
       list_covar<-list_covar_tanner_
       list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
-      suffix<-paste("wave-",waves,"_var-",idx_tanner,sep="")
+      suffix<-paste("ses-",waves,"_var-",idx_tanner,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas_,
@@ -477,7 +490,7 @@ gam_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_s
       print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
       list_covar<-list_covar_hormone_
       list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
-      suffix<-paste("wave-",waves,"_var-",idx_hormone,sep="")
+      suffix<-paste("ses-",waves,"_var-",idx_hormone,sep="")
       
       nullobj<-gam_fc_cs(paths_=paths_,subset_subj_=subset_subj_temp,list_covar_=list_covar,
                          wave_clin_=wave_clin,wave_mri_=wave_mri,list_atlas_=list_atlas,
@@ -487,7 +500,7 @@ gam_fc_multi<-function(paths_=paths,list_waves_=list_waves,subset_subj_=subset_s
     } # finished looping over Hormones
     
   } # finished looping over waves
-  print("Finished gam_fc_multi()")
+  print("Finished gam_fc_cs_multi()")
 }
 
 
@@ -525,13 +538,13 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
                     list_type_p_=list_type_p,thr_p_=thr_p,suffix_=suffix
                     ){
   print("Starting gam_fc_cs().")
-  nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs()",copy_log=T)
+  #nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs()",copy_log=T)
   dict_roi <- func_dict_roi(paths_)
   
   # Load and subset clinical data according to specified subsetting condition and covariate availability
   print('Loading clinical data.')
   data_clin<-func_clinical_data_long(paths_,list_wave=wave_clin_,subset_subj_,
-                                     list_covar=list_covar_,rem_na_clin=T,suffix=suffix_)
+                                     list_covar=list_covar_,rem_na_clin=T,prefix=suffix_,print_terminal=F)
   df_clin<-data_clin$df_clin
   
   for (atlas in list_atlas_){
@@ -539,7 +552,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     # Load ROI-wise FC data
     print(paste('Loading FC data, atlas:',atlas,sep=' '))
     #df_fc<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
-    df_fc<-fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
+    df_fc<-as.data.frame(fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep=''))))
     df_join<-join_fc_clin(df_fc,df_clin,wave_clin_,wave_mri_)
     write.csv(df_join,file.path(paths_$output,"output",paste("atl-",atlas,suffix_,"_src.csv",sep="")),
               row.names=F)
@@ -556,8 +569,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
               file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_aic.csv",sep="")),row.names = F)
     
     # Calculate multiple comparison-corrected p values
-    df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
-                             list_mod_,list_plot_,calc_seed_level=T)
+    df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod_,list_plot_,calc_seed_level=T)
     write.csv(df_plot_gamm,
               file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_plt.csv",sep="")),row.names = F)
     

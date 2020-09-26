@@ -12,25 +12,22 @@
 
 # parameters for fc()
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
 
-#dir_in <-"300_ts_acompcor"
-#dir_out <-"301_fc_acompcor"
-#dir_in <-"310_ts_aroma"
-#dir_out <-"311_fc_aroma"
-#dir_in <-"330_ts_acompcor_gsr"
-#dir_out <-"331_fc_acompcor_gsr"
-#dir_in <-"340_ts_aroma_gsr"
-#dir_out <-"341_fc_aroma_gsr"
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100","schaefer200","schaefer400","shen268")
-#list_atlas<-c("aal116","gordon333","power264","shen268")
-# list_atlas<-"aal116"
+dir_in <-"440_ts_36p"
+dir_out <-"441_fc_36p"
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+path_exp_full<-'/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP'
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in <-"56.1_ts_conn"
 #dir_out <-"56.3_fc_conn"
 #list_atlas<-"cnn"
 #list_atlas<-"hoa"
+
 
 #**************************************************
 # Libraries =======================================
@@ -41,6 +38,8 @@ library(ica)
 library(tidyverse)
 library(ggplot2)
 library(parallel)
+library(data.table)
+library(pbapply)
 
 
 #**************************************************
@@ -57,7 +56,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 #func_data_timeseries<-function(paths,data_clinical,subset_roi,atlas_=atlas){
 func_data_timeseries<-function(paths__,atlas_=atlas,key_group="group_3"){
   #print("Starting to load timeseries data.")
-  df_timeseries <- read.csv(file.path(paths__$input,"output",paste("atl-",atlas_,"_ts.csv",sep="")))
+  df_timeseries <- as.data.frame(fread(file.path(paths__$input,"output",paste("atl-",atlas_,"_ts.csv",sep=""))))
   #df_timeseries <- df_timeseries[is.element(df_timeseries$ID_pnTTC,
   #                                          data_clinical_$list_id_subj),]
   list_id_roi <- colnames(df_timeseries)[c(-1,-2,-3)]
@@ -149,7 +148,7 @@ fc_core<-function(data_ts){
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_sub-",sprintf("%05d", id_subj),"_ses-",sprintf("%02d",ses),suffix_file,".eps",sep=""),
          plot=plot_fc_heatmap,device=cairo_ps,
-         path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+         path=file.path(paths_$output,"output","plot"),dpi=300,height=10,width=10,limitsize=F)
   
   #print(paste("Finished Wave: ",as.character(ses),", Subject: ",as.character(id_subj),sep=""))
   
@@ -184,61 +183,74 @@ fc<-function(paths_=paths,
     }
     
     # Parallel computing of ROI-wise FC for each subject/session
-    list_label_roi<-data_timeseries$list_label_roi
-    suffix_file="_fc"
-    print(paste("Atlas: ",atlas,", calculating ROI-wise FC in parallel.",sep=""))
-    clust<-makeCluster(floor(detectCores()*3/4))
-    clusterExport(clust,
-                  varlist=c("paths_","atlas","list_label_roi","func_cor","FisherZ",
-                            "plot_cor_heatmap","rcorr","rownames_to_column","gather",
-                            "ggplot","aes","geom_tile","scale_fill_gradientn",
-                            "matlab.like2","scale_y_discrete","scale_x_discrete",
-                            "theme_light","theme","element_text","element_blank",
-                            "ggtitle","ggsave","suffix_file"),
-                  envir=environment())
-    list_path_tmp<-parSapply(clust,list_data_ts,fc_core)
-    stopCluster(clust)
-    
-    # Bind results of ROI-wise FC from temporary files
-    print(paste("Atlas: ",atlas,", binding ROI-wise FC results.",sep=""))
-    df_fc_stack<-data.frame()
-    for (path_tmp in list_path_tmp){
-      df_tmp<-read.csv(path_tmp)
-      df_fc_stack<-rbind(df_fc_stack,df_tmp)
-      file.remove(path_tmp)
+    path_fc_precalc<-file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep=""))
+    if(file.exists(path_fc_precalc)){
+      print(paste("Atlas: ",atlas,", detected pre-calculated ROI-wise FC.",sep=""))
+    }else{
+      list_label_roi<-data_timeseries$list_label_roi
+      suffix_file="_fc"
+      print(paste("Atlas: ",atlas,", calculating ROI-wise FC in parallel.",sep=""))
+      clust<-makeCluster(floor(detectCores()*3/4))
+      clusterExport(clust,
+                    varlist=c("paths_","atlas","list_label_roi","func_cor","func_fisherz",
+                              "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                              "ggplot","aes","geom_tile","scale_fill_gradientn",
+                              "matlab.like2","scale_y_discrete","scale_x_discrete",
+                              "theme_light","theme","element_text","element_blank",
+                              "ggtitle","ggsave","suffix_file"),
+                    envir=environment())
+      list_path_tmp<-pbsapply(list_data_ts,fc_core,cl=clust)
+      stopCluster(clust)
+      
+      # Bind results of ROI-wise FC from temporary files
+      print(paste("Atlas: ",atlas,", binding ROI-wise FC results.",sep=""))
+      df_fc_stack<-data.frame()
+      for (path_tmp in list_path_tmp){
+        df_tmp<-as.data.frame(fread(path_tmp))
+        df_fc_stack<-rbind(df_fc_stack,df_tmp)
+        file.remove(path_tmp)
+      }
+      colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
+      write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
+      df_fc_stack<-NULL
     }
-    colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
-    write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names = F)
-    df_fc_stack<-NULL
     
     # Parallel computing of group-wise FC for each subject/session
-    list_label_roi<-data_timeseries$list_group
-    suffix_file="_fc_grp"
-    print(paste("Atlas: ",atlas,", calculating group-wise FC in parallel.",sep=""))
-    clust<-makeCluster(floor(detectCores()*3/4))
-    clusterExport(clust,
-                  varlist=c("paths_","atlas","list_label_roi","func_cor","FisherZ",
-                            "plot_cor_heatmap","rcorr","rownames_to_column","gather",
-                            "ggplot","aes","geom_tile","scale_fill_gradientn",
-                            "matlab.like2","scale_y_discrete","scale_x_discrete",
-                            "theme_light","theme","element_text","element_blank",
-                            "ggtitle","ggsave","suffix_file"),
-                  envir=environment())
-    list_path_tmp<-parSapply(clust,list_data_ts_group,fc_core)
-    stopCluster(clust)
-    
-    # Bind results of group-wise FC from temporary files
-    print(paste("Atlas: ",atlas,", binding group-wise FC results.",sep=""))
-    df_fc_stack<-data.frame()
-    for (path_tmp in list_path_tmp){
-      df_tmp<-read.csv(path_tmp)
-      df_fc_stack<-rbind(df_fc_stack,df_tmp)
-      file.remove(path_tmp)
+    path_fc_precalc<-file.path(paths_$output,"output",paste("atl-",atlas,"_fc_grp.csv",sep=""))
+    if(file.exists(path_fc_precalc)){
+      print(paste("Atlas: ",atlas,", detected pre-calculated group-wise FC.",sep=""))
+    }else{
+      list_label_roi<-data_timeseries$list_group
+      if(length(list_label_roi)>1){
+        suffix_file="_fc_grp"
+        print(paste("Atlas: ",atlas,", calculating group-wise FC in parallel.",sep=""))
+        clust<-makeCluster(floor(detectCores()*3/4))
+        clusterExport(clust,
+                      varlist=c("paths_","atlas","list_label_roi","func_cor","func_fisherz",
+                                "plot_cor_heatmap","rcorr","rownames_to_column","gather",
+                                "ggplot","aes","geom_tile","scale_fill_gradientn",
+                                "matlab.like2","scale_y_discrete","scale_x_discrete",
+                                "theme_light","theme","element_text","element_blank",
+                                "ggtitle","ggsave","suffix_file"),
+                      envir=environment())
+        list_path_tmp<-pbsapply(list_data_ts_group,fc_core,cl=clust)
+        stopCluster(clust)
+        
+        # Bind results of group-wise FC from temporary files
+        print(paste("Atlas: ",atlas,", binding group-wise FC results.",sep=""))
+        df_fc_stack<-data.frame()
+        for (path_tmp in list_path_tmp){
+          df_tmp<-as.data.frame(fread(path_tmp))
+          df_fc_stack<-rbind(df_fc_stack,df_tmp)
+          file.remove(path_tmp)
+        }
+        colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
+        write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc_grp.csv",sep="")),row.names = F)
+        df_fc_stack<-NULL
+      }else{
+        print("Only one group detected and group-wise FC skipped.")
+      }
     }
-    colnames(df_fc_stack)<-c("ses","ID_pnTTC","from","to","r","p","z_r")
-    write.csv(df_fc_stack, file.path(paths_$output,"output",paste("atl-",atlas,"_fc_grp.csv",sep="")),row.names = F)
-    df_fc_stack<-NULL
-
   }
   print("Finished fc().")
 }

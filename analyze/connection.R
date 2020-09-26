@@ -10,27 +10,22 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"201_fc_acompcor"
-#dir_out<-"401_fp_acompcor"
-#dir_out<-"405_fc_diff_acompcor"
-#list_atlas<-"aal116"
+#dir_in<-dir_out<-"401_fc_acompcor"
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"425_fc_gamm_aroma"
-#list_atlas<-"aal116"
-#list_atlas<-"shen268"
-
-dir_in<-"401_fc_acompcor"
-dir_out<-""
-#list_atlas<-c("gordon333","power264","schaefer400x7","shen268")
-list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
-path_exp_full<-NULL
+dir_in<-"421_fc_aroma"
+dir_out<-"424_fc_gamm_aroma"
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 
 #dir_in<-"421_fc_aroma"
-#dir_out<-"426_fc_ca_aroma"
+#dir_out<-"427_fc_gamm_aroma"
+#list_atlas<-"aal116"
 #list_atlas<-"power264"
-#list_atlas<-"gordon333"
 #list_atlas<-c("aal116","gordon333","power264","schaefer400x7","shen268")
 #path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
 
@@ -42,43 +37,6 @@ path_exp_full<-NULL
 #list_atlas<-"hoa"
 
 list_wave <- c(1,2)
-
-#list_covar<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-#                 "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-#                 "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-#                 "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"),
-#                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
-#                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
-list_covar<-list("sdq_td"=list("1"="W1_SDQ_tdJ",     "2"="W2_SDQ_tdJ",      "label"="SDQ_td"),
-                 "age"  =list("1"="W1_Age_at_MRI",  "2"="W2_Age_at_MRI",  "label"="Age"),
-                 "sex"  =list("1"="Sex",            "2"="Sex",            "label"="Sex"))
-
-subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
-                             list("key"="W1_rsfMRIexist","condition"="==1"),
-                             list("key"="W1_Censor","condition"="<126")),
-                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
-                             list("key"="W2_rsfMRIexist","condition"="==1"),
-                             list("key"="W2_Censor","condition"="<126")))
-
-#list_mod <- list("l"= "value ~ age + testo + s(ID_pnTTC,bs='re')")
-                 #"a"= "value ~ s(age,k=3) + s(testo,k=3) + s(ID_pnTTC,bs='re')",
-                 #"q"="value ~ poly(age,2) + poly(testo,2) + s(ID_pnTTC,bs='re')")
-
-list_mod <- list("l"= "value ~ age + sdq_td + s(ID_pnTTC,bs='re')")
-
-#list_plot <-list(#"a"=list("title"="Age effect","var_exp"="age"),
-                 #"sa"=list("title"="Age effect","var_exp"="s(age)"),
-                 #"pa1"=list("title"="Age effect","var_exp"="poly(age, 2)1"),
-                 #"pa2"=list("title"="Age effect","var_exp"="poly(age, 2)2"),
-                 #"t"=list("title"="Testosterone effect","var_exp"="testo")
-                 #"st"=list("title"="Testosterone effect","var_exp"="s(testo)")
-                 #"st"=list("title"="Testosterone effect","var_exp"="s(testo)"),
-                 #"pt1"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)1"),
-                 #"pt2"=list("title"="Testosterone effect","var_exp"="poly(testo, 2)2")
-                 #)
-
-list_plot <-list("sdq"=list("title"="SDQ effect","var_exp"="sdq_td"))
 
 list_type_p=c("p","p_bh","seed_p_bh")
 #list_type_p="p"
@@ -101,12 +59,13 @@ library(igraph)
 library(ggrepel)
 library(colorRamps)
 library(tidyverse)
-library(dplyr)
 library(parallel)
 library(mgcv)
 library(car)
 library(plyr)
+library(dplyr)
 library(data.table)
+library(pbapply)
 
 
 #**************************************************
@@ -115,71 +74,142 @@ library(data.table)
 source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/gta_function.R"))
+source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
-
-
-#**************************************************
-# Calculate longitudinal FC difference ============
-#**************************************************
-
-diff_fc<-function(paths_=paths,list_atlas_=list_atlas,
-                  key_roigroup="group_3"){
-  print("Starting diff_fc().")
-  #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
-  
-  for (atlas in list_atlas_){
-    # Load connection data
-    #df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    dt_conn<-fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    df_conn<-as.data.frame(dt_conn)
-    dt_conn<-NULL
-    gc()
-    
-    # Create dataframe of existing graph edges
-    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
-    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
-    df_edge$from<-as.character(df_edge$from)
-    df_edge$to<-as.character(df_edge$to)
-    
-    # Examine existing subject IDs and sessions in connection data
-    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    for (ses in c(1,2)){
-      df_ses_subj<-rbind(df_ses_subj,
-                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
-    }
-    list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
-                                    df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
-    print(paste("Atlas: ",atlas,", ",
-                as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
-                sep=""))
-    
-    # Calculate longitudinal fc difference
-    df_out<-data.frame()
-    for (id_subj in list_subj_exist_long){
-      df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
-      colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
-      colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
-      df_ses2<-df_conn[(df_conn$ses==2 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
-      colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
-      colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
-      df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
-      df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
-      df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
-      df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
-      df_out<-rbind(df_out,df_diff)
-    }
-    df_out<-transform(df_out,ses=as.character(ses))
-    df_out<-rbind.fill(df_conn,df_out)
-    write.csv(df_out,file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
-  }
-  print('Finished diff_fc()')
-}
 
 
 #**************************************************
 # GLM/GAM of FCs ==================================
 #**************************************************
+
+gamm_fc_core<-function(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
+                       list_covar,list_mod,list_plot,idx_var,
+                       list_type_p_=list_type_p,thr_p_=thr_p
+                       ){
+  # Prepare clinical data
+  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T,
+                                     prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+  df_clin<-data_clin$df_clin
+  
+  # Join fc and clinical data
+  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
+  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
+  colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
+  df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
+                  -which(colnames(df_fc)=="p"))]
+  df_clin$wave<-as.character(df_clin$wave)
+  df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
+  for (key in c('ID_pnTTC','wave','sex')){
+    if (key %in% colnames(df_join)){
+      df_join[,key]<-as.factor(df_join[,key])
+    }
+  }
+  
+  # Calculate ROI-wise GAMM of FC
+  data_gamm<-iterate_gamm(df_join,df_roi,list_mod)
+  
+  # Calculate multiple comparison-corrected p values
+  df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,
+                           list_plot,calc_seed_level=T)
+  
+  # Save results
+  write.csv(data_gamm$df_out_gamm,
+            file.path(paths_$output,"output",
+                      paste("atl-",atlas,"_var-",idx_var,"_fc_gamm.csv",sep="")),row.names = F)
+  write.csv(data_gamm$df_out_aic,
+            file.path(paths_$output,"output",
+                      paste("atl-",atlas,"_var-",idx_var,"_fc_gamm_aic.csv",sep="")),row.names = F)
+  write.csv(df_plot_gamm,
+            file.path(paths_$output,"output",
+                      paste("atl-",atlas,"_var-",idx_var,"_fc_gamm_plot.csv",sep="")),row.names = F)
+  
+  # Graphical output of ROI-wise GAMM of FC
+  plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
+              list_type_p_,thr_p,paths_,suffix_=paste("var-",idx_var,sep=""))
+}
+
+  gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
+                        list_atlas_=list_atlas,key_group_='group_3',
+                        list_covar_tanner_=gamm_fc_list_covar_tanner,list_tanner_=gamm_fc_list_tanner,
+                        list_mod_tanner_=gamm_fc_list_mod_tanner,list_plot_tanner_=gamm_fc_list_plot_tanner,
+                        list_covar_hormone_=gamm_fc_list_covar_hormone,list_hormone_=gamm_fc_list_hormone,
+                        list_mod_hormone_=gamm_fc_list_mod_hormone,list_plot_hormone_=gamm_fc_list_plot_hormone){
+  
+  print("Starting gamm_fc_multi().")
+  nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
+  dict_roi <- func_dict_roi(paths_)
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    print(paste("Loading FC of atlas: ",atlas,sep=""))
+    df_fc<-as.data.frame(fread(file.path(paths_$input,"output",
+                                         paste("atl-",atlas,"_fc.csv",sep=""))))
+    
+    # Prepare dataframe of ROIs
+    list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
+    df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
+    colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
+    
+    # Loop over clinical variables
+    #1 Tanner stage
+    for (idx_tanner in names(list_tanner_)){
+      print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
+      list_covar<-list_covar_tanner_
+      list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
+      gamm_fc_core(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
+                   list_covar,list_mod_tanner_,list_plot_tanner_,idx_tanner)
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(list_hormone_)){
+      print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
+      list_covar<-list_covar_hormone_
+      list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
+      gamm_fc_core(paths_,df_fc,atlas,df_roi,list_wave_,subset_subj_,
+                   list_covar,list_mod_hormone_,list_plot_hormone_,idx_hormone)
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  print("Combining results.")
+  df_gamm<-df_aic<-df_gamm_plot<-data.frame()
+  for (atlas in list_atlas_){
+    #1 Tanner stage
+    for (idx_tanner in names(list_tanner_)){
+      df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                 paste("atl-",atlas,"_var-",idx_tanner,
+                                                       "_fc_gamm.csv",sep=""))))
+      df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_tanner,df_gamm_add))
+      df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                paste("atl-",atlas,"_var-",idx_tanner,
+                                                      "_fc_gamm_aic.csv",sep=""))))
+      df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_tanner,df_aic_add))
+      df_gamm_plot_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                      paste("atl-",atlas,"_var-",idx_tanner,
+                                                            "_fc_gamm_plot.csv",sep=""))))
+      df_gamm_plot<-rbind(df_gamm_plot,cbind(atlas=atlas,variable=idx_tanner,df_gamm_plot_add))
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(list_hormone_)){
+      df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                 paste("atl-",atlas,"_var-",idx_hormone,
+                                                       "_fc_gamm.csv",sep=""))))
+      df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_hormone,df_gamm_add))
+      df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                paste("atl-",atlas,"_var-",idx_hormone,
+                                                      "_fc_gamm_aic.csv",sep=""))))
+      df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_hormone,df_aic_add))
+      df_gamm_plot_add<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                      paste("atl-",atlas,"_var-",idx_hormone,
+                                                            "_fc_gamm_plot.csv",sep=""))))
+      df_gamm_plot<-rbind(df_gamm_plot,cbind(atlas=atlas,variable=idx_hormone,df_gamm_plot_add))
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  write.csv(df_gamm,file.path(paths_$output,"output","fc_gamm.csv"),row.names = F)
+  write.csv(df_aic,file.path(paths_$output,"output","fc_gamm_aic.csv"),row.names = F)
+  write.csv(df_gamm_plot,file.path(paths_$output,"output","fc_gamm_plot.csv"),row.names = F)
+}
 
 join_fc_clin<-function(df_fc,df_clin){
   df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
@@ -187,6 +217,7 @@ join_fc_clin<-function(df_fc,df_clin){
   colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
   df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
                   -which(colnames(df_fc)=="p"))]
+  df_clin$wave<-as.character(df_clin$wave)
   
   # Join clinical and FC data frames
   print('Joining clinical and FC data.')
@@ -320,9 +351,77 @@ gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
 
 
 #**************************************************
-# Component analyses of FC ========================
+# Calculate longitudinal FC difference ============
 #**************************************************
 
+diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_roigroup="group_3"){
+  print("Starting diff_fc().")
+  #nullobj<-func_createdirs(paths_,str_proc="diff_fc()")
+  
+  for (atlas in list_atlas_){
+    path_file_fc<-file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))
+    if (!file.exists(path_file_fc)){
+      print(paste("Atlas:",atlas,"FC data does not exist.",sep=" "))
+    }else{
+    
+      # Load connection data
+      dt_conn<-fread(path_file_fc)
+      df_conn<-as.data.frame(dt_conn)
+      dt_conn<-NULL
+      gc()
+      
+      if (sum(df_conn$ses=="2-1")>0){
+        print(paste("Atlas:",atlas,"FC difference already calculated.",sep=" "))
+      }else{
+        
+        # Create dataframe of existing graph edges
+        df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+        df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+        df_edge$from<-as.character(df_edge$from)
+        df_edge$to<-as.character(df_edge$to)
+        
+        # Examine existing subject IDs and sessions in connection data
+        df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+        colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+        for (ses in c(1,2)){
+          df_ses_subj<-rbind(df_ses_subj,
+                             data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
+        }
+        list_subj_exist_long<-intersect(df_ses_subj[df_ses_subj$ses==1,"ID_pnTTC"],
+                                        df_ses_subj[df_ses_subj$ses==2,"ID_pnTTC"])
+        print(paste("Atlas: ",atlas,", ",
+                    as.character(length(list_subj_exist_long))," subjects with longitudinal data.",
+                    sep=""))
+        
+        # Calculate longitudinal fc difference
+        df_out<-data.frame()
+        for (id_subj in list_subj_exist_long){
+          df_ses1<-df_conn[(df_conn$ses==1 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
+          colnames(df_ses1)[colnames(df_ses1)=="r"]<-"ses1_r"
+          colnames(df_ses1)[colnames(df_ses1)=="z_r"]<-"ses1_z_r"
+          df_ses2<-df_conn[(df_conn$ses==2 & df_conn$ID_pnTTC==id_subj),c("from","to","r","z_r")]
+          colnames(df_ses2)[colnames(df_ses2)=="r"]<-"ses2_r"
+          colnames(df_ses2)[colnames(df_ses2)=="z_r"]<-"ses2_z_r"
+          df_diff<-left_join(df_ses1,df_ses2,by=c("from","to"))
+          df_diff$r<-df_diff$ses2_r-df_diff$ses1_r
+          df_diff$z_r<-df_diff$ses2_z_r-df_diff$ses1_z_r
+          df_diff<-data.frame(ses="2-1",ID_pnTTC=id_subj,df_diff[,c("from","to","r","z_r")])
+          df_out<-rbind(df_out,df_diff)
+        }
+        df_out<-transform(df_out,ses=as.character(ses))
+        df_out<-rbind.fill(df_conn,df_out)
+        write.csv(df_out,file.path(paths_$output,"output",paste("atl-",atlas,"_fc.csv",sep="")),row.names=F)
+      }
+    }
+  }
+  print('Finished diff_fc()')
+}
+
+
+#**************************************************
+# Component analyses of FC ========================
+#**************************************************
+# OBSOLETE
 ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
                 list_covar_=list_covar,subset_subj_=subset_subj,list_dim_ca_=list_dim_ca,
                 plot_result=F){
@@ -453,6 +552,8 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,list_wave_=list_wave,
 # Core function for parallelization of fp_fc()
 fp_fc_core<-function(data_zr){
   measure<-"fc"
+  atlas<-data_zr$atlas
+  paths<-data_zr$paths
   group_1<-data_zr$group[[1]]
   group_2<-data_zr$group[[2]]
   df_zr<-data_zr$df_zr
@@ -496,136 +597,139 @@ fp_fc_core<-function(data_zr){
   
   # Save heatmap plot
   ggsave(paste("atl-",atlas,"_msr-",measure,"_grp1-",group_1,"_grp2-",group_2,"_fp.eps",sep=""),plot=plot_fp_heatmap,device=cairo_ps,
-         path=file.path(paths_$output,"output"),dpi=300,height=10,width=10,limitsize=F)
+         path=file.path(paths$output,"output","plot"),dpi=300,height=10,width=10,limitsize=F)
   
   return(df_fp_subnet)
 }
 
 # Main function for fingerprint computing
 
-fp_fc<-function(paths_=paths,
-                list_atlas_=list_atlas,
-                key_roigroup="group_3"){
+fp_fc<-function(paths_=paths,list_wave_=list_wave,list_atlas_=list_atlas,key_roigroup="group_3"){
   print("Starting fp_fc().")
   nullobj<-func_createdirs(paths_,str_proc="fp_fc()")
   dict_roi<-func_dict_roi(paths_)
   dict_roi<-data.frame(id=as.character(dict_roi$id),group=as.character(dict_roi[,key_roigroup]),stringsAsFactors = F)
   
   for (atlas in list_atlas_){
-    # Load connection data
-    df_conn<-read.csv(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep="")))
-    df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
-    df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
-    df_edge$from<-as.character(df_edge$from)
-    df_edge$to<-as.character(df_edge$to)
-    
-    # Examine existing subject IDs and sessions in connection data
-    df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
-    colnames(df_ses_subj)<-c("ses","ID_pnTTC")
-    list_ses_exist <- sort(unique(df_conn$ses))
-    for (ses in list_ses_exist){
-      df_ses_subj<-rbind(df_ses_subj,
-                         data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
-    }
-    
-    # Add node subgroup column to df_edge
-    df_edge<-left_join(df_edge,dict_roi,by=c("from"="id"))
-    colnames(df_edge)[colnames(df_edge)=="group"]<-"from_group"
-    df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
-    colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
-    
-    # List groups of existing nodes
-    list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
-    if (!("whole" %in% list_group)){
-      list_group<-c("whole",list_group)
-    }
-    n_group<-length(list_group)
-    print(paste("Atlas: ",atlas, ", ", as.character(n_group)," groups:",sep=""))
-    print(list_group)
-    
-    # Split and combine z_r data for each subgroup of networks for parallel computing
-    list_data_zr<-list()
-    
-    for (idx_group_1 in seq(n_group)){
-      for (idx_group_2 in seq(idx_group_1,n_group)){
-        group_1<-list_group[idx_group_1]
-        group_2<-list_group[idx_group_2]
-        # 1. whole <-> whole
-        # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
-        # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
-        if (group_1=="whole"){
-          if (group_2=="whole"){
-            # 1. whole <-> whole
-            df_edge_group<-df_edge
-          }else{
-            # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
-            df_edge_group<-rbind(df_edge[df_edge$from_group!=group_2 & df_edge$to_group==group_2,],
-                                 df_edge[df_edge$from_group==group_2 & df_edge$to_group!=group_2,])
-          }
-        }else{
+    if (file.exists(file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")))){
+      print(paste("Atlas: ",atlas,", fingerprint already calculated.",sep=""))
+    }else{
+      # Load connection data
+      df_conn<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))))
+      df_edge<-df_conn[which(df_conn$ID_pnTTC==df_conn[1,"ID_pnTTC"]),]
+      df_edge<-df_edge[which(df_edge$ses==df_edge[1,"ses"]),c("from","to"),]
+      df_edge$from<-as.character(df_edge$from)
+      df_edge$to<-as.character(df_edge$to)
+      
+      # Examine existing subject IDs and sessions in connection data
+      df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
+      colnames(df_ses_subj)<-c("ses","ID_pnTTC")
+      #list_ses_exist <- sort(unique(df_conn$ses))
+      for (ses in list_wave_){
+        df_ses_subj<-rbind(df_ses_subj,
+                           data.frame(ses=ses,ID_pnTTC=sort(unique(df_conn[df_conn$ses==ses,"ID_pnTTC"]))))
+      }
+      
+      # Add node subgroup column to df_edge
+      df_edge<-left_join(df_edge,dict_roi,by=c("from"="id"))
+      colnames(df_edge)[colnames(df_edge)=="group"]<-"from_group"
+      df_edge<-left_join(df_edge,dict_roi,by=c("to"="id"))
+      colnames(df_edge)[colnames(df_edge)=="group"]<-"to_group"
+      
+      # List groups of existing nodes
+      list_group<-sort(unique(c(df_edge[,"from_group"],df_edge[,"to_group"])))
+      if (!("whole" %in% list_group)){
+        list_group<-c("whole",list_group)
+      }
+      n_group<-length(list_group)
+      print(paste("Atlas: ",atlas, ", ", as.character(n_group)," groups:",sep=""))
+      print(list_group)
+      
+      # Split and combine z_r data for each subgroup of networks for parallel computing
+      list_data_zr<-list()
+      
+      for (idx_group_1 in seq(n_group)){
+        for (idx_group_2 in seq(idx_group_1,n_group)){
+          group_1<-list_group[idx_group_1]
+          group_2<-list_group[idx_group_2]
+          # 1. whole <-> whole
+          # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
           # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
-          if (group_1==group_2){
-            df_edge_group<-df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_1,]
+          if (group_1=="whole"){
+            if (group_2=="whole"){
+              # 1. whole <-> whole
+              df_edge_group<-df_edge
+            }else{
+              # 2. (whole-group_2) <-> group_2 and group_2 <-> (whole-group_2)
+              df_edge_group<-rbind(df_edge[df_edge$from_group!=group_2 & df_edge$to_group==group_2,],
+                                   df_edge[df_edge$from_group==group_2 & df_edge$to_group!=group_2,])
+            }
           }else{
-            df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
-                                 df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
+            # 3. group_1 <-> group_2 and group_2 <-> group_1 (including group_1=group_2)
+            if (group_1==group_2){
+              df_edge_group<-df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_1,]
+            }else{
+              df_edge_group<-rbind(df_edge[df_edge$from_group==group_1 & df_edge$to_group==group_2,],
+                                   df_edge[df_edge$from_group==group_2 & df_edge$to_group==group_1,])
+            }
+          }
+          
+          df_edge_group$idx<-seq(nrow(df_edge_group))
+          n_edge_group<-dim(df_edge_group)[1]
+          
+          if (n_edge_group<5){
+            print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
+          }else{
+            # Create combined dataframe of Z-transformed correlation coefficients
+            # according to pre-calculated edge and subject data
+            print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2,", preparing data.",sep=""))
+            df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
+            
+            for (idx_subj in seq(nrow(df_ses_subj))){
+              #print(paste("Ses: ",df_ses_subj[idx_subj,"ses"],", Subj: ",df_ses_subj[idx_subj,"ID_pnTTC"],sep=""))
+              df_conn_subset<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,"ID_pnTTC"]
+                                      & df_conn$ses==df_ses_subj[idx_subj,"ses"],c("from","to","z_r")]
+              df_conn_subset$from<-as.character(df_conn_subset$from)
+              df_conn_subset$to<-as.character(df_conn_subset$to)
+              df_conn_subset<-inner_join(df_conn_subset,df_edge_group,by=c("from","to"))
+              df_conn_subset<-df_conn_subset[order(df_conn_subset$idx),"z_r"]
+              df_conn_cbind<-cbind(df_conn_cbind,df_conn_subset)
+            }
+            colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
+            rownames(df_conn_cbind)<-NULL
+            
+            list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"atlas"=atlas,"paths"=paths_,
+                                                   "df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
           }
         }
-        
-        df_edge_group$idx<-seq(nrow(df_edge_group))
-        n_edge_group<-dim(df_edge_group)[1]
-        
-        if (n_edge_group<5){
-          print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2, ", Edges: ",as.character(n_edge_group)," < 5, fp calculation skipped.",sep=""))
-        }else{
-          # Create combined dataframe of Z-transformed correlation coefficients
-          # according to pre-calculated edge and subject data
-          print(paste("Atlas: ",atlas,", Group: ",group_1," and ",group_2,", preparing data.",sep=""))
-          df_conn_cbind<-data.frame(matrix(nrow=n_edge_group,ncol=0))
-          
-          for (idx_subj in seq(nrow(df_ses_subj))){
-            #print(paste("Ses: ",df_ses_subj[idx_subj,"ses"],", Subj: ",df_ses_subj[idx_subj,"ID_pnTTC"],sep=""))
-            df_conn_subset<-df_conn[df_conn$ID_pnTTC==df_ses_subj[idx_subj,"ID_pnTTC"]
-                                    & df_conn$ses==df_ses_subj[idx_subj,"ses"],c("from","to","z_r")]
-            df_conn_subset$from<-as.character(df_conn_subset$from)
-            df_conn_subset$to<-as.character(df_conn_subset$to)
-            df_conn_subset<-inner_join(df_conn_subset,df_edge_group,by=c("from","to"))
-            df_conn_subset<-df_conn_subset[order(df_conn_subset$idx),"z_r"]
-            df_conn_cbind<-cbind(df_conn_cbind,df_conn_subset)
-          }
-          colnames(df_conn_cbind)<-as.character(seq(ncol(df_conn_cbind)))
-          rownames(df_conn_cbind)<-NULL
-          
-          list_data_zr<-c(list_data_zr,list(list("group"=c(group_1,group_2),"df_zr"=df_conn_cbind,"df_ses_subj"=df_ses_subj)))
+      }
+      
+      # Parallel fingerprint correlation computing over groups of subnetworks
+      print(paste("Atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
+      n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
+      clust<-makeCluster(n_cluster)
+      clusterExport(clust,
+                    varlist=c("func_cor",
+                              "plot_cor_heatmap","rcorr","func_fisherz","rownames_to_column","gather",
+                              "ggplot","aes","geom_tile","scale_fill_gradientn",
+                              "matlab.like2","scale_y_discrete","scale_x_discrete",
+                              "theme_light","theme","element_text","element_blank",
+                              "ggtitle","ggsave"),
+                    envir=environment())
+      list_df_fp<-pblapply(list_data_zr,fp_fc_core,cl=clust)
+      stopCluster(clust)
+      
+      # Output dataframe
+      df_fp<-NULL
+      for (df_fp_subnet in list_df_fp){
+        if (!is.null(df_fp_subnet)){
+          df_fp<-rbind(df_fp,df_fp_subnet)
         }
       }
+      
+      # Save fingerprint correlation
+      write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
     }
-    
-    # Parallel fingerprint correlation computing over groups of subnetworks
-    print(paste("atlas: ",atlas,", calculating FC fingerprint correlation in parallel.",sep=""))
-    n_cluster<-min(floor(detectCores()*3/4),length(list_data_zr))
-    clust<-makeCluster(n_cluster)
-    clusterExport(clust,
-                  varlist=c("paths_","atlas","func_cor",
-                            "plot_cor_heatmap","rcorr","FisherZ","rownames_to_column","gather",
-                            "ggplot","aes","geom_tile","scale_fill_gradientn",
-                            "matlab.like2","scale_y_discrete","scale_x_discrete",
-                            "theme_light","theme","element_text","element_blank",
-                            "ggtitle","ggsave"),
-                  envir=environment())
-    list_df_fp<-parLapply(clust,list_data_zr,fp_fc_core)
-    stopCluster(clust)
-    
-    # Output dataframe
-    df_fp<-NULL
-    for (df_fp_subnet in list_df_fp){
-      if (!is.null(df_fp_subnet)){
-        df_fp<-rbind(df_fp,df_fp_subnet)
-      }
-    }
-    
-    # Save fingerprint correlation
-    write.csv(df_fp,file.path(paths_$output,"output",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
   }
   print("Finished fp_fc().")
 }

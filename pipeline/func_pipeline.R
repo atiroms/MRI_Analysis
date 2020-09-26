@@ -136,45 +136,6 @@ list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","lab
 n_permutation<-1000
 #n_permutation<-100
 
-#**************************************************
-# ca_fc() for multiple clinical covariates ========
-#**************************************************
-
-ca_fc_multi<-function(path_exp_=path_exp,
-                      id_dir_fc_=id_dir_fc,id_dir_ca_=id_dir_ca,suffix_dir_=suffix_dir,
-                      list_atlas_=list_atlas,list_wave_=list_wave,subset_subj_=subset_subj,
-                      list_covar_=list_covar,list_type_tanner_=list_type_tanner,
-                      list_covar_hormone_=list_covar_hormone,list_hormone_=list_hormone,
-                      dim_ca_=dim_ca){
-  
-  print('Starting ca_fc_multi().')
-  dir_in<-paste(as.character(id_dir_fc_),"fc",suffix_dir_,sep="_")
-  id_dir<-id_dir_ca_
-  
-  for (idx_type_tanner in names(list_type_tanner_)){
-    id_dir<-id_dir+0.1
-    print(paste("Tanner type: ",idx_type_tanner,sep=""))
-    list_covar_[["tanner"]]<-list_type_tanner_[[idx_type_tanner]]
-    dir_out<-paste(as.character(id_dir),"fc_ca",suffix_dir_,idx_type_tanner,sep='_')
-    paths<-func_path(path_exp_=path_exp_,dir_in_=dir_in,dir_out_=dir_out)
-    nullobj<-ca_fc(paths_=paths,list_atlas_=list_atlas_,
-                   list_wave_=list_wave_,list_covar_=list_covar_,
-                   subset_subj_=subset_subj_,dim_ca_=dim_ca_)
-  }
-  
-  for (idx_hormone in names(list_hormone_)){
-    id_dir<-id_dir+0.1
-    print(paste("Hormone: ",idx_hormone,sep=""))
-    list_covar_hormone_[["hormone"]]<-list_hormone_[[idx_hormone]]
-    dir_out<-paste(as.character(id_dir),"fc_ca",suffix_dir_,idx_hormone,sep='_')
-    paths<-func_path(path_exp_=path_exp_,dir_in_=dir_in,dir_out_=dir_out)
-    nullobj<-ca_fc(paths_=paths,list_atlas_=list_atlas_,
-                   list_wave_=list_wave_,list_covar_=list_covar_,
-                   subset_subj_=subset_subj_,dim_ca_=dim_ca_)
-  }
-  print('Finished ca_fc_multi().')
-}
-
 
 #**************************************************
 # Pickup model_fp() results =======================
