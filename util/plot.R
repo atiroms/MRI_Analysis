@@ -16,10 +16,60 @@ library(purrr)
 
 
 #**************************************************
-# Plot PCA/ICA of FC ==============================
+# Heatamap plot of PCA/ICA factors of FC ===========
+#**************************************************
+plot_ca_fc_heatmap<-function(paths_,df_comp_mri,atlas,dim_ca,method,label_sex,ses){
+  print(paste("Generationg heatmap plot of factors, Session: ",as.character(ses),
+              ", Sex: ",label_sex,", Method: ",method,", Dim: ",as.character(dim_ca),sep="")) 
+  dict_roi<-func_dict_roi(paths_)
+  dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
+  dict_roi<-dict_roi[order(dict_roi$group_3),]
+  df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("from"="id"))
+  colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"from_label"
+  df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("to"="id"))
+  colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"to_label"
+  
+  for (idx_comp in 1:dim_ca){
+    df_edge<-df_comp_mri[,c("from_label","to_label",sprintf("comp_%03d",idx_comp))]
+    colnames(df_edge)<-c("row","column","r")
+    df_edge_inv<-data.frame(row=df_edge$column, column=df_edge$row,r=df_edge$r)
+    df_edge_identical<-data.frame(row=dict_roi$label,column=dict_roi$label,r=NA)
+    df_edge<-rbind(df_edge,df_edge_inv,df_edge_identical)
+    limits<-max(max(df_edge$r),-min(df_edge$r))
+    limits<-c(-limits,limits)
+    
+    plot<-(ggplot(df_edge, aes(column, row))
+           + geom_tile(aes(fill = r))
+           + scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=limits)
+           + scale_y_discrete(limits = rev(dict_roi$label))
+           + scale_x_discrete(limits = dict_roi$label, position="top")
+           + ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
+                           ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
+                           ", Sex: ",label_sex,sep=""))
+           + theme_light()
+           + theme(axis.text.x = element_text(size=29/log(nrow(dict_roi),2),angle = 90,vjust=0,hjust=0),
+                   axis.text.y = element_text(size=29/log(nrow(dict_roi),2)),
+                   panel.grid.major=element_blank(),
+                   panel.grid.minor = element_blank(),
+                   panel.border = element_blank(),
+                   panel.background = element_blank(),
+                   plot.title = element_text(hjust = 0.5),
+                   axis.title=element_blank(),
+                   legend.title=element_blank())
+    )
+    ggsave(paste("atl-",atlas,"_method-",method,"_ses-",as.character(ses),
+                 "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
+                 "_comp-",sprintf("%03d",idx_comp),"_fc_ca.png",sep=""),
+           plot=plot,
+           path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
+  }
+}
+
+#**************************************************
+# Circular plot of PCA/ICA factors of FC ==========
 #**************************************************
 
-plot_ca_fc_core<-function(data_plot){
+plot_ca_fc_circular_core<-function(data_plot){
   file<-data_plot$file
   plot<-data_plot$plot
   path<-data_plot$path
@@ -27,8 +77,9 @@ plot_ca_fc_core<-function(data_plot){
   return(T)
 }
 
-plot_ca_fc<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,label_sex,ses){
-  print("Calculating graphics of components.")
+plot_ca_fc_circular<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,label_sex,ses){
+  print(paste("Generationg circular plot of factors, Session: ",as.character(ses),
+              ", Sex: ",label_sex,", Method: ",method,", Dim: ",as.character(dim_ca),sep=""))
   df_node<-func_dict_roi(paths=paths)
   df_node<-df_node[df_node$atlas==atlas,c("id","label")]
   n_vis<-floor(nrow(df_comp_mri)*ratio_vis)
@@ -61,7 +112,7 @@ plot_ca_fc<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,label_sex,
   clusterExport(clust,
                 varlist=c("ggsave","guide_edge_colourbar"),
                 envir=environment())
-  list_dst_gamm<-pblapply(list_plot,plot_ca_fc_core,cl=clust)
+  list_dst_gamm<-pblapply(list_plot,plot_ca_fc_circular_core,cl=clust)
   stopCluster(clust)
 }
 
@@ -340,8 +391,11 @@ plot_gamm<-function(plot_in,mod_gamm,df_in,spec_graph){
 # Plot correlation matrix in heatmap ==============
 #**************************************************
 plot_cor_heatmap<-function(input,label=NULL){
+  
   input_tidy<-rownames_to_column(input,"row")
   input_tidy<-gather(input_tidy,key=column,value=r,2:ncol(input_tidy))
+
+  # Text label overlay on heatmap
   if (!is.null(label)){
     label_tidy<-rownames_to_column(label,"row")
     label_tidy<-gather(label_tidy,key=column,value=label,2:ncol(label_tidy))

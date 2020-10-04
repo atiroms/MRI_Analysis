@@ -30,7 +30,7 @@ func_fisherz<-function(rho){
 #**************************************************
 # Create path list ================================
 #**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","D:/NICT_WS"),
+func_path<-function(list_path_root = c("C:/Users/atiro","D:/atiro","/home/atiroms","D:/NICT_WS"),
                     path_exp_,dir_in_,dir_out_,path_exp_full_=NULL
                     ){
   path_root<-NA
