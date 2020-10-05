@@ -67,6 +67,38 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # and waves =======================================
 #**************************************************
 
+group_factor<-function(df_ca_mri,dim,dict_roi,list_group,list_sex){
+  df_ca_mri<-inner_join(df_ca_mri,dict_roi[,c("id","group_3")],by=c("from"="id"))
+  colnames(df_ca_mri)[colnames(df_ca_mri)=="group_3"]<-"from_group"
+  df_ca_mri<-inner_join(df_ca_mri,dict_roi[,c("id","group_3")],by=c("to"="id"))
+  colnames(df_ca_mri)[colnames(df_ca_mri)=="group_3"]<-"to_group"
+  
+  df_ca_mri_grp<-NULL
+  for (label_sex in names(list_sex)){
+    for (idx_grp1 in seq(length(list_group))){
+      for (idx_grp2 in seq(idx_grp1,length(list_group))){
+        df_ca_mri_subset<-rbind(df_ca_mri[df_ca_mri$sex==label_sex
+                                          & df_ca_mri$from_group==list_group[idx_grp1]
+                                          & df_ca_mri$to_group==list_group[idx_grp2],],
+                                df_ca_mri[df_ca_mri$sex==label_sex
+                                          & df_ca_mri$from_group==list_group[idx_grp2]
+                                          & df_ca_mri$to_group==list_group[idx_grp1],])
+        df_ca_mri_subset<-df_ca_mri_subset[,sprintf("comp_%03d",seq(dim))]
+        df_ca_mri_grp<-rbind(df_ca_mri_grp,
+                             cbind(sex=label_sex,abs=F,from=list_group[idx_grp1],to=list_group[idx_grp2],
+                                   t(colMeans(df_ca_mri_subset))))
+        df_ca_mri_subset_abs<-abs(df_ca_mri_subset)
+        df_ca_mri_grp<-rbind(df_ca_mri_grp,
+                             cbind(sex=label_sex,abs=T,from=list_group[idx_grp1],to=list_group[idx_grp2],
+                                   t(colMeans(df_ca_mri_subset_abs))))
+        
+      }
+    }
+  }
+  df_ca_mri_grp<-as.data.frame(cbind(dim=dim,df_ca_mri_grp))
+  return(df_ca_mri_grp)
+}
+
 comp_clin_cor<-function(df_comp_subj,df_clin,n_covar,list_sex){
   list_dim<-sort(unique(df_comp_subj$dim))
   df_cor_rbind<-df_cor_flat_rbind<-NULL
@@ -102,7 +134,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
                          list_dim_ca_=list_dim_ca,ratio_vis_=ratio_vis){
   print("Starting ca_fc_cs_multi()")
   nullobj<-func_createdirs(paths_,str_proc="ca_fc_cs_multi()",copy_log=T)
-  # Increase memory limit
+  # Increase memory limit for later ICA calculation
   memory.limit(1000000)
   df_cor<-NULL
   for (atlas in list_atlas_){
@@ -200,6 +232,36 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
       } # end if not PCA/ICA factors are already calculated
     } # end for over waves
+    
+    # Group-wise average of factor-MRI matrix
+    print(paste("Calculating group-wise contribution to factors, atlas:",atlas,sep=" "))
+    dict_roi<-func_dict_roi(paths_)
+    dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
+    list_group<-unique(dict_roi$group_3)
+    for (waves in names(list_waves_)){
+      wave_mri<-list_waves_[[waves]]$wave_mri
+      path_pca_mri_grp<-file.path(paths_$output,"output",
+                               paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep=""))
+      path_ica_mri_grp<-file.path(paths_$output,"output",
+                               paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep=""))
+      if (!(file.exists(path_pca_mri_grp) & file.exists(path_ica_mri_grp))){
+        df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
+        df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
+        df_pca_mri_grp<-df_ica_mri_grp<-data.frame()
+        # PCA
+        dim<-max(list_dim_ca_)
+        df_pca_mri_grp<-group_factor(df_pca_mri,dim,dict_roi,list_group,list_sex_)
+        write.csv(df_pca_mri_grp,path_pca_mri_grp,row.names=F)
+        # ICA
+        for (dim in list_dim_ca_){
+          df_ica_mri_grp<-rbind.fill(df_ica_mri_grp,
+                                     group_factor(df_pca_mri,dim,dict_roi,list_group,list_sex_))
+        }
+        write.csv(df_ica_mri_grp,path_ica_mri_grp,row.names=F)
+      }
+    }
     
     # Generate visual output of MRI factors
     wave_mri_done<-NULL
@@ -317,7 +379,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
   
   # Reload and bind all results
   print("Binding component analysis results.")
-  df_ca_subj_bind<-df_ca_var_bind<-df_ca_vaf_bind<-NULL
+  df_ca_subj_bind<-df_ca_var_bind<-df_ca_vaf_bind<-df_ca_var_grp_bind<-NULL
   for (atlas in list_atlas_){
     wave_mri_done<-NULL
     for (waves in names(list_waves_)){
@@ -346,6 +408,14 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,
                                    cbind(atlas=atlas,method="pca",df_pca_vaf),
                                    cbind(atlas=atlas,method="ica",df_ica_vaf))
+        
+        df_pca_var_grp<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep=""))))
+        df_ica_var_grp<-as.data.frame(fread(file.path(paths_$output,"output",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep=""))))
+        df_ca_var_grp_bind<-rbind.fill(df_ca_var_grp_bind,
+                                   cbind(atlas=atlas,method="pca",df_pca_var_grp),
+                                   cbind(atlas=atlas,method="ica",df_ica_var_grp))
       } # End if wave_mri is not in wave_mri_done
     } # End of loop ove  waves
   } # End of loop over atlases
@@ -362,6 +432,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
   write.csv(df_ca_var_bind,file.path(paths_$output,"output",paste("fc_ca_var.csv",sep="")),row.names=F)
   write.csv(df_ca_subj_bind,file.path(paths_$output,"output",paste("fc_ca_subj.csv",sep="")),row.names=F)
   write.csv(df_ca_vaf_bind,file.path(paths_$output,"output",paste("fc_ca_vaf.csv",sep="")),row.names=F)
+  write.csv(df_ca_var_grp_bind,file.path(paths_$output,"output",paste("fc_ca_var_grp.csv",sep="")),row.names=F)
   write.csv(df_cor,file.path(paths_$output,"output",paste("fc_ca_cor.csv",sep="")),row.names=F)
   
   print("Finished ca_fc_cs_multi()")
