@@ -16,9 +16,17 @@ library(purrr)
 
 
 #**************************************************
-# Heatamap plot of PCA/ICA factors of FC ===========
+# Heatamap plot of PCA/ICA factors of FC ==========
 #**************************************************
-plot_ca_fc_heatmap<-function(paths_,df_comp_mri,atlas,dim_ca,method,label_sex,ses){
+plot_ca_fc_heatmap_core<-function(data_plot){
+  file<-data_plot$file
+  plot<-data_plot$plot
+  path<-data_plot$path
+  ggsave(file,plot=plot,path=path,height=13,width=10,dpi=600)
+  return(T)
+}
+
+plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,method,label_sex,ses){
   print(paste("Generationg heatmap plot of factors, Session: ",as.character(ses),
               ", Sex: ",label_sex,", Method: ",method,", Dim: ",as.character(dim_ca),sep="")) 
   dict_roi<-func_dict_roi(paths_)
@@ -42,7 +50,11 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,atlas,dim_ca,method,label_sex,se
   df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("to"="id"))
   colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"to_label"
   
+  list_plot<-list()
   for (idx_comp in 1:dim_ca){
+    list_subplot<-list()
+    
+    # ROI-ROI heatmap
     df_edge<-df_comp_mri[,c("from_label","to_label",sprintf("comp_%03d",idx_comp))]
     colnames(df_edge)<-c("row","column","r")
     limits<-max(max(df_edge$r),-min(df_edge$r))
@@ -58,29 +70,98 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,atlas,dim_ca,method,label_sex,se
            #       + scale_x_discrete(limits = dict_roi$label, position="top")
            + scale_y_discrete(limits = rev(list_roi_axis))
            + scale_x_discrete(limits = list_roi_axis, position="top")
-           + ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
-                           ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
-                           ", Sex: ",label_sex,sep=""))
-           + xlab(title_axis)
-           + theme_light()
-           + theme(axis.text.x = element_text(size=29/log(length(list_roi_axis),2),angle = 90,vjust=0,hjust=0),
-                   axis.text.y = element_text(size=29/log(length(list_roi_axis),2)),
+           #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
+           #                ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
+           #                ", Sex: ",label_sex,sep=""))
+           #+ xlab(title_axis)
+           + theme_linedraw()
+           + theme(
+                   #axis.text.x = element_text(size=29/log(length(list_roi_axis),2),angle = 90,vjust=0,hjust=0),
+                   #axis.text.y = element_text(size=29/log(length(list_roi_axis),2)),
+                   axis.text.x = element_text(size=3,angle = 90,vjust=0,hjust=0),
+                   axis.text.y = element_text(size=3),
                    panel.grid.major=element_blank(),
                    panel.grid.minor = element_blank(),
                    panel.border = element_blank(),
                    panel.background = element_blank(),
                    #legend.title=element_blank(),
                    plot.title = element_text(hjust = 0.5),
+                   #axis.title.x=element_text(size=5),
+                   axis.title.x=element_blank(),
                    axis.title.y=element_blank(),
                    axis.ticks=element_blank()
-                   )
            )
-    ggsave(paste("atl-",atlas,"_method-",method,"_ses-",as.character(ses),
-                 "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
-                 "_comp-",sprintf("%03d",idx_comp),"_fc_ca.png",sep=""),
-           plot=plot,
-           path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
+    )
+    list_subplot<-c(list_subplot,list(plot))
+    
+    # group-group heatmap
+    for (abs_mean in c(F,T)){
+      df_edge<-df_comp_mri_grp[df_comp_mri_grp$abs==abs_mean,c("from","to",sprintf("comp_%03d",idx_comp))]
+      colnames(df_edge)<-c("row","column","r")
+      limits<-max(max(df_edge$r),-min(df_edge$r))
+      limits<-c(-limits,limits)
+      df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
+      df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,r=df_edge_inv$r)
+      df_edge<-rbind(df_edge,df_edge_inv)
+      
+      plot<-(ggplot(df_edge, aes(column, row))
+             + geom_tile(aes(fill = r))
+             + scale_fill_gradientn(colors = matlab.like2(100),name="mean z",limits=limits)
+             + scale_y_discrete(limits = rev(list_group))
+             + scale_x_discrete(limits = list_group, position="top")
+             #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
+             #                ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
+             #                ", Sex: ",label_sex,sep=""))
+             #+ theme_light()
+             + theme_linedraw()
+             + theme(
+                     #axis.text.x = element_text(size=29/log(length(list_group),2),angle = 90,vjust=0,hjust=0),
+                     #axis.text.y = element_text(size=29/log(length(list_group),2)),
+                     axis.text.x = element_text(size=8.5,angle = 90,vjust=0,hjust=0),
+                     axis.text.y = element_text(size=8.5),
+                     panel.grid.major=element_blank(),
+                     panel.grid.minor = element_blank(),
+                     panel.border = element_blank(),
+                     panel.background = element_blank(),
+                     #legend.title=element_blank(),
+                     plot.title = element_text(hjust = 0.5),
+                     #axis.title.x=element_text(size=5),
+                     axis.title.x=element_blank(),
+                     axis.title.y=element_blank(),
+                     axis.ticks=element_blank()
+                     )
+            )
+      list_subplot<-c(list_subplot,list(plot))
+    }
+    arranged_plot<-ggarrange(list_subplot[[1]],
+                             ggarrange(list_subplot[[2]],list_subplot[[3]],
+                                       ncol=2,
+                                       labels=c("Group(signed)","Group(absolute)"),
+                                       label.x=-0.05,
+                                       font.label = list(size = 10,face="plain"),
+                                       common.legend = TRUE, legend = "right"),
+                             nrow=2,heights=c(2,1),
+                             labels="ROI",
+                             font.label = list(size = 10,face="plain"))
+    
+    arranged_plot<-annotate_figure(arranged_plot,
+                                   top = text_grob(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
+                                                         ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
+                                                         ", Sex: ",label_sex,sep=""), color = "black", size = 14))
+    
+    list_plot<-c(list_plot,list(list("file"=paste("atl-",atlas,"_method-",method,"_ses-",as.character(ses),
+                                                  "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
+                                                  "_comp-",sprintf("%03d",idx_comp),"_fc_ca.png",sep=""),
+                                     "path"=file.path(paths_$output,"output","plot"),
+                                     "plot"=arranged_plot)))
   }
+  n_cluster<-floor(detectCores()*3/4)
+  clust<-makeCluster(n_cluster)
+  clusterExport(clust,
+                varlist=c("ggsave"),
+                envir=environment())
+  nullobj<-pblapply(list_plot,plot_ca_fc_heatmap_core,cl=clust)
+  stopCluster(clust)
 }
 
 
@@ -131,7 +212,7 @@ plot_ca_fc_circular<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,l
   clusterExport(clust,
                 varlist=c("ggsave","guide_edge_colourbar"),
                 envir=environment())
-  list_dst_gamm<-pblapply(list_plot,plot_ca_fc_circular_core,cl=clust)
+  nullobj<-pblapply(list_plot,plot_ca_fc_circular_core,cl=clust)
   stopCluster(clust)
 }
 
@@ -428,7 +509,7 @@ plot_cor_heatmap<-function(input,label=NULL){
          + scale_fill_gradientn(colors = matlab.like2(100),name="r",limits=c(-1,1))
          + scale_y_discrete(limits = rev(rownames(input)))
          + scale_x_discrete(limits = colnames(input), position="top")
-         + theme_light()
+         + theme_linedraw()
          + theme(axis.text.x = element_text(size=29/log(ncol(input),2),angle = 90,vjust=0,hjust=0),
                  axis.text.y = element_text(size=29/log(ncol(input),2)),
                  #axis.title=element_blank(),

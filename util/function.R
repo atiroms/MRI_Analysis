@@ -17,10 +17,11 @@ library(ica)
 library(parallel)
 #library(DescTools)
 library(pbapply)
+library(ggpubr)
 
 
 #**************************************************
-# Fisher transofrmation of Correlation to Z =======
+# Fisher transformation of Correlation to Z =======
 #**************************************************
 func_fisherz<-function(rho){
   return((log((1+rho)/(1-rho)))/2)

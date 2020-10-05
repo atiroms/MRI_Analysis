@@ -40,7 +40,7 @@ ratio_vis<-0.01
 #              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
 list_atlas<-"aal116"
-#list_atlas<-"schaefer400x7"
+#list_atlas<-"schaefer400x17"
 
 list_type_p=c("p","p_bh","seed_p_bh")
 thr_p <- 0.05
@@ -274,35 +274,41 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         print(paste("MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
         df_pca_mri<-read.csv(file.path(paths_$output,"output",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")))
+        df_pca_mri_grp<-read.csv(file.path(paths_$output,"output",
+                                           paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep="")))
         df_ica_mri<-read.csv(file.path(paths_$output,"output",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")))
+        df_ica_mri_grp<-read.csv(file.path(paths_$output,"output",
+                                       paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep="")))
         
         # Visual output of PCA/ICA factors
         for (label_sex in names(list_sex_)){
           # PCA
           dim_ca<-max(list_dim_ca_)
           df_pca_mri_subset<-df_pca_mri[df_pca_mri$sex==label_sex & df_pca_mri$dim==dim_ca,]
-          df_pca_mri_subset$sex<-df_pca_mri_subset$dim<-NULL
+          df_pca_mri_grp_subset<-df_pca_mri_grp[df_pca_mri_grp$sex==label_sex & df_pca_mri_grp$dim==dim_ca,]
+          df_pca_mri_subset$sex<-df_pca_mri_subset$dim<-df_pca_mri_grp_subset$sex<-df_pca_mri_grp_subset$dim<-NULL
           
           # Visualize factor-FC matrix in circular plot
           #plot_ca_fc_circular(paths_=paths_,df_pca_mri_subset,atlas=atlas,dim_ca=dim_ca,
           #           ratio_vis=ratio_vis,method="pca",label_sex=label_sex,ses=wave_mri)
           
           # Visualize factor-FC matrix in heatmap plot
-          plot_ca_fc_heatmap(paths_=paths_,df_pca_mri_subset,atlas=atlas,dim_ca=dim_ca,
+          plot_ca_fc_heatmap(paths_=paths_,df_pca_mri_subset,df_pca_mri_grp_subset,atlas=atlas,dim_ca=dim_ca,
                              method="pca",label_sex=label_sex,ses=wave_mri)
           
           # ICA
           for (dim_ca in list_dim_ca_){
             df_ica_mri_subset<-df_ica_mri[df_ica_mri$sex==label_sex & df_ica_mri$dim==dim_ca,]
-            df_ica_mri_subset$sex<-df_ica_mri_subset$dim<-NULL
+            df_ica_mri_grp_subset<-df_ica_mri_grp[df_ica_mri_grp$sex==label_sex & df_ica_mri_grp$dim==dim_ca,]
+            df_ica_mri_subset$sex<-df_ica_mri_subset$dim<-df_ica_mri_grp_subset$sex<-df_ica_mri_grp_subset$dim<-NULL
             
             # Visualize factor-FC matrix in circular plot
             #plot_ca_fc_circular(paths_=paths_,df_ica_mri_subset,atlas=atlas,dim_ca=dim_ca,
             #           ratio_vis=ratio_vis,method="ica",label_sex=label_sex,ses=wave_mri)
             
             # Visualize factor-FC matrix in heatmap plot
-            plot_ca_fc_heatmap(paths_=paths_,df_ica_mri_subset,atlas=atlas,dim_ca=dim_ca,
+            plot_ca_fc_heatmap(paths_=paths_,df_ica_mri_subset,df_ica_mri_grp_subset,atlas=atlas,dim_ca=dim_ca,
                                method="ica",label_sex=label_sex,ses=wave_mri)
           }
         }
