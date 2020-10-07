@@ -25,49 +25,76 @@ dict_roi<-func_dict_roi(paths_)
 dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
 list_group<-unique(dict_roi$group_3)
 
-waves<-names(list_waves_)[1]
-wave_mri<-list_waves_[[waves]]$wave_mri
 
 
-df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output",
-                                          paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
-df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output",
-                                          paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
-
-
-
-
-#df_pca_mri_grp<-df_ica_mri_grp<-NULL
-
-####
-df_ca_mri<-df_pca_mri
-dim<-40
-####
-
-df_ca_mri<-inner_join(df_ca_mri,dict_roi[,c("id","group_3")],by=c("from"="id"))
-colnames(df_ca_mri)[colnames(df_ca_mri)=="group_3"]<-"from_group"
-df_ca_mri<-inner_join(df_ca_mri,dict_roi[,c("id","group_3")],by=c("to"="id"))
-colnames(df_ca_mri)[colnames(df_ca_mri)=="group_3"]<-"to_group"
-
-df_ca_mri_grp<-NULL
-for (label_sex in names(list_sex_)){
-  for (idx_grp1 in seq(length(list_group))){
-    for (idx_grp2 in seq(idx_grp1,length(list_group))){
-      df_ca_mri_subset<-rbind(df_ca_mri[df_ca_mri$sex==label_sex
-                                        & df_ca_mri$from_group==list_group[idx_grp1]
-                                        & df_ca_mri$to_group==list_group[idx_grp2],],
-                              df_ca_mri[df_ca_mri$sex==label_sex
-                                        & df_ca_mri$from_group==list_group[idx_grp2]
-                                        & df_ca_mri$to_group==list_group[idx_grp1],])
-      df_ca_mri_subset<-df_ca_mri_subset[,sprintf("comp_%03d",seq(dim))]
-      df_ca_mri_grp<-rbind(df_ca_mri_grp,
-                           cbind(sex=label_sex,abs=F,from=list_group[idx_grp1],to=list_group[idx_grp2],
-                                 t(colMeans(df_ca_mri_subset))))
-      df_ca_mri_subset_abs<-abs(df_ca_mri_subset)
-      df_ca_mri_grp<-rbind(df_ca_mri_grp,
-                           cbind(sex=label_sex,abs=T,from=list_group[idx_grp1],to=list_group[idx_grp2],
-                                 t(colMeans(df_ca_mri_subset_abs))))
-      
-    }
-  }
-}
+# Calculate factor attibution-clinical relation
+for (waves in names(list_waves_)){
+  wave_clin<-list_waves_[[waves]]$wave_clin
+  wave_mri<-list_waves_[[waves]]$wave_mri
+  
+  print(paste("Clinical wave: ",wave_clin,", MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
+  
+  df_pca_subj<-read.csv(file.path(paths_$output,"output",
+                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")))
+  df_ica_subj<-read.csv(file.path(paths_$output,"output",
+                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")))
+  
+  # Calculate factor-clinical correlation
+  subset_subj_temp<-list(subset_subj_[[as.character(wave_mri)]])
+  names(subset_subj_temp)<-wave_clin
+  #1 Tanner stage
+  for (idx_tanner in names(list_tanner_)){
+    print(paste("Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
+    list_covar<-list_covar_tanner_
+    list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
+    n_covar<-length(list_covar)
+    suffix<-paste("ses-",waves,"_var-",idx_tanner,sep="")
+    
+    data_clin<-func_clinical_data_long(paths_,wave_clin,subset_subj_temp,list_covar,
+                                       rem_na_clin=T,prefix=suffix,print_terminal=F)
+    df_clin<-data_clin$df_clin
+    df_clin$wave<-NULL
+    
+    # Calculate correlation between component attribution and clinical covariate
+    data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,
+                            n_covar=n_covar,list_sex=list_sex_,method="pca",
+                            wave_mri=wave_mri,wave_clin=wave_clin,
+                            idx_var=idx_tanner,label_var=list_tanner_[[idx_tanner]]$label)
+    df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_tanner,
+                               method="pca",data_cor$df_cor_flat))
+    data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,
+                            n_covar=n_covar,list_sex=list_sex_,method="ica",
+                            wave_mri=wave_mri,wave_clin=wave_clin,
+                            idx_var=idx_tanner,label_var=list_tanner_[[idx_tanner]]$label)
+    df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_tanner,
+                               method="ica",data_cor$df_cor_flat))
+  } # End for Tanner stages
+  
+  #2 Hormones
+  for (idx_hormone in names(list_hormone_)){
+    print(paste("Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
+    list_covar<-list_covar_hormone_
+    list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
+    n_covar<-length(list_covar)
+    suffix<-paste("ses-",waves,"_var-",idx_hormone,sep="")
+    
+    data_clin<-func_clinical_data_long(paths_,wave_clin,subset_subj_temp,list_covar,
+                                       rem_na_clin=T,prefix=suffix,print_terminal=F)
+    df_clin<-data_clin$df_clin
+    df_clin$wave<-NULL
+    
+    # Calculate correlation between component attribution and clinical covariate
+    data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,
+                            n_covar=n_covar,list_sex=list_sex_,method="pca",
+                            wave_mri=wave_mri,wave_clin=wave_clin,
+                            idx_var=idx_hormone,label_var=list_hormone_[[idx_hormone]]$label)
+    df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_hormone,
+                               method="pca",data_cor$df_cor_flat))
+    data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,
+                            n_covar=n_covar,list_sex=list_sex_,method="ica",
+                            wave_mri=wave_mri,wave_clin=wave_clin,
+                            idx_var=idx_hormone,label_var=list_hormone_[[idx_hormone]]$label)
+    df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_hormone,
+                               method="ica",data_cor$df_cor_flat))
+  } # End for hormones
+} # End for waves

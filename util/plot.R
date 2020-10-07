@@ -13,6 +13,7 @@ library(ggraph)
 library(igraph)
 library(colorRamps)
 library(purrr)
+library(viridis)
 
 
 #**************************************************
@@ -78,8 +79,8 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
            + theme(
                    #axis.text.x = element_text(size=29/log(length(list_roi_axis),2),angle = 90,vjust=0,hjust=0),
                    #axis.text.y = element_text(size=29/log(length(list_roi_axis),2)),
-                   axis.text.x = element_text(size=3,angle = 90,vjust=0,hjust=0),
-                   axis.text.y = element_text(size=3),
+                   axis.text.x = element_text(size=1.5,angle = 90,vjust=0,hjust=0),
+                   axis.text.y = element_text(size=1.5),
                    panel.grid.major=element_blank(),
                    panel.grid.minor = element_blank(),
                    panel.border = element_blank(),
@@ -106,7 +107,7 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
       
       plot<-(ggplot(df_edge, aes(column, row))
              + geom_tile(aes(fill = r))
-             + scale_fill_gradientn(colors = matlab.like2(100),name="mean z",limits=limits)
+             #+ scale_fill_gradientn(colors = matlab.like2(100),name="mean z",limits=limits)
              + scale_y_discrete(limits = rev(list_group))
              + scale_x_discrete(limits = list_group, position="top")
              #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
@@ -131,6 +132,13 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
                      axis.ticks=element_blank()
                      )
             )
+      if (abs_mean){
+        plot<-(plot
+               + scale_fill_gradientn(colors=viridis(100),name="mean(abs(z))"))
+      }else{
+        plot<-(plot
+               + scale_fill_gradientn(colors = matlab.like2(100),name="mean(z)",limits=limits))
+      }
       list_subplot<-c(list_subplot,list(plot))
     }
     arranged_plot<-ggarrange(list_subplot[[1]],
@@ -138,8 +146,7 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
                                        ncol=2,
                                        labels=c("Group(signed)","Group(absolute)"),
                                        label.x=-0.05,
-                                       font.label = list(size = 10,face="plain"),
-                                       common.legend = TRUE, legend = "right"),
+                                       font.label = list(size = 10,face="plain")),
                              nrow=2,heights=c(2,1),
                              labels="ROI",
                              font.label = list(size = 10,face="plain"))

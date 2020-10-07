@@ -35,11 +35,11 @@ ratio_vis<-0.01
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-#list_atlas<-c("aal116","gordon333","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
+list_atlas<-c("aal116","gordon333","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
-list_atlas<-"aal116"
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400x17"
 
 list_type_p=c("p","p_bh","seed_p_bh")
@@ -99,29 +99,58 @@ group_factor<-function(df_ca_mri,dim,dict_roi,list_group,list_sex){
   return(df_ca_mri_grp)
 }
 
-comp_clin_cor<-function(df_comp_subj,df_clin,n_covar,list_sex){
+comp_clin_cor<-function(df_comp_subj,df_clin,n_covar,list_sex,atlas,method,
+                        wave_mri,wave_clin,idx_var,label_var){
   list_dim<-sort(unique(df_comp_subj$dim))
   df_cor_rbind<-df_cor_flat_rbind<-NULL
-  for (dim in list_dim){
+  for (dim_ca in list_dim){
     for (label_sex in names(list_sex)){
-      df_comp_subj_subset<-df_comp_subj[df_comp_subj$dim==dim & df_comp_subj$sex==label_sex,
-                                        c("ID_pnTTC",sprintf("comp_%03d",1:dim))]
+      df_comp_subj_subset<-df_comp_subj[df_comp_subj$dim==dim_ca & df_comp_subj$sex==label_sex,
+                                        c("ID_pnTTC",sprintf("comp_%03d",1:dim_ca))]
       df_join<-inner_join(df_clin,df_comp_subj_subset,by="ID_pnTTC")
       df_join$ID_pnTTC<-NULL
       data_cor<-func_cor(df_join)
+      
+      # Pick up correlation between covariates and factors
       df_cor<-data_cor$cor
       df_cor<-df_cor[(n_covar+1):nrow(df_cor),1:n_covar]
       df_cor<-rownames_to_column(df_cor,"comp")
       df_cor$comp<-sapply(sapply(df_cor$comp,substr,start=6,stop=8),as.integer)
-      df_cor<-cbind(dim=dim,df_cor)
       df_cor_flat<-data_cor$cor_flat
       df_cor_flat<-df_cor_flat[df_cor_flat$from %in% colnames(df_clin) & df_cor_flat$to %in% colnames(df_comp_subj_subset),]
       df_cor_flat<-df_cor_flat[,c("from","to","r","p")]
       colnames(df_cor_flat)<-c("covar","comp","r","p")
       df_cor_flat$comp<-sapply(sapply(df_cor_flat$comp,substr,start=6,stop=8),as.integer)
-      df_cor_flat<-cbind(dim=dim,df_cor_flat)
-      df_cor_rbind<-rbind(df_cor_rbind,cbind(sex=label_sex,df_cor))
-      df_cor_flat_rbind<-rbind(df_cor_flat_rbind,cbind(sex=label_sex,df_cor_flat))
+      rownames(df_cor)<-rownames(df_cor_flat)<-NULL
+      
+      # rbind data
+      df_cor_rbind<-rbind(df_cor_rbind,cbind(sex=label_sex,dim=dim_ca,df_cor))
+      df_cor_flat_rbind<-rbind(df_cor_flat_rbind,cbind(sex=label_sex,dim=dim_ca,df_cor_flat))
+      
+      # Visualize result
+      df_plot<-df_cor_flat
+      #df_plot$r<-abs(as.numeric(df_plot$r))
+      df_plot$r<-as.numeric(df_plot$r)
+      df_plot<-df_plot[df_plot$covar!="sex",]
+      df_plot$covar<-str_to_title(df_plot$covar)
+      
+      plot<-(ggplot(data=df_plot,aes(x=comp,y=r,fill=covar))
+             + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+             + scale_fill_brewer(palette="Accent")
+             + scale_x_continuous(breaks=seq(dim_ca),limits=c(0.5,max(list_dim)+0.5),expand=c(0.003,0.003))
+             + scale_y_continuous(breaks=seq(-0.5,0.5,0.1),limits=c(-0.5,0.5))
+             + ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Variable: ",label_var,
+                             ", Clinical: ",wave_clin, ",MRI: ",wave_mri,
+                             ", Dimension: ",as.character(dim_ca),
+                             ", Sex: ",label_sex,sep=""))
+             + xlab("Factor") + ylab("z(r)") + theme_classic()
+             + theme(plot.title = element_text(hjust = 0.5),
+                     legend.position="top",legend.justification="center",legend.direction="horizontal",legend.title=element_blank())
+      )
+      name_file<-paste("atl-",atlas,"_method-",method,"_var-",idx_var,"_ses-c",wave_clin,"m",wave_mri,
+                       "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
+                       "_fc_ca_cor.png",sep="")
+      ggsave(name_file,plot,path=file.path(paths$output,"output","plot"),height=5,width=10,dpi=200)
     }
   }
   return(list("df_cor"=df_cor_rbind,"df_cor_flat"=df_cor_flat_rbind))
@@ -231,7 +260,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         write.csv(df_ica_vaf,file.path(paths_$output,"output",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
       } # end if not PCA/ICA factors are already calculated
-    } # end for over waves
+    } # end for waves
     
     # Group-wise average of factor-MRI matrix
     print(paste("Calculating group-wise contribution to factors, atlas:",atlas,sep=" "))
@@ -321,12 +350,9 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
       wave_mri<-list_waves_[[waves]]$wave_mri
       
       print(paste("Clinical wave: ",wave_clin,", MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
-      df_pca_mri<-read.csv(file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")))
+
       df_pca_subj<-read.csv(file.path(paths_$output,"output",
                                      paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")))
-      df_ica_mri<-read.csv(file.path(paths_$output,"output",
-                                     paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")))
       df_ica_subj<-read.csv(file.path(paths_$output,"output",
                                      paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")))
       
@@ -348,11 +374,15 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         
         # Calculate correlation between component attribution and clinical covariate
         data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,
-                                n_covar=n_covar,list_sex=list_sex_)
+                                n_covar=n_covar,list_sex=list_sex_,atlas=atlas,method="pca",
+                                wave_mri=wave_mri,wave_clin=wave_clin,
+                                idx_var=idx_tanner,label_var=list_tanner_[[idx_tanner]]$label)
         df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_tanner,
                                    method="pca",data_cor$df_cor_flat))
         data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,
-                                n_covar=n_covar,list_sex=list_sex_)
+                                n_covar=n_covar,list_sex=list_sex_,atlas=atlas,method="ica",
+                                wave_mri=wave_mri,wave_clin=wave_clin,
+                                idx_var=idx_tanner,label_var=list_tanner_[[idx_tanner]]$label)
         df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_tanner,
                                    method="ica",data_cor$df_cor_flat))
       } # End for Tanner stages
@@ -372,11 +402,15 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         
         # Calculate correlation between component attribution and clinical covariate
         data_cor<-comp_clin_cor(df_comp_subj=df_pca_subj,df_clin=df_clin,
-                                n_covar=n_covar,list_sex=list_sex_)
+                                n_covar=n_covar,list_sex=list_sex_,atlas=atlas,method="pca",
+                                wave_mri=wave_mri,wave_clin=wave_clin,
+                                idx_var=idx_hormone,label_var=list_hormone_[[idx_hormone]]$label)
         df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_hormone,
                                    method="pca",data_cor$df_cor_flat))
         data_cor<-comp_clin_cor(df_comp_subj=df_ica_subj,df_clin=df_clin,
-                                n_covar=n_covar,list_sex=list_sex_)
+                                n_covar=n_covar,list_sex=list_sex_,atlas=atlas,method="ica",
+                                wave_mri=wave_mri,wave_clin=wave_clin,
+                                idx_var=idx_hormone,label_var=list_hormone_[[idx_hormone]]$label)
         df_cor<-rbind(df_cor,cbind(atlas=atlas,ses=waves,variable=idx_hormone,
                                    method="ica",data_cor$df_cor_flat))
       } # End for hormones
