@@ -22,8 +22,8 @@ path_exp_full<-NULL
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"433_fc_gam_aroma_gsr"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_ca_aroma"
+dir_in<-"401_fc_acompcor"
+dir_out<-"405_fc_ca_acompcor"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
