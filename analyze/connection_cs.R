@@ -256,7 +256,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         write.csv(df_pca_vaf,file.path(paths_$output,"output",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep="")),row.names=F)
         write.csv(df_ica_mri,file.path(paths_$output,"output",
-                                       paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")),row.names=F)
+                                       paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_mri.csv",sep="")),row.names=F)
         write.csv(df_ica_subj,file.path(paths_$output,"output",
                                         paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")),row.names=F)
         write.csv(df_ica_vaf,file.path(paths_$output,"output",
