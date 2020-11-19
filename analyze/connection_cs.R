@@ -19,30 +19,31 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"431_fc_aroma_gsr"
-#dir_out<-"433_fc_gam_aroma_gsr"
+dir_in<-"401_fc_acompcor"
+dir_out<-"403_fc_gam_acompcor"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"435_fc_ca_aroma_gsr"
+#dir_in<-"431_fc_aroma_gsr"
+#dir_out<-"435_fc_ca_aroma_gsr"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
 #list_dim_ca<-c(5,10)
 #list_dim_ca<-10
-ratio_vis<-0.01
+#ratio_vis<-0.01
 
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-c("aal116","gordon333","power264",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
+#list_atlas<-c("aal116","gordon333","power264",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
-#list_atlas<-"aal116"
+list_atlas<-"aal116"
 #list_atlas<-"schaefer400x17"
 
-list_type_p=c("p","p_bh","seed_p_bh")
+#list_type_p=c("p","p_bh","seed_p_bh")
+list_type_p=c("p_bh")
 thr_p <- 0.05
 
 
@@ -723,7 +724,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     list_roi<-sort(unique(c(as.character(df_join$from),as.character(df_join$to))))
     df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
     colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
-    data_gamm<-iterate_gamm(df_join,df_roi,list_mod_)
+    data_gamm<-iterate_gamm(df_join,df_roi,list_mod_,calc_parallel=T)
     write.csv(data_gamm$df_out_gamm,
               file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam.csv",sep="")),row.names = F)
     write.csv(data_gamm$df_out_aic,
@@ -733,6 +734,27 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod_,list_plot_,calc_seed_level=T)
     write.csv(df_plot_gamm,
               file.path(paths_$output,"output",paste("atl-",atlas,"_",suffix_,"_gam_plt.csv",sep="")),row.names = F)
+    
+    # Calculate group-wise average of FC
+    df_fc<-left_join(df_fc,df_roi,by=c("from"="id"))
+    colnames(df_fc)[colnames(df_fc)=="group"]<-"from_grp"
+    df_fc<-left_join(df_fc,df_roi,by=c("to"="id"))
+    colnames(df_fc)[colnames(df_fc)=="group"]<-"to_grp"
+    list_group<-unique(df_roi$group)
+    df_fc_grp<-data.frame()
+    for (idx_grp1 in seq(length(list_group))){
+      for (idx_grp2 in seq(idx_grp1,length(list_group))){
+        label_grp1<-list_group[idx_grp1]
+        label_grp2<-list_group[idx_grp2]
+        df_fc_subset<-df_fc[df_fc$from_grp==label_grp1 && df_fc$to_grp==label_grp2]
+        mean_z_r<-mean(df_fc_subset$z_r)
+        mean_abs_z_r<-mean(abs(df_fc_subset$z_r))
+        df_fc_grp<-rbind(df_fc_grp,data.frame("from_group"=label_grp1,"to_group"=label_grp2,
+                                              "mean_z_r"=mean_z_r,"mean_abs_z_r"=mean_abs_z_r))
+      }
+    }
+    
+    # Calculate and save group-wise GAMM of FC
     
     # Graphical output of ROI-wise GAMM of FC
     plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod_,list_plot_,
