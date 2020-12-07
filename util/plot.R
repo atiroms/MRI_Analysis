@@ -113,7 +113,6 @@ plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,
               list_subplot<-c(list_subplot,list(plot))
               
               # group-group heatmap
-              df_is_sign<-T
               for (df_gam_grp_subset in list(df_gam_grp_sign_subset,df_gam_grp_abs_subset)){
                 df_edge<-df_gam_grp_subset
                 limits<-max(max(df_edge$weight),-min(df_edge$weight))
@@ -129,6 +128,8 @@ plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,
                 
                 plot<-(ggplot(df_edge, aes(column, row))
                        + geom_tile(aes(fill = r))
+                       + scale_fill_gradientn(colors = matlab.like2(100),
+                                              name=label_legend,limits=limits)
                        + scale_y_discrete(limits = rev(list_label_group))
                        + scale_x_discrete(limits = list_label_group, position="top")
                        + theme_linedraw()
@@ -145,17 +146,6 @@ plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,
                          axis.ticks=element_blank()
                        )
                 )
-                
-                if (df_is_sign){
-                  plot<-(plot
-                         + scale_fill_gradientn(colors = matlab.like2(100),
-                                                name=paste("mean(",label_legend,")",sep=""),limits=limits))
-                }else{
-                  plot<-(plot
-                         + scale_fill_gradientn(colors = matlab.like2(100),
-                                                name=paste("mean(abs(",label_legend,"))",sep=""),limits=limits))
-                }
-                df_is_sign<-F
                 list_subplot<-c(list_subplot,list(plot))
               }
               arranged_plot<-ggarrange(list_subplot[[1]],

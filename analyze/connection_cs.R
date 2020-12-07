@@ -19,8 +19,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-"403_fc_gam_acompcor"
+dir_in<-"411_fc_acompcor_gsr"
+dir_out<-"413_fc_gam_acompcor_gsr"
 
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"435_fc_ca_aroma_gsr"
@@ -35,15 +35,15 @@ list_dim_ca<-c(10,20,40)
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-#list_atlas<-c("aal116","gordon333","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
+list_atlas<-c("aal116","gordon333","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 #list_atlas<-c("aal116","power264","shen268")
-list_atlas<-"aal116"
+#list_atlas<-"aal116"
 #list_atlas<-"schaefer400x17"
 
 #list_type_p=c("p","p_bh","seed_p_bh")
-list_type_p=c("p_bh") # Benjamini-Hochberg method
+list_type_p=c("p_bh") # Benjamini-Hochberg method of FDR
 thr_p <- 0.05
 
 
