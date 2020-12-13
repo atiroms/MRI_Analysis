@@ -131,18 +131,28 @@ combine_gamm<-function(list_dst_sub){
   return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic))
 }
 
-iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T){
+iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F){
   list_roi<-df_roi$id
   list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
   
   if (calc_parallel){
     # Prepare dataset for multi-core processing
-    print("Preparing dataset for parallel processing.")
+    #print("Preparing dataset for parallel processing.")
     list_src_gamm<-list()
-    for (id_from in list_roi[-length(list_roi)]){
+    if (calc_identical){
+      list_id_from<-list_roi
+    }else{
+      list_id_from<-list_roi[-length(list_roi)]
+    }
+    for (id_from in list_id_from){
       df_join_from<-df_join[df_join$from==id_from,]
       label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-      for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+      if (calc_identical){
+        list_id_to<-list_roi[seq(which(list_roi==id_from),length(list_roi))]
+      }else{
+        list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
+      }
+      for(id_to in list_id_to){
         label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
         df_src<-df_join_from[df_join_from$to==id_to,]
         list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
@@ -155,7 +165,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T){
     n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
     #n_cluster<-min(floor(detectCores()*1/8),length(list_src_gamm))
     clust<-makeCluster(n_cluster)
-    print(paste("Parallel processing,",as.character(n_cluster),"cores.",sep=" "))
+    #print(paste("Calculating GAM in parallel,",as.character(n_cluster),"cores.",sep=" "))
     clusterExport(clust,
                   varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
                             "as.numeric.factor"),
@@ -165,10 +175,20 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T){
     stopCluster(clust)
   }else{
     list_dst_gamm<-list()
-    for (id_from in list_roi[-length(list_roi)]){
+    if (calc_identical){
+      list_id_from<-list_roi
+    }else{
+      list_id_from<-list_roi[-length(list_roi)]
+    }
+    for (id_from in list_id_from){
       df_join_from<-df_join[df_join$from==id_from,]
       label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-      for(id_to in list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]){
+      if (calc_identical){
+        list_id_to<-list_roi[seq(which(list_roi==id_from),length(list_roi))]
+      }else{
+        list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
+      }
+      for(id_to in list_id_to){
         label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
         #print(paste("Calculating",label_from,"and",label_to,sep=" "))
         df_src<-df_join_from[df_join_from$to==id_to,]
@@ -180,11 +200,12 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T){
     }
   }
   
+  #print("Combining GAM results.")
   # Collect data into dataframes
   len_list<-length(list_dst_gamm)
   len_sublist<-floor(sqrt(len_list)*2)
   n_sublist<-ceil(len_list/len_sublist)
-  print(paste("Dividing results into", as.character(n_sublist), "sublists.",sep=" "))
+  #print(paste("Dividing results into", as.character(n_sublist), "sublists.",sep=" "))
   list_dst_gamm_sub<-list()
   for (idx_sublist in 1:n_sublist){
     #print(paste("Subgroup",as.character(idx_sublist),sep=" "))
@@ -201,14 +222,14 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T){
   
   n_cluster<-floor(detectCores()*3/4)
   clust<-makeCluster(n_cluster)
-  print(paste("Combining within sublists,",as.character(n_cluster),"cores.",sep=" "))
+  #print(paste("Combining within sublists,",as.character(n_cluster),"cores.",sep=" "))
   clusterExport(clust,
                 varlist=NULL,
                 envir=environment())
   list_dst_gamm<-parLapply(clust,list_dst_gamm_sub,combine_gamm)
   stopCluster(clust)
   
-  print("Combining sublists.")
+  #print("Combining sublists.")
   df_out_gamm<-df_out_aic<-NULL
   for (dst_gamm in list_dst_gamm){
     df_out_gamm<-rbind(df_out_gamm,dst_gamm$df_out_gamm_add)
@@ -296,6 +317,15 @@ iterate_gamm_old<-function(df_join,df_roi,list_mod_){
 #**************************************************
 # Add multiple comparison-corrected p values ======
 #**************************************************
+mltcomp_corr<-function(input){
+  output<-data.frame("p_bonf"=p.adjust(input$p,method = "bonferroni"),
+                     "p_holm"=p.adjust(input$p,method = "holm"),
+                     "p_hoch"=p.adjust(input$p,method = "hochberg"),
+                     "p_homm"=p.adjust(input$p,method = "hommel"),
+                     "p_bh"=p.adjust(input$p,method="BH"),
+                     "p_by"=p.adjust(input$p,method="BY"))
+  return(output)
+}
 
 add_mltcmp<-function(df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE){
   df_plot_gamm_concat<-NULL
@@ -362,7 +392,9 @@ as.numeric.factor <- function(x) {
 func_createdirs<-function(paths,str_proc="",copy_log=T){
   list_createdirs<-c(paths$output,
                      file.path(paths$output,"output"),
-                     file.path(paths$output,"output","plot"))
+                     file.path(paths$output,"output","plot"),
+                     file.path(paths$output,"output","temp"),
+                     file.path(paths$output,"output","result"))
   for(d in list_createdirs){
     if (file.exists(d)){
       print(paste("Destination folder already exists:",d,sep=" "))
@@ -543,7 +575,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
   rownames(df_clin_exist)<-NULL
   
-  writeLines(list_log, file.path(paths$output,"output",paste(prefix,"clin_long.txt",sep="_")))
+  writeLines(list_log, file.path(paths$output,"output","temp",paste(prefix,"clin_long.txt",sep="_")))
   
   output<-list('df_clin'=df_clin_exist,'list_id_subset'=list_id_subset,'list_id_exist'=list_id_exist)
   return(output)
@@ -835,19 +867,4 @@ func_ica<-function(df_src,df_var=NULL,df_indiv=NULL,dim_ca=NULL,calc_corr){
   return(list('df_comp_mri'=df_comp_mri,'df_comp_subj'=df_comp_subj,
               'df_vaf'=df_vaf,'dim'=ncp_calc,
               'df_comp_clin'=df_cor,'df_comp_clin_flat'=df_cor_flat))
-}
-
-
-#**************************************************
-# Multiple comparison correction of p values ======
-#**************************************************
-
-mltcomp_corr<-function(input){
-  output<-data.frame("p_bonf"=p.adjust(input$p,method = "bonferroni"),
-                     "p_holm"=p.adjust(input$p,method = "holm"),
-                     "p_hoch"=p.adjust(input$p,method = "hochberg"),
-                     "p_homm"=p.adjust(input$p,method = "hommel"),
-                     "p_bh"=p.adjust(input$p,method="BH"),
-                     "p_by"=p.adjust(input$p,method="BY"))
-  return(output)
 }
