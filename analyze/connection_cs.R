@@ -19,8 +19,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-"403_fc_gam_acompcor"
+dir_in<-"421_fc_acompcor"
+dir_out<-"423_fc_gam_acompcor"
 
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"435_fc_ca_aroma_gsr"
@@ -194,6 +194,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         for (label_sex in names(list_sex_)){
           
           # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified mri wave
+          # Existence of clinical variables are not considered here
           subset_subj_temp<-list(c(subset_subj_[[as.character(wave_mri)]],
                                    list(list("key"="Sex","condition"=list_sex_[[label_sex]]))))
           names(subset_subj_temp)<-wave_mri
@@ -212,7 +213,7 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
           list_subj_qc<-unique(df_clin[df_clin$ses==wave_mri,]$ID_pnTTC)
           list_subj_calc<-intersect(list_subj_mri,list_subj_qc)
           
-          # Cbind FC data (Fisher-z transform of FC) as input for PCA function
+          # Cbind FC data (Fisher-z transform of FC) as input for PCA/ICA calculation
           df_conn_calc<-data.frame(matrix(nrow=n_edge,ncol=0))
           df_clin_exist<-data.frame(matrix(nrow=0,ncol=ncol(df_clin)))
           colnames(df_clin_exist)<-colnames(df_clin)
@@ -672,7 +673,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
   } # finished looping over waves
   
   print("Combining results.")
-  df_gam<-df_gam_grp_sign<-df_gam_grp_abs<-data.frame()
+  df_gam<-df_gam_grp_sign<-df_gam_grp_abs<-df_gam_aic<-df_gam_grp_sign_aic<-df_gam_grp_abs_aic<-data.frame()
   for (label_waves in names(list_waves_)){
     for (idx_var in c(names(list_tanner_),names(list_hormone_))){
       for (atlas in list_atlas_){
@@ -680,16 +681,26 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
         df_prefix<-data.frame("atlas"=atlas,"ses"=label_waves,"idx_var"=idx_var)
         df_gam<-rbind(df_gam,cbind(df_prefix,
                                    as.data.frame(fread(file.path(paths_$output,'output','temp',paste(prefix,'_gam.csv',sep=''))))))
+        df_gam_aic<-rbind(df_gam_aic,cbind(df_prefix,
+                                   as.data.frame(fread(file.path(paths_$output,'output','temp',paste(prefix,'_gam_aic.csv',sep=''))))))
         df_gam_grp_sign<-rbind(df_gam_grp_sign,cbind(df_prefix,
                                                      as.data.frame(fread(file.path(paths_$output,'output','temp',paste(prefix,'_gam_grp_sign.csv',sep=''))))))
         df_gam_grp_abs<-rbind(df_gam_grp_abs,cbind(df_prefix,
                                                    as.data.frame(fread(file.path(paths_$output,'output','temp',paste(prefix,'_gam_grp_abs.csv',sep=''))))))
+        df_gam_grp_sign_aic<-rbind(df_gam_grp_sign_aic,cbind(df_prefix,
+                                                     as.data.frame(fread(file.path(paths_$output,'output','temp',paste(prefix,'_gam_grp_sign_aic.csv',sep=''))))))
+        df_gam_grp_abs_aic<-rbind(df_gam_grp_abs_aic,cbind(df_prefix,
+                                                   as.data.frame(fread(file.path(paths_$output,'output','temp',paste(prefix,'_gam_grp_abs_aic.csv',sep=''))))))
+        
       }
     }
   }
   write.csv(df_gam,file.path(paths_$output,"output","result","gam.csv"),row.names = F)
+  write.csv(df_gam_aic,file.path(paths_$output,"output","result","gam_aic.csv"),row.names = F)
   write.csv(df_gam_grp_sign,file.path(paths_$output,"output","result","gam_grp_sign.csv"),row.names = F)
   write.csv(df_gam_grp_abs,file.path(paths_$output,"output","result","gam_grp_abs.csv"),row.names = F)
+  write.csv(df_gam_grp_sign_aic,file.path(paths_$output,"output","result","gam_grp_sign_aic.csv"),row.names = F)
+  write.csv(df_gam_grp_abs_aic,file.path(paths_$output,"output","result","gam_grp_abs_aic.csv"),row.names = F)
   print("Finished gam_fc_cs_multi()")
 }
 
@@ -747,9 +758,6 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     #df_fc<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
     df_fc<-as.data.frame(fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep=''))))
     df_join<-join_fc_clin(df_fc,df_clin,wave_clin,wave_mri)
-    #write.csv(df_join,file.path(paths_$output,"output","temp",
-    #                            paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_src.csv",sep="")),
-    #          row.names=F)
     
     # Calculate and save ROI-wise GAMM of FC
     print(paste('Calculating GAM, atlas: ',atlas,sep=''))
@@ -767,6 +775,10 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
               file.path(paths_$output,"output","temp",
                         paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_aic.csv",sep="")),
               row.names = F)
+    write.csv(df_join,
+              file.path(paths_$output,"output","temp",
+                        paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_src.csv",sep="")),
+              row.names=F)
     
     # Calculate group-wise average of FC
     df_fc<-df_fc[df_fc$ses==wave_mri,]
@@ -814,13 +826,29 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
               file.path(paths_$output,"output","temp",
                         paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_grp_sign.csv",sep="")),
               row.names = F)
+    write.csv(data_gamm_grp_sign$df_out_aic,
+              file.path(paths_$output,"output","temp",
+                        paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_grp_sign_aic.csv",sep="")),
+              row.names = F)
+    write.csv(df_join_sign,
+              file.path(paths_$output,"output","temp",
+                        paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_grp_sign_src.csv",sep="")),
+              row.names = F)
     colnames(df_join_abs)[colnames(df_join_abs)=="mean_abs_z_r"]<-"value"
     df_join_abs$mean_z_r_<-NULL
     data_gamm_grp_abs<-iterate_gamm(df_join_abs,df_grp,list_mod_,calc_parallel=T,calc_identical=T)
     df_gam_grp_abs<-add_mltcmp(data_gamm_grp_abs$df_out_gamm,df_grp,list_mod_,list_plot_,calc_seed_level=F)
-    write.csv(df_gam_grp_sign,
+    write.csv(df_gam_grp_abs,
               file.path(paths_$output,"output","temp",
                         paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_grp_abs.csv",sep="")),
+              row.names = F)
+    write.csv(data_gamm_grp_abs$df_out_aic,
+              file.path(paths_$output,"output","temp",
+                        paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_grp_abs_aic.csv",sep="")),
+              row.names = F)
+    write.csv(df_join_abs,
+              file.path(paths_$output,"output","temp",
+                        paste("atl-",atlas,"_ses-",label_waves,"_var-",idx_var_,"_gam_grp_abs_src.csv",sep="")),
               row.names = F)
     
     # Graphical output of ROI-wise and group-wise GAMM of FC

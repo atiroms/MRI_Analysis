@@ -173,6 +173,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
     #list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
     list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
     stopCluster(clust)
+    
   }else{
     list_dst_gamm<-list()
     if (calc_identical){
@@ -239,7 +240,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
   gc()
   
   rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
-  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic))
+  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic))
 }
 
 
