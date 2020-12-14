@@ -85,9 +85,9 @@ gam_fc_list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosteron
                           "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
                           "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
                           "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
-gam_fc_list_mod_tanner <- list("l"= "value ~ age + tanner")
-#"a"= "value ~ s(age,k=3) + s(tanner,k=3))",
-#"q"="value ~ poly(age,2) + poly(tanner,2)")
+gam_fc_list_mod_tanner <- list("l"= "value ~ age + tanner",
+                               "a"= "value ~ s(age,k=3) + s(tanner,k=3)",
+                               "q"="value ~ poly(age,2) + poly(tanner,2)")
 gam_fc_list_mod_hormone <- list("l"= "value ~ age + hormone")
 gam_fc_list_plot_tanner <-list("t"=list("title"="Tanner effect","var_exp"="tanner"))
 gam_fc_list_plot_hormone <-list("h"=list("title"="Hormone effect","var_exp"="hormone"))

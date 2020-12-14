@@ -19,8 +19,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"411_fc_acompcor_gsr"
-dir_out<-"413_fc_gam_acompcor_gsr"
+dir_in<-"401_fc_acompcor"
+dir_out<-"403_fc_gam_acompcor"
 
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"435_fc_ca_aroma_gsr"
@@ -184,9 +184,9 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
     for (waves in names(list_waves_)){
       wave_mri<-list_waves_[[waves]]$wave_mri
 
-      path_pca_subj<-file.path(paths_$output,"output",
+      path_pca_subj<-file.path(paths_$output,"output","temp",
                                paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep=""))
-      path_ica_subj<-file.path(paths_$output,"output",
+      path_ica_subj<-file.path(paths_$output,"output","temp",
                                paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep=""))
 
       if (!(file.exists(path_pca_subj) & file.exists(path_ica_subj))){
@@ -251,20 +251,21 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
             gc()
           } # end for over ICA dimensions
         } # end for over sex
-        write.csv(df_pca_mri,file.path(paths_$output,"output",
+        write.csv(df_pca_mri,file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")),row.names=F)
-        write.csv(df_pca_subj,file.path(paths_$output,"output",
+        write.csv(df_pca_subj,file.path(paths_$output,"output","temp",
                                         paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")),row.names=F)
-        write.csv(df_pca_vaf,file.path(paths_$output,"output",
+        write.csv(df_pca_vaf,file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep="")),row.names=F)
-        write.csv(df_ica_mri,file.path(paths_$output,"output",
+        write.csv(df_ica_mri,file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")),row.names=F)
-        write.csv(df_ica_subj,file.path(paths_$output,"output",
+        write.csv(df_ica_subj,file.path(paths_$output,"output","temp",
                                         paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")),row.names=F)
-        write.csv(df_ica_vaf,file.path(paths_$output,"output",
+        write.csv(df_ica_vaf,file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep="")),row.names=F)
       } # end if not PCA/ICA factors are already calculated
     } # end for waves
+    # end calculating PCA/ICA factors
     
     # Group-wise average of factor-MRI matrix
     print(paste("Calculating group-wise contribution to factors, atlas:",atlas,sep=" "))
@@ -273,14 +274,14 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
     list_group<-unique(dict_roi$group_3)
     for (waves in names(list_waves_)){
       wave_mri<-list_waves_[[waves]]$wave_mri
-      path_pca_mri_grp<-file.path(paths_$output,"output",
+      path_pca_mri_grp<-file.path(paths_$output,"output","temp",
                                paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep=""))
-      path_ica_mri_grp<-file.path(paths_$output,"output",
+      path_ica_mri_grp<-file.path(paths_$output,"output","temp",
                                paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep=""))
       if (!(file.exists(path_pca_mri_grp) & file.exists(path_ica_mri_grp))){
-        df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
-        df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
         df_pca_mri_grp<-df_ica_mri_grp<-data.frame()
         # PCA
@@ -305,13 +306,13 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
         wave_mri_done<-c(wave_mri_done,wave_mri)
         
         print(paste("MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
-        df_pca_mri<-read.csv(file.path(paths_$output,"output",
+        df_pca_mri<-read.csv(file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")))
-        df_pca_mri_grp<-read.csv(file.path(paths_$output,"output",
+        df_pca_mri_grp<-read.csv(file.path(paths_$output,"output","temp",
                                            paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep="")))
-        df_ica_mri<-read.csv(file.path(paths_$output,"output",
+        df_ica_mri<-read.csv(file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")))
-        df_ica_mri_grp<-read.csv(file.path(paths_$output,"output",
+        df_ica_mri_grp<-read.csv(file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep="")))
         
         # Visual output of PCA/ICA factors
@@ -355,9 +356,9 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
       
       print(paste("Clinical wave: ",wave_clin,", MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
 
-      df_pca_subj<-read.csv(file.path(paths_$output,"output",
+      df_pca_subj<-read.csv(file.path(paths_$output,"output","temp",
                                      paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep="")))
-      df_ica_subj<-read.csv(file.path(paths_$output,"output",
+      df_ica_subj<-read.csv(file.path(paths_$output,"output","temp",
                                      paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep="")))
       
       # Calculate factor-clinical correlation
@@ -427,41 +428,42 @@ ca_fc_cs_multi<-function(paths_=paths,list_waves_=ca_fc_list_waves,subset_subj_=
   for (atlas in list_atlas_){
     wave_mri_done<-NULL
     for (waves in names(list_waves_)){
-      wave_mri<-list_waves_[[waves]]$wave_mr
+      wave_mri<-list_waves_[[waves]]$wave_mri
       if (!(wave_mri %in% wave_mri_done)){
-        df_pca_subj<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_pca_subj<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                         paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_subj.csv",sep=""))))
-        df_ica_subj<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_ica_subj<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                         paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_subj.csv",sep=""))))
         df_ca_subj_bind<-rbind.fill(df_ca_subj_bind,
-                                    cbind(atlas=atlas,method="pca",df_pca_subj),
-                                    cbind(atlas=atlas,method="ica",df_ica_subj))
+                                    cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_subj),
+                                    cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_subj))
         
-        df_pca_var<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_pca_var<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                    paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
-        df_ica_var<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_ica_var<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                    paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
         df_ca_var_bind<-rbind.fill(df_ca_var_bind,
-                                   cbind(atlas=atlas,method="pca",df_pca_var),
-                                   cbind(atlas=atlas,method="ica",df_ica_var))
+                                   cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_var),
+                                   cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_var))
         
-        df_pca_vaf<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_pca_vaf<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_vaf.csv",sep=""))))
-        df_ica_vaf<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_ica_vaf<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_vaf.csv",sep=""))))
         df_ca_vaf_bind<-rbind.fill(df_ca_vaf_bind,
-                                   cbind(atlas=atlas,method="pca",df_pca_vaf),
-                                   cbind(atlas=atlas,method="ica",df_ica_vaf))
+                                   cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_vaf),
+                                   cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_vaf))
         
-        df_pca_var_grp<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_pca_var_grp<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep=""))))
-        df_ica_var_grp<-as.data.frame(fread(file.path(paths_$output,"output",
+        df_ica_var_grp<-as.data.frame(fread(file.path(paths_$output,"output","temp",
                                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep=""))))
         df_ca_var_grp_bind<-rbind.fill(df_ca_var_grp_bind,
-                                   cbind(atlas=atlas,method="pca",df_pca_var_grp),
-                                   cbind(atlas=atlas,method="ica",df_ica_var_grp))
+                                   cbind(atlas=atlas,ses=wave_mri,method="pca",df_pca_var_grp),
+                                   cbind(atlas=atlas,ses=wave_mri,method="ica",df_ica_var_grp))
+        wave_mri_done<-c(wave_mri_done,wave_mri)
       } # End if wave_mri is not in wave_mri_done
-    } # End of loop ove  waves
+    } # End of loop over  waves
   } # End of loop over atlases
   
   # Add ROI label to component-MRI variable matrix
@@ -646,6 +648,8 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
                          list_mod_=list_mod_tanner_,list_plot_=list_plot_tanner_,
                          key_group_='group_3',list_type_p_=list_type_p_,thr_p_=thr_p_,
                          waves_=waves,idx_var_=idx_tanner)
+      nullobj<-NULL
+      gc()
     } # finished looping over Tanner stages
     
     
@@ -661,6 +665,8 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
                          list_mod_=list_mod_hormone_,list_plot_=list_plot_hormone_,
                          key_group_='group_3',list_type_p_=list_type_p_,thr_p_=thr_p_,
                          waves_=waves,idx_var_=idx_hormone)
+      nullobj<-NULL
+      gc()
     } # finished looping over Hormones
     
   } # finished looping over waves
