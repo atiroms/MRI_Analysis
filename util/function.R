@@ -666,8 +666,8 @@ func_subset_str<-function(df_str,
 #**************************************************
 # General correlation calculation =================
 #**************************************************
-func_cor<-function(input){
-  cor <-rcorr(as.matrix(input), type="pearson")
+func_cor<-function(input,type="pearson"){
+  cor <-rcorr(as.matrix(input), type=type)
   n_node<-ncol(input)
   cor_flat<-data.frame(matrix(nrow=n_node*(n_node-1)/2,ncol=4))
   colnames(cor_flat)<-c("from","to","r","p")

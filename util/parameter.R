@@ -20,8 +20,8 @@ ca_fc_subset_subj <- list("1"  =list(list("key"="W1_T1QC","condition"="==1"),
                                      list("key"="W2_rsfMRIexist","condition"="==1"),
                                      list("key"="W2_Censor","condition"="<126")))
 ca_fc_list_sex <- list("male"="==1","female"="==2","all"=" %in% c(1,2)")
-gam_fc_list_wave_mri<-list("m1"="1","m2"="2","m2-1"="2-1")
-gam_fc_list_wave_clin<-list("c1"="1","c2"="2")
+ca_fc_list_wave_mri<-list("m1"="1","m2"="2","m2-1"="2-1")
+ca_fc_list_wave_clin<-list("c1"="1","c2"="2")
 #ca_fc_list_waves<-list("c1m1" =list("wave_clin"="1","wave_mri"="1"),
 #                       "c1m2" =list("wave_clin"="1","wave_mri"="2"),
 #                       "c1m2-1"=list("wave_clin"="1","wave_mri"="2-1"),

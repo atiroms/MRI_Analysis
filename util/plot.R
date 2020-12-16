@@ -192,6 +192,7 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
               ", Sex: ",label_sex,", Method: ",method,", Dim: ",as.character(dim_ca),sep="")) 
   dict_roi<-func_dict_roi(paths_)
   dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
+  dict_roi$label<-as.character(dict_roi$label)
   #dict_roi<-dict_roi[order(dict_roi$group_3),]
   
   # Create list of ROIs with blanks between groups
@@ -223,6 +224,8 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
     df_edge_inv<-data.frame(row=df_edge$column, column=df_edge$row,r=df_edge$r)
     df_edge_identical<-data.frame(row=dict_roi$label,column=dict_roi$label,r=NA)
     df_edge<-rbind(df_edge,df_edge_inv,df_edge_identical)
+    df_edge$row<-as.character(df_edge$row)
+    df_edge$column<-as.character(df_edge$column)
     
     plot<-(ggplot(df_edge, aes(column, row))
            + geom_tile(aes(fill = r))
