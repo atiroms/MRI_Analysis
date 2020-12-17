@@ -321,10 +321,11 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     # end calculating group-wise average
     
     # Generate visual output of MRI factors
+    print(paste("Generating heatmap plot of PCA/ICA factors:",atlas,sep=" "))
     if (!skip_ca_plot){
       for (label_wave_mri in names(list_wave_mri_)){
         wave_mri<-list_wave_mri_[[label_wave_mri]]
-        print(paste("MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
+        #print(paste("MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
         df_pca_mri<-read.csv(file.path(paths_$output,"output","temp",
                                        paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")))
         df_pca_mri_grp<-read.csv(file.path(paths_$output,"output","temp",
@@ -360,31 +361,35 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     # End of generating factor heatmap plot
     
     # Calculate node strength in each factor
+    print(paste("Calculating node strength of PCA/ICA factors:",atlas,sep=" "))
     for (label_wave_mri in names(list_wave_mri_)){
       wave_mri<-list_wave_mri_[[label_wave_mri]]
-      df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
-                                                paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
-      df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
-                                                paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
-      df_strength<-NULL
-      list_ca_mri<-list("pca"=df_pca_mri,"ica"=df_ica_mri)
-      for (method in names(list_ca_mri)){
-        df_ca_mri<-list_ca_mri[[method]]
-        list_sex<-unique(df_ca_mri$sex)
-        list_dim<-unique(df_ca_mri$dim)
-        for (sex in list_sex){
-          for (dim in list_dim){
-            df_ca_mri_subset<-df_ca_mri[df_ca_mri$sex==sex & df_ca_mri$dim==dim,]
-            for (node in list_node){
-              strength<-colSums(abs(df_ca_mri_subset[df_ca_mri_subset$from==node | df_ca_mri_subset$to==node,
-                                                 sprintf("comp_%03d",seq(dim))]))
-              df_strength_add<-data.frame(wave_mri=wave_mri,method=method,sex=sex,dim=dim,comp=seq(dim),node=node,strength=strength)
-              df_strength<-rbind(df_strength,df_strength_add)
+      path_file_check<-file.path(paths_$output,"output","temp",paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ca_str.csv",sep=""))
+      if (!file.exists(path_file_check)){
+        df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
+        df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
+                                                  paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
+        df_strength<-NULL
+        list_ca_mri<-list("pca"=df_pca_mri,"ica"=df_ica_mri)
+        for (method in names(list_ca_mri)){
+          df_ca_mri<-list_ca_mri[[method]]
+          list_sex<-unique(df_ca_mri$sex)
+          list_dim<-unique(df_ca_mri$dim)
+          for (sex in list_sex){
+            for (dim in list_dim){
+              df_ca_mri_subset<-df_ca_mri[df_ca_mri$sex==sex & df_ca_mri$dim==dim,]
+              for (node in list_node){
+                strength<-colSums(abs(df_ca_mri_subset[df_ca_mri_subset$from==node | df_ca_mri_subset$to==node,
+                                                       sprintf("comp_%03d",seq(dim))]))
+                df_strength_add<-data.frame(wave_mri=wave_mri,method=method,sex=sex,dim=dim,comp=seq(dim),node=node,strength=strength)
+                df_strength<-rbind(df_strength,df_strength_add)
+              }
             }
           }
         }
+        write.csv(df_strength,file.path(paths_$output,"output","temp",paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ca_str.csv",sep="")),row.names=F)
       }
-      write.csv(df_strength,file.path(paths_$output,"output","temp",paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ca_str.csv",sep="")),row.names=F)
     }
     # End calculating node strength in each factor
     
@@ -518,7 +523,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
                              legend.position="top",legend.justification="center",legend.direction="horizontal",legend.title=element_blank())
               )
               name_file<-paste("atl-",atlas,"_method-",method,"_var-",idx_var,"_ses-m",wave_mri,
-                               "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
+                               "_sex-",label_sex,"_dim-",sprintf("%03d",dim),
                                "_fc_ca_cor_int.png",sep="")
               ggsave(name_file,plot,path=file.path(paths$output,"output","plot"),height=5,width=10,dpi=200)
             }
@@ -572,10 +577,8 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
       df_ca_cor_bind<-rbind.fill(df_ca_cor_bind,df_ca_cor)
       
       df_ca_strength<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ca_str.csv",sep=""))))
-      df_ca_strength_bind<-rbind.fill(df_ca_strength_bind,df_ca_strength)
-      
-      wave_mri_done<-c(wave_mri_done,wave_mri)
-      
+      df_ca_strength_bind<-rbind.fill(df_ca_strength_bind,
+                                      cbind(atlas=atlas,df_ca_strength))
     } # End of loop over MRI wave
   } # End of loop over atlases
   
