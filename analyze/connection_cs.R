@@ -146,12 +146,21 @@ comp_clin_cor<-function(df_comp_subj,df_clin,n_covar,list_sex,atlas,method,
       df_plot$r<-as.numeric(df_plot$r)
       df_plot<-df_plot[df_plot$covar!="sex",]
       df_plot$covar<-str_to_title(df_plot$covar)
+      df_plot$significance<-""
+      df_plot[df_plot$p<0.05,"significance"]<-"*"
+      df_plot[df_plot$p<0.001,"significance"]<-"**"
       
       plot<-(ggplot(data=df_plot,aes(x=comp,y=r,fill=covar))
              + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
              + scale_fill_brewer(palette="Accent")
              + scale_x_continuous(breaks=seq(dim_ca),limits=c(0.5,max(list_dim)+0.5),expand=c(0.003,0.003))
              + scale_y_continuous(breaks=seq(-0.5,0.5,0.1),limits=c(-0.5,0.5))
+             + geom_hline(yintercept = 0, linetype = 2)
+             + geom_text(
+               aes(label = significance, group = covar), 
+               position = position_dodge(0.7),
+               vjust = 0, size = 3.5
+             )
              + ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Variable: ",label_var,
                              ", Clinical: ",wave_clin, ",MRI: ",wave_mri,
                              ", Dimension: ",as.character(dim_ca),
@@ -348,6 +357,8 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     } # End for MRI wave
     # End of generating factor heatmap plot
     
+    
+    
     # Calculate factor attibution-clinical relation
     for (label_wave_mri in names(list_wave_mri_)){
       wave_mri<-list_wave_mri_[[label_wave_mri]]
@@ -422,10 +433,11 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     # End of calculating factor-clinical correlation
     
     # Integrated visual output of factor-clinical correlation
+    list_var<-c(list_tanner_,list_hormone_)
     for (label_wave_mri in names(list_wave_mri_)){
       wave_mri<-list_wave_mri_[[label_wave_mri]]
       df_cor<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ca_cor.csv",sep=""))))
-      for (idx_var in c(names(list_tanner_),names(list_hormone_))){
+      for (idx_var in names(list_var)){
         for (label_sex in names(list_sex_)){
           for (method in c("pca","ica")){
             list_dim<-sort(unique(df_cor[df_cor$variable==idx_var & df_cor$sex==label_sex
@@ -443,6 +455,43 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
               list_covar<-sort(unique(df_plot$covar))
               
               #Visualize df_plot
+              #df_plot$r<-as.numeric(df_plot$r)
+              df_plot<-df_plot[df_plot$covar!="sex",]
+              df_plot<-df_plot[df_plot$comp<=10,]
+              df_plot[df_plot$covar=="age","covar"]<-"Age"
+              df_plot[df_plot$covar=="tanner","covar"]<-list_var[[idx_var]][["label"]]
+              df_plot[df_plot$covar=="hormone","covar"]<-list_var[[idx_var]][["label"]]
+              df_plot$wave_clin<-as.character(df_plot$wave_clin)
+              df_plot[df_plot$wave_clin=="1","wave_clin"]<-"1st wave"
+              df_plot[df_plot$wave_clin=="2","wave_clin"]<-"2nd wave"
+              df_plot$covar<-paste(df_plot$wave_clin,df_plot$covar,sep=" ")
+              df_plot$significance<-""
+              df_plot[df_plot$p<0.05,"significance"]<-"*"
+              df_plot[df_plot$p<0.001,"significance"]<-"**"
+              
+              plot<-(ggplot(data=df_plot,aes(x=comp,y=r,fill=covar))
+                     + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+                     + scale_fill_brewer(palette="Accent")
+                     + scale_x_continuous(breaks=seq(10),limits=c(0.5,10.5),expand=c(0.003,0.003))
+                     + scale_y_continuous(breaks=seq(-0.5,0.5,0.1),limits=c(-0.5,0.5))
+                     + geom_hline(yintercept = 0, linetype = 2)
+                     + geom_text(
+                       aes(label = significance, group = covar), 
+                       position = position_dodge(0.7),
+                       vjust = 0, size = 3.5
+                     )
+                     + ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Variable: ",idx_var,
+                                     ", MRI wave: ",wave_mri,
+                                     ", Dimension: ",as.character(dim),
+                                     ", Sex: ",label_sex,sep=""))
+                     + xlab("Factor") + ylab("r or rho") + theme_classic()
+                     + theme(plot.title = element_text(hjust = 0.5),
+                             legend.position="top",legend.justification="center",legend.direction="horizontal",legend.title=element_blank())
+              )
+              name_file<-paste("atl-",atlas,"_method-",method,"_var-",idx_var,"_ses-m",wave_mri,
+                               "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
+                               "_fc_ca_cor_int.png",sep="")
+              ggsave(name_file,plot,path=file.path(paths$output,"output","plot"),height=5,width=10,dpi=200)
               
               ####
             }
