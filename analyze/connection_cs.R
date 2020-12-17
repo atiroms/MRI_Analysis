@@ -19,11 +19,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"423_fc_gam_aroma"
-
 dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_ca_aroma_test"
+dir_out<-"423_fc_gam_aroma"
+
+#dir_in<-"421_fc_aroma"
+#dir_out<-"425_fc_ca_aroma_test"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-c(5,10,20,40)
@@ -870,7 +870,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     path_file_check<-file.path(paths_$output,"output","temp",
                                paste("atl-",atlas,"_ses-",label_waves,
                                      "_var-",idx_var_,"_gam_grp_abs_src.csv",sep=""))
-    if (!file_exists(path_file_check)){
+    if (!file.exists(path_file_check)){
       # Load ROI-wise FC data
       df_fc<-as.data.frame(fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep=''))))
       df_join<-join_fc_clin(df_fc,df_clin,wave_clin,wave_mri)
