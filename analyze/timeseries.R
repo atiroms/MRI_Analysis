@@ -14,13 +14,15 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
-dir_in <-"440_ts_36p"
-dir_out <-"441_fc_36p"
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100x7","schaefer200x7","schaefer400x7",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
-path_exp_full<-'/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP'
+dir_in <-"410_ts_acompcor_gsr"
+dir_out <-"411_fc_acompcor_gsr"
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100x7","schaefer200x7","schaefer400x7",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+list_atlas<-"ho112"
+#path_exp_full<-'/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP'
+path_exp_full<-NULL
 
 #path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
 #dir_in <-"56.1_ts_conn"
@@ -196,7 +198,7 @@ fc<-function(paths_=paths,
                               "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                               "ggplot","aes","geom_tile","scale_fill_gradientn",
                               "matlab.like2","scale_y_discrete","scale_x_discrete",
-                              "theme_light","theme","element_text","element_blank",
+                              "theme_linedraw","theme_light","theme","element_text","element_blank",
                               "ggtitle","ggsave","suffix_file"),
                     envir=environment())
       list_path_tmp<-pbsapply(list_data_ts,fc_core,cl=clust)
@@ -230,7 +232,7 @@ fc<-function(paths_=paths,
                                 "plot_cor_heatmap","rcorr","rownames_to_column","gather",
                                 "ggplot","aes","geom_tile","scale_fill_gradientn",
                                 "matlab.like2","scale_y_discrete","scale_x_discrete",
-                                "theme_light","theme","element_text","element_blank",
+                                "theme_linedraw","theme_light","theme","element_text","element_blank",
                                 "ggtitle","ggsave","suffix_file"),
                       envir=environment())
         list_path_tmp<-pbsapply(list_data_ts_group,fc_core,cl=clust)
