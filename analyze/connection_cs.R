@@ -19,11 +19,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"401_fc_acompcor"
-#dir_out<-"403_fc_gam_acompcor"
+dir_in<-"421_fc_aroma"
+dir_out<-"423_fc_gam_aroma"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"435_fc_ca_aroma_gsr"
+#dir_in<-"431_fc_aroma_gsr"
+#dir_out<-"435_fc_ca_aroma_gsr"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
@@ -741,6 +741,7 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
                           list_type_p_=list_type_p,thr_p_=thr_p){
   print("Starting gam_fc_cs_multi()")
   nullobj<-func_createdirs(paths_,str_proc="gam_fc_cs_multi()",copy_log=T)
+  memory.limit(1000000)
   
   for (label_waves in names(list_waves_)){
     wave_clin<-list_waves_[[label_waves]]$wave_clin
