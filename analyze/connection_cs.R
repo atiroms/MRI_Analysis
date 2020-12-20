@@ -19,15 +19,13 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-"403_fc_gam_acompcor"
+#dir_in<-"401_fc_acompcor"
+#dir_out<-"403_fc_gam_acompcor"
 
-#dir_in<-"431_fc_aroma_gsr"
-#dir_out<-"435_fc_ca_aroma_gsr"
+dir_in<-"431_fc_aroma_gsr"
+dir_out<-"435_fc_ca_aroma_gsr"
 
 list_dim_ca<-c(10,20,40)
-#list_dim_ca<-c(5,10,20,40)
-#list_dim_ca<-c(5,10)
 #list_dim_ca<-10
 #ratio_vis<-0.01
 
@@ -38,9 +36,9 @@ list_dim_ca<-c(10,20,40)
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
+#list_atlas<-"ho112"
 #list_atlas<-c("aal116","power264","shen268")
 #list_atlas<-"aal116"
-#list_atlas<-"schaefer400x17"
 
 #list_type_p=c("p","p_bh","seed_p_bh")
 list_type_p=c("p_bh") # Benjamini-Hochberg method of FDR
@@ -192,7 +190,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
   #df_cor<-NULL
   for (atlas in list_atlas_){
     # Load and examine FC data
-    print(paste("Loading FC of atlas: ",atlas,sep=""))
+    print(paste("Loading FC: ",atlas,sep=""))
     df_conn<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fc.csv",sep=""))))
     
     # Create graph edge dataframe and node list
@@ -290,7 +288,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     # end calculating PCA/ICA factors
     
     # Group-wise average of factor-MRI matrix
-    print(paste("Calculating group-wise contribution to factors, atlas:",atlas,sep=" "))
+    print(paste("Calculating group-wise contribution to factors:",atlas,sep=" "))
     dict_roi<-func_dict_roi(paths_)
     dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
     list_group<-unique(dict_roi$group_3)
@@ -394,6 +392,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     # End calculating node strength in each factor
     
     # Calculate factor attibution-clinical relation
+    print(paste("Calculating factor-clinical correlation:",atlas,sep=" "))
     for (label_wave_mri in names(list_wave_mri_)){
       wave_mri<-list_wave_mri_[[label_wave_mri]]
       df_pca_subj<-read.csv(file.path(paths_$output,"output","temp",
@@ -404,7 +403,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
       df_cor<-NULL
       for (label_wave_clin in names(list_wave_clin_)){
         wave_clin<-list_wave_clin_[[label_wave_clin]]
-        print(paste("Clinical wave: ",wave_clin,", MRI wave: ",wave_mri,", calculating factor-clinical correlation.",sep=""))
+        #print(paste("Clinical wave: ",wave_clin,", MRI wave: ",wave_mri,", calculating factor-clinical correlation.",sep=""))
         # Pickup subsetting condition of MRI wave, and rename it to clinical wave
         subset_subj_temp<-list(subset_subj_[[as.character(wave_mri)]])
         names(subset_subj_temp)<-wave_clin
@@ -467,6 +466,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
     # End of calculating factor-clinical correlation
     
     # Integrated visual output of factor-clinical correlation
+    print(paste("Generating integrated graph of factor-clinical correlation:",atlas,sep=" "))
     list_var<-c(list_tanner_,list_hormone_)
     for (label_wave_mri in names(list_wave_mri_)){
       wave_mri<-list_wave_mri_[[label_wave_mri]]
