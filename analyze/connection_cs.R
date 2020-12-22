@@ -19,11 +19,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-#dir_in<-"401_fc_acompcor"
-#dir_out<-"403_fc_gam_acompcor"
+dir_in<-"401_fc_acompcor"
+dir_out<-"403_fc_gam_acompcor"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"435_fc_ca_aroma_gsr"
+#dir_in<-"431_fc_aroma_gsr"
+#dir_out<-"435_fc_ca_aroma_gsr"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
