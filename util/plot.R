@@ -23,10 +23,7 @@ library(viridis)
 #plot_gam_fc<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,method,label_sex,ses){
 plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,
                       list_mod,list_plot,list_type_p,thr_p,waves,idx_var){
-  label_waves<-names(waves)
-  wave_clin<-waves[[1]]$wave_clin
-  wave_mri<-waves[[1]]$wave_mri
-  
+
   dict_roi<-func_dict_roi(paths_)
   dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
   
@@ -165,7 +162,7 @@ plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,
                                                              color = "black", size = 14))
               ggsave(paste("atl-",atlas,"_mod-",idx_mod,"_plt-",var_exp,
                            "_sex-",label_sex,"_pval-",type_p,
-                           "_ses-",label_waves,"_var-",idx_var,"_gam.png",sep=""),
+                           "_ses-",names(waves),"_var-",idx_var,"_gam.png",sep=""),
                      plot=arranged_plot,path=file.path(paths_$output,"output","plot"),height=13,width=10,dpi=600)
             }
           }
