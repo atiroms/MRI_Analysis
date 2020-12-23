@@ -191,7 +191,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
       }
       for(id_to in list_id_to){
         label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-        #print(paste("Calculating",label_from,"and",label_to,sep=" "))
+        print(paste("Calculating",label_from,"and",label_to,sep=" "))
         df_src<-df_join_from[df_join_from$to==id_to,]
         list_dst_gamm<-c(list_dst_gamm,
                          list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,

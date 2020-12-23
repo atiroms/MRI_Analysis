@@ -17,7 +17,7 @@ path_exp_full<-NULL
 #list_atlas<-"ho112"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"424_fc_gamm_aroma"
+dir_out<-"424_fc_gamm_aroma_test"
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
@@ -153,7 +153,8 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
                         list_covar_tanner_=gamm_fc_list_covar_tanner,list_tanner_=gamm_fc_list_tanner,
                         list_mod_tanner_=gamm_fc_list_mod_tanner,list_plot_tanner_=gamm_fc_list_plot_tanner,
                         list_covar_hormone_=gamm_fc_list_covar_hormone,list_hormone_=gamm_fc_list_hormone,
-                        list_mod_hormone_=gamm_fc_list_mod_hormone,list_plot_hormone_=gamm_fc_list_plot_hormone){
+                        list_mod_hormone_=gamm_fc_list_mod_hormone,list_plot_hormone_=gamm_fc_list_plot_hormone
+                        ){
   
   print("Starting gamm_fc_multi().")
   nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
@@ -161,6 +162,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
   
   # Loop over atlases
   for (atlas in list_atlas_){
+    
     print(paste("Preparing FC data: ",atlas,sep=""))
     df_fc<-as.data.frame(fread(file.path(paths_$input,"output",
                                          paste("atl-",atlas,"_fc.csv",sep=""))))
@@ -171,7 +173,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
     colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
     
     # prepare dataframe of group-wise FC averages
-    list_group<-unique(as.character(df_roi&group))
+    list_group<-unique(as.character(df_roi$group))
     df_fc_temp<-df_fc
     df_fc_temp$z_r[which(is.nan(df_fc_temp$z_r))]<-0
     df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("from"="id"))
@@ -182,25 +184,27 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
     list_subj<-sort(unique(df_fc$ID_pnTTC))
     for (id_subj in list_subj){
       list_ses<-sort(unique(df_fc[df_fc$ID_pnTTC==id_subj,"ses"]))
+      list_ses<-list_ses[list_ses!="2-1"]
       df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
     }
     
     df_fc_grp<-NULL
     for (idx_subj_ses in seq(dim(df_subj)[1])){
+      #print(paste(df_subj[idx_subj_ses,"ID_pnTTC"],df_subj[idx_subj_ses,"ses"]))
+      df_fc_subset1<-df_fc_temp[df_fc_temp$ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
+                                & df_fc_temp$ses==df_subj[idx_subj_ses,"ses"],]
       for (idx_grp1 in seq(length(list_group))){
         for (idx_grp2 in seq(idx_grp1,length(list_group))){
-          df_fc_subset<-rbind(df_fc_temp[df_fc_temp&ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
-                                         & df_fc_temp$ses==df_subj[id_subj_ses,"ses"]
-                                         & df_fc_temp$from_group==list_group[idx_grp1]
-                                         & df_fc_temp$to_group==list_group[idx_grp2],],
-                              df_fc_temp[df_fc_temp&ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
-                                         & df_fc_temp$ses==df_subj[id_subj_ses,"ses"]
-                                         & df_fc_temp$from_group==list_group[idx_grp2]
-                                         & df_fc_temp$to_group==list_group[idx_grp1],])
+          # data in df_fc_subset2 is doubled for connections within same group,
+          # but does not affect z_r average calculation
+          df_fc_subset2<-rbind(df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp1]
+                                             & df_fc_subset1$to_group==list_group[idx_grp2],],
+                               df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp2]
+                                             & df_fc_subset1$to_group==list_group[idx_grp1],])
           df_fc_grp<-rbind(df_fc_grp,
                            cbind(ID_pnTTC=df_subj[idx_subj_ses,"ID_pnTTC"],ses=df_subj[idx_subj_ses,"ses"],
                                  from=list_group[idx_grp1],to=list_group[idx_grp2],
-                                 z_r=mean(df_fc_subset$z_r)))
+                                 z_r=mean(df_fc_subset2$z_r)))
         }
       }
     }
