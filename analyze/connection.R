@@ -10,14 +10,14 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/HDD_04/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/SSD_01/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-dir_out<-"431_fc_aroma_gsr"
 #list_atlas<-"ho112"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"424_fc_gamm_aroma_test"
+dir_in<-"401_fc_acompcor"
+dir_out<-"404_fc_gamm_acompcor"
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
