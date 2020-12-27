@@ -234,7 +234,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
   } # Finished looping over atlas
   
   print("Combining results.")
-  df_gamm<-df_aic<-df_plot<-data.frame()
+  df_gamm<-df_aic<-df_plot<-df_gamm_grp<-df_aic_grp<-df_plot_grp<-data.frame()
   list_var<-c(list_tanner_,list_hormone_)
   for (atlas in list_atlas_){
     for (idx_var in names(list_var)){
