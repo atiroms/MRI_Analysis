@@ -104,28 +104,30 @@ gamm_fc_core<-function(paths_,df_fc,df_fc_grp,atlas,df_roi,list_wave_,subset_sub
       df_join[,key]<-as.factor(df_join[,key])
     }
   }
+  df_join$value<-as.numeric.factor(df_join$value)
   
   # Calculate ROI-wise GAMM of FC
-  data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_identical=F)
-  df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,
-                           list_plot,calc_seed_level=F)
+  data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=F,calc_identical=F)
+  df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=F)
   
   # Join group-wise FC and clinical data
   colnames(df_fc_grp)[colnames(df_fc_grp)=="z_r"]<-"value"
   colnames(df_fc_grp)[colnames(df_fc_grp)=="ses"]<-"wave"
+  df_fc_grp$ID_pnTTC<-as.numeric.factor(df_fc_grp$ID_pnTTC)
+  df_fc_grp$wave<-as.character(as.numeric.factor(df_fc_grp$wave))
   df_join_grp<-inner_join(df_fc_grp,df_clin,by=c('ID_pnTTC','wave'))
   for (key in c('ID_pnTTC','wave','sex')){
     if (key %in% colnames(df_join_grp)){
       df_join_grp[,key]<-as.factor(df_join_grp[,key])
     }
   }
+  df_join_grp$value<-as.numeric.factor(df_join_grp$value)
   
   # Calculate Group-wise GAMM of FC
   list_group<-unique(as.character(df_roi$group))
   df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
-  data_gamm_grp<-iterate_gamm(df_join_grp,df_grp,list_mod,calc_identical=T)
-  df_plot_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_grp,list_mod,
-                          list_plot,calc_seed_level=F)
+  data_gamm_grp<-iterate_gamm(df_join_grp,df_grp,list_mod,calc_parallel=F,calc_identical=T)
+  df_plot_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_grp,list_mod,list_plot,calc_seed_level=F)
   
   # Save results
   write.csv(data_gamm$df_out_gamm,
@@ -166,6 +168,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
     print(paste("Preparing FC data: ",atlas,sep=""))
     df_fc<-as.data.frame(fread(file.path(paths_$input,"output",
                                          paste("atl-",atlas,"_fc.csv",sep=""))))
+    df_fc<-df_fc[df_fc$ses!="2-1",]
     
     # Prepare dataframe of ROIs
     list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
@@ -187,8 +190,9 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
       list_ses<-list_ses[list_ses!="2-1"]
       df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
     }
+    df_subj$ses<-as.character(df_subj$ses)
     
-    df_fc_grp<-NULL
+    df_fc_grp<-data.frame()
     for (idx_subj_ses in seq(dim(df_subj)[1])){
       #print(paste(df_subj[idx_subj_ses,"ID_pnTTC"],df_subj[idx_subj_ses,"ses"]))
       df_fc_subset1<-df_fc_temp[df_fc_temp$ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]

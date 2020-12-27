@@ -178,9 +178,14 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
     list_dst_gamm<-list()
     if (calc_identical){
       list_id_from<-list_roi
+      n_edge<-length(list_roi)*(length(list_roi)-1)/2+length(list_roi)
     }else{
       list_id_from<-list_roi[-length(list_roi)]
+      n_edge<-length(list_roi)*(length(list_roi)-1)/2
     }
+    interval_refresh<-max(1,floor(n_edge/300))
+    progressbar <- txtProgressBar(min = 1, max = n_edge, style = 3)
+    idx_edge<-0
     for (id_from in list_id_from){
       df_join_from<-df_join[df_join$from==id_from,]
       label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
@@ -190,15 +195,21 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
         list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
       }
       for(id_to in list_id_to){
+        idx_edge<-idx_edge+1
         label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-        print(paste("Calculating",label_from,"and",label_to,sep=" "))
+        #print(paste("Calculating",label_from,"and",label_to,sep=" "))
         df_src<-df_join_from[df_join_from$to==id_to,]
         list_dst_gamm<-c(list_dst_gamm,
                          list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
                                              "label_from"=label_from,"label_to"=label_to,
                                              "list_mod"=list_mod_,"list_sex"=list_sex))))
+        if ((idx_edge %% interval_refresh) ==0){
+          Sys.sleep(0.1)
+          setTxtProgressBar(progressbar, idx_edge)
+        }
       }
     }
+    close(progressbar)
   }
   
   #print("Combining GAM results.")
