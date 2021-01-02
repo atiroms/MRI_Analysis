@@ -75,7 +75,7 @@ gamm_core<-function(data_src){
   for (idx_mod in names(list_mod_)){
     for (idx_sex in list_sex){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
-
+      df_src_sex$value<-as.numeric(df_src_sex$value)
       mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
       if (class(mod)[1]!="try-error"){
         p_table<-summary.gam(mod)$p.table

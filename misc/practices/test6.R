@@ -124,8 +124,10 @@ df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,list_plot,calc_seed_le
 # Join group-wise FC and clinical data
 colnames(df_fc_grp)[colnames(df_fc_grp)=="z_r"]<-"value"
 colnames(df_fc_grp)[colnames(df_fc_grp)=="ses"]<-"wave"
-df_fc_grp$ID_pnTTC<-as.numeric.factor(df_fc_grp$ID_pnTTC)
+df_fc_grp$ID_pnTTC<-as.character(as.numeric.factor(df_fc_grp$ID_pnTTC))
 df_fc_grp$wave<-as.character(as.numeric.factor(df_fc_grp$wave))
+df_clin$ID_pnTTC<-as.character(as.numeric.factor(df_clin$ID_pnTTC))
+df_clin$wave<-as.character(as.numeric.factor(df_clin$wave))
 df_join_grp<-inner_join(df_fc_grp,df_clin,by=c('ID_pnTTC','wave'))
 for (key in c('ID_pnTTC','wave','sex')){
   if (key %in% colnames(df_join_grp)){
@@ -160,165 +162,113 @@ plot_gam_fc(paths_,df_gam=df_plot,df_gam_grp_sign=df_plot_grp,df_gam_grp_abs=NUL
 
 ####
 
-df_gam=df_plot
-df_gam_grp_sign=df_plot_grp
-df_gam_grp_abs=NULL
-list_type_p=list_type_p_
-thr_p=thr_p_
-waves=NULL
+df_join=df_join_grp
+df_roi=df_grp
+list_mod_=list_mod
+calc_parallel=F
+calc_identical=T
 
 ####
 
-dict_roi<-func_dict_roi(paths_)
-dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
-
-# Create list of ROIs with blanks between groups
-list_group<-unique(as.character(dict_roi$group_3))
-list_roi_axis<-NULL
-title_axis<-"Groups: "
-for (group in list_group){
-  list_roi_axis<-c(list_roi_axis,as.character(dict_roi[dict_roi$group_3==group,"label"]),"")
-  title_axis<-paste(title_axis,group,", ",sep="")
-}
-list_roi_axis<-list_roi_axis[1:length(list_roi_axis)-1]
-title_axis<-substr(title_axis,1,nchar(title_axis)-2)
-list_label_group<-str_to_title(gsub("_"," ",as.character(list_group)))
+list_roi<-df_roi$id
+list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
 
 ####
 
-idx_mod<-names(list_mod)[2]
-idx_plot<-names(list_plot)[2]
-idx_sex<-1
-
-####
-
-var_exp<-list_plot[[idx_plot]][["var_exp"]]
-
-# Subset GAMM result dataframe for plotting
-if (idx_sex==1){
-  label_sex<-"m"
+list_dst_gamm<-list()
+if (calc_identical){
+  list_id_from<-list_roi
+  n_edge<-length(list_roi)*(length(list_roi)-1)/2+length(list_roi)
 }else{
-  label_sex<-"f"
+  list_id_from<-list_roi[-length(list_roi)]
+  n_edge<-length(list_roi)*(length(list_roi)-1)/2
 }
-df_gam_subset<-df_gam[df_gam$model==idx_mod & df_gam$term==var_exp & df_gam$sex==idx_sex,]
-df_gam_grp_sign_subset<-df_gam_grp_sign[df_gam_grp_sign$model==idx_mod
-                                        & df_gam_grp_sign$term==var_exp
-                                        & df_gam_grp_sign$sex==idx_sex,]
-df_gam_grp_abs_subset<-df_gam_grp_abs[df_gam_grp_abs$model==idx_mod
-                                      & df_gam_grp_abs$term==var_exp
-                                      & df_gam_grp_abs$sex==idx_sex,]
-if (nrow(df_gam_subset)>0){
-  #print(paste("GAMM output, atlas: ",atlas,", model: ",idx_mod,", plot: ",var_exp,", sex: ",label_sex,sep=""))
-  # Convert GAMM rseult into igraph object
-  if (!is.na(df_gam_subset[1,"estimate"])){
-    df_gam_subset<-rename(df_gam_subset,c("estimate"="weight"))
-    df_gam_grp_sign_subset<-rename(df_gam_grp_sign_subset,c("estimate"="weight"))
-    df_gam_grp_abs_subset<-rename(df_gam_grp_abs_subset,c("estimate"="weight"))
-    label_legend<-"beta"
+interval_refresh<-max(1,floor(n_edge/300))
+progressbar <- txtProgressBar(min = 1, max = n_edge, style = 3)
+idx_edge<-0
+for (id_from in list_id_from){
+  df_join_from<-df_join[df_join$from==id_from,]
+  label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+  if (calc_identical){
+    list_id_to<-list_roi[seq(which(list_roi==id_from),length(list_roi))]
   }else{
-    df_gam_subset<-rename(df_gam_subset,c("F"="weight"))
-    df_gam_grp_sign_subset<-rename(df_gam_grp_sign_subset,c("F"="weight"))
-    df_gam_grp_abs_subset<-rename(df_gam_grp_abs_subset,c("F"="weight"))
-    label_legend<-"F"
+    list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
   }
-  
-  # Plot and save heatmap
-  for (type_p in list_type_p){
-    if(type_p %in% colnames(df_gam_subset)){
-      list_subplot<-list()
-      
-      # ROI-ROI heatmap
-      df_edge<-df_gam_subset
-      limits<-max(max(df_edge$weight),-min(df_edge$weight))
-      limits<-c(-limits,limits)
-      #df_edge<-df_edge[which(df_edge[,type_p]<thr_p),]
-      df_edge[which(df_edge[,type_p]>thr_p),"weight"]<-NA
-      df_edge<-df_edge[,c("label_from","label_to","weight")]
-      colnames(df_edge)<-c("row","column","r")
-      df_edge_inv<-data.frame(row=df_edge$column, column=df_edge$row,r=df_edge$r)
-      df_edge_identical<-data.frame(row=dict_roi$label,column=dict_roi$label,r=NA)
-      df_edge<-rbind(df_edge,df_edge_inv,df_edge_identical)
-      
-      plot<-(ggplot(df_edge, aes(column, row))
-             + geom_tile(aes(fill = r))
-             + scale_fill_gradientn(colors = matlab.like2(100),name=label_legend,limits=limits)
-             + scale_y_discrete(limits = rev(list_roi_axis))
-             + scale_x_discrete(limits = list_roi_axis, position="top")
-             + theme_linedraw()
-             + theme(
-               axis.text.x = element_text(size=1.5,angle = 90,vjust=0,hjust=0),
-               axis.text.y = element_text(size=1.5),
-               panel.grid.major=element_blank(),
-               panel.grid.minor = element_blank(),
-               panel.border = element_blank(),
-               panel.background = element_blank(),
-               plot.title = element_text(hjust = 0.5),
-               axis.title.x=element_blank(),
-               axis.title.y=element_blank(),
-               axis.ticks=element_blank()
-             )
-      )
-      list_subplot<-c(list_subplot,list(plot))
-      
-      # group-group heatmap
-      for (df_gam_grp_subset in list(df_gam_grp_sign_subset,df_gam_grp_abs_subset)){
-        if (is.null(df_gam_grp_subset)){
-          list_subplot<-c(list_subplot,list(NULL))
-        }else{
-          df_edge<-df_gam_grp_subset
-          limits<-max(max(df_edge$weight),-min(df_edge$weight))
-          limits<-c(-limits,limits)
-          df_edge[which(df_gam_grp_subset[,type_p]>thr_p),"weight"]<-NA
-          df_edge$from<-as.character(df_edge$from)
-          df_edge$to<-as.character(df_edge$to)
-          df_edge<-df_edge[,c("label_from","label_to","weight")]
-          colnames(df_edge)<-c("row","column","r")
-          df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
-          df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,r=df_edge_inv$r)
-          df_edge<-rbind(df_edge,df_edge_inv)
-          
-          plot<-(ggplot(df_edge, aes(column, row))
-                 + geom_tile(aes(fill = r))
-                 + scale_fill_gradientn(colors = matlab.like2(100),
-                                        name=label_legend,limits=limits)
-                 + scale_y_discrete(limits = rev(list_label_group))
-                 + scale_x_discrete(limits = list_label_group, position="top")
-                 + theme_linedraw()
-                 + theme(
-                   axis.text.x = element_text(size=8.5,angle = 90,vjust=0,hjust=0),
-                   axis.text.y = element_text(size=8.5),
-                   panel.grid.major=element_blank(),
-                   panel.grid.minor = element_blank(),
-                   panel.border = element_blank(),
-                   panel.background = element_blank(),
-                   plot.title = element_text(hjust = 0.5),
-                   axis.title.x=element_blank(),
-                   axis.title.y=element_blank(),
-                   axis.ticks=element_blank()
-                 )
-          )
-          list_subplot<-c(list_subplot,list(plot))
-        }
-      }
-      arranged_plot<-ggarrange(list_subplot[[1]],
-                               ggarrange(list_subplot[[2]],list_subplot[[3]],
-                                         ncol=2,
-                                         labels=c("Group(signed)","Group(absolute)"),
-                                         label.x=0,
-                                         font.label = list(size = 10,face="plain")),
-                               nrow=2,heights=c(2,1),
-                               labels="ROI",
-                               font.label = list(size = 10,face="plain"))
-      
-      arranged_plot<-annotate_figure(arranged_plot,
-                                     top = text_grob(paste("GLM/GAM sex: ",label_sex,", measure: ",
-                                                           idx_var,", model: ",idx_mod,
-                                                           ", expvar: ",var_exp,", threshold: ",type_p,sep=""),
-                                                     color = "black", size = 14))
-      ggsave(paste("atl-",atlas,"_mod-",idx_mod,"_plt-",var_exp,
-                   "_sex-",label_sex,"_pval-",type_p,
-                   "_ses-",names(waves),"_var-",idx_var,"_gam.png",sep=""),
-             plot=arranged_plot,path=file.path(paths_$output,"output","plot"),height=13,width=10,dpi=600)
+  for(id_to in list_id_to){
+    idx_edge<-idx_edge+1
+    label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+    #print(paste("Calculating",label_from,"and",label_to,sep=" "))
+    df_src<-df_join_from[df_join_from$to==id_to,]
+    list_dst_gamm<-c(list_dst_gamm,
+                     list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
+                                         "label_from"=label_from,"label_to"=label_to,
+                                         "list_mod"=list_mod_,"list_sex"=list_sex))))
+    if ((idx_edge %% interval_refresh) ==0){
+      Sys.sleep(0.1)
+      setTxtProgressBar(progressbar, idx_edge)
     }
   }
 }
+close(progressbar)
+
+####
+
+data_src<-list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
+               "label_from"=label_from,"label_to"=label_to,
+               "list_mod"=list_mod_,"list_sex"=list_sex)
+
+####
+
+df_src<-data_src$df_src
+
+list_mod_<-data_src$list_mod
+list_sex<-data_src$list_sex
+
+#list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
+df_out_aic_add<-df_out_gamm_add<-data.frame()
+for (idx_mod in names(list_mod_)){
+  for (idx_sex in list_sex){
+    df_src_sex<-df_src[df_src$sex==idx_sex,]
+    df_src_sex$value<-as.numeric(df_src_sex$value)
+    mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+    if (class(mod)[1]!="try-error"){
+      p_table<-summary.gam(mod)$p.table
+      if (is.null(summary.gam(mod)$s.table)){
+        df_out_gamm_add_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                        se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                        p=p_table[,'Pr(>|t|)'])
+      }else{
+        s_table<-summary.gam(mod)$s.table
+        df_out_gamm_add_add<-rbind(data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                              se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                              p=p_table[,'Pr(>|t|)']),
+                                   data.frame(term=rownames(s_table),estimate=NA,se=NA,F=s_table[,'F'],
+                                              t=NA,p=s_table[,'p-value']))
+      }
+      
+      df_out_gamm_add<-rbind(df_out_gamm_add,
+                             cbind(sex=idx_sex,model=idx_mod,df_out_gamm_add_add))
+      df_out_aic_add<-rbind(df_out_aic_add,
+                            data.frame(sex=idx_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+    }
+  } # Finished looping over sex
+}# Finished looping over model
+
+# Compare AICs of GAMM models
+df_out_aic_add_sex_rbind<-data.frame()
+for (idx_sex in list_sex){
+  df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
+  df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
+                     'aic_best_among_models']<-1
+  df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
+}
+
+# Prepare output dataframe
+id_from<-data_src$id_from
+id_to<-data_src$id_to
+label_from<-data_src$label_from
+label_to<-data_src$label_to
+df_out_gamm_add<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                       df_out_gamm_add)
+df_out_aic_add_sex_rbind<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                df_out_aic_add_sex_rbind)

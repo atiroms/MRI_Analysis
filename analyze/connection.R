@@ -16,8 +16,8 @@ path_exp_full<-NULL
 #dir_in<-dir_out<-"431_fc_aroma_gsr"
 #list_atlas<-"ho112"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"424_fc_gamm_aroma"
+dir_in<-"401_fc_acompcor"
+dir_out<-"404_fc_gamm_acompcor"
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
@@ -113,8 +113,10 @@ gamm_fc_core<-function(paths_,df_fc,df_fc_grp,atlas,df_roi,list_wave_,subset_sub
   # Join group-wise FC and clinical data
   colnames(df_fc_grp)[colnames(df_fc_grp)=="z_r"]<-"value"
   colnames(df_fc_grp)[colnames(df_fc_grp)=="ses"]<-"wave"
-  df_fc_grp$ID_pnTTC<-as.numeric.factor(df_fc_grp$ID_pnTTC)
+  df_fc_grp$ID_pnTTC<-as.character(as.numeric.factor(df_fc_grp$ID_pnTTC))
   df_fc_grp$wave<-as.character(as.numeric.factor(df_fc_grp$wave))
+  df_clin$ID_pnTTC<-as.character(as.numeric.factor(df_clin$ID_pnTTC))
+  df_clin$wave<-as.character(as.numeric.factor(df_clin$wave))
   df_join_grp<-inner_join(df_fc_grp,df_clin,by=c('ID_pnTTC','wave'))
   for (key in c('ID_pnTTC','wave','sex')){
     if (key %in% colnames(df_join_grp)){
