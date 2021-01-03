@@ -86,70 +86,74 @@ gamm_fc_core<-function(paths_,df_fc,df_fc_grp,atlas,df_roi,list_wave_,subset_sub
                        list_covar,list_mod,list_plot,idx_var,
                        list_type_p_=list_type_p,thr_p_=thr_p
                        ){
-  # Prepare clinical data
-  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T,
-                                     prefix=paste("var-",idx_var,sep=""),print_terminal=F)
-  df_clin<-data_clin$df_clin
   
-  # Join FC and clinical data
-  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
-  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
-  colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
-  df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
-                  -which(colnames(df_fc)=="p"))]
-  df_clin$wave<-as.character(df_clin$wave)
-  df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
-  for (key in c('ID_pnTTC','wave','sex')){
-    if (key %in% colnames(df_join)){
-      df_join[,key]<-as.factor(df_join[,key])
+  file_check<-file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot_grp.csv",sep=""))
+  if (file.exists(file_check)){
+    print("Calculated result already exists.")
+  }else{
+    # Prepare clinical data
+    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T,
+                                       prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+    df_clin<-data_clin$df_clin
+    
+    # Join FC and clinical data
+    df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
+    colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
+    colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
+    df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
+                    -which(colnames(df_fc)=="p"))]
+    df_clin$wave<-as.character(df_clin$wave)
+    df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
+    for (key in c('ID_pnTTC','wave','sex')){
+      if (key %in% colnames(df_join)){
+        df_join[,key]<-as.factor(df_join[,key])
+      }
     }
-  }
-  df_join$value<-as.numeric.factor(df_join$value)
-  
-  # Calculate ROI-wise GAMM of FC
-  data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=F,calc_identical=F)
-  df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=F)
-  
-  # Join group-wise FC and clinical data
-  colnames(df_fc_grp)[colnames(df_fc_grp)=="z_r"]<-"value"
-  colnames(df_fc_grp)[colnames(df_fc_grp)=="ses"]<-"wave"
-  df_fc_grp$ID_pnTTC<-as.character(as.numeric.factor(df_fc_grp$ID_pnTTC))
-  df_fc_grp$wave<-as.character(as.numeric.factor(df_fc_grp$wave))
-  df_clin$ID_pnTTC<-as.character(as.numeric.factor(df_clin$ID_pnTTC))
-  df_clin$wave<-as.character(as.numeric.factor(df_clin$wave))
-  df_join_grp<-inner_join(df_fc_grp,df_clin,by=c('ID_pnTTC','wave'))
-  for (key in c('ID_pnTTC','wave','sex')){
-    if (key %in% colnames(df_join_grp)){
-      df_join_grp[,key]<-as.factor(df_join_grp[,key])
+    df_join$value<-as.numeric.factor(df_join$value)
+    
+    # Calculate ROI-wise GAMM of FC
+    data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=F,calc_identical=F)
+    df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=F)
+    
+    # Join group-wise FC and clinical data
+    colnames(df_fc_grp)[colnames(df_fc_grp)=="z_r"]<-"value"
+    colnames(df_fc_grp)[colnames(df_fc_grp)=="ses"]<-"wave"
+    df_fc_grp$ID_pnTTC<-as.character(as.numeric.factor(df_fc_grp$ID_pnTTC))
+    df_fc_grp$wave<-as.character(as.numeric.factor(df_fc_grp$wave))
+    df_clin$ID_pnTTC<-as.character(as.numeric.factor(df_clin$ID_pnTTC))
+    df_clin$wave<-as.character(as.numeric.factor(df_clin$wave))
+    df_join_grp<-inner_join(df_fc_grp,df_clin,by=c('ID_pnTTC','wave'))
+    for (key in c('ID_pnTTC','wave','sex')){
+      if (key %in% colnames(df_join_grp)){
+        df_join_grp[,key]<-as.factor(df_join_grp[,key])
+      }
     }
+    df_join_grp$value<-as.numeric.factor(df_join_grp$value)
+    
+    # Calculate Group-wise GAMM of FC
+    list_group<-unique(as.character(df_roi$group))
+    df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
+    data_gamm_grp<-iterate_gamm(df_join_grp,df_grp,list_mod,calc_parallel=F,calc_identical=T)
+    df_plot_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_grp,list_mod,list_plot,calc_seed_level=F)
+    
+    # Graphical output of ROI- and group-wise GAMM of FC
+    plot_gam_fc(paths_,df_gam=df_plot,df_gam_grp_sign=df_plot_grp,df_gam_grp_abs=NULL,atlas,
+                list_mod,list_plot,list_type_p=list_type_p_,thr_p=thr_p_,waves=NULL,idx_var)
+    
+    # Save results
+    write.csv(data_gamm$df_out_gamm,
+              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+    write.csv(data_gamm$df_out_aic,
+              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
+    write.csv(df_plot,
+              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot.csv",sep="")),row.names = F)
+    write.csv(data_gamm_grp$df_out_gamm,
+              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
+    write.csv(data_gamm_grp$df_out_aic,
+              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
+    write.csv(df_plot_grp,
+              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot_grp.csv",sep="")),row.names = F)
   }
-  df_join_grp$value<-as.numeric.factor(df_join_grp$value)
-  
-  # Calculate Group-wise GAMM of FC
-  list_group<-unique(as.character(df_roi$group))
-  df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
-  data_gamm_grp<-iterate_gamm(df_join_grp,df_grp,list_mod,calc_parallel=F,calc_identical=T)
-  df_plot_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_grp,list_mod,list_plot,calc_seed_level=F)
-  
-  # Save results
-  write.csv(data_gamm$df_out_gamm,
-            file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
-  write.csv(data_gamm$df_out_aic,
-            file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
-  write.csv(df_plot,
-            file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot.csv",sep="")),row.names = F)
-  write.csv(data_gamm_grp$df_out_gamm,
-            file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
-  write.csv(data_gamm_grp$df_out_aic,
-            file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
-  write.csv(df_plot_grp,
-            file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot_grp.csv",sep="")),row.names = F)
-  
-  # Graphical output of ROI- and group-wise GAMM of FC
-  plot_gam_fc(paths_,df_gam=df_plot,df_gam_grp_sign=df_plot_grp,df_gam_grp_abs=NULL,atlas,
-                        list_mod,list_plot,list_type_p=list_type_p_,thr_p=thr_p_,waves=NULL,idx_var)
-  #plot_gam_fc(df_plot,df_roi,analysis="roi",atlas,list_mod,list_plot,
-  #            list_type_p_,thr_p,paths_,suffix_=paste("var-",idx_var,sep=""))
 }
 
 gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
