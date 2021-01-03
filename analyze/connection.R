@@ -16,8 +16,8 @@ path_exp_full<-NULL
 #dir_in<-dir_out<-"431_fc_aroma_gsr"
 #list_atlas<-"ho112"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-"404_fc_gamm_acompcor"
+dir_in<-"421_fc_aroma"
+dir_out<-"424_fc_gamm_aroma"
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
