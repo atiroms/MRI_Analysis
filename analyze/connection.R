@@ -167,6 +167,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
   print("Starting gamm_fc_multi().")
   nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
   dict_roi <- func_dict_roi(paths_)
+  memory.limit(1000000)
   
   # Loop over atlases
   for (atlas in list_atlas_){
