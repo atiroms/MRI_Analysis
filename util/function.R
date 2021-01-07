@@ -75,7 +75,7 @@ gamm_core<-function(data_src){
   for (idx_mod in names(list_mod_)){
     for (idx_sex in list_sex){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
-
+      df_src_sex$value<-as.numeric(df_src_sex$value)
       mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
       if (class(mod)[1]!="try-error"){
         p_table<-summary.gam(mod)$p.table
@@ -173,13 +173,19 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
     #list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
     list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
     stopCluster(clust)
+    
   }else{
     list_dst_gamm<-list()
     if (calc_identical){
       list_id_from<-list_roi
+      n_edge<-length(list_roi)*(length(list_roi)-1)/2+length(list_roi)
     }else{
       list_id_from<-list_roi[-length(list_roi)]
+      n_edge<-length(list_roi)*(length(list_roi)-1)/2
     }
+    interval_refresh<-max(1,floor(n_edge/300))
+    progressbar <- txtProgressBar(min = 1, max = n_edge, style = 3)
+    idx_edge<-0
     for (id_from in list_id_from){
       df_join_from<-df_join[df_join$from==id_from,]
       label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
@@ -189,6 +195,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
         list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
       }
       for(id_to in list_id_to){
+        idx_edge<-idx_edge+1
         label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
         #print(paste("Calculating",label_from,"and",label_to,sep=" "))
         df_src<-df_join_from[df_join_from$to==id_to,]
@@ -196,8 +203,13 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
                          list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
                                              "label_from"=label_from,"label_to"=label_to,
                                              "list_mod"=list_mod_,"list_sex"=list_sex))))
+        if ((idx_edge %% interval_refresh) ==0){
+          Sys.sleep(0.1)
+          setTxtProgressBar(progressbar, idx_edge)
+        }
       }
     }
+    close(progressbar)
   }
   
   #print("Combining GAM results.")
@@ -239,7 +251,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
   gc()
   
   rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
-  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"==df_out_aic))
+  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic))
 }
 
 
@@ -665,8 +677,8 @@ func_subset_str<-function(df_str,
 #**************************************************
 # General correlation calculation =================
 #**************************************************
-func_cor<-function(input){
-  cor <-rcorr(as.matrix(input), type="pearson")
+func_cor<-function(input,type="pearson"){
+  cor <-rcorr(as.matrix(input), type=type)
   n_node<-ncol(input)
   cor_flat<-data.frame(matrix(nrow=n_node*(n_node-1)/2,ncol=4))
   colnames(cor_flat)<-c("from","to","r","p")
