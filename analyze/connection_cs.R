@@ -19,11 +19,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"433_fc_gam_aroma_gsr"
-
 #dir_in<-"431_fc_aroma_gsr"
-#dir_out<-"435_fc_ca_aroma_gsr"
+#dir_out<-"433_fc_gam_aroma_gsr"
+
+dir_in<-"431_fc_aroma_gsr"
+dir_out<-"435_fc_ca_aroma_gsr"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
@@ -182,7 +182,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
                          list_sex_=ca_fc_list_sex,list_atlas_=list_atlas,
                          list_covar_tanner_=ca_fc_list_covar_tanner,list_tanner_=ca_fc_list_tanner,
                          list_covar_hormone_=ca_fc_list_covar_hormone,list_hormone_=ca_fc_list_hormone,
-                         list_dim_ca_=list_dim_ca,skip_ca_plot=T){
+                         list_dim_ca_=list_dim_ca,skip_ca_plot=F){
   print("Starting ca_fc_cs_multi()")
   nullobj<-func_createdirs(paths_,str_proc="ca_fc_cs_multi()",copy_log=T)
   # Increase memory limit for later ICA calculation
