@@ -310,8 +310,9 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
         write.csv(df_pca_mri_grp,path_pca_mri_grp,row.names=F)
         # ICA
         for (dim in list_dim_ca_){
+          df_ica_mri_subset<-df_ica_mri[df_ica_mri$dim==dim,]
           df_ica_mri_grp<-rbind.fill(df_ica_mri_grp,
-                                     group_factor(df_pca_mri,dim,dict_roi,list_group,list_sex_))
+                                     group_factor(df_ica_mri_subset,dim,dict_roi,list_group,list_sex_))
         }
         write.csv(df_ica_mri_grp,path_ica_mri_grp,row.names=F)
       }
