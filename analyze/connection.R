@@ -17,7 +17,8 @@ path_exp_full<-NULL
 #list_atlas<-"ho112"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"424_fc_gamm_aroma"
+#dir_out<-"424_fc_gamm_aroma"
+dir_out<-"427_fc_gamm_aroma"
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
@@ -113,8 +114,8 @@ gamm_fc_core<-function(paths_,df_fc,df_fc_grp,atlas,df_roi,list_wave_,subset_sub
     df_join$value<-as.numeric.factor(df_join$value)
     
     # Calculate ROI-wise GAMM of FC
-    #data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=F,calc_identical=F)
-    data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=T,calc_identical=F)
+    data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=F,calc_identical=F)
+    #data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=T,calc_identical=F)
     df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=F)
     
     # Join group-wise FC and clinical data

@@ -76,7 +76,7 @@ gamm_core<-function(data_src){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
       df_src_sex$value<-as.numeric(df_src_sex$value)
       if (data_src$calc_parallel){
-        mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F,control=list(nthreads=1))
+        mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
       }else{
         mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
       }
@@ -167,7 +167,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
     
     # Parallel processing
     n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
-    #n_cluster<-min(floor(detectCores()*1/8),length(list_src_gamm))
+    #n_cluster<-1
     clust<-makeCluster(n_cluster)
     #print(paste("Calculating GAM in parallel,",as.character(n_cluster),"cores.",sep=" "))
     clusterExport(clust,
