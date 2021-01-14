@@ -120,3 +120,7 @@ summary(mod6)
 vis.gam(mod6, view=c("edge","tanner"), color="cm", theta=45)
 
 ####
+
+mod7<-gam(value ~ age + s(tanner,bs='cr',id=1,by=edge,k=5) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod7)
+vis.gam(mod7, view=c("edge","tanner"), color="cm", theta=45)

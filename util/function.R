@@ -66,7 +66,6 @@ func_path<-function(list_path_root = c("C:/Users/atiro","D:/atiro","/home/atirom
 
 gamm_core<-function(data_src){
   df_src<-data_src$df_src
-  
   list_mod_<-data_src$list_mod
   list_sex<-data_src$list_sex
   
@@ -76,7 +75,11 @@ gamm_core<-function(data_src){
     for (idx_sex in list_sex){
       df_src_sex<-df_src[df_src$sex==idx_sex,]
       df_src_sex$value<-as.numeric(df_src_sex$value)
-      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+      if (data_src$calc_parallel){
+        mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F,control=list(nthreads=1))
+      }else{
+        mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+      }
       if (class(mod)[1]!="try-error"){
         p_table<-summary.gam(mod)$p.table
         if (is.null(summary.gam(mod)$s.table)){
@@ -157,7 +160,8 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
         df_src<-df_join_from[df_join_from$to==id_to,]
         list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
                                                  "label_from"=label_from,"label_to"=label_to,
-                                                 "list_mod"=list_mod_,"list_sex"=list_sex)))
+                                                 "list_mod"=list_mod_,"list_sex"=list_sex,
+                                                 "calc_parallel"=calc_parallel)))
       }
     }
     
@@ -202,7 +206,8 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
         list_dst_gamm<-c(list_dst_gamm,
                          list(gamm_core(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
                                              "label_from"=label_from,"label_to"=label_to,
-                                             "list_mod"=list_mod_,"list_sex"=list_sex))))
+                                             "list_mod"=list_mod_,"list_sex"=list_sex,
+                                             "calc_parallel"=calc_parallel))))
         if ((idx_edge %% interval_refresh) ==0){
           Sys.sleep(0.1)
           setTxtProgressBar(progressbar, idx_edge)
