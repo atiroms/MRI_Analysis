@@ -73,7 +73,17 @@ gamm_core<-function(data_src){
   df_out_aic_add<-df_out_gamm_add<-data.frame()
   for (idx_mod in names(list_mod_)){
     for (idx_sex in list_sex){
-      df_src_sex<-df_src[df_src$sex==idx_sex,]
+      df_src_sex<-NULL
+      label_sex<-NULL
+      for (subidx_sex in idx_sex){
+        df_src_sex<-rbind(df_src_sex,df_src[df_src$sex==subidx_sex,])
+        if (is.null(label_sex)){
+          label_sex<-as.character(subidx_sex)
+        }else{
+          label_sex<-paste(label_sex,subidx_sex,sep="_")
+        }
+      }
+      
       df_src_sex$value<-as.numeric(df_src_sex$value)
       if (data_src$calc_parallel){
         mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
@@ -96,9 +106,9 @@ gamm_core<-function(data_src){
         }
         
         df_out_gamm_add<-rbind(df_out_gamm_add,
-                               cbind(sex=idx_sex,model=idx_mod,df_out_gamm_add_add))
+                               cbind(sex=label_sex,model=idx_mod,df_out_gamm_add_add))
         df_out_aic_add<-rbind(df_out_aic_add,
-                              data.frame(sex=idx_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+                              data.frame(sex=label_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
       }
     } # Finished looping over sex
   }# Finished looping over model
@@ -106,7 +116,15 @@ gamm_core<-function(data_src){
   # Compare AICs of GAMM models
   df_out_aic_add_sex_rbind<-data.frame()
   for (idx_sex in list_sex){
-    df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==idx_sex,]
+    label_sex<-NULL
+    for (subidx_sex in idx_sex){
+      if (is.null(label_sex)){
+        label_sex<-as.character(subidx_sex)
+      }else{
+        label_sex<-paste(label_sex,subidx_sex,sep="_")
+      }
+    }
+    df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==label_sex,]
     df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
                        'aic_best_among_models']<-1
     df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
@@ -134,10 +152,12 @@ combine_gamm<-function(list_dst_sub){
   return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic))
 }
 
-iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F){
+iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F,list_sex=NULL){
   list_roi<-df_roi$id
-  list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
-  
+  if (is.null(list_sex)){
+    list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
+  }
+    
   if (calc_parallel){
     # Prepare dataset for multi-core processing
     #print("Preparing dataset for parallel processing.")
@@ -178,7 +198,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
     list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
     stopCluster(clust)
     
-  }else{
+  }else{ # if calc_parallel==F
     list_dst_gamm<-list()
     if (calc_identical){
       list_id_from<-list_roi

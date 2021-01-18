@@ -4,6 +4,27 @@
 # R script for commonly used parameters in MRI data analysis
 
 
+
+#**************************************************
+# sex_diff_fc_multi() =================================
+#**************************************************
+
+sex_diff_fc_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+                                     list("key"="W1_rsfMRIexist","condition"="==1"),
+                                     list("key"="W1_Censor","condition"="<126")),
+                            "2"=list(list("key"="W2_T1QC","condition"="==1"),
+                                     list("key"="W2_rsfMRIexist","condition"="==1"),
+                                     list("key"="W2_Censor","condition"="<126")))
+sex_diff_fc_list_covar<-list("age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
+                             "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex"))
+sex_diff_fc_list_mod <- list("l"= "value ~ sex + age + s(ID_pnTTC,bs='re')")
+sex_diff_fc_list_plot <- list("a"=list("title"="Age effect","var_exp"="age"),
+                              "s"=list("title"="Sex effect","var_exp"="sex"))
+sex_diff_fc_list_type_p <- "p"
+sex_diff_fc_thr_p <- 0.001
+
+
+
 #**************************************************
 # ca_fc_cs_multi() ================================ 
 #**************************************************
