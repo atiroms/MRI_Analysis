@@ -84,12 +84,12 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # Sex Difference of FCs ===========================
 #**************************************************
 
-sex_diff_fc_multi<-function(paths_=paths,subset_subj_=sex_diff_fc_subset_subj,list_wave_=list_wave,
-                            list_atlas_=list_atlas,key_group_='group_3',
-                            list_covar_=sex_diff_fc_list_covar,
-                            list_mod_=sex_diff_fc_list_mod,list_plot_=sex_diff_fc_list_plot,
-                            list_type_p_=sex_diff_fc_list_type_p,thr_p_=sex_diff_fc_thr_p
-                            ){
+sex_diff_fc<-function(paths_=paths,subset_subj_=sex_diff_fc_subset_subj,list_wave_=list_wave,
+                      list_atlas_=list_atlas,key_group_='group_3',
+                      list_covar_=sex_diff_fc_list_covar,
+                      list_mod_=sex_diff_fc_list_mod,list_plot_=sex_diff_fc_list_plot,
+                      list_type_p_=sex_diff_fc_list_type_p,thr_p_=sex_diff_fc_thr_p
+                      ){
   
   print("Starting sex_diff_fc_multi().")
   nullobj<-func_createdirs(paths_,str_proc="sex_diff_fc_multi()",copy_log=T)
@@ -110,9 +110,11 @@ sex_diff_fc_multi<-function(paths_=paths,subset_subj_=sex_diff_fc_subset_subj,li
     df_join<-join_fc_clin(data_fc$df_fc,data_clin$df_clin)
     data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod_,calc_parallel=F,calc_identical=F,list_sex=list(c(1,2)))
     
+    
     # Calculate Group-wise GAMM of FC
     df_join_grp<-join_fc_clin(data_fc$df_fc_grp,data_clin$df_clin)
     data_gamm_grp<-iterate_gamm(df_join_grp,data_fc$df_grp,list_mod_,calc_parallel=F,calc_identical=T,list_sex=list(c(1,2)))
+    
     
     # Graphical output of ROI- and group-wise GAMM of FC
     plot_gam_fc(paths_,df_gam=df_plot,df_gam_grp_sign=df_plot_grp,df_gam_grp_abs=NULL,atlas,
@@ -220,8 +222,7 @@ join_fc_clin<-function(df_fc,df_clin){
   df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
   colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
   colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
-  df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
-                  -which(colnames(df_fc)=="p"))]
+  df_fc$r<-df_fc$p<-NULL
   df_clin$wave<-as.character(df_clin$wave)
   
   # Join clinical and FC data frames
@@ -285,7 +286,7 @@ prep_data_fc<-function(paths,atlas,key_group){
       }
     }
   }
-  df_fc_grp$ID_pnTTC<-as.character(as.numeric.factor(df_fc_grp$ID_pnTTC))
+  df_fc_grp$ID_pnTTC<-as.numeric(as.numeric.factor(df_fc_grp$ID_pnTTC))
   df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
   
   df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))

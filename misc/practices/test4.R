@@ -31,7 +31,132 @@ data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar_,re
 
 # Calculate ROI-wise GAMM of FC
 df_join<-join_fc_clin(data_fc$df_fc,data_clin$df_clin)
-data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod_,calc_parallel=F,calc_identical=F,list_sex=list(c(1,2)))
+#data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod_,calc_parallel=F,calc_identical=F,list_sex=list(c(1,2)))
+
+####
+
+df_roi<-data_fc$df_roi
+calc_parallel=F
+calc_identical=F
+list_sex=list(c(1,2))
+
+####
+
+list_roi<-df_roi$id
+if (is.null(list_sex)){
+  list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
+}
+
+# Prepare dataset for multi-core processing
+#print("Preparing dataset for parallel processing.")
+list_src_gamm<-list()
+if (calc_identical){
+  list_id_from<-list_roi
+}else{
+  list_id_from<-list_roi[-length(list_roi)]
+}
+for (id_from in list_id_from){
+  df_join_from<-df_join[df_join$from==id_from,]
+  label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+  if (calc_identical){
+    list_id_to<-list_roi[seq(which(list_roi==id_from),length(list_roi))]
+  }else{
+    list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
+  }
+  for(id_to in list_id_to){
+    label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+    df_src<-df_join_from[df_join_from$to==id_to,]
+    df_src$from<-df_src$to<-NULL
+    list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
+                                             "label_from"=label_from,"label_to"=label_to,
+                                             "list_mod"=list_mod_,"list_sex"=list_sex,
+                                             "calc_parallel"=calc_parallel)))
+  }
+}
+
+####
+
+data_src<-list_src_gamm[[1]]
+
+####
+
+df_src<-data_src$df_src
+list_mod_<-data_src$list_mod
+list_sex<-data_src$list_sex
+
+#list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
+df_out_aic_add<-df_out_gamm_add<-data.frame()
+for (idx_mod in names(list_mod_)){
+  for (idx_sex in list_sex){
+    df_src_sex<-NULL
+    label_sex<-NULL
+    for (subidx_sex in idx_sex){
+      df_src_sex<-rbind(df_src_sex,df_src[df_src$sex==subidx_sex,])
+      if (is.null(label_sex)){
+        label_sex<-as.character(subidx_sex)
+      }else{
+        label_sex<-paste(label_sex,subidx_sex,sep="_")
+      }
+    }
+    
+    df_src_sex$value<-as.numeric(df_src_sex$value)
+    if (data_src$calc_parallel){
+      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
+    }else{
+      mod<-try(gam(as.formula(list_mod_[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+    }
+    if (class(mod)[1]!="try-error"){
+      p_table<-summary.gam(mod)$p.table
+      if (is.null(summary.gam(mod)$s.table)){
+        df_out_gamm_add_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                        se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                        p=p_table[,'Pr(>|t|)'])
+      }else{
+        s_table<-summary.gam(mod)$s.table
+        df_out_gamm_add_add<-rbind(data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                              se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                              p=p_table[,'Pr(>|t|)']),
+                                   data.frame(term=rownames(s_table),estimate=NA,se=NA,F=s_table[,'F'],
+                                              t=NA,p=s_table[,'p-value']))
+      }
+      
+      df_out_gamm_add<-rbind(df_out_gamm_add,
+                             cbind(sex=label_sex,model=idx_mod,df_out_gamm_add_add))
+      df_out_aic_add<-rbind(df_out_aic_add,
+                            data.frame(sex=label_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+    }
+  } # Finished looping over sex
+}# Finished looping over model
+
+# Compare AICs of GAMM models
+df_out_aic_add_sex_rbind<-data.frame()
+for (idx_sex in list_sex){
+  label_sex<-NULL
+  for (subidx_sex in idx_sex){
+    if (is.null(label_sex)){
+      label_sex<-as.character(subidx_sex)
+    }else{
+      label_sex<-paste(label_sex,subidx_sex,sep="_")
+    }
+  }
+  df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==label_sex,]
+  df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
+                     'aic_best_among_models']<-1
+  df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
+}
+
+# Prepare output dataframe
+id_from<-data_src$id_from
+id_to<-data_src$id_to
+label_from<-data_src$label_from
+label_to<-data_src$label_to
+df_out_gamm_add<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                       df_out_gamm_add)
+df_out_aic_add_sex_rbind<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
+                                df_out_aic_add_sex_rbind)
+
+
+####
 
 # Calculate Group-wise GAMM of FC
 df_join_grp<-join_fc_clin(data_fc$df_fc_grp,data_clin$df_clin)
