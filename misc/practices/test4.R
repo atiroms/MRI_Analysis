@@ -37,8 +37,13 @@ data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod_,calc_parallel=F,calc_id
 
 ####
 
-df_gamm<-data_gamm$df_out_gamm
-df_m<-df_gamm[df_gamm$term=="sex2",]
+df_gamm_sign<-data_gamm$df_out_gamm
+df_gamm_sign<-df_gamm_sign[df_gamm_sign$term=="sex2" && df_gamm_sign$p<thr_p,]
+df_m<-df_gamm_sign[df_gamm_sign$t<0,]
+df_f<-df_gamm_sign[df_gamm_sign$t>0,]
+
+####
+bfs<-function()
 
 ####
 
