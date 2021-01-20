@@ -70,7 +70,7 @@ gamm_core<-function(data_src){
   list_sex<-data_src$list_sex
   
   #list_sex<-sort(unique(as.numeric.factor(df_src$sex)))
-  df_out_aic_add<-df_out_gamm_add<-data.frame()
+  df_out_aic_add<-df_out_gamm_add<-df_out_anova_add<-data.frame()
   for (idx_mod in names(list_mod_)){
     for (idx_sex in list_sex){
       df_src_sex<-NULL
@@ -92,23 +92,24 @@ gamm_core<-function(data_src){
       }
       if (class(mod)[1]!="try-error"){
         p_table<-summary.gam(mod)$p.table
-        if (is.null(summary.gam(mod)$s.table)){
-          df_out_gamm_add_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
-                                          se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
-                                          p=p_table[,'Pr(>|t|)'])
-        }else{
-          s_table<-summary.gam(mod)$s.table
-          df_out_gamm_add_add<-rbind(data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
-                                                se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
-                                                p=p_table[,'Pr(>|t|)']),
+        df_out_gamm_add_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                        se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                        p=p_table[,'Pr(>|t|)'])
+        s_table<-summary.gam(mod)$s.table
+        if(!is.null(s_table)){
+          df_out_gamm_add_add<-rbind(df_out_gamm_add_add,
                                      data.frame(term=rownames(s_table),estimate=NA,se=NA,F=s_table[,'F'],
                                                 t=NA,p=s_table[,'p-value']))
         }
-        
+        p_table_anova<-anova.gam(mod)$pTerms.table
+        colnames(p_table_anova)<-c("df","F","p")
         df_out_gamm_add<-rbind(df_out_gamm_add,
                                cbind(sex=label_sex,model=idx_mod,df_out_gamm_add_add))
         df_out_aic_add<-rbind(df_out_aic_add,
                               data.frame(sex=label_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+        df_out_anova_add<-rbind(df_out_anova_add,
+                                cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
+                                      p_table_anova))
       }
     } # Finished looping over sex
   }# Finished looping over model
@@ -140,7 +141,8 @@ gamm_core<-function(data_src){
   df_out_aic_add_sex_rbind<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
                                   df_out_aic_add_sex_rbind)
   
-  return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind))
+  return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind,
+              "df_out_anova_add"=df_out_anova_add))
 }
 
 combine_gamm<-function(list_dst_sub){
@@ -189,13 +191,13 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
   if (calc_parallel){
     n_cluster<-min(floor(detectCores()*3/4),length(list_src_gamm))
   }else{
-    n_cluster<-1
+    n_cluster<-2
   }
   clust<-makeCluster(n_cluster)
   #print(paste("Calculating GAM in parallel,",as.character(n_cluster),"cores.",sep=" "))
   clusterExport(clust,
                 varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
-                          "as.numeric.factor"),
+                          "anova.gam","as.numeric.factor"),
                 envir=environment())
   list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
   stopCluster(clust)

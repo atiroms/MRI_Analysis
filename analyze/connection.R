@@ -109,7 +109,8 @@ sex_diff_fc<-function(paths_=paths,subset_subj_=sex_diff_fc_subset_subj,list_wav
     # Calculate ROI-wise GAMM of FC
     df_join<-join_fc_clin(data_fc$df_fc,data_clin$df_clin)
     data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod_,calc_parallel=F,calc_identical=F,list_sex=list(c(1,2)))
-    
+    df_gamm<-data_gamm$df_out_gamm
+    df_m<-df_gamm[df_gamm$term=="sex2",]
     
     # Calculate Group-wise GAMM of FC
     df_join_grp<-join_fc_clin(data_fc$df_fc_grp,data_clin$df_clin)
