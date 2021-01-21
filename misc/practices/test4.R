@@ -44,32 +44,43 @@ df_f<-df_gamm_sign[df_gamm_sign$t>0,]
 
 ####
 bfs<-function(df_edge){
-  list_network<-list()
-  
   df_edge_remain<-df_edge
-  df_edge_new<-df_edge_remain[1,]
-  
-  
-  
+  list_network<-list()
+  list_size<-NULL
+  #df_edge_new<-df_edge_remain[1,]
   while (nrow(df_edge_remain)>0){ # for each subnetwork
-    node_orig<-df_edge_remain[[1,"from"]]
-    list_node_new<-node_orig
-    
-    for (node_new in list_node_new){
-      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_new,]
+    list_node_todo<-list_node_net<-df_edge_remain[[1,"from"]]
+    #node_orig<-df_edge_remain[[1,"from"]]
+    #list_node_new<-node_orig
+    df_edge_net<-data.frame()
+    while (length(list_node_todo)>0){
+      node_check<-list_node_todo[1]
+      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_cheeck,]
+      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
       list_node_new_from<-df_edge_new_from[[,"to"]]
-      df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_new,]
-      list_node_new_to<-df_edge_new_from[[,"from"]]
+      df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
+      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
+      list_node_new_to<-df_edge_new_to[[,"from"]]
       df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
       list_node_new<-c(list_node_new_from,list_node_new_to)
+      
+      df_edge_net<-rbind(df_edge_net,df_edge_new)
+      list_node_net<-c(list_node_net,list_node_new)
+      list_node_todo<-c(list_node_todo,list_node_new)
+      
+      list_node_todo<-list_node_todo[-1]
     }
     
-    # add data to list of subnetwork
+    size_net<-nrow(df_edge_net)
+    list_size<-c(list_size,size_net)
+    list_network<-c(list_network,list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net))
   }
-  list_node_new<-df_edge_remain[[1,"from"]]
   
-
+  max_size<-max(list_size)
+  output<-list("list_network"=list_network,"list_size"=list_size,"max_size"=max_size)
+  return(output)
 }
+
 ####
 
 ####
