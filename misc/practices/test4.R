@@ -43,8 +43,33 @@ df_m<-df_gamm_sign[df_gamm_sign$t<0,]
 df_f<-df_gamm_sign[df_gamm_sign$t>0,]
 
 ####
-bfs<-function()
+bfs<-function(df_edge){
+  list_network<-list()
+  
+  df_edge_remain<-df_edge
+  df_edge_new<-df_edge_remain[1,]
+  
+  
+  
+  while (nrow(df_edge_remain)>0){ # for each subnetwork
+    node_orig<-df_edge_remain[[1,"from"]]
+    list_node_new<-node_orig
+    
+    for (node_new in list_node_new){
+      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_new,]
+      list_node_new_from<-df_edge_new_from[[,"to"]]
+      df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_new,]
+      list_node_new_to<-df_edge_new_from[[,"from"]]
+      df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
+      list_node_new<-c(list_node_new_from,list_node_new_to)
+    }
+    
+    # add data to list of subnetwork
+  }
+  list_node_new<-df_edge_remain[[1,"from"]]
+  
 
+}
 ####
 
 ####

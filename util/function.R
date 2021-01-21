@@ -146,12 +146,14 @@ gamm_core<-function(data_src){
 }
 
 combine_gamm<-function(list_dst_sub){
-  df_gamm<-df_aic<-data.frame()
+  df_gamm<-df_aic<-df_anova<-data.frame()
   for (dst_sub in list_dst_sub){
     df_gamm<-rbind(df_gamm,dst_sub$df_out_gamm_add)
     df_aic<-rbind(df_aic,dst_sub$df_out_aic_add)
+    df_anova<-rbind(df_anova,dst_sub$df_out_anova_add)
   }
-  return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic))
+  return(list("df_out_gamm_add"=df_gamm,"df_out_aic_add"=df_aic,
+              "df_out_anova_add"=df_anova))
 }
 
 iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F,list_sex=NULL){
@@ -231,16 +233,17 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
   stopCluster(clust)
   
   #print("Combining sublists.")
-  df_out_gamm<-df_out_aic<-NULL
+  df_out_gamm<-df_out_aic<-df_out_anova<-NULL
   for (dst_gamm in list_dst_gamm){
     df_out_gamm<-rbind(df_out_gamm,dst_gamm$df_out_gamm_add)
     df_out_aic<-rbind(df_out_aic,dst_gamm$df_out_aic_add)
+    df_out_anova<-rbind(df_out_anova,dst_gamm$df_out_anova_add)
   }
   list_dst_gamm<-NULL
   gc()
   
-  rownames(df_out_gamm)<-rownames(df_out_aic)<-NULL
-  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic))
+  rownames(df_out_gamm)<-rownames(df_out_aic)<-rownames(df_out_anova)<-NULL
+  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic,"df_out_anova"<-df_out_anova))
 }
 
 
