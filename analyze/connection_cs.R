@@ -63,6 +63,20 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 
 
 #**************************************************
+# Sex difference of FC-cs and FC-diff data ========
+#**************************************************
+sex_diff_fc_cs<-function(){
+  print("Starting sex_diff_fc_cs()")
+  nullobj<-func_createdirs(paths_,str_proc="sex_diff_fc_cs()",copy_log=T)
+  # Increase memory limit for later ICA calculation
+  memory.limit(1000000)
+  for (atlas in list_atlas_){
+  
+  }
+}
+
+
+#**************************************************
 # Iterate ca_fc() over clinical variables =========
 # and waves =======================================
 #**************************************************
@@ -826,30 +840,6 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
 #**************************************************
 # Additive/Linear model of FC in cross-section ====
 #**************************************************
-
-join_fc_clin<-function(df_fc,df_clin,wave_clin,wave_mri){
-  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
-  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
-  df_fc<-df_fc[df_fc$ses==wave_mri,]
-  df_fc$ses<-NULL
-  #colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
-  df_fc<-df_fc[,c("ID_pnTTC","from","to","value")]
-  
-  df_clin<-df_clin[df_clin$wave==wave_clin,]
-  df_clin$wave<-NULL
-  
-  # Join clinical and FC data frames
-  #print('Joining clinical and FC data.')
-  #df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
-  df_join<-inner_join(df_fc,df_clin,by='ID_pnTTC')
-  for (key in c('ID_pnTTC','wave','sex')){
-    if (key %in% colnames(df_join)){
-      df_join[,key]<-as.factor(df_join[,key])
-    }
-  }
-  return(df_join)
-}
-
 gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                     list_atlas_=list_atlas,
                     list_mod_=list_mod,list_plot_=list_plot,key_group_='group_3',
@@ -878,7 +868,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     if (!file.exists(path_file_check)){
       # Load ROI-wise FC data
       df_fc<-as.data.frame(fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep=''))))
-      df_join<-join_fc_clin(df_fc,df_clin,wave_clin,wave_mri)
+      df_join<-join_fc_clin_cs(df_fc,df_clin,wave_clin,wave_mri)
       
       # Calculate and save ROI-wise GAMM of FC
       print(paste('Calculating GAM, atlas: ',atlas,sep=''))

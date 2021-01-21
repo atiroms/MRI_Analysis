@@ -42,6 +42,29 @@ join_fc_clin<-function(df_fc,df_clin){
   return(df_join)
 }
 
+join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
+  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
+  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
+  df_fc<-df_fc[df_fc$ses==wave_mri,]
+  df_fc$ses<-NULL
+  #colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
+  df_fc<-df_fc[,c("ID_pnTTC","from","to","value")]
+  
+  df_clin<-df_clin[df_clin$wave==wave_clin,]
+  df_clin$wave<-NULL
+  
+  # Join clinical and FC data frames
+  #print('Joining clinical and FC data.')
+  #df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
+  df_join<-inner_join(df_fc,df_clin,by='ID_pnTTC')
+  for (key in c('ID_pnTTC','wave','sex')){
+    if (key %in% colnames(df_join)){
+      df_join[,key]<-as.factor(df_join[,key])
+    }
+  }
+  df_join$value<-as.numeric.factor(df_join$value)
+  return(df_join)
+}
 
 #**************************************************
 # Prepare longitudinal FC data ====================
