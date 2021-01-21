@@ -21,6 +21,137 @@ library(ggpubr)
 
 
 #**************************************************
+# Join FC and clinical data =======================
+#**************************************************
+join_fc_clin<-function(df_fc,df_clin){
+  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
+  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
+  colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
+  df_fc$r<-df_fc$p<-NULL
+  df_clin$wave<-as.character(df_clin$wave)
+  
+  # Join clinical and FC data frames
+  #print('Joining clinical and FC data.')
+  df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
+  for (key in c('ID_pnTTC','wave','sex')){
+    if (key %in% colnames(df_join)){
+      df_join[,key]<-as.factor(df_join[,key])
+    }
+  }
+  df_join$value<-as.numeric.factor(df_join$value)
+  return(df_join)
+}
+
+
+#**************************************************
+# Prepare longitudinal FC data ====================
+#**************************************************
+prep_data_fc_long<-function(paths,atlas,key_group){
+  dict_roi <- func_dict_roi(paths)
+  
+  df_fc<-as.data.frame(fread(file.path(paths$input,"output",
+                                       paste("atl-",atlas,"_fc.csv",sep=""))))
+  df_fc<-df_fc[df_fc$ses!="2-1",]
+  
+  # Prepare dataframe of ROIs
+  list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
+  df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group)]
+  colnames(df_roi)[colnames(df_roi)==key_group]<-"group"
+  
+  # prepare dataframe of group-wise FC averages
+  list_group<-unique(as.character(df_roi$group))
+  df_fc_temp<-df_fc
+  df_fc_temp$z_r[which(is.nan(df_fc_temp$z_r))]<-0
+  df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("from"="id"))
+  colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"from_group"
+  df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("to"="id"))
+  colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"to_group"
+  df_subj<-NULL
+  list_subj<-sort(unique(df_fc$ID_pnTTC))
+  for (id_subj in list_subj){
+    list_ses<-sort(unique(df_fc[df_fc$ID_pnTTC==id_subj,"ses"]))
+    list_ses<-list_ses[list_ses!="2-1"]
+    df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
+  }
+  df_subj$ses<-as.character(df_subj$ses)
+  
+  df_fc_grp<-data.frame()
+  for (idx_subj_ses in seq(dim(df_subj)[1])){
+    #print(paste(df_subj[idx_subj_ses,"ID_pnTTC"],df_subj[idx_subj_ses,"ses"]))
+    df_fc_subset1<-df_fc_temp[df_fc_temp$ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
+                              & df_fc_temp$ses==df_subj[idx_subj_ses,"ses"],]
+    for (idx_grp1 in seq(length(list_group))){
+      for (idx_grp2 in seq(idx_grp1,length(list_group))){
+        # data in df_fc_subset2 is doubled for connections within same group,
+        # but does not affect z_r average calculation
+        df_fc_subset2<-rbind(df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp1]
+                                           & df_fc_subset1$to_group==list_group[idx_grp2],],
+                             df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp2]
+                                           & df_fc_subset1$to_group==list_group[idx_grp1],])
+        df_fc_grp<-rbind(df_fc_grp,
+                         cbind(ID_pnTTC=df_subj[idx_subj_ses,"ID_pnTTC"],ses=df_subj[idx_subj_ses,"ses"],
+                               from=list_group[idx_grp1],to=list_group[idx_grp2],
+                               z_r=mean(df_fc_subset2$z_r)))
+      }
+    }
+  }
+  df_fc_grp$ID_pnTTC<-as.numeric(as.numeric.factor(df_fc_grp$ID_pnTTC))
+  df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
+  
+  df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
+  return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_grp"=df_grp))
+}
+
+
+
+#**************************************************
+# Breadth-first search of connected network =======
+#**************************************************
+func_bfs<-function(df_edge){
+  df_edge_remain<-df_edge
+  list_network<-list()
+  list_size<-NULL
+  #df_edge_new<-df_edge_remain[1,]
+  while (nrow(df_edge_remain)>0){ # for each subnetwork
+    list_node_todo<-list_node_net<-df_edge_remain[[1,"from"]]
+    #node_orig<-df_edge_remain[[1,"from"]]
+    #list_node_new<-node_orig
+    df_edge_net<-data.frame()
+    while (length(list_node_todo)>0){
+      node_check<-list_node_todo[1]
+      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
+      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
+      list_node_new_from<-df_edge_new_from[,"to"]
+      df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
+      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
+      list_node_new_to<-df_edge_new_to[,"from"]
+      df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
+      list_node_new<-c(list_node_new_from,list_node_new_to)
+      
+      df_edge_net<-rbind(df_edge_net,df_edge_new)
+      list_node_net<-c(list_node_net,list_node_new)
+      list_node_todo<-c(list_node_todo,list_node_new)
+      
+      list_node_todo<-list_node_todo[-1]
+    }
+    
+    size_net<-nrow(df_edge_net)
+    list_size<-c(list_size,size_net)
+    list_network<-c(list_network,list(list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net)))
+  }
+  if(is.null(list_size)){
+    max_size<-0
+    n_network<-0
+  }else{
+    max_size<-max(list_size)
+    n_network<-length(list_size)
+  }
+  output<-list("list_network"=list_network,"list_size"=list_size,"max_size"=max_size,"n_network"=n_network)
+  return(output)
+}
+
+
+#**************************************************
 # Fisher transformation of Correlation to Z =======
 #**************************************************
 func_fisherz<-function(rho){
@@ -243,7 +374,7 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
   gc()
   
   rownames(df_out_gamm)<-rownames(df_out_aic)<-rownames(df_out_anova)<-NULL
-  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic,"df_out_anova"<-df_out_anova))
+  return(list("df_out_gamm"=df_out_gamm,"df_out_aic"=df_out_aic,"df_out_anova"=df_out_anova))
 }
 
 

@@ -38,12 +38,21 @@ data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod_,calc_parallel=F,calc_id
 ####
 
 df_gamm_sign<-data_gamm$df_out_gamm
-df_gamm_sign<-df_gamm_sign[df_gamm_sign$term=="sex2" && df_gamm_sign$p<thr_p,]
+#df_gamm_sign<-df_gamm_sign[df_gamm_sign$term=="sex2",]
+df_gamm_sign<-df_gamm_sign[df_gamm_sign$term=="sex2" & df_gamm_sign$p<thr_p_,]
 df_m<-df_gamm_sign[df_gamm_sign$t<0,]
 df_f<-df_gamm_sign[df_gamm_sign$t>0,]
 
 ####
-bfs<-function(df_edge){
+
+#df_edge<-df_m
+data_bfs<-func_bfs(df_m)
+data_bfs<-func_bfs(df_f)
+data_bfs<-func_bfs(data.frame())
+
+####
+
+func_bfs<-function(df_edge){
   df_edge_remain<-df_edge
   list_network<-list()
   list_size<-NULL
@@ -55,12 +64,12 @@ bfs<-function(df_edge){
     df_edge_net<-data.frame()
     while (length(list_node_todo)>0){
       node_check<-list_node_todo[1]
-      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_cheeck,]
+      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
-      list_node_new_from<-df_edge_new_from[[,"to"]]
+      list_node_new_from<-df_edge_new_from[,"to"]
       df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
-      list_node_new_to<-df_edge_new_to[[,"from"]]
+      list_node_new_to<-df_edge_new_to[,"from"]
       df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
       list_node_new<-c(list_node_new_from,list_node_new_to)
       
@@ -73,11 +82,16 @@ bfs<-function(df_edge){
     
     size_net<-nrow(df_edge_net)
     list_size<-c(list_size,size_net)
-    list_network<-c(list_network,list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net))
+    list_network<-c(list_network,list(list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net)))
   }
-  
-  max_size<-max(list_size)
-  output<-list("list_network"=list_network,"list_size"=list_size,"max_size"=max_size)
+  if(is.null(list_size)){
+    max_size<-0
+    n_network<-0
+  }else{
+    max_size<-max(list_size)
+    n_network<-length(list_size)
+  }
+  output<-list("list_network"=list_network,"list_size"=list_size,"max_size"=max_size,"n_network"=n_network)
   return(output)
 }
 
