@@ -773,7 +773,7 @@ model_fp<-function(paths_=paths,
           
           if (n_id_subj_exist_twice>0){
             # Create dataframe for GLM analysis
-            df_src_glm<-func_clinical_data_join(df_src=df_clin,
+            df_src_glm<-func_clinical_data_diffmean(df_src=df_clin,
                                                 list_id_subj=list_id_subj_nonna,
                                                 list_covar=list_covar_)
             df_src_glm<-inner_join(df_src_glm,df_cor_fp,by="ID_pnTTC")

@@ -21,6 +21,40 @@ library(ggpubr)
 
 
 #**************************************************
+# Network-based statistics ========================
+#**************************************************
+func_nbs<-function(df_fc,df_clin,list_mod,list_plot,thr_p_cdt,progressbar){
+  df_join<-join_fc_clin(df_fc,df_clin)
+  # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
+  df_join$value<-df_join$value/df_join$diff_age
+  data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod,calc_parallel=T,calc_identical=F,
+                          list_sex=list(c(1,2)),progressbar=progressbar)
+  list_out_bfs<-list()
+  for (model in names(list_mod)){
+    list_out_model<-list()
+    for (plot in names(list_plot)){
+      var_exp<-list_plot[[plot]][["var_exp"]]
+      df_gamm_subset<-data_gamm$df_out_gamm[data_gamm$df_out_gamm$model==model & data_gamm$df_out_gamm$term==var_exp,]
+      if (nrow(df_gamm_subset)>0){
+        df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
+        df_m<-df_gamm_sign[df_gamm_sign$t<0,]
+        data_bfs_m<-func_bfs(df_m)
+        df_f<-df_gamm_sign[df_gamm_sign$t>0,]
+        data_bfs_f<-func_bfs(df_f)
+        list_out_plot<-list(list("m"=data_bfs_m,"f"=data_bfs_f))
+        names(list_out_plot)<-plot
+        list_out_model<-c(list_out_model,list_out_plot)
+      }
+    }
+    list_out_model<-list(list_out_model)
+    names(list_out_model)<-model
+    list_out_bfs<-c(list_out_bfs,list_out_model)
+  }
+  return(list_out_bfs)
+}
+
+
+#**************************************************
 # Join FC and clinical data =======================
 #**************************************************
 join_fc_clin<-function(df_fc,df_clin){
@@ -69,19 +103,21 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc_long<-function(paths,atlas,key_group){
+prep_data_fc<-function(paths,atlas,key_group,include_diff=F){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
                                        paste("atl-",atlas,"_fc.csv",sep=""))))
-  df_fc<-df_fc[df_fc$ses!="2-1",]
+  if (!include_diff){
+    df_fc<-df_fc[df_fc$ses!="2-1",]
+  }
   
   # Prepare dataframe of ROIs
   list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
   df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group)]
   colnames(df_roi)[colnames(df_roi)==key_group]<-"group"
   
-  # prepare dataframe of group-wise FC averages
+  # Prepare dataframe of group-wise FC averages
   list_group<-unique(as.character(df_roi$group))
   df_fc_temp<-df_fc
   df_fc_temp$z_r[which(is.nan(df_fc_temp$z_r))]<-0
@@ -93,7 +129,7 @@ prep_data_fc_long<-function(paths,atlas,key_group){
   list_subj<-sort(unique(df_fc$ID_pnTTC))
   for (id_subj in list_subj){
     list_ses<-sort(unique(df_fc[df_fc$ID_pnTTC==id_subj,"ses"]))
-    list_ses<-list_ses[list_ses!="2-1"]
+    #list_ses<-list_ses[list_ses!="2-1"]
     df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
   }
   df_subj$ses<-as.character(df_subj$ses)
@@ -134,32 +170,31 @@ func_bfs<-function(df_edge){
   df_edge_remain<-df_edge
   list_network<-list()
   list_size<-NULL
-  #df_edge_new<-df_edge_remain[1,]
-  while (nrow(df_edge_remain)>0){ # for each subnetwork
+  while (nrow(df_edge_remain)>0){ # Examine new subnetwork as long as any edge is remaining
+    # Node as the origin of subnetwork
     list_node_todo<-list_node_net<-df_edge_remain[[1,"from"]]
-    #node_orig<-df_edge_remain[[1,"from"]]
-    #list_node_new<-node_orig
     df_edge_net<-data.frame()
-    while (length(list_node_todo)>0){
-      node_check<-list_node_todo[1]
+    while (length(list_node_todo)>0){ # Search as long as any connected and unexamined node exist
+      node_check<-list_node_todo[1] # Node of interest
+      list_node_todo<-list_node_todo[-1]
       df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
       list_node_new_from<-df_edge_new_from[,"to"]
       df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
       list_node_new_to<-df_edge_new_to[,"from"]
+      # Edge and node connected to node_check
       df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
       list_node_new<-c(list_node_new_from,list_node_new_to)
-      
+      # Add to subnetwork currently examined
       df_edge_net<-rbind(df_edge_net,df_edge_new)
       list_node_net<-c(list_node_net,list_node_new)
-      list_node_todo<-c(list_node_todo,list_node_new)
-      
-      list_node_todo<-list_node_todo[-1]
+      # Add to nodes to be examined
+      list_node_todo<-unique(c(list_node_todo,list_node_new))
     }
-    
     size_net<-nrow(df_edge_net)
     list_size<-c(list_size,size_net)
+    list_node_net<-unique(list_node_net)
     list_network<-c(list_network,list(list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net)))
   }
   if(is.null(list_size)){
@@ -286,14 +321,10 @@ gamm_core<-function(data_src){
   }
   
   # Prepare output dataframe
-  id_from<-data_src$id_from
-  id_to<-data_src$id_to
-  label_from<-data_src$label_from
-  label_to<-data_src$label_to
-  df_out_gamm_add<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                         df_out_gamm_add)
-  df_out_aic_add_sex_rbind<-cbind(from=id_from,to=id_to,label_from=label_from,label_to=label_to,
-                                  df_out_aic_add_sex_rbind)
+  df_id<-data.frame("from"=data_src$id_from,"to"=data_src$id_to,"label_from"=data_src$label_from,"label_to"=data_src$label_to)
+  df_out_gamm_add<-cbind(df_id,df_out_gamm_add)
+  df_out_aic_add_sex_rbind<-cbind(df_id,df_out_aic_add_sex_rbind)
+  df_out_anova_add<-cbind(df_id,df_out_anova_add)
   
   return(list("df_out_gamm_add"=df_out_gamm_add,"df_out_aic_add"=df_out_aic_add_sex_rbind,
               "df_out_anova_add"=df_out_anova_add))
@@ -310,7 +341,7 @@ combine_gamm<-function(list_dst_sub){
               "df_out_anova_add"=df_anova))
 }
 
-iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F,list_sex=NULL){
+iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F,list_sex=NULL,progressbar=T){
   list_roi<-df_roi$id
   if (is.null(list_sex)){
     list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
@@ -355,7 +386,11 @@ iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F
                 varlist=c("list_mod_","sort","gam","as.formula","summary.gam",
                           "anova.gam","as.numeric.factor"),
                 envir=environment())
-  list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
+  if (progressbar){
+    list_dst_gamm<-pblapply(list_src_gamm,gamm_core,cl=clust)
+  }else{
+    list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core)
+  }
   stopCluster(clust)
   
   # Collect data into dataframes
@@ -741,9 +776,9 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
 
 
 #**************************************************
-# Joining longitudinal clinical data ==============
+# Calculate difference and means of clinical data =
 #**************************************************
-func_clinical_data_join<-function(df_src,list_id_subj,list_covar){
+func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
   
   # Classify covaiates to fixed values and unfixed values
   list_covar_fix<-list_covar_change<-NULL
@@ -764,7 +799,7 @@ func_clinical_data_join<-function(df_src,list_id_subj,list_covar){
   # Prepare unfixed values
   df_clin_change<-list()
   for (ses in c(1,2)){
-    df_clin_change_ses<-df_src[df_src$ses==ses & df_src$ID_pnTTC %in% list_id_subj, list_covar_change]
+    df_clin_change_ses<-df_src[df_src$ses==ses & df_src$ID_pnTTC %in% list_id_subj, list_covar_change,drop=F]
     df_clin_change_ses<-list(df_clin_change_ses)
     names(df_clin_change_ses)<-as.character(ses)
     df_clin_change<-c(df_clin_change,df_clin_change_ses)

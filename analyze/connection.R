@@ -100,7 +100,7 @@ sex_diff_fc<-function(paths_=paths,subset_subj_=sex_diff_fc_subset_subj,list_wav
   for (atlas in list_atlas_){
     
     print(paste("Preparing FC data: ",atlas,sep=""))
-    data_fc<-prep_data_fc_long(paths_,atlas,key_group_)
+    data_fc<-prep_data_fc(paths_,atlas,key_group_)
     
     # Prepare clinical data
     data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar_,rem_na_clin=T,
@@ -115,6 +115,10 @@ sex_diff_fc<-function(paths_=paths,subset_subj_=sex_diff_fc_subset_subj,list_wav
     data_bfs_m<-func_bfs(df_m)
     df_f<-df_gamm_sign[df_gamm_sign$t>0,]
     data_bfs_f<-func_bfs(df_f)
+    
+    ####
+    # Under construction from here
+    ####
     
     # Calculate Group-wise GAMM of FC
     df_join_grp<-join_fc_clin(data_fc$df_fc_grp,data_clin$df_clin)
@@ -239,7 +243,7 @@ gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_
   for (atlas in list_atlas_){
     
     print(paste("Preparing FC data: ",atlas,sep=""))
-    data_fc<-prep_data_fc_long(paths_,atlas,key_group_)
+    data_fc<-prep_data_fc(paths_,atlas,key_group_)
     
     # Loop over clinical variables
     #1 Tanner stage

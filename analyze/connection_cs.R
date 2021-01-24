@@ -22,8 +22,8 @@ path_exp_full<-NULL
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"433_fc_gam_aroma_gsr"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"435_fc_ca_aroma_gsr"
+dir_in<-"421_fc_aroma"
+dir_out<-"427_fc_sex_diff_aroma"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
@@ -65,13 +65,58 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 #**************************************************
 # Sex difference of FC-cs and FC-diff data ========
 #**************************************************
-sex_diff_fc_cs<-function(){
+sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
+                         subset_subj_=sex_diff_fc_cs_subset_subj,list_covar_=sex_diff_fc_cs_list_covar,
+                         list_mod_cs_=sex_diff_fc_cs_list_mod_cs,list_mod_diff_=sex_diff_fc_cs_list_mod_diff,
+                         list_plot_=sex_diff_fc_cs_list_plot,
+                         thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt,
+                         thr_p_perm_=sex_diff_fc_cs_thr_p_perm,n_perm_=sex_diff_fc_cs_n_perm){
   print("Starting sex_diff_fc_cs()")
   nullobj<-func_createdirs(paths_,str_proc="sex_diff_fc_cs()",copy_log=T)
-  # Increase memory limit for later ICA calculation
+  # Increase memory limit
   memory.limit(1000000)
   for (atlas in list_atlas_){
-  
+    print(paste("Preparing FC data: ",atlas,sep=""))
+    data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T)
+    data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
+                                       prefix=paste("atl-",atlas,sep=""),print_terminal=F)
+    
+    # Longitudinal change analysis
+    df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
+    # List of subjects meeting QC criteria and has non-NA covariates in both waves
+    list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+    df_clin<-data_clin$df_clin
+    colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+    df_clin_diffmean<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
+    df_clin_diffmean$wave<-"2-1"
+    
+    # Network-based statistics
+    data_bfs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,list_mod=list_mod_diff_,
+                       thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=T)
+    
+    # Permutation test
+    set.seed(0)
+    list_max<-list()
+    pb<-txtProgressBar(min=0,max=n_perm_,style=3)
+    for (idx_perm in seq(n_perm_)){
+      df_clin_diffmean_perm<-df_clin_diffmean
+      df_clin_diffmean_perm$sex<-sample(df_clin_diffmean_perm$sex)
+      data_bfs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,list_mod=list_mod_diff_,
+                         thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
+      for (model in names(data_bfs)){
+        for (plot in names(data_bfs[[model]])){
+          for (sex in names(data_bfs[[model]][[plot]])){
+            list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
+                                                data_bfs[[model]][[plot]][[sex]][["max_size"]])
+          }
+        }
+      }
+      setTxtProgressBar(pb,idx_perm)
+    }
+    
+    
+    # Cross-sectional analysis
+    
   }
 }
 
@@ -226,7 +271,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
         df_pca_mri<-df_pca_subj<-df_pca_vaf<-df_ica_mri<-df_ica_subj<-df_ica_vaf<-NULL
         for (label_sex in names(list_sex_)){
           
-          # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified mri wave
+          # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified MRI wave
           # Existence of clinical variables are not considered here
           subset_subj_temp<-list(c(subset_subj_[[as.character(wave_mri)]],
                                    list(list("key"="Sex","condition"=list_sex_[[label_sex]]))))
