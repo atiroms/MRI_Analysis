@@ -36,7 +36,7 @@ list_dim_ca<-c(10,20,40)
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-c("aal116","ho112")
+list_atlas<-"power264"
 #list_atlas<-c("aal116","power264","shen268")
 #list_atlas<-"aal116"
 
@@ -123,9 +123,11 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
       }
       setTxtProgressBar(pb,idx_perm)
     }
+    close(pb)
 
     # Summarize permutation and threshold
-    Sys.sleep(0.1)
+    #Sys.sleep(0.1)
+    #print("")
     print(paste("Permutation output: ",atlas,sep=""))
     data_nbs_thr<-func_nbs_threshold(paths_,data_nbs,list_max,list_mod_diff_,
                                      list_plot_,thr_p_perm_,atlas,data_fc$df_roi,
