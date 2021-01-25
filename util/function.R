@@ -23,11 +23,11 @@ library(ggpubr)
 #**************************************************
 # Network-based statistics ========================
 #**************************************************
-func_nbs<-function(df_fc,df_clin,list_mod,list_plot,thr_p_cdt,progressbar){
+func_nbs<-function(df_fc,df_clin,df_roi,list_mod,list_plot,thr_p_cdt,progressbar){
   df_join<-join_fc_clin(df_fc,df_clin)
   # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
   df_join$value<-df_join$value/df_join$diff_age
-  data_gamm<-iterate_gamm(df_join,data_fc$df_roi,list_mod,calc_parallel=T,calc_identical=F,
+  data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=T,calc_identical=F,
                           list_sex=list(c(1,2)),progressbar=progressbar)
   list_out_bfs<-list()
   for (model in names(list_mod)){
@@ -51,6 +51,68 @@ func_nbs<-function(df_fc,df_clin,list_mod,list_plot,thr_p_cdt,progressbar){
     list_out_bfs<-c(list_out_bfs,list_out_model)
   }
   return(list_out_bfs)
+}
+
+func_nbs_threshold<-function(paths,data_nbs,list_max,list_mod,list_plot,thr_p_perm,
+                             atlas,df_roi,df_grp){
+  df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
+  for (model in names(data_nbs)){
+    for (plot in names(data_nbs[[model]])){
+      for (sex in c("m","f")){
+        data_nbs_subset<-data_nbs[[model]][[plot]][[sex]]
+        list_max_subset<-list_max[[model]][[plot]][[sex]]
+        list_max_subset_sort<-sort(list_max_subset)
+        thr_size_perm<-list_max_subset_sort[ceiling(length(list_max_subset_sort)*(1-thr_p_perm))]
+        
+        if (sex=="m"){
+          title_sex<-"M>F"
+          color_plt<-"steelblue2"
+        }else{
+          title_sex<-"F>M"
+          color_plt<-"lightcoral"
+        }
+        title_plot<-list_plot[[plot]][["title"]]
+        plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
+                         atlas,model,plot,sex,title_plot,title_sex,color_plt)
+
+        df_head<-data.frame(atlas=atlas,mod=model,plot=plot,sex=sex)
+        list_network_sign<-list()
+        if(length(data_nbs_subset$list_network)>0){
+          for (idx_net in seq(length(data_nbs_subset$list_network))){
+            network<-data_nbs_subset$list_network[[idx_net]]
+            df_net<-rbind(df_net,
+                          cbind(df_head,
+                                data.frame(id_net=idx_net,network$df_edge)))
+            df_size_net<-rbind(df_size_net,
+                               cbind(df_head,
+                                     data.frame(id_net=idx_net,size=network$size_net)))
+            if (network$size_net>=thr_size_perm){
+              list_network_sign<-c(list(network))
+              plot_sex_diff_fc(paths,network$df_edge,atlas,df_roi,df_grp,
+                               model,plot,sex,title_plot,title_sex,idx_net)
+            }
+          }
+        }
+        data_nbs[[model]][[plot]][[sex]][["list_network_sign_perm"]]<-list_network_sign
+        data_nbs[[model]][[plot]][[sex]][["list_max_size_perm"]]<-list_max_subset
+        data_nbs[[model]][[plot]][[sex]][["thr_size_perm"]]<-thr_size_perm
+        df_thr_size<-rbind(df_thr_size,
+                           cbind(df_head,data.frame(thr_size=thr_size_perm)))
+        df_perm<-rbind(df_perm,
+                       cbind(df_head,data.frame(id_perm=seq(length(list_max_subset)),
+                                                max_size_net=list_max_subset)))
+      }
+    }
+  }
+  write.csv(df_net,file.path(paths$output,"output","temp",
+                             paste("atl-",atlas,"_net.csv",sep="")),row.names=F)
+  write.csv(df_size_net,file.path(paths$output,"output","temp",
+                             paste("atl-",atlas,"_size_net.csv",sep="")),row.names=F)
+  write.csv(df_thr_size,file.path(paths$output,"output","temp",
+                             paste("atl-",atlas,"_thr_perm.csv",sep="")),row.names=F)
+  write.csv(df_perm,file.path(paths$output,"output","temp",
+                              paste("atl-",atlas,"_perm.csv",sep="")),row.names=F)
+  return(data_nbs)
 }
 
 

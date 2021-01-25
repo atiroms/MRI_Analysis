@@ -17,6 +17,97 @@ library(viridis)
 
 
 #**************************************************
+# Histogram of Permutaion =========================
+#**************************************************
+plot_permutation<-function(paths_,list_max,thr_size_perm,
+                           atlas,model,plot,sex,title_plot,title_sex,color_plt){
+  plt<-(ggplot(data.frame(max=list_max), aes(x=max))
+        + geom_histogram(binwidth=5,fill=color_plt)
+        + geom_vline(aes(xintercept=thr_size_perm),
+                     color="grey", linetype="dashed", size=1)
+        + ggtitle(paste("Atlas: ",atlas,", Model: ",model,", Plot: ",title_plot,
+                        ", Sex: ",title_sex,sep=""))
+        + xlab("Size")
+        + ylab("Count")
+        + theme_light()
+        + theme(plot.title = element_text(hjust = 0.5))
+  )
+  ggsave(paste("atl-",atlas,"_mod-",model,"_plt-",plot,
+               "_sex-",sex,"_perm.png",sep=""),
+         plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
+}
+
+
+#**************************************************
+# Heatmap Plot of sex difference NBS ==============
+#**************************************************
+plot_sex_diff_fc<-function(paths_,df_edge,atlas,df_roi,df_grp,mod,plot,sex,
+                           title_plot,title_sex,idx_net){
+  # Create list of ROIs with blanks between groups
+  list_roi_axis<-NULL
+  for (group in df_grp$id){
+    list_roi_axis<-c(list_roi_axis,as.character(df_roi[df_roi$group==group,"label"]),"")
+  }
+  list_roi_axis<-list_roi_axis[1:length(list_roi_axis)-1]
+  title_axis<-paste("Groups: ",paste(df_grp$label,collapse=", "),sep="")
+  
+  if (!is.na(df_edge[1,"t"])){
+    df_edge<-rename(df_edge,c("t"="r"),warn_missing=F)
+    label_legend<-"t"
+  }else{
+    df_edge<-rename(df_edge,c("F"="r"),warn_missing=F)
+    label_legend<-"F"
+  }
+  df_edge<-df_edge[,c("from","to","r")]
+  df_edge_inv<-df_edge
+  colnames(df_edge_inv)<-c("to","from","r")
+  df_edge<-rbind(df_edge,df_edge_inv)
+  rownames(df_roi)<-NULL
+  df_edge_full<-NULL
+  for (idx1 in seq(nrow(df_roi))){
+    for (idx2 in seq(nrow(df_roi))){
+      if (idx1!=idx2){
+        df_edge_full<-rbind(df_edge_full,data.frame(from=df_roi[idx1,"id"],to=df_roi[idx2,"id"],
+                                                  label_from=df_roi[idx1,"label"],label_to=df_roi[idx2,"label"]))
+      }
+    }
+  }
+  df_edge<-left_join(df_edge_full,df_edge,by=c("from","to"))
+  df_edge<-df_edge[,c("label_from","label_to","r")]
+  colnames(df_edge)<-c("row","column","r")
+  limits<-max(max(df_edge$r,na.rm=T),-min(df_edge$r,na.rm=T))
+  limits<-c(-limits,limits)
+
+  plt<-(ggplot(df_edge, aes(column, row))
+         + geom_tile(aes(fill = r))
+         + scale_fill_gradientn(colors = matlab.like2(100),name=label_legend,limits=limits)
+         + scale_y_discrete(limits = rev(list_roi_axis))
+         + scale_x_discrete(limits = list_roi_axis, position="top")
+         + ggtitle(paste("Atlas: ",atlas,", Model: ",mod,", Plot: ",title_plot,
+                         ", Contr: ",title_sex,", #",sprintf("%02d",idx_net),sep=""))
+         + xlab(title_axis)
+         + theme_linedraw()
+         + theme(
+           axis.text.x = element_text(size=1.5,angle = 90,vjust=0,hjust=0),
+           axis.text.y = element_text(size=1.5),
+           panel.grid.major=element_blank(),
+           panel.grid.minor = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           plot.title = element_text(hjust = 0.5),
+           #axis.title.x=element_blank(),
+           axis.title.y=element_blank(),
+           axis.ticks=element_blank()
+         )
+  )
+  
+  ggsave(paste("atl-",atlas,"_mod-",mod,"_plt-",plot,
+               "_cntr-",sex,"_idx-",sprintf("%02d",idx_net),"_net.png",sep=""),
+         plot=plt,path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
+  
+}
+
+#**************************************************
 # Heatmap Plot of GAM of FC =======================
 #**************************************************
 

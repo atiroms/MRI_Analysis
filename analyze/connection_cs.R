@@ -33,10 +33,10 @@ list_dim_ca<-c(10,20,40)
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-c("aal116","gordon333","ho112","power264",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
-#list_atlas<-"ho112"
+#list_atlas<-c("aal116","gordon333","ho112","power264",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+list_atlas<-c("aal116","ho112")
 #list_atlas<-c("aal116","power264","shen268")
 #list_atlas<-"aal116"
 
@@ -69,14 +69,14 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
                          subset_subj_=sex_diff_fc_cs_subset_subj,list_covar_=sex_diff_fc_cs_list_covar,
                          list_mod_cs_=sex_diff_fc_cs_list_mod_cs,list_mod_diff_=sex_diff_fc_cs_list_mod_diff,
                          list_plot_=sex_diff_fc_cs_list_plot,
-                         thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt,
-                         thr_p_perm_=sex_diff_fc_cs_thr_p_perm,n_perm_=sex_diff_fc_cs_n_perm){
+                         thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt,thr_p_perm_=sex_diff_fc_cs_thr_p_perm,
+                         n_perm_=sex_diff_fc_cs_n_perm){
   print("Starting sex_diff_fc_cs()")
   nullobj<-func_createdirs(paths_,str_proc="sex_diff_fc_cs()",copy_log=T)
   # Increase memory limit
   memory.limit(1000000)
   for (atlas in list_atlas_){
-    print(paste("Preparing FC data: ",atlas,sep=""))
+    print(paste("Preparing data: ",atlas,sep=""))
     data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T)
     data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
                                        prefix=paste("atl-",atlas,sep=""),print_terminal=F)
@@ -91,33 +91,65 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
     df_clin_diffmean$wave<-"2-1"
     
     # Network-based statistics
-    data_bfs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,list_mod=list_mod_diff_,
+    print(paste("Calculating model: ",atlas,sep=""))
+    data_nbs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,
+                       df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
                        thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=T)
     
     # Permutation test
+    print(paste("Calculating permutation: ",atlas,sep=""))
     set.seed(0)
     list_max<-list()
-    pb<-txtProgressBar(min=0,max=n_perm_,style=3)
+    pb<-txtProgressBar(min=0,max=n_perm_,style=3,width=50)
     for (idx_perm in seq(n_perm_)){
       df_clin_diffmean_perm<-df_clin_diffmean
       df_clin_diffmean_perm$sex<-sample(df_clin_diffmean_perm$sex)
-      data_bfs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,list_mod=list_mod_diff_,
-                         thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
-      for (model in names(data_bfs)){
-        for (plot in names(data_bfs[[model]])){
-          for (sex in names(data_bfs[[model]][[plot]])){
+      data_nbs_perm<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,
+                              df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
+                              thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
+      for (model in names(data_nbs_perm)){
+        for (plot in names(data_nbs_perm[[model]])){
+          for (sex in names(data_nbs_perm[[model]][[plot]])){
             list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
-                                                data_bfs[[model]][[plot]][[sex]][["max_size"]])
+                                                data_nbs_perm[[model]][[plot]][[sex]][["max_size"]])
           }
         }
       }
       setTxtProgressBar(pb,idx_perm)
     }
-    
+
+    # Summarize permutation and threshold
+    Sys.sleep(0.1)
+    print(paste("Permutation output: ",atlas,sep=""))
+    data_nbs_thr<-func_nbs_threshold(paths_,data_nbs,list_max,list_mod_diff_,
+                                     list_plot_,thr_p_perm_,atlas,data_fc$df_roi,
+                                     data_fc$df_grp)
     
     # Cross-sectional analysis
     
   }
+  
+  print("Binding results")
+  df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
+  for (atlas in list_atlas_){
+    df_net<-rbind(df_net,
+                  as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                paste("atl-",atlas,"_net.csv",sep="")))))
+    df_size_net<-rbind(df_size_net,
+                       as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                     paste("atl-",atlas,"_size_net.csv",sep="")))))
+    df_thr_size<-rbind(df_thr_size,
+                       as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                     paste("atl-",atlas,"_thr_perm.csv",sep="")))))
+    df_perm<-rbind(df_perm,
+                   as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                 paste("atl-",atlas,"_perm.csv",sep="")))))
+  }
+  write.csv(df_net,file.path(paths$output,"output","result","net.csv"),row.names=F)
+  write.csv(df_size_net,file.path(paths$output,"output","result","size_net.csv"),row.names=F)
+  write.csv(df_thr_size,file.path(paths$output,"output","result","thr_perm.csv"),row.names=F)
+  write.csv(df_perm,file.path(paths$output,"output","result","perm.csv"),row.names=F)
+  print("Finished sex_diff_fc_cs()")
 }
 
 
