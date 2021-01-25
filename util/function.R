@@ -234,17 +234,17 @@ func_bfs<-function(df_edge){
   list_size<-NULL
   while (nrow(df_edge_remain)>0){ # Examine new subnetwork as long as any edge is remaining
     # Node as the origin of subnetwork
-    list_node_todo<-list_node_net<-df_edge_remain[[1,"from"]]
+    list_node_todo<-list_node_net<-as.character(df_edge_remain[[1,"from"]])
     df_edge_net<-data.frame()
     while (length(list_node_todo)>0){ # Search as long as any connected and unexamined node exist
-      node_check<-list_node_todo[1] # Node of interest
+      node_check<-as.character(list_node_todo[1]) # Node of interest
       list_node_todo<-list_node_todo[-1]
       df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
-      list_node_new_from<-df_edge_new_from[,"to"]
+      list_node_new_from<-as.character(df_edge_new_from[,"to"])
       df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
-      list_node_new_to<-df_edge_new_to[,"from"]
+      list_node_new_to<-as.character(df_edge_new_to[,"from"])
       # Edge and node connected to node_check
       df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
       list_node_new<-c(list_node_new_from,list_node_new_to)

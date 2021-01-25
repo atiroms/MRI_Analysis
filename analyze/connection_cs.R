@@ -94,7 +94,7 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
     print(paste("Calculating model: ",atlas,sep=""))
     data_nbs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,
                        df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
-                       thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=T)
+                       thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
     
     # Permutation test
     print(paste("Calculating permutation: ",atlas,sep=""))
@@ -109,9 +109,15 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
                               thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
       for (model in names(data_nbs_perm)){
         for (plot in names(data_nbs_perm[[model]])){
-          for (sex in names(data_nbs_perm[[model]][[plot]])){
-            list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
-                                                data_nbs_perm[[model]][[plot]][[sex]][["max_size"]])
+          if(idx_perm==1){
+            list_max_sex<-list("m"=data_nbs_perm[[model]][[plot]][["m"]][["max_size"]],
+                               "f"=data_nbs_perm[[model]][[plot]][["f"]][["max_size"]])
+            list_max[[model]][[plot]]<-list_max_sex
+          }else{
+            for (sex in c("m","f")){
+              list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
+                                                  data_nbs_perm[[model]][[plot]][[sex]][["max_size"]])
+            }
           }
         }
       }
