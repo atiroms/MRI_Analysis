@@ -23,7 +23,7 @@ path_exp_full<-NULL
 #dir_out<-"433_fc_gam_aroma_gsr"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_sex_diff_aroma"
+dir_out<-"427_fc_sex_diff_aroma_test"
 
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
@@ -36,7 +36,7 @@ list_dim_ca<-c(10,20,40)
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-"power264"
+list_atlas<-c("aal116","ho112")
 #list_atlas<-c("aal116","power264","shen268")
 #list_atlas<-"aal116"
 
@@ -68,6 +68,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
                          subset_subj_=sex_diff_fc_cs_subset_subj,list_covar_=sex_diff_fc_cs_list_covar,
                          list_mod_cs_=sex_diff_fc_cs_list_mod_cs,list_mod_diff_=sex_diff_fc_cs_list_mod_diff,
+                         list_mod_long_=sex_diff_fc_cs_list_mod_long,
                          list_plot_=sex_diff_fc_cs_list_plot,
                          thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt,thr_p_perm_=sex_diff_fc_cs_thr_p_perm,
                          n_perm_=sex_diff_fc_cs_n_perm){
@@ -76,82 +77,83 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
   # Increase memory limit
   memory.limit(1000000)
   for (atlas in list_atlas_){
-    print(paste("Preparing data: ",atlas,sep=""))
-    data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T)
-    data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
-                                       prefix=paste("atl-",atlas,sep=""),print_terminal=F)
-    
-    # Longitudinal change analysis
-    df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
-    # List of subjects meeting QC criteria and has non-NA covariates in both waves
-    list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
-    df_clin<-data_clin$df_clin
-    colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
-    df_clin_diffmean<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
-    df_clin_diffmean$wave<-"2-1"
-    
-    # Network-based statistics
-    print(paste("Calculating model: ",atlas,sep=""))
-    data_nbs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,
-                       df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
-                       thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
-    
-    # Permutation test
-    print(paste("Calculating permutation: ",atlas,sep=""))
-    set.seed(0)
-    list_max<-list()
-    pb<-txtProgressBar(min=0,max=n_perm_,style=3,width=50)
-    for (idx_perm in seq(n_perm_)){
-      df_clin_diffmean_perm<-df_clin_diffmean
-      df_clin_diffmean_perm$sex<-sample(df_clin_diffmean_perm$sex)
-      data_nbs_perm<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,
-                              df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
-                              thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,progressbar=F)
-      for (model in names(data_nbs_perm)){
-        for (plot in names(data_nbs_perm[[model]])){
-          if(idx_perm==1){
-            list_max_sex<-list("m"=data_nbs_perm[[model]][[plot]][["m"]][["max_size"]],
-                               "f"=data_nbs_perm[[model]][[plot]][["f"]][["max_size"]])
-            list_max[[model]][[plot]]<-list_max_sex
-          }else{
-            for (sex in c("m","f")){
-              list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
-                                                  data_nbs_perm[[model]][[plot]][[sex]][["max_size"]])
+    if (!file.exists(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_perm.csv",sep="")))){
+      print(paste("Preparing data: ",atlas,sep=""))
+      data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T,include_grp=F)
+      data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
+                                         prefix=paste("atl-",atlas,sep=""),print_terminal=F)
+      
+      # Longitudinal change analysis
+      df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
+      # List of subjects meeting QC criteria and has non-NA covariates in both waves
+      list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+      df_clin<-data_clin$df_clin
+      colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+      df_clin_diffmean<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
+      df_clin_diffmean$wave<-"2-1"
+      
+      # Network-based statistics
+      print(paste("Calculating model: ",atlas,sep=""))
+      data_nbs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,
+                         df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
+                         thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
+                         progressbar=F,output_gamm=T,calc_slope=T)
+      data_gamm<-data_nbs$data_gamm
+      data_nbs<-data_nbs$data_nbs
+      
+      # Permutation test
+      print(paste("Calculating permutation: ",atlas,sep=""))
+      set.seed(0)
+      list_max<-list()
+      pb<-txtProgressBar(min=0,max=n_perm_,style=3,width=50)
+      for (idx_perm in seq(n_perm_)){
+        df_clin_diffmean_perm<-df_clin_diffmean
+        df_clin_diffmean_perm$sex<-sample(df_clin_diffmean_perm$sex)
+        data_nbs_perm<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,
+                                df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
+                                thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
+                                progressbar=F,output_gamm=F,calc_slope=T)$data_nbs
+        for (model in names(data_nbs_perm)){
+          for (plot in names(data_nbs_perm[[model]])){
+            if(idx_perm==1){
+              list_max_sex<-list("m"=data_nbs_perm[[model]][[plot]][["m"]][["max_size"]],
+                                 "f"=data_nbs_perm[[model]][[plot]][["f"]][["max_size"]])
+              list_max[[model]][[plot]]<-list_max_sex
+            }else{
+              for (sex in c("m","f")){
+                list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
+                                                    data_nbs_perm[[model]][[plot]][[sex]][["max_size"]])
+              }
             }
           }
         }
+        setTxtProgressBar(pb,idx_perm)
       }
-      setTxtProgressBar(pb,idx_perm)
+      close(pb)
+      
+      # Summarize permutation and threshold
+      #Sys.sleep(0.1)
+      #print("")
+      print(paste("Permutation output: ",atlas,sep=""))
+      data_nbs_thr<-func_nbs_threshold(paths_,data_nbs,list_max,list_mod_diff_,
+                                       list_plot_,thr_p_perm_,atlas,data_fc$df_roi,
+                                       data_fc$df_grp)
+      
+      # Cross-sectional analysis
     }
-    close(pb)
-
-    # Summarize permutation and threshold
-    #Sys.sleep(0.1)
-    #print("")
-    print(paste("Permutation output: ",atlas,sep=""))
-    data_nbs_thr<-func_nbs_threshold(paths_,data_nbs,list_max,list_mod_diff_,
-                                     list_plot_,thr_p_perm_,atlas,data_fc$df_roi,
-                                     data_fc$df_grp)
-    
-    # Cross-sectional analysis
-    
   }
   
   print("Binding results")
   df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
   for (atlas in list_atlas_){
-    df_net<-rbind(df_net,
-                  as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                paste("atl-",atlas,"_net.csv",sep="")))))
-    df_size_net<-rbind(df_size_net,
-                       as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                     paste("atl-",atlas,"_size_net.csv",sep="")))))
-    df_thr_size<-rbind(df_thr_size,
-                       as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                     paste("atl-",atlas,"_thr_perm.csv",sep="")))))
-    df_perm<-rbind(df_perm,
-                   as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                 paste("atl-",atlas,"_perm.csv",sep="")))))
+    df_net<-rbind(df_net,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                       paste("atl-",atlas,"_net.csv",sep="")))))
+    df_size_net<-rbind(df_size_net,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                                 paste("atl-",atlas,"_size_net.csv",sep="")))))
+    df_thr_size<-rbind(df_thr_size,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                                 paste("atl-",atlas,"_thr_perm.csv",sep="")))))
+    df_perm<-rbind(df_perm,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                         paste("atl-",atlas,"_perm.csv",sep="")))))
   }
   write.csv(df_net,file.path(paths$output,"output","result","net.csv"),row.names=F)
   write.csv(df_size_net,file.path(paths$output,"output","result","size_net.csv"),row.names=F)

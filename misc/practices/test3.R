@@ -1,3 +1,7 @@
+source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
+
+####
+
 paths_=paths
 list_atlas_=list_atlas
 key_group_='group_3'
@@ -5,6 +9,7 @@ subset_subj_=sex_diff_fc_cs_subset_subj
 list_covar_=sex_diff_fc_cs_list_covar
 list_mod_cs_=sex_diff_fc_cs_list_mod_cs
 list_mod_diff_=sex_diff_fc_cs_list_mod_diff
+list_mod_long_=sex_diff_fc_cs_list_mod_long
 list_plot_=sex_diff_fc_cs_list_plot
 thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt
 thr_p_perm_=sex_diff_fc_cs_thr_p_perm
@@ -23,7 +28,207 @@ atlas<-list_atlas[1]
 
 ####
 
-print(paste("Preparing FC data: ",atlas,sep=""))
-data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T)
+print(paste("Preparing data: ",atlas,sep=""))
+data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T,include_grp=F)
 data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
                                    prefix=paste("atl-",atlas,sep=""),print_terminal=F)
+
+# Generalized linear mixed model analysis
+df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
+print(paste("Calculating model: ",atlas,sep=""))
+#data_nbs<-func_nbs(df_fc=df_fc_long,df_clin=data_clin$df_clin,
+#                   df_roi=data_fc$df_roi,list_mod=list_mod_long_,
+#                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
+#                   progressbar=F,output_gamm=T,calc_slope=F)
+
+####
+
+df_fc=df_fc_long
+df_clin=data_clin$df_clin
+df_roi=data_fc$df_roi
+list_mod=list_mod_long_
+thr_p_cdt=thr_p_cdt_
+list_plot=list_plot_
+progressbar=F
+output_gamm=T
+calc_slope=F
+
+####
+
+df_join<-join_fc_clin(df_fc,df_clin)
+if(calc_slope){
+  # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
+  df_join$value<-df_join$value/df_join$diff_age
+}
+
+####
+
+list_mod_=list_mod
+calc_parallel=T
+calc_identical=F
+list_sex=list(c(1,2))
+progressbar=F
+
+####
+
+id_from<-"aal116_00011"
+id_to<-"aal116_00044"
+
+####
+
+list_src_gamm<-list()
+
+####
+
+df_join_from<-df_join[df_join$from==id_from,]
+label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+
+####
+
+label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+df_src<-df_join_from[df_join_from$to==id_to,]
+df_src$from<-df_src$to<-NULL
+list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
+                                         "label_from"=label_from,"label_to"=label_to,
+                                         "list_mod"=list_mod_,"list_sex"=list_sex,
+                                         "calc_parallel"=calc_parallel)))
+
+####
+
+t_start<-Sys.time()
+data_gamm<-gamm_core(list_src_gamm[[1]])
+t_elapsed<-Sys.time()-t_start
+print(t_elapsed)
+
+####
+
+plot_long<-(ggplot(df_src,aes(x=age,y=value,color=sex))
+            + geom_point()
+            + scale_color_manual(values = c("steelblue2", "lightcoral"),labels=c("M","F"))
+            + xlab("age(d)")
+            + ylab("z(r)")
+            + geom_path(aes(x=age,y=value,group=ID_pnTTC),
+                        color="grey",size=0.3,linetype="dashed")
+            + geom_smooth(method="lm",se=F,fullrange=T)
+            + theme_light()
+            
+)
+plot_long
+
+df_src$abs_value<-abs(df_src$value)
+plot_long_abs<-(ggplot(df_src,aes(x=age,y=abs_value,color=sex))
+            + geom_point()
+            + scale_color_manual(values = c("steelblue2", "lightcoral"),labels=c("M","F"))
+            + xlab("age(d)")
+            + ylab("z(r)")
+            + geom_path(aes(x=age,y=abs_value,group=ID_pnTTC),
+                        color="grey",size=0.3,linetype="dashed")
+            + geom_smooth(method="lm",se=F,fullrange=T)
+            + theme_light()
+            
+)
+plot_long_abs
+
+id_long<-sort(as.numeric(intersect(unique(as.character(df_src[df_src$wave==1,"ID_pnTTC"])),
+                        unique(as.character(df_src[df_src$wave==2,"ID_pnTTC"])))))
+
+
+####
+
+# Longitudinal change analysis
+df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
+# List of subjects meeting QC criteria and has non-NA covariates in both waves
+list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+df_clin<-data_clin$df_clin
+colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+df_clin_diffmean<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
+df_clin_diffmean$wave<-"2-1"
+
+# Network-based statistics
+print(paste("Calculating model: ",atlas,sep=""))
+data_nbs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,
+                   df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
+                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
+                   progressbar=F,output_gamm=T,calc_slope=T)
+data_nbs<-data_nbs$data_nbs
+
+####
+
+df_temp_s<-data_nbs[["int"]][["s"]][["f"]][["list_network"]][[1]][["df_edge"]]
+df_temp_s<-df_temp_s[order(df_temp_s$p),]
+df_temp_sxm<-data_nbs$int[["sxm(a)"]]$m$list_network[[1]][["df_edge"]]
+df_temp_sxm<-df_temp_sxm[order(df_temp_sxm$p),]
+
+df_join<-join_fc_clin(df_fc_diff,df_clin_diffmean)
+df_join$value<-df_join$value/df_join$diff_age
+
+list_plot_mean<-list()
+for (idx_row in seq(nrow(df_temp_sxm))){
+  df_join_subset<-df_join[df_join$from==df_temp_sxm[idx_row,"from"] & df_join$to==df_temp_sxm[idx_row,"to"],]
+  plot_mean<-(ggplot(df_join_subset,aes(x=mean_age,y=value,color=sex))
+              + geom_point()
+              + scale_color_manual(values = c("steelblue2", "lightcoral"),labels=c("M","F"))
+              + xlab("mean(age)(d)")
+              + ylab("delta(z(r))")
+              + geom_smooth(method="lm",se=F,fullrange=T)
+              + theme_light()
+  )
+  list_plot_mean<-c(list_plot_mean,list(plot_mean))
+}
+
+#df_join_subset<-df_join[df_join$from=="aal116_00011" & df_join$to=="aal116_00044",]
+#df_join_subset_m<-df_join_subset[df_join_subset$sex=="1",]
+#df_join_subset_f<-df_join_subset[df_join_subset$sex=="2",]
+
+
+
+plot_ses1<-(ggplot(df_join_subset,aes(x=ses1_age,y=value,color=sex))
+            + geom_point()
+            + scale_color_manual(values = c("steelblue2", "lightcoral"))
+            + geom_smooth(method="lm")
+)
+plot_ses1
+plot_ses2<-(ggplot(df_join_subset,aes(x=ses2_age,y=value,color=sex))
+            + geom_point()
+            + scale_color_manual(values = c("steelblue2", "lightcoral"))
+            + geom_smooth(method="lm")
+)
+plot_ses2
+
+plot_diff<-(ggplot(df_join_subset,aes(x=diff_age,y=value,color=sex))
+            + geom_point()
+            + scale_color_manual(values = c("steelblue2", "lightcoral"))
+            + geom_smooth(method="lm")
+)
+plot_diff
+
+####
+
+
+
+####
+
+data_gamm<-data_nbs$data_gamm
+df_gamm<-data_gamm$df_out_gamm
+df_gamm_subset<-df_gamm[df_gamm$model=="int" & df_gamm$from=="aal116_00011" & df_gamm$to=="aal116_00044",]
+rownames(df_gamm_subset)<-NULL
+
+
+
+mean(df_join_subset[df_join_subset$sex=="2","value"])-mean(df_join_subset[df_join_subset$sex=="1","value"])
+df_gamm_subset[2,"estimate"]-df_gamm_subset[1,"estimate"]
+
+####
+
+mod1<-gam(value ~ sex + mean_age + sex*mean_age,data=df_join_subset,method="REML",control=list(nthreads=1))
+summary(mod1)
+
+mod2<-gam(value ~ sex*mean_age,data=df_join_subset,method="REML",control=list(nthreads=1))
+summary(mod2)
+
+mod_m<-gam(value ~ mean_age,data=df_join_subset_m,method="REML",control=list(nthreads=1))
+summary(mod_m)
+
+mod_f<-gam(value ~ mean_age,data=df_join_subset_f,method="REML",control=list(nthreads=1))
+summary(mod_f)
+

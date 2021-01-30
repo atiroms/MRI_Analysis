@@ -23,10 +23,13 @@ library(ggpubr)
 #**************************************************
 # Network-based statistics ========================
 #**************************************************
-func_nbs<-function(df_fc,df_clin,df_roi,list_mod,list_plot,thr_p_cdt,progressbar){
+func_nbs<-function(df_fc,df_clin,df_roi,list_mod,list_plot,thr_p_cdt,progressbar,
+                   output_gamm=F,calc_slope=F){
   df_join<-join_fc_clin(df_fc,df_clin)
-  # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
-  df_join$value<-df_join$value/df_join$diff_age
+  if(calc_slope){
+    # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
+    df_join$value<-df_join$value/df_join$diff_age
+  }
   data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=T,calc_identical=F,
                           list_sex=list(c(1,2)),progressbar=progressbar)
   list_out_bfs<-list()
@@ -50,7 +53,12 @@ func_nbs<-function(df_fc,df_clin,df_roi,list_mod,list_plot,thr_p_cdt,progressbar
     names(list_out_model)<-model
     list_out_bfs<-c(list_out_bfs,list_out_model)
   }
-  return(list_out_bfs)
+  if (output_gamm){
+    output<-list("data_nbs"=list_out_bfs,"data_gamm"=data_gamm)
+  }else{
+    output<-list("data_nbs"=list_out_bfs)
+  }
+  return(output)
 }
 
 func_nbs_threshold<-function(paths,data_nbs,list_max,list_mod,list_plot,thr_p_perm,
@@ -165,7 +173,7 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc<-function(paths,atlas,key_group,include_diff=F){
+prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
@@ -179,47 +187,52 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F){
   df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group)]
   colnames(df_roi)[colnames(df_roi)==key_group]<-"group"
   
-  # Prepare dataframe of group-wise FC averages
+  # Prepare dataframe of groups
   list_group<-unique(as.character(df_roi$group))
-  df_fc_temp<-df_fc
-  df_fc_temp$z_r[which(is.nan(df_fc_temp$z_r))]<-0
-  df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("from"="id"))
-  colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"from_group"
-  df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("to"="id"))
-  colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"to_group"
-  df_subj<-NULL
-  list_subj<-sort(unique(df_fc$ID_pnTTC))
-  for (id_subj in list_subj){
-    list_ses<-sort(unique(df_fc[df_fc$ID_pnTTC==id_subj,"ses"]))
-    #list_ses<-list_ses[list_ses!="2-1"]
-    df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
-  }
-  df_subj$ses<-as.character(df_subj$ses)
+  df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
   
-  df_fc_grp<-data.frame()
-  for (idx_subj_ses in seq(dim(df_subj)[1])){
-    #print(paste(df_subj[idx_subj_ses,"ID_pnTTC"],df_subj[idx_subj_ses,"ses"]))
-    df_fc_subset1<-df_fc_temp[df_fc_temp$ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
-                              & df_fc_temp$ses==df_subj[idx_subj_ses,"ses"],]
-    for (idx_grp1 in seq(length(list_group))){
-      for (idx_grp2 in seq(idx_grp1,length(list_group))){
-        # data in df_fc_subset2 is doubled for connections within same group,
-        # but does not affect z_r average calculation
-        df_fc_subset2<-rbind(df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp1]
-                                           & df_fc_subset1$to_group==list_group[idx_grp2],],
-                             df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp2]
-                                           & df_fc_subset1$to_group==list_group[idx_grp1],])
-        df_fc_grp<-rbind(df_fc_grp,
-                         cbind(ID_pnTTC=df_subj[idx_subj_ses,"ID_pnTTC"],ses=df_subj[idx_subj_ses,"ses"],
-                               from=list_group[idx_grp1],to=list_group[idx_grp2],
-                               z_r=mean(df_fc_subset2$z_r)))
+  # Prepare dataframe of group-wise FC averages
+  if (include_grp){
+    df_fc_temp<-df_fc
+    df_fc_temp$z_r[which(is.nan(df_fc_temp$z_r))]<-0
+    df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("from"="id"))
+    colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"from_group"
+    df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("to"="id"))
+    colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"to_group"
+    df_subj<-NULL
+    list_subj<-sort(unique(df_fc$ID_pnTTC))
+    for (id_subj in list_subj){
+      list_ses<-sort(unique(df_fc[df_fc$ID_pnTTC==id_subj,"ses"]))
+      df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
+    }
+    df_subj$ses<-as.character(df_subj$ses)
+    
+    df_fc_grp<-data.frame()
+    for (idx_subj_ses in seq(dim(df_subj)[1])){
+      #print(paste(df_subj[idx_subj_ses,"ID_pnTTC"],df_subj[idx_subj_ses,"ses"]))
+      df_fc_subset1<-df_fc_temp[df_fc_temp$ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
+                                & df_fc_temp$ses==df_subj[idx_subj_ses,"ses"],]
+      for (idx_grp1 in seq(length(list_group))){
+        for (idx_grp2 in seq(idx_grp1,length(list_group))){
+          # data in df_fc_subset2 is doubled for connections within same group,
+          # but does not affect z_r average calculation
+          df_fc_subset2<-rbind(df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp1]
+                                             & df_fc_subset1$to_group==list_group[idx_grp2],],
+                               df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp2]
+                                             & df_fc_subset1$to_group==list_group[idx_grp1],])
+          df_fc_grp<-rbind(df_fc_grp,
+                           cbind(ID_pnTTC=df_subj[idx_subj_ses,"ID_pnTTC"],ses=df_subj[idx_subj_ses,"ses"],
+                                 from=list_group[idx_grp1],to=list_group[idx_grp2],
+                                 z_r=mean(df_fc_subset2$z_r)))
+        }
       }
     }
+    df_fc_grp$ID_pnTTC<-as.numeric(as.numeric.factor(df_fc_grp$ID_pnTTC))
+    df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
+  }else{
+    df_fc_grp<-NULL
   }
-  df_fc_grp$ID_pnTTC<-as.numeric(as.numeric.factor(df_fc_grp$ID_pnTTC))
-  df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
-  
-  df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
+
   return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_grp"=df_grp))
 }
 

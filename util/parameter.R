@@ -26,6 +26,8 @@ sex_diff_fc_cs_list_mod_cs   <- list("lin"  = "value ~ sex + age + sex*age",
                                      "int"  = "value ~ sex + age")
 sex_diff_fc_cs_list_mod_diff <- list("lin"  = "value ~ sex + mean_age",
                                      "int"  = "value ~ sex + mean_age + sex*mean_age")
+sex_diff_fc_cs_list_mod_long <- list("lin"  = "value ~ sex + age + s(ID_pnTTC,bs='re')",
+                                     "int"  = "value ~ sex + age + sex*age + s(ID_pnTTC,bs='re')")
 sex_diff_fc_cs_list_plot <- list("s"     =list("title"="Sex effect","var_exp"="sex2"),
                                  "sxm(a)"=list("title"="Sex by mean(age) interaction","var_exp"="sex2:mean_age"),
                                  "sxa"   =list("title"="Sex by age interaction","var_exp"="sex2:age"))
