@@ -18,26 +18,31 @@ library(parallel)
 #library(DescTools)
 library(pbapply)
 library(ggpubr)
+library(wranglR)
 
 
 #**************************************************
 # Network-based statistics ========================
 #**************************************************
-func_nbs<-function(df_fc,df_clin,df_roi,list_mod,list_plot,thr_p_cdt,progressbar,
+func_nbs<-function(clust,df_fc,df_clin,df_roi,df_edge,list_mod,list_plot,thr_p_cdt,progressbar,
                    output_gamm=F,calc_slope=F){
   df_join<-join_fc_clin(df_fc,df_clin)
   if(calc_slope){
     # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
     df_join$value<-df_join$value/df_join$diff_age
   }
-  data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=T,calc_identical=F,
-                          list_sex=list(c(1,2)),progressbar=progressbar)
+  df_edge$label_from<-df_edge$label_to<-NULL
+  df_edge$id_edge<-seq(nrow(df_edge))
+  data_gamm<-iterate_gamm3(clust,df_join,df_edge,progressbar=progressbar)
   list_out_bfs<-list()
   for (model in names(list_mod)){
     list_out_model<-list()
     for (plot in names(list_plot)){
       var_exp<-list_plot[[plot]][["var_exp"]]
-      df_gamm_subset<-data_gamm$df_out_gamm[data_gamm$df_out_gamm$model==model & data_gamm$df_out_gamm$term==var_exp,]
+      df_gamm<-data_gamm$df_gamm
+      idx_subset<-which(df_gamm$model==model & df_gamm$term==var_exp)
+      df_gamm_subset<-df_gamm[idx_subset,]
+      #df_gamm_subset<-data_gamm$df_gamm[(data_gamm$df_gamm$model==model & data_gamm$df_gamm$term==var_exp),]
       if (nrow(df_gamm_subset)>0){
         df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
         df_m<-df_gamm_sign[df_gamm_sign$t<0,]
@@ -187,6 +192,20 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
   df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group)]
   colnames(df_roi)[colnames(df_roi)==key_group]<-"group"
   
+  # Prepare dataframe of edges
+  df_edge<-NULL
+  list_id_from<-list_roi[-length(list_roi)]
+  for (id_from in list_id_from){
+    label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
+    list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
+    for(id_to in list_id_to){
+      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
+      df_edge<-rbind(df_edge,data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to))
+    }
+  }
+  df_edge$from<-as.character(df_edge$from)
+  df_edge$to<-as.character(df_edge$to)
+  
   # Prepare dataframe of groups
   list_group<-unique(as.character(df_roi$group))
   df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
@@ -233,7 +252,7 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
     df_fc_grp<-NULL
   }
 
-  return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_grp"=df_grp))
+  return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_edge"=df_edge,"df_grp"=df_grp))
 }
 
 
@@ -254,13 +273,22 @@ func_bfs<-function(df_edge){
       list_node_todo<-list_node_todo[-1]
       df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
-      list_node_new_from<-as.character(df_edge_new_from[,"to"])
+      if (nrow(df_edge_new_from)>0){
+        list_node_new_from<-as.character(df_edge_new_from$to)
+      }else{
+        list_node_new_from<-NULL
+      }
       df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
       df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
-      list_node_new_to<-as.character(df_edge_new_to[,"from"])
+      if (nrow(df_edge_new_to)){
+        list_node_new_to<-as.character(df_edge_new_to$from)
+      }else{
+        list_node_new_to<-NULL
+      }
       # Edge and node connected to node_check
-      df_edge_new<-rbind(df_edge_new_to,df_edge_new_from)
+      df_edge_new<-rbind(df_edge_new_from,df_edge_new_to)
       list_node_new<-c(list_node_new_from,list_node_new_to)
+      list_node_new<-list_node_new[list_node_new %nin% list_node_net]
       # Add to subnetwork currently examined
       df_edge_net<-rbind(df_edge_net,df_edge_new)
       list_node_net<-c(list_node_net,list_node_new)
@@ -327,6 +355,100 @@ func_path<-function(list_path_root = c("C:/Users/atiro","D:/atiro","/home/atirom
 #**************************************************
 # Iterate GAM/GLM over ROI paiers in FC ===========
 #**************************************************
+
+gamm_core3<-function(df_src){
+  df_out_aic_add<-df_out_gamm_add<-df_out_anova_add<-data.frame()
+  for (idx_mod in names(list_mod)){
+    for (idx_sex in list_sex){
+      df_src_sex<-NULL
+      label_sex<-NULL
+      for (subidx_sex in idx_sex){
+        df_src_sex<-rbind(df_src_sex,df_src[df_src$sex==subidx_sex,])
+        if (is.null(label_sex)){
+          label_sex<-as.character(subidx_sex)
+        }else{
+          label_sex<-paste(label_sex,subidx_sex,sep="_")
+        }
+      }
+      
+      df_src_sex$value<-as.numeric(df_src_sex$value)
+      if (calc_parallel){
+        mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
+      }else{
+        mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
+      }
+      if (class(mod)[1]!="try-error"){
+        p_table<-summary.gam(mod)$p.table
+        df_out_gamm_add_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                        se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                        p=p_table[,'Pr(>|t|)'])
+        s_table<-summary.gam(mod)$s.table
+        if(!is.null(s_table)){
+          df_out_gamm_add_add<-rbind(df_out_gamm_add_add,
+                                     data.frame(term=rownames(s_table),estimate=NA,se=NA,F=s_table[,'F'],
+                                                t=NA,p=s_table[,'p-value']))
+        }
+        p_table_anova<-anova.gam(mod)$pTerms.table
+        colnames(p_table_anova)<-c("df","F","p")
+        df_out_gamm_add<-rbind(df_out_gamm_add,
+                               cbind(sex=label_sex,model=idx_mod,df_out_gamm_add_add))
+        df_out_aic_add<-rbind(df_out_aic_add,
+                              data.frame(sex=label_sex,model=idx_mod,aic=mod$aic,aic_best_among_models=0))
+        df_out_anova_add<-rbind(df_out_anova_add,
+                                cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
+                                      p_table_anova))
+      }
+    } # Finished looping over sex
+  }# Finished looping over model
+  
+  # Compare AICs of GAMM models
+  df_out_aic_add_sex_rbind<-data.frame()
+  for (idx_sex in list_sex){
+    label_sex<-NULL
+    for (subidx_sex in idx_sex){
+      if (is.null(label_sex)){
+        label_sex<-as.character(subidx_sex)
+      }else{
+        label_sex<-paste(label_sex,subidx_sex,sep="_")
+      }
+    }
+    df_out_aic_add_sex<-df_out_aic_add[df_out_aic_add$sex==label_sex,]
+    df_out_aic_add_sex[which(df_out_aic_add_sex$aic==min(df_out_aic_add_sex$aic)),
+                       'aic_best_among_models']<-1
+    df_out_aic_add_sex_rbind<-rbind(df_out_aic_add_sex_rbind,df_out_aic_add_sex)
+  }
+  
+  # Prepare output dataframe
+  df_id<-df_src[1,c("from","to")]
+  rownames(df_id)<-NULL
+  df_out_gamm_add<-cbind(df_id,df_out_gamm_add)
+  df_out_aic_add_sex_rbind<-cbind(df_id,df_out_aic_add_sex_rbind)
+  df_out_anova_add<-cbind(df_id,df_out_anova_add)
+  
+  return(list("df_gamm"=df_out_gamm_add,"df_aic"=df_out_aic_add_sex_rbind,
+              "df_anova"=df_out_anova_add))
+}
+
+
+iterate_gamm3<-function(clust,df_join,df_edge,progressbar=T){
+  
+  df_join<-inner_join(df_join,df_edge,by=c("from","to"))
+  list_src_gamm<-split(df_join,df_join$id_edge)
+  
+  if (progressbar){
+    list_dst_gamm<-pblapply(list_src_gamm,gamm_core3,cl=clust)
+  }else{
+    list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core3)
+  }
+  
+  df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
+  df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
+  df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
+  
+  rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+  return(list("df_gamm"=df_gamm,"df_aic"=df_aic,"df_anova"=df_anova))
+}
+
 
 gamm_core<-function(data_src){
   df_src<-data_src$df_src
@@ -416,14 +538,14 @@ combine_gamm<-function(list_dst_sub){
               "df_out_anova_add"=df_anova))
 }
 
-iterate_gamm<-function(df_join,df_roi,list_mod_,calc_parallel=T,calc_identical=F,list_sex=NULL,progressbar=T){
+iterate_gamm<-function(df_join,df_roi,list_mod_,df_edge=NULL,
+                       calc_parallel=T,calc_identical=F,list_sex=NULL,progressbar=T){
   list_roi<-df_roi$id
   if (is.null(list_sex)){
     list_sex<-sort(unique(as.numeric.factor(df_join$sex)))
   }
   
   # Prepare dataset for multi-core processing
-  #print("Preparing dataset for parallel processing.")
   list_src_gamm<-list()
   if (calc_identical){
     list_id_from<-list_roi

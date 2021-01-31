@@ -36,9 +36,9 @@ list_dim_ca<-c(10,20,40)
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-c("aal116","ho112")
+#list_atlas<-c("aal116","ho112")
 #list_atlas<-c("aal116","power264","shen268")
-#list_atlas<-"aal116"
+list_atlas<-"aal116"
 
 #list_type_p=c("p","p_bh","seed_p_bh")
 list_type_p=c("p_bh") # Benjamini-Hochberg method of FDR
@@ -94,8 +94,16 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
       
       # Network-based statistics
       print(paste("Calculating model: ",atlas,sep=""))
-      data_nbs<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean,
-                         df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
+      list_sex<-list(c(1,2))
+      calc_parallel<-T
+      clust_gamm<-makeCluster(floor(detectCores()*3/4))
+      list_mod<-list_mod_diff_
+      clusterExport(clust_gamm,
+                    varlist=c("list_mod","list_sex","calc_parallel","sort","gam","as.formula","summary.gam",
+                              "anova.gam","as.numeric.factor"),
+                    envir=environment())
+      data_nbs<-func_nbs(clust=clust_gamm,df_fc=df_fc_diff,df_clin=df_clin_diffmean,
+                         df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,list_mod=list_mod_diff_,
                          thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
                          progressbar=F,output_gamm=T,calc_slope=T)
       data_gamm<-data_nbs$data_gamm
@@ -109,8 +117,8 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
       for (idx_perm in seq(n_perm_)){
         df_clin_diffmean_perm<-df_clin_diffmean
         df_clin_diffmean_perm$sex<-sample(df_clin_diffmean_perm$sex)
-        data_nbs_perm<-func_nbs(df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,
-                                df_roi=data_fc$df_roi,list_mod=list_mod_diff_,
+        data_nbs_perm<-func_nbs(clust=clust_gamm,df_fc=df_fc_diff,df_clin=df_clin_diffmean_perm,
+                                df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,list_mod=list_mod_diff_,
                                 thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
                                 progressbar=F,output_gamm=F,calc_slope=T)$data_nbs
         for (model in names(data_nbs_perm)){
@@ -130,6 +138,7 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
         setTxtProgressBar(pb,idx_perm)
       }
       close(pb)
+      stopCluster(clust_gamm)
       
       # Summarize permutation and threshold
       #Sys.sleep(0.1)
@@ -140,6 +149,15 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
                                        data_fc$df_grp)
       
       # Cross-sectional analysis
+      
+      # Generalized linear mixed model analysis
+      #df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
+      #print(paste("Calculating model: ",atlas,sep=""))
+      #data_nbs<-func_nbs(df_fc=df_fc_long,df_clin=data_clin$df_clin,
+      #                   df_roi=data_fc$df_roi,list_mod=list_mod_long_,
+      #                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
+      #                   progressbar=F,output_gamm=T,calc_slope=F)
+      
     }
   }
   

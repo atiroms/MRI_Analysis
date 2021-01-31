@@ -1,4 +1,5 @@
-source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
+#source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
+source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
 
 ####
 
@@ -24,7 +25,8 @@ memory.limit(1000000)
 
 ####
 
-atlas<-list_atlas[1]
+#atlas<-list_atlas[1]
+atlas<-"aal116"
 
 ####
 
@@ -33,73 +35,108 @@ data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T,include_grp=F)
 data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
                                    prefix=paste("atl-",atlas,sep=""),print_terminal=F)
 
-# Generalized linear mixed model analysis
-df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
+# Longitudinal change analysis
+df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
+# List of subjects meeting QC criteria and has non-NA covariates in both waves
+list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+df_clin<-data_clin$df_clin
+colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+df_clin_diffmean<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
+df_clin_diffmean$wave<-"2-1"
+
+# Network-based statistics
 print(paste("Calculating model: ",atlas,sep=""))
-#data_nbs<-func_nbs(df_fc=df_fc_long,df_clin=data_clin$df_clin,
-#                   df_roi=data_fc$df_roi,list_mod=list_mod_long_,
-#                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
-#                   progressbar=F,output_gamm=T,calc_slope=F)
+list_sex<-list(c(1,2))
+calc_parallel<-T
+clust_gamm<-makeCluster(floor(detectCores()*3/4))
+list_mod<-list_mod_diff_
+clusterExport(clust_gamm,
+              varlist=c("list_mod","list_sex","calc_parallel","sort","gam","as.formula","summary.gam",
+                        "anova.gam","as.numeric.factor"),
+              envir=environment())
+data_nbs<-func_nbs(clust=clust_gamm,df_fc=df_fc_diff,df_clin=df_clin_diffmean,
+                   df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,list_mod=list_mod_diff_,
+                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
+                   progressbar=F,output_gamm=T,calc_slope=T)
+data_gamm<-data_nbs$data_gamm
+data_nbs<-data_nbs$data_nbs
 
 ####
 
-df_fc=df_fc_long
-df_clin=data_clin$df_clin
+clust=clust_gamm
+df_fc=df_fc_diff
+df_clin=df_clin_diffmean
 df_roi=data_fc$df_roi
-list_mod=list_mod_long_
+df_edge=data_fc$df_edge
+list_mod=list_mod_diff_
 thr_p_cdt=thr_p_cdt_
 list_plot=list_plot_
 progressbar=F
 output_gamm=T
-calc_slope=F
+calc_slope=T
 
 ####
-
 df_join<-join_fc_clin(df_fc,df_clin)
 if(calc_slope){
   # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
   df_join$value<-df_join$value/df_join$diff_age
 }
+df_edge$label_from<-df_edge$label_to<-NULL
+df_edge$id_edge<-seq(nrow(df_edge))
+data_gamm<-iterate_gamm3(clust,df_join,df_edge,progressbar=progressbar)
 
 ####
 
-list_mod_=list_mod
-calc_parallel=T
-calc_identical=F
-list_sex=list(c(1,2))
-progressbar=F
+list_out_bfs<-list()
 
 ####
+model<-names(list_mod)[1]
+plot<-names(list_plot)[1]
+var_exp<-list_plot[[plot]][["var_exp"]]
+df_gamm_subset<-data_gamm$df_gamm[data_gamm$df_gamm$model==model & data_gamm$df_gamm$term==var_exp,]
+df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
+df_m<-df_gamm_sign[df_gamm_sign$t<0,]
+data_bfs_m<-func_bfs(df_m)
+df_f<-df_gamm_sign[df_gamm_sign$t>0,]
+data_bfs_f<-func_bfs(df_f)
+list_out_plot<-list(list("m"=data_bfs_m,"f"=data_bfs_f))
+names(list_out_plot)<-plot
+list_out_model<-c(list_out_model,list_out_plot)
 
-id_from<-"aal116_00011"
-id_to<-"aal116_00044"
+
+
+for (model in names(list_mod)){
+  list_out_model<-list()
+  for (plot in names(list_plot)){
+    var_exp<-list_plot[[plot]][["var_exp"]]
+    df_gamm_subset<-data_gamm$df_gamm[data_gamm$df_gamm$model==model & data_gamm$df_gamm$term==var_exp,]
+    if (nrow(df_gamm_subset)>0){
+      df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
+      df_m<-df_gamm_sign[df_gamm_sign$t<0,]
+      data_bfs_m<-func_bfs(df_m)
+      df_f<-df_gamm_sign[df_gamm_sign$t>0,]
+      data_bfs_f<-func_bfs(df_f)
+      list_out_plot<-list(list("m"=data_bfs_m,"f"=data_bfs_f))
+      names(list_out_plot)<-plot
+      list_out_model<-c(list_out_model,list_out_plot)
+    }
+  }
+  list_out_model<-list(list_out_model)
+  names(list_out_model)<-model
+  list_out_bfs<-c(list_out_bfs,list_out_model)
+}
+if (output_gamm){
+  output<-list("data_nbs"=list_out_bfs,"data_gamm"=data_gamm)
+}else{
+  output<-list("data_nbs"=list_out_bfs)
+}
+
+
+
+
+
 
 ####
-
-list_src_gamm<-list()
-
-####
-
-df_join_from<-df_join[df_join$from==id_from,]
-label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-
-####
-
-label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-df_src<-df_join_from[df_join_from$to==id_to,]
-df_src$from<-df_src$to<-NULL
-list_src_gamm<-c(list_src_gamm,list(list("df_src"=df_src,"id_from"=id_from,"id_to"=id_to,
-                                         "label_from"=label_from,"label_to"=label_to,
-                                         "list_mod"=list_mod_,"list_sex"=list_sex,
-                                         "calc_parallel"=calc_parallel)))
-
-####
-
-t_start<-Sys.time()
-data_gamm<-gamm_core(list_src_gamm[[1]])
-t_elapsed<-Sys.time()-t_start
-print(t_elapsed)
-
 ####
 
 plot_long<-(ggplot(df_src,aes(x=age,y=value,color=sex))
