@@ -24,8 +24,8 @@ library(wranglR)
 #**************************************************
 # Network-based statistics ========================
 #**************************************************
-func_nbs<-function(clust,df_fc,df_clin,df_roi,df_edge,list_mod,list_plot,thr_p_cdt,progressbar,
-                   output_gamm=F,calc_slope=F){
+func_nbs_core<-function(clust,df_fc,df_clin,df_roi,df_edge,list_mod,list_plot,thr_p_cdt,progressbar,
+                        output_gamm=F,calc_slope=F){
   df_join<-join_fc_clin(df_fc,df_clin)
   if(calc_slope){
     # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
@@ -66,66 +66,56 @@ func_nbs<-function(clust,df_fc,df_clin,df_roi,df_edge,list_mod,list_plot,thr_p_c
   return(output)
 }
 
-func_nbs_threshold<-function(paths,data_nbs,list_max,list_mod,list_plot,thr_p_perm,
-                             atlas,df_roi,df_grp){
-  df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
-  for (model in names(data_nbs)){
-    for (plot in names(data_nbs[[model]])){
-      for (sex in c("m","f")){
-        data_nbs_subset<-data_nbs[[model]][[plot]][[sex]]
-        list_max_subset<-list_max[[model]][[plot]][[sex]]
-        list_max_subset_sort<-sort(list_max_subset)
-        thr_size_perm<-list_max_subset_sort[ceiling(length(list_max_subset_sort)*(1-thr_p_perm))]
-        
-        if (sex=="m"){
-          title_sex<-"M>F"
-          color_plt<-"steelblue2"
-        }else{
-          title_sex<-"F>M"
-          color_plt<-"lightcoral"
-        }
-        title_plot<-list_plot[[plot]][["title"]]
-        plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
-                         atlas,model,plot,sex,title_plot,title_sex,color_plt)
-
-        df_head<-data.frame(atlas=atlas,mod=model,plot=plot,sex=sex)
-        list_network_sign<-list()
-        if(length(data_nbs_subset$list_network)>0){
-          for (idx_net in seq(length(data_nbs_subset$list_network))){
-            network<-data_nbs_subset$list_network[[idx_net]]
-            df_net<-rbind(df_net,
-                          cbind(df_head,
-                                data.frame(id_net=idx_net,network$df_edge)))
-            df_size_net<-rbind(df_size_net,
-                               cbind(df_head,
-                                     data.frame(id_net=idx_net,size=network$size_net)))
-            if (network$size_net>=thr_size_perm){
-              list_network_sign<-c(list(network))
-              plot_sex_diff_fc(paths,network$df_edge,atlas,df_roi,df_grp,
-                               model,plot,sex,title_plot,title_sex,idx_net)
-            }
-          }
-        }
-        data_nbs[[model]][[plot]][[sex]][["list_network_sign_perm"]]<-list_network_sign
-        data_nbs[[model]][[plot]][[sex]][["list_max_size_perm"]]<-list_max_subset
-        data_nbs[[model]][[plot]][[sex]][["thr_size_perm"]]<-thr_size_perm
-        df_thr_size<-rbind(df_thr_size,
-                           cbind(df_head,data.frame(thr_size=thr_size_perm)))
-        df_perm<-rbind(df_perm,
-                       cbind(df_head,data.frame(id_perm=seq(length(list_max_subset)),
-                                                max_size_net=list_max_subset)))
+# Breadth-first search of connected graph
+func_bfs<-function(df_edge){
+  df_edge_remain<-df_edge
+  list_network<-list()
+  list_size<-NULL
+  while (nrow(df_edge_remain)>0){ # Examine new subnetwork as long as any edge is remaining
+    # Node as the origin of subnetwork
+    list_node_todo<-list_node_net<-as.character(df_edge_remain[[1,"from"]])
+    df_edge_net<-data.frame()
+    while (length(list_node_todo)>0){ # Search as long as any connected and unexamined node exist
+      node_check<-as.character(list_node_todo[1]) # Node of interest
+      list_node_todo<-list_node_todo[-1]
+      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
+      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
+      if (nrow(df_edge_new_from)>0){
+        list_node_new_from<-as.character(df_edge_new_from$to)
+      }else{
+        list_node_new_from<-NULL
       }
+      df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
+      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
+      if (nrow(df_edge_new_to)){
+        list_node_new_to<-as.character(df_edge_new_to$from)
+      }else{
+        list_node_new_to<-NULL
+      }
+      # Edge and node connected to node_check
+      df_edge_new<-rbind(df_edge_new_from,df_edge_new_to)
+      list_node_new<-c(list_node_new_from,list_node_new_to)
+      list_node_new<-list_node_new[list_node_new %nin% list_node_net]
+      # Add to subnetwork currently examined
+      df_edge_net<-rbind(df_edge_net,df_edge_new)
+      list_node_net<-c(list_node_net,list_node_new)
+      # Add to nodes to be examined
+      list_node_todo<-unique(c(list_node_todo,list_node_new))
     }
+    size_net<-nrow(df_edge_net)
+    list_size<-c(list_size,size_net)
+    list_node_net<-unique(list_node_net)
+    list_network<-c(list_network,list(list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net)))
   }
-  write.csv(df_net,file.path(paths$output,"output","temp",
-                             paste("atl-",atlas,"_net.csv",sep="")),row.names=F)
-  write.csv(df_size_net,file.path(paths$output,"output","temp",
-                             paste("atl-",atlas,"_size_net.csv",sep="")),row.names=F)
-  write.csv(df_thr_size,file.path(paths$output,"output","temp",
-                             paste("atl-",atlas,"_thr_perm.csv",sep="")),row.names=F)
-  write.csv(df_perm,file.path(paths$output,"output","temp",
-                              paste("atl-",atlas,"_perm.csv",sep="")),row.names=F)
-  return(data_nbs)
+  if(is.null(list_size)){
+    max_size<-0
+    n_network<-0
+  }else{
+    max_size<-max(list_size)
+    n_network<-length(list_size)
+  }
+  output<-list("list_network"=list_network,"list_size"=list_size,"max_size"=max_size,"n_network"=n_network)
+  return(output)
 }
 
 
@@ -256,62 +246,6 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
 }
 
 
-
-#**************************************************
-# Breadth-first search of connected network =======
-#**************************************************
-func_bfs<-function(df_edge){
-  df_edge_remain<-df_edge
-  list_network<-list()
-  list_size<-NULL
-  while (nrow(df_edge_remain)>0){ # Examine new subnetwork as long as any edge is remaining
-    # Node as the origin of subnetwork
-    list_node_todo<-list_node_net<-as.character(df_edge_remain[[1,"from"]])
-    df_edge_net<-data.frame()
-    while (length(list_node_todo)>0){ # Search as long as any connected and unexamined node exist
-      node_check<-as.character(list_node_todo[1]) # Node of interest
-      list_node_todo<-list_node_todo[-1]
-      df_edge_new_from<-df_edge_remain[df_edge_remain$from==node_check,]
-      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_from),]
-      if (nrow(df_edge_new_from)>0){
-        list_node_new_from<-as.character(df_edge_new_from$to)
-      }else{
-        list_node_new_from<-NULL
-      }
-      df_edge_new_to<-df_edge_remain[df_edge_remain$to==node_check,]
-      df_edge_remain<-df_edge_remain[rownames(df_edge_remain) %nin% rownames(df_edge_new_to),]
-      if (nrow(df_edge_new_to)){
-        list_node_new_to<-as.character(df_edge_new_to$from)
-      }else{
-        list_node_new_to<-NULL
-      }
-      # Edge and node connected to node_check
-      df_edge_new<-rbind(df_edge_new_from,df_edge_new_to)
-      list_node_new<-c(list_node_new_from,list_node_new_to)
-      list_node_new<-list_node_new[list_node_new %nin% list_node_net]
-      # Add to subnetwork currently examined
-      df_edge_net<-rbind(df_edge_net,df_edge_new)
-      list_node_net<-c(list_node_net,list_node_new)
-      # Add to nodes to be examined
-      list_node_todo<-unique(c(list_node_todo,list_node_new))
-    }
-    size_net<-nrow(df_edge_net)
-    list_size<-c(list_size,size_net)
-    list_node_net<-unique(list_node_net)
-    list_network<-c(list_network,list(list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net)))
-  }
-  if(is.null(list_size)){
-    max_size<-0
-    n_network<-0
-  }else{
-    max_size<-max(list_size)
-    n_network<-length(list_size)
-  }
-  output<-list("list_network"=list_network,"list_size"=list_size,"max_size"=max_size,"n_network"=n_network)
-  return(output)
-}
-
-
 #**************************************************
 # Fisher transformation of Correlation to Z =======
 #**************************************************
@@ -429,7 +363,7 @@ gamm_core3<-function(df_src){
               "df_anova"=df_out_anova_add))
 }
 
-
+# Faster version
 iterate_gamm3<-function(clust,df_join,df_edge,progressbar=T){
   
   df_join<-inner_join(df_join,df_edge,by=c("from","to"))
