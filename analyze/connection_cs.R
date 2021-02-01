@@ -61,33 +61,33 @@ source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
+
 #**************************************************
-# Sex difference of FC-cs and FC-diff data ========
+# Sex difference of FC ============================
 #**************************************************
 
-func_nbs<-function(paths,atlas,df_fc,df_clin,list_mod,list_plot,list_sex,
+func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
                    df_roi,df_edge,df_grp,thr_p_cdt,n_perm,thr_p_perm,calc_parallel){
-  print(paste("Calculating model: ",atlas,sep=""))
+  print(paste("Calculating model, atlas: ",atlas,", wave: ",wave,sep=""))
   clust<-makeCluster(floor(detectCores()*3/4))
   clusterExport(clust,
                 varlist=c("list_mod","list_sex","calc_parallel","sort","gam","as.formula","summary.gam",
                           "anova.gam","as.numeric.factor"),
                 envir=environment())
-
   data_nbs<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin,
                           df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
                           thr_p_cdt=thr_p_cdt,list_plot=list_plot,
                           progressbar=F,output_gamm=F,calc_slope=T)$data_nbs
   
   # Permutation test
-  print(paste("Calculating permutation: ",atlas,sep=""))
+  print(paste("Calculating permutation, atlas: ",atlas,", wave: ",wave,sep=""))
   set.seed(0)
   list_max<-list()
   pb<-txtProgressBar(min=0,max=n_perm,style=3,width=50)
   for (idx_perm in seq(n_perm)){
-    df_clin_diff_perm<-df_clin
-    df_clin_diff_perm$sex<-sample(df_clin_diff_perm$sex)
-    data_nbs_perm<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin_diff_perm,
+    df_clin_perm<-df_clin
+    df_clin_perm$sex<-sample(df_clin_perm$sex)
+    data_nbs_perm<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin_perm,
                                  df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
                                  thr_p_cdt=thr_p_cdt,list_plot=list_plot,
                                  progressbar=F,output_gamm=F,calc_slope=T)$data_nbs
@@ -108,11 +108,11 @@ func_nbs<-function(paths,atlas,df_fc,df_clin,list_mod,list_plot,list_sex,
     setTxtProgressBar(pb,idx_perm)
   }
   close(pb)
-  stopCluster(clust)
   
   # Summarize permutation and threshold subgraphs
-  print(paste("Preparing output: ",atlas,sep=""))
+  print(paste("Preparing output, atlas: ",atlas,", wave: ",wave,sep=""))
   df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
+  list_output<-list()
   for (model in names(data_nbs)){
     for (plot in names(data_nbs[[model]])){
       for (sex in c("m","f")){
@@ -129,24 +129,21 @@ func_nbs<-function(paths,atlas,df_fc,df_clin,list_mod,list_plot,list_sex,
           color_plt<-"lightcoral"
         }
         title_plot<-list_plot[[plot]][["title"]]
-        plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
-                         atlas,model,plot,sex,title_plot,title_sex,color_plt)
-        
-        df_head<-data.frame(atlas=atlas,mod=model,plot=plot,sex=sex)
+        list_output<-c(list_output,
+                       list(plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
+                                             atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)))
+        df_head<-data.frame(atlas=atlas,wave=wave,mod=model,plot=plot,sex=sex)
         list_network_sign<-list()
         if(length(data_nbs_subset$list_network)>0){
           for (idx_net in seq(length(data_nbs_subset$list_network))){
             network<-data_nbs_subset$list_network[[idx_net]]
-            df_net<-rbind(df_net,
-                          cbind(df_head,
-                                data.frame(id_net=idx_net,network$df_edge)))
-            df_size_net<-rbind(df_size_net,
-                               cbind(df_head,
-                                     data.frame(id_net=idx_net,size=network$size_net)))
+            list_output<-c(list_output,
+                           list(plot_sex_diff_fc(paths,network$df_edge,atlas,wave,df_roi,df_grp,
+                                                 model,plot,sex,title_plot,title_sex,idx_net)))
+            df_net<-rbind(df_net,cbind(df_head, data.frame(id_net=idx_net,network$df_edge)))
+            df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(id_net=idx_net,size=network$size_net)))
             if (network$size_net>=thr_size_perm){
               list_network_sign<-c(list(network))
-              plot_sex_diff_fc(paths,network$df_edge,atlas,df_roi,df_grp,
-                               model,plot,sex,title_plot,title_sex,idx_net)
             }
           }
         }
@@ -161,24 +158,26 @@ func_nbs<-function(paths,atlas,df_fc,df_clin,list_mod,list_plot,list_sex,
       }
     }
   }
+  plot_parallel(clust,list_output)
+  stopCluster(clust)
   write.csv(df_net,file.path(paths$output,"output","temp",
-                             paste("atl-",atlas,"_net.csv",sep="")),row.names=F)
+                             paste("atl-",atlas,"_wave-",wave,"_net.csv",sep="")),row.names=F)
   write.csv(df_size_net,file.path(paths$output,"output","temp",
-                                  paste("atl-",atlas,"_size_net.csv",sep="")),row.names=F)
+                                  paste("atl-",atlas,"_wave-",wave,"_size_net.csv",sep="")),row.names=F)
   write.csv(df_thr_size,file.path(paths$output,"output","temp",
-                                  paste("atl-",atlas,"_thr_perm.csv",sep="")),row.names=F)
+                                  paste("atl-",atlas,"_wave-",wave,"_thr_perm.csv",sep="")),row.names=F)
   write.csv(df_perm,file.path(paths$output,"output","temp",
-                              paste("atl-",atlas,"_perm.csv",sep="")),row.names=F)
+                              paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")),row.names=F)
 }
 
-sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
+sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
                          subset_subj_=sex_diff_fc_cs_subset_subj,list_covar_=sex_diff_fc_cs_list_covar,
                          list_mod_cs_=sex_diff_fc_cs_list_mod_cs,list_mod_diff_=sex_diff_fc_cs_list_mod_diff,
                          list_mod_long_=sex_diff_fc_cs_list_mod_long,
                          list_plot_=sex_diff_fc_cs_list_plot,
                          thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt,thr_p_perm_=sex_diff_fc_cs_thr_p_perm,
                          n_perm_=sex_diff_fc_cs_n_perm){
-  print("Starting sex_diff_fc_cs()")
+  print("Starting sex_diff_fc()")
   nullobj<-func_createdirs(paths_,str_proc="sex_diff_fc_cs()",copy_log=T)
   # Increase memory limit
   memory.limit(1000000)
@@ -199,7 +198,7 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
       df_clin_diff$wave<-"2-1"
       
       # Network-based statistics
-      func_nbs(paths=paths_,atlas=atlas,
+      func_nbs(paths=paths_,atlas=atlas,wave="diff",
                df_fc=df_fc_diff,df_clin=df_clin_diff,
                list_mod=list_mod_diff_,list_plot=list_plot_,list_sex=list(c(1,2)),
                df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,df_grp=data_fc$df_grp,
@@ -222,20 +221,22 @@ sex_diff_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3
   print("Binding results")
   df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
   for (atlas in list_atlas_){
-    df_net<-rbind(df_net,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                       paste("atl-",atlas,"_net.csv",sep="")))))
-    df_size_net<-rbind(df_size_net,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                                 paste("atl-",atlas,"_size_net.csv",sep="")))))
-    df_thr_size<-rbind(df_thr_size,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                                 paste("atl-",atlas,"_thr_perm.csv",sep="")))))
-    df_perm<-rbind(df_perm,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                         paste("atl-",atlas,"_perm.csv",sep="")))))
+    for (wave in c("diff")){
+      df_net<-rbind(df_net,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                         paste("atl-",atlas,"_wave-",wave,"_net.csv",sep="")))))
+      df_size_net<-rbind(df_size_net,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                                   paste("atl-",atlas,"_wave-",wave,"_size_net.csv",sep="")))))
+      df_thr_size<-rbind(df_thr_size,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                                   paste("atl-",atlas,"_wave-",wave,"_thr_perm.csv",sep="")))))
+      df_perm<-rbind(df_perm,as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                           paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")))))
+    }
   }
   write.csv(df_net,file.path(paths$output,"output","result","net.csv"),row.names=F)
   write.csv(df_size_net,file.path(paths$output,"output","result","size_net.csv"),row.names=F)
   write.csv(df_thr_size,file.path(paths$output,"output","result","thr_perm.csv"),row.names=F)
   write.csv(df_perm,file.path(paths$output,"output","result","perm.csv"),row.names=F)
-  print("Finished sex_diff_fc_cs()")
+  print("Finished sex_diff_fc()")
 }
 
 

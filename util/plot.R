@@ -17,31 +17,54 @@ library(viridis)
 
 
 #**************************************************
+# Parallel ggsave output for complex figures ======
+#**************************************************
+
+plot_parallel_core<-function(data_plot){
+  ggsave(filename=data_plot$filename,plot=data_plot$plot,path=data_plot$path,
+         height=data_plot$height,width=data_plot$width,dpi=data_plot$dpi)
+  #return(T)
+}
+
+plot_parallel<-function(clust,list_data_plot){
+  clusterExport(clust,
+                varlist=c("ggsave"),
+                envir=environment())
+  nullobj<-pblapply(list_data_plot,plot_parallel_core,cl=clust)
+}
+
+
+#**************************************************
 # Histogram of Permutaion =========================
 #**************************************************
 plot_permutation<-function(paths_,list_max,thr_size_perm,
-                           atlas,model,plot,sex,title_plot,title_sex,color_plt){
+                           atlas,wave,model,plot,sex,title_plot,title_sex,color_plt){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
         + geom_histogram(binwidth=5,fill=color_plt)
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
-        + ggtitle(paste("Atlas: ",atlas,", Model: ",model,", Plot: ",title_plot,
-                        ", Sex: ",title_sex,sep=""))
+        + ggtitle(paste("Atlas: ",atlas,", Wave: ",wave,", Model: ",model,
+                        "\rPlot: ",title_plot,", Sex: ",title_sex,sep=""))
         + xlab("Size")
         + ylab("Count")
         + theme_light()
         + theme(plot.title = element_text(hjust = 0.5))
   )
-  ggsave(paste("atl-",atlas,"_mod-",model,"_plt-",plot,
-               "_sex-",sex,"_perm.png",sep=""),
-         plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
+  #ggsave(paste("atl-",atlas,"_mod-",model,"_plt-",plot,
+  #             "_sex-",sex,"_perm.png",sep=""),
+  #       plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
+  output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
+                                "_sex-",sex,"_perm.png",sep=""),
+               "plot"=plt,"path"=file.path(paths_$output,"output","plot"),
+               "height"=5,"width"=7,"dpi"=300)
+  return(output)
 }
 
 
 #**************************************************
 # Heatmap Plot of sex difference NBS ==============
 #**************************************************
-plot_sex_diff_fc<-function(paths_,df_edge,atlas,df_roi,df_grp,mod,plot,sex,
+plot_sex_diff_fc<-function(paths_,df_edge,atlas,wave,df_roi,df_grp,mod,plot,sex,
                            title_plot,title_sex,idx_net){
   # Create list of ROIs with blanks between groups
   list_roi_axis<-NULL
@@ -83,7 +106,7 @@ plot_sex_diff_fc<-function(paths_,df_edge,atlas,df_roi,df_grp,mod,plot,sex,
          + scale_fill_gradientn(colors = matlab.like2(100),name=label_legend,limits=limits)
          + scale_y_discrete(limits = rev(list_roi_axis))
          + scale_x_discrete(limits = list_roi_axis, position="top")
-         + ggtitle(paste("Atlas: ",atlas,", Model: ",mod,", Plot: ",title_plot,
+         + ggtitle(paste("Atlas: ",atlas,", Wave: ",wave,", Model: ",mod,", Plot: ",title_plot,
                          ", Contr: ",title_sex,", #",sprintf("%02d",idx_net),sep=""))
          + xlab(title_axis)
          + theme_linedraw()
@@ -101,10 +124,14 @@ plot_sex_diff_fc<-function(paths_,df_edge,atlas,df_roi,df_grp,mod,plot,sex,
          )
   )
   
-  ggsave(paste("atl-",atlas,"_mod-",mod,"_plt-",plot,
-               "_cntr-",sex,"_idx-",sprintf("%02d",idx_net),"_net.png",sep=""),
-         plot=plt,path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
-  
+  #ggsave(paste("atl-",atlas,"_mod-",mod,"_plt-",plot,
+  #             "_cntr-",sex,"_idx-",sprintf("%02d",idx_net),"_net.png",sep=""),
+  #       plot=plt,path=file.path(paths_$output,"output","plot"),height=10,width=10,dpi=600)
+  output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",mod,"_plt-",plot,
+                                "_cntr-",sex,"_idx-",sprintf("%02d",idx_net),"_net.png",sep=""),
+               "plot"=plt,"path"=file.path(paths_$output,"output","plot"),
+               "height"=10,"width"=10,"dpi"=600)
+  return(output)
 }
 
 #**************************************************

@@ -34,7 +34,7 @@ sex_diff_fc_cs_list_plot <- list("s"     =list("title"="Sex effect","var_exp"="s
 sex_diff_fc_cs_thr_p_cdt <- 0.001
 sex_diff_fc_cs_thr_p_perm <- 0.05
 #sex_diff_fc_cs_n_perm <- 1000
-sex_diff_fc_cs_n_perm <- 5
+sex_diff_fc_cs_n_perm <- 3
 
 
 #**************************************************
