@@ -22,9 +22,6 @@ path_exp_full<-NULL
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"433_fc_gam_aroma_gsr"
 
-dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_sex_diff_aroma_test"
-
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
 #ratio_vis<-0.01

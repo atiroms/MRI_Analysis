@@ -1,5 +1,5 @@
-#source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
-source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
+source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
+#source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
 
 ####
 
@@ -41,26 +41,25 @@ df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
 list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
 df_clin<-data_clin$df_clin
 colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
-df_clin_diffmean<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
-df_clin_diffmean$wave<-"2-1"
+df_clin_diff<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
+df_clin_diff$wave<-"2-1"
 
-# Network-based statistics
-print(paste("Calculating model: ",atlas,sep=""))
-list_sex<-list(c(1,2))
-calc_parallel<-T
-clust_gamm<-makeCluster(floor(detectCores()*3/4))
-list_mod<-list_mod_diff_
-clusterExport(clust_gamm,
-              varlist=c("list_mod","list_sex","calc_parallel","sort","gam","as.formula","summary.gam",
-                        "anova.gam","as.numeric.factor"),
-              envir=environment())
-data_nbs<-func_nbs(clust=clust_gamm,df_fc=df_fc_diff,df_clin=df_clin_diffmean,
-                   df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,list_mod=list_mod_diff_,
-                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
-                   progressbar=F,output_gamm=T,calc_slope=T)
-data_gamm<-data_nbs$data_gamm
-data_nbs<-data_nbs$data_nbs
+####
 
+df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=10)$df_clin
+
+####
+
+plot_mean<-(ggplot(df_join_subset,aes(x=mean_age,y=value,color=sex))
+            + geom_point()
+            + scale_color_manual(values = c("steelblue2", "lightcoral"),labels=c("M","F"))
+            + xlab("mean(age)(d)")
+            + ylab("delta(z(r))")
+            + geom_smooth(method="lm",se=F,fullrange=T)
+            + theme_light()
+)
+
+####
 ####
 
 clust=clust_gamm
