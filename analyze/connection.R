@@ -17,7 +17,7 @@ path_exp_full<-NULL
 #list_atlas<-"ho112"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_sex_diff_aroma_test6"
+dir_out<-"427_fc_sex_diff_aroma_test"
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
@@ -84,10 +84,14 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # Sex difference of FC ============================
 #**************************************************
 
-func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
+func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,calc_slope,list_plot,list_sex,
                    df_roi,df_edge,df_grp,thr_p_cdt,n_perm,thr_p_perm,calc_parallel,test_mod=F){
   print(paste("Calculating model, atlas: ",atlas,", wave: ",wave,sep=""))
-  clust<-makeCluster(floor(detectCores()*3/4))
+  if (calc_paralllel){
+    clust<-makeCluster(floor(detectCores()*3/4))
+  }else{
+    clust<-makeCluster(1)
+  }
   clusterExport(clust,
                 varlist=c("list_mod","list_sex","calc_parallel","test_mod","sort","gam","as.formula","summary.gam",
                           "anova.gam","as.numeric.factor"),
@@ -95,7 +99,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
   data_nbs<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin,
                           df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
                           thr_p_cdt=thr_p_cdt,list_plot=list_plot,
-                          progressbar=F,output_gamm=F,calc_slope=T,test_mod=test_mod)
+                          progressbar=F,output_gamm=F,calc_slope=calc_slope,test_mod=test_mod)
   if(test_mod){
     return(data_nbs)
   }else{
@@ -112,7 +116,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
       data_nbs_perm<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin_perm,
                                    df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
                                    thr_p_cdt=thr_p_cdt,list_plot=list_plot,
-                                   progressbar=F,output_gamm=F,calc_slope=T)$data_nbs
+                                   progressbar=F,output_gamm=F,calc_slope=calc_slope,test_mod=F)$data_nbs
       for (model in names(data_nbs_perm)){
         for (plot in names(data_nbs_perm[[model]])){
           if(idx_perm==1){
@@ -197,8 +201,9 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
 
 sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
                       subset_subj_=sex_diff_fc_subset_subj,list_covar_=sex_diff_fc_list_covar,
-                      list_mod_=sex_diff_fc_list_mod_cs,list_mod_diff_=sex_diff_fc_list_mod_diff,
+                      list_mod_diff_=sex_diff_fc_list_mod_diff,
                       list_mod_long_=sex_diff_fc_list_mod_long,
+                      list_mod_cs_=sex_diff_fc_list_mod_cs,
                       list_plot_=sex_diff_fc_list_plot,
                       thr_p_cdt_=sex_diff_fc_thr_p_cdt,thr_p_perm_=sex_diff_fc_thr_p_perm,
                       n_perm_=sex_diff_fc_n_perm){
@@ -217,9 +222,9 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
       df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
       # List of subjects meeting QC criteria and has non-NA covariates in both waves
       list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
-      df_clin<-data_clin$df_clin
-      colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
-      df_clin_diff<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
+      df_clin_diff<-data_clin$df_clin
+      colnames(df_clin_diff)[colnames(df_clin_diff)=="wave"]<-"ses"
+      df_clin_diff<-func_clinical_data_diffmean(df_clin_diff,list_id_subj,list_covar_)
       df_clin_diff$wave<-"2-1"
       #df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=10)$df_clin
       mean_mean_age<-mean(df_clin_diff$mean_age)
@@ -228,20 +233,17 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
       # Network-based statistics
       func_nbs(paths=paths_,atlas=atlas,wave="diff",
                df_fc=df_fc_diff,df_clin=df_clin_diff,
-               list_mod=list_mod_diff_,list_plot=list_plot_,list_sex=list(c(1,2)),
+               list_mod=list_mod_diff_,calc_slope=T,list_plot=list_plot_,list_sex=list(c(1,2)),
                df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,df_grp=data_fc$df_grp,
                thr_p_cdt=thr_p_cdt_,n_perm=n_perm_,thr_p_perm=thr_p_perm_,
                calc_parallel=T,test_mod=F)
+
+      # Generalized linear(/additive) mixed model analysis
+      df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
+
+
       
       # Cross-sectional analysis
-      
-      # Generalized linear mixed model analysis
-      #df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
-      #print(paste("Calculating model: ",atlas,sep=""))
-      #data_nbs<-func_nbs(df_fc=df_fc_long,df_clin=data_clin$df_clin,
-      #                   df_roi=data_fc$df_roi,list_mod=list_mod_long_,
-      #                   thr_p_cdt=thr_p_cdt_,list_plot=list_plot_,
-      #                   progressbar=F,output_gamm=T,calc_slope=F)
       
     }
   }
