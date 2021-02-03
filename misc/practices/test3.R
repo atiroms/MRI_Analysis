@@ -106,7 +106,7 @@ clusterExport(clust,
 
 ####
 
-progressbar=F
+progressbar=T
 output_gamm=F
 
 ####
