@@ -44,20 +44,20 @@ plot_permutation<-function(paths_,list_max,thr_size_perm,
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
         + ggtitle(paste("Atlas: ",atlas,", Wave: ",wave,", Model: ",model,
-                        "\rPlot: ",title_plot,", Sex: ",title_sex,sep=""))
+                        "\nPlot: ",title_plot,", Sex: ",title_sex,sep=""))
         + xlab("Size")
         + ylab("Count")
         + theme_light()
         + theme(plot.title = element_text(hjust = 0.5))
   )
-  #ggsave(paste("atl-",atlas,"_mod-",model,"_plt-",plot,
-  #             "_sex-",sex,"_perm.png",sep=""),
-  #       plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
-  output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
-                                "_sex-",sex,"_perm.png",sep=""),
-               "plot"=plt,"path"=file.path(paths_$output,"output","plot"),
-               "height"=5,"width"=7,"dpi"=300)
-  return(output)
+  ggsave(paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
+               "_sex-",sex,"_perm.png",sep=""),
+         plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
+  #output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
+  #                              "_sex-",sex,"_perm.png",sep=""),
+  #             "plot"=plt,"path"=file.path(paths_$output,"output","plot"),
+  #             "height"=5,"width"=7,"dpi"=300)
+  #return(output)
 }
 
 
@@ -87,13 +87,10 @@ plot_sex_diff_fc<-function(paths_,df_edge,atlas,wave,df_roi,df_grp,mod,plot,sex,
   df_edge<-rbind(df_edge,df_edge_inv)
   rownames(df_roi)<-NULL
   df_edge_full<-NULL
-  for (idx1 in seq(nrow(df_roi))){
-    for (idx2 in seq(nrow(df_roi))){
-      if (idx1!=idx2){
-        df_edge_full<-rbind(df_edge_full,data.frame(from=df_roi[idx1,"id"],to=df_roi[idx2,"id"],
-                                                  label_from=df_roi[idx1,"label"],label_to=df_roi[idx2,"label"]))
-      }
-    }
+  for (idx_roi in seq(nrow(df_roi))){
+    df_edge_add<-cbind(df_roi[idx_roi,c("id","label")],df_roi[-idx_roi,c("id","label")],row.names=NULL)
+    colnames(df_edge_add)<-c("from","label_from","to","label_to")
+    df_edge_full<-rbind(df_edge_full,df_edge_add)
   }
   df_edge<-left_join(df_edge_full,df_edge,by=c("from","to"))
   df_edge<-df_edge[,c("label_from","label_to","r")]

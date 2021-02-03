@@ -5,10 +5,10 @@
 
 
 #**************************************************
-# sex_diff_fc_cs() =============================
+# sex_diff_fc() ===================================
 #**************************************************
 
-sex_diff_fc_cs_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+sex_diff_fc_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                                             list("key"="W1_rsfMRIexist","condition"="==1"),
                                             list("key"="W1_Censor","condition"="<126")),
                                    "2"=list(list("key"="W2_T1QC","condition"="==1"),
@@ -20,41 +20,22 @@ sex_diff_fc_cs_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==
                                               list("key"="W2_T1QC","condition"="==1"),
                                               list("key"="W2_rsfMRIexist","condition"="==1"),
                                               list("key"="W2_Censor","condition"="<126")))
-sex_diff_fc_cs_list_covar<-list("age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
+sex_diff_fc_list_covar<-list("age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
                                 "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex"))
-sex_diff_fc_cs_list_mod_cs   <- list("lin"  = "value ~ sex + age + sex*age",
+sex_diff_fc_list_mod_cs   <- list("lin"  = "value ~ sex + age + sex*age",
                                      "int"  = "value ~ sex + age")
-sex_diff_fc_cs_list_mod_diff <- list("lin"  = "value ~ sex + mean_age",
-                                     "int"  = "value ~ sex + mean_age + sex*mean_age")
-sex_diff_fc_cs_list_mod_long <- list("lin"  = "value ~ sex + age + s(ID_pnTTC,bs='re')",
+sex_diff_fc_list_mod_diff <- list("lin"  = "value ~ sex + mean_age",
+                                     #"int"  = "value ~ sex + mean_age + sex*mean_age")
+                                     "int"  = "value ~ sex*mean_age")
+sex_diff_fc_list_mod_long <- list("lin"  = "value ~ sex + age + s(ID_pnTTC,bs='re')",
                                      "int"  = "value ~ sex + age + sex*age + s(ID_pnTTC,bs='re')")
-sex_diff_fc_cs_list_plot <- list("s"     =list("title"="Sex effect","var_exp"="sex2"),
+sex_diff_fc_list_plot <- list("s"     =list("title"="Sex effect","var_exp"="sex2"),
                                  "sxm(a)"=list("title"="Sex by mean(age) interaction","var_exp"="sex2:mean_age"),
                                  "sxa"   =list("title"="Sex by age interaction","var_exp"="sex2:age"))
-sex_diff_fc_cs_thr_p_cdt <- 0.001
-sex_diff_fc_cs_thr_p_perm <- 0.05
-#sex_diff_fc_cs_n_perm <- 1000
-sex_diff_fc_cs_n_perm <- 3
-
-
-#**************************************************
-# sex_diff_fc() ===================================
-#**************************************************
-
-sex_diff_fc_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
-                                         list("key"="W1_rsfMRIexist","condition"="==1"),
-                                         list("key"="W1_Censor","condition"="<126")),
-                                "2"=list(list("key"="W2_T1QC","condition"="==1"),
-                                         list("key"="W2_rsfMRIexist","condition"="==1"),
-                                         list("key"="W2_Censor","condition"="<126")))
-sex_diff_fc_list_covar<-list("age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
-                             "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex"))
-sex_diff_fc_list_mod <- list("l"= "value ~ sex + age + s(ID_pnTTC,bs='re')")
-sex_diff_fc_list_plot <- list("a"=list("title"="Age effect","var_exp"="age"),
-                              "s"=list("title"="Sex effect","var_exp"="sex"))
-sex_diff_fc_list_type_p <- "p"
-sex_diff_fc_thr_p <- 0.001
-
+sex_diff_fc_thr_p_cdt <- 0.001
+sex_diff_fc_thr_p_perm <- 0.05
+#sex_diff_fc_n_perm <- 1000
+sex_diff_fc_n_perm <- 3
 
 
 #**************************************************

@@ -17,7 +17,7 @@ path_exp_full<-NULL
 #list_atlas<-"ho112"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_sex_diff_aroma_test5"
+dir_out<-"427_fc_sex_diff_aroma_test6"
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
@@ -89,7 +89,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
   print(paste("Calculating model, atlas: ",atlas,", wave: ",wave,sep=""))
   clust<-makeCluster(floor(detectCores()*3/4))
   clusterExport(clust,
-                varlist=c("list_mod","list_sex","calc_parallel","sort","gam","as.formula","summary.gam",
+                varlist=c("list_mod","list_sex","calc_parallel","test_mod","sort","gam","as.formula","summary.gam",
                           "anova.gam","as.numeric.factor"),
                 envir=environment())
   data_nbs<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin,
@@ -151,9 +151,11 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
             color_plt<-"lightcoral"
           }
           title_plot<-list_plot[[plot]][["title"]]
-          list_output<-c(list_output,
-                         list(plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
-                                               atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)))
+          #list_output<-c(list_output,
+          #               list(plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
+          #                                     atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)))
+          plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
+                           atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)
           df_head<-data.frame(atlas=atlas,wave=wave,mod=model,plot=plot,sex=sex)
           list_network_sign<-list()
           if(length(data_nbs_subset$list_network)>0){
@@ -194,12 +196,12 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,list_plot,list_sex,
 }
 
 sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
-                      subset_subj_=sex_diff_fc_cs_subset_subj,list_covar_=sex_diff_fc_cs_list_covar,
-                      list_mod_cs_=sex_diff_fc_cs_list_mod_cs,list_mod_diff_=sex_diff_fc_cs_list_mod_diff,
-                      list_mod_long_=sex_diff_fc_cs_list_mod_long,
-                      list_plot_=sex_diff_fc_cs_list_plot,
-                      thr_p_cdt_=sex_diff_fc_cs_thr_p_cdt,thr_p_perm_=sex_diff_fc_cs_thr_p_perm,
-                      n_perm_=sex_diff_fc_cs_n_perm){
+                      subset_subj_=sex_diff_fc_subset_subj,list_covar_=sex_diff_fc_list_covar,
+                      list_mod_=sex_diff_fc_list_mod_cs,list_mod_diff_=sex_diff_fc_list_mod_diff,
+                      list_mod_long_=sex_diff_fc_list_mod_long,
+                      list_plot_=sex_diff_fc_list_plot,
+                      thr_p_cdt_=sex_diff_fc_thr_p_cdt,thr_p_perm_=sex_diff_fc_thr_p_perm,
+                      n_perm_=sex_diff_fc_n_perm){
   print("Starting sex_diff_fc()")
   nullobj<-func_createdirs(paths_,str_proc="sex_diff_fc()",copy_log=T)
   # Increase memory limit

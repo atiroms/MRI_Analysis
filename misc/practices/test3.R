@@ -1,5 +1,5 @@
-source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
-#source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
+#source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
+source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
 
 ####
 
@@ -43,97 +43,156 @@ df_clin<-data_clin$df_clin
 colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
 df_clin_diff<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar_)
 df_clin_diff$wave<-"2-1"
+#df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=10)$df_clin
+mean_mean_age<-mean(df_clin_diff$mean_age)
+df_clin_diff$mean_age<-df_clin_diff$mean_age-mean_mean_age
+
+# Network-based statistics
+#func_nbs(paths=paths_,atlas=atlas,wave="diff",
+#         df_fc=df_fc_diff,df_clin=df_clin_diff,
+#         list_mod=list_mod_diff_,list_plot=list_plot_,list_sex=list(c(1,2)),
+#         df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,df_grp=data_fc$df_grp,
+#         thr_p_cdt=thr_p_cdt_,n_perm=n_perm_,thr_p_perm=thr_p_perm_,
+#         calc_parallel=T,test_mod=F)
 
 ####
 
-df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=10)$df_clin
+#test_mod<-func_nbs(paths=paths_,atlas=atlas,wave="diff",
+#         df_fc=df_fc_diff,df_clin=df_clin_diff,
+#         list_mod=list_mod_diff_,list_plot=list_plot_,list_sex=list(c(1,2)),
+#         df_roi=data_fc$df_roi,df_edge=data_fc$df_edge,df_grp=data_fc$df_grp,
+#         thr_p_cdt=thr_p_cdt_,n_perm=n_perm_,thr_p_perm=thr_p_perm_,
+#         calc_parallel=T,test_mod=T)
+#summary(test_mod[[1]])
+#summary(test_mod[[2]])
+
 
 ####
 
-plot_mean<-(ggplot(df_join_subset,aes(x=mean_age,y=value,color=sex))
-            + geom_point()
-            + scale_color_manual(values = c("steelblue2", "lightcoral"),labels=c("M","F"))
-            + xlab("mean(age)(d)")
-            + ylab("delta(z(r))")
-            + geom_smooth(method="lm",se=F,fullrange=T)
-            + theme_light()
-)
-
-####
-####
-
-clust=clust_gamm
+paths=paths_
+wave="diff"
 df_fc=df_fc_diff
-df_clin=df_clin_diffmean
+df_clin=df_clin_diff
+list_mod=list_mod_diff_
+list_plot=list_plot_
+list_sex=list(c(1,2))
 df_roi=data_fc$df_roi
 df_edge=data_fc$df_edge
-list_mod=list_mod_diff_
+df_grp=data_fc$df_grp
 thr_p_cdt=thr_p_cdt_
-list_plot=list_plot_
-progressbar=F
-output_gamm=T
-calc_slope=T
+n_perm=n_perm_
+thr_p_perm=thr_p_perm_
+calc_parallel=T
+test_mod=F
 
 ####
-df_join<-join_fc_clin(df_fc,df_clin)
-if(calc_slope){
-  # value as slope of z_r longitudinal difference against age (z(r(wave=2))-z(r(wave=1)))/delta(age)
-  df_join$value<-df_join$value/df_join$diff_age
-}
-df_edge$label_from<-df_edge$label_to<-NULL
-df_edge$id_edge<-seq(nrow(df_edge))
-data_gamm<-iterate_gamm3(clust,df_join,df_edge,progressbar=progressbar)
-
-####
-
-list_out_bfs<-list()
-
-####
-model<-names(list_mod)[1]
-plot<-names(list_plot)[1]
-var_exp<-list_plot[[plot]][["var_exp"]]
-df_gamm_subset<-data_gamm$df_gamm[data_gamm$df_gamm$model==model & data_gamm$df_gamm$term==var_exp,]
-df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
-df_m<-df_gamm_sign[df_gamm_sign$t<0,]
-data_bfs_m<-func_bfs(df_m)
-df_f<-df_gamm_sign[df_gamm_sign$t>0,]
-data_bfs_f<-func_bfs(df_f)
-list_out_plot<-list(list("m"=data_bfs_m,"f"=data_bfs_f))
-names(list_out_plot)<-plot
-list_out_model<-c(list_out_model,list_out_plot)
-
-
-
-for (model in names(list_mod)){
-  list_out_model<-list()
-  for (plot in names(list_plot)){
-    var_exp<-list_plot[[plot]][["var_exp"]]
-    df_gamm_subset<-data_gamm$df_gamm[data_gamm$df_gamm$model==model & data_gamm$df_gamm$term==var_exp,]
-    if (nrow(df_gamm_subset)>0){
-      df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
-      df_m<-df_gamm_sign[df_gamm_sign$t<0,]
-      data_bfs_m<-func_bfs(df_m)
-      df_f<-df_gamm_sign[df_gamm_sign$t>0,]
-      data_bfs_f<-func_bfs(df_f)
-      list_out_plot<-list(list("m"=data_bfs_m,"f"=data_bfs_f))
-      names(list_out_plot)<-plot
-      list_out_model<-c(list_out_model,list_out_plot)
+print(paste("Calculating model, atlas: ",atlas,", wave: ",wave,sep=""))
+clust<-makeCluster(floor(detectCores()*3/4))
+clusterExport(clust,
+              varlist=c("list_mod","list_sex","calc_parallel","test_mod","sort","gam","as.formula","summary.gam",
+                        "anova.gam","as.numeric.factor"),
+              envir=environment())
+data_nbs<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin,
+                        df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
+                        thr_p_cdt=thr_p_cdt,list_plot=list_plot,
+                        progressbar=F,output_gamm=F,calc_slope=T,test_mod=test_mod)
+if(test_mod){
+  return(data_nbs)
+}else{
+  data_nbs<-data_nbs$data_nbs
+  
+  # Permutation test
+  print(paste("Calculating permutation, atlas: ",atlas,", wave: ",wave,sep=""))
+  set.seed(0)
+  list_max<-list()
+  pb<-txtProgressBar(min=0,max=n_perm,style=3,width=50)
+  for (idx_perm in seq(n_perm)){
+    df_clin_perm<-df_clin
+    df_clin_perm$sex<-sample(df_clin_perm$sex)
+    data_nbs_perm<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin_perm,
+                                 df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
+                                 thr_p_cdt=thr_p_cdt,list_plot=list_plot,
+                                 progressbar=F,output_gamm=F,calc_slope=T)$data_nbs
+    for (model in names(data_nbs_perm)){
+      for (plot in names(data_nbs_perm[[model]])){
+        if(idx_perm==1){
+          list_max_sex<-list("m"=data_nbs_perm[[model]][[plot]][["m"]][["max_size"]],
+                             "f"=data_nbs_perm[[model]][[plot]][["f"]][["max_size"]])
+          list_max[[model]][[plot]]<-list_max_sex
+        }else{
+          for (sex in c("m","f")){
+            list_max[[model]][[plot]][[sex]]<-c(list_max[[model]][[plot]][[sex]],
+                                                data_nbs_perm[[model]][[plot]][[sex]][["max_size"]])
+          }
+        }
+      }
+    }
+    setTxtProgressBar(pb,idx_perm)
+  }
+  close(pb)
+  
+  # Summarize permutation and threshold subgraphs
+  print(paste("Preparing output, atlas: ",atlas,", wave: ",wave,sep=""))
+  df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
+  list_output<-list()
+  for (model in names(data_nbs)){
+    for (plot in names(data_nbs[[model]])){
+      for (sex in c("m","f")){
+        data_nbs_subset<-data_nbs[[model]][[plot]][[sex]]
+        list_max_subset<-list_max[[model]][[plot]][[sex]]
+        list_max_subset_sort<-sort(list_max_subset)
+        thr_size_perm<-list_max_subset_sort[ceiling(length(list_max_subset_sort)*(1-thr_p_perm))]
+        
+        if (sex=="m"){
+          title_sex<-"M>F"
+          color_plt<-"steelblue2"
+        }else{
+          title_sex<-"F>M"
+          color_plt<-"lightcoral"
+        }
+        title_plot<-list_plot[[plot]][["title"]]
+        #list_output<-c(list_output,
+        #               list(plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
+        #                                     atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)))
+        plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
+                         atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)
+        df_head<-data.frame(atlas=atlas,wave=wave,mod=model,plot=plot,sex=sex)
+        list_network_sign<-list()
+        if(length(data_nbs_subset$list_network)>0){
+          for (idx_net in seq(length(data_nbs_subset$list_network))){
+            network<-data_nbs_subset$list_network[[idx_net]]
+            list_output<-c(list_output,
+                           list(plot_sex_diff_fc(paths,network$df_edge,atlas,wave,df_roi,df_grp,
+                                                 model,plot,sex,title_plot,title_sex,idx_net)))
+            df_net<-rbind(df_net,cbind(df_head, data.frame(id_net=idx_net,network$df_edge)))
+            df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(id_net=idx_net,size=network$size_net)))
+            if (network$size_net>=thr_size_perm){
+              list_network_sign<-c(list(network))
+            }
+          }
+        }
+        data_nbs[[model]][[plot]][[sex]][["list_network_sign_perm"]]<-list_network_sign
+        data_nbs[[model]][[plot]][[sex]][["list_max_size_perm"]]<-list_max_subset
+        data_nbs[[model]][[plot]][[sex]][["thr_size_perm"]]<-thr_size_perm
+        df_thr_size<-rbind(df_thr_size,
+                           cbind(df_head,data.frame(thr_size=thr_size_perm)))
+        df_perm<-rbind(df_perm,
+                       cbind(df_head,data.frame(id_perm=seq(length(list_max_subset)),
+                                                max_size_net=list_max_subset)))
+      }
     }
   }
-  list_out_model<-list(list_out_model)
-  names(list_out_model)<-model
-  list_out_bfs<-c(list_out_bfs,list_out_model)
+  plot_parallel(clust,list_output)
+  stopCluster(clust)
+  write.csv(df_net,file.path(paths$output,"output","temp",
+                             paste("atl-",atlas,"_wave-",wave,"_net.csv",sep="")),row.names=F)
+  write.csv(df_size_net,file.path(paths$output,"output","temp",
+                                  paste("atl-",atlas,"_wave-",wave,"_size_net.csv",sep="")),row.names=F)
+  write.csv(df_thr_size,file.path(paths$output,"output","temp",
+                                  paste("atl-",atlas,"_wave-",wave,"_thr_perm.csv",sep="")),row.names=F)
+  write.csv(df_perm,file.path(paths$output,"output","temp",
+                              paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")),row.names=F)
 }
-if (output_gamm){
-  output<-list("data_nbs"=list_out_bfs,"data_gamm"=data_gamm)
-}else{
-  output<-list("data_nbs"=list_out_bfs)
-}
-
-
-
-
-
 
 ####
 ####

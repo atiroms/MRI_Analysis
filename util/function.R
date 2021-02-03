@@ -206,20 +206,17 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
   list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
   df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group)]
   colnames(df_roi)[colnames(df_roi)==key_group]<-"group"
+  df_roi$id<-as.character(df_roi$id)
+  df_roi$label<-as.character(df_roi$label)
+  df_roi$group<-as.character(df_roi$group)
   
   # Prepare dataframe of edges
   df_edge<-NULL
-  list_id_from<-list_roi[-length(list_roi)]
-  for (id_from in list_id_from){
-    label_from<-as.character(df_roi[df_roi$id==id_from,"label"])
-    list_id_to<-list_roi[seq(which(list_roi==id_from)+1,length(list_roi))]
-    for(id_to in list_id_to){
-      label_to<-as.character(df_roi[df_roi$id==id_to,"label"])
-      df_edge<-rbind(df_edge,data.frame(from=id_from,to=id_to,label_from=label_from,label_to=label_to))
-    }
+  for (idx_roi in seq(nrow(df_roi)-1)){
+    df_edge_add<-cbind(df_roi[idx_roi,c("id","label")],df_roi[-seq(idx_roi),c("id","label")],row.names=NULL)
+    colnames(df_edge_add)<-c("from","label_from","to","label_to")
+    df_edge<-rbind(df_edge,df_edge_add)
   }
-  df_edge$from<-as.character(df_edge$from)
-  df_edge$to<-as.character(df_edge$to)
   
   # Prepare dataframe of groups
   list_group<-unique(as.character(df_roi$group))
@@ -315,21 +312,11 @@ func_path<-function(list_path_root = c("C:/Users/atiro","D:/atiro","/home/atirom
 # Iterate GAM/GLM over ROI paiers in FC ===========
 #**************************************************
 
-gamm_core3<-function(df_src,return_mod=F){
+gamm_core3<-function(df_src){
   df_aic<-df_gamm<-df_anova<-data.frame()
   list_label_sex<-list_gamm_output<-NULL
   for (idx_mod in names(list_mod)){
     for (idx_sex in list_sex){
-      #df_src_sex<-NULL
-      #label_sex<-NULL
-      #for (subidx_sex in idx_sex){
-      #  df_src_sex<-rbind(df_src_sex,df_src[df_src$sex==subidx_sex,])
-      #  if (is.null(label_sex)){
-      #    label_sex<-as.character(subidx_sex)
-      #  }else{
-      #    label_sex<-paste(label_sex,subidx_sex,sep="_")
-      #  }
-      #}
       label_sex<-paste(idx_sex,collapse="_")
       df_src_sex<-df_src[df_src$sex %in% idx_sex,]
       
@@ -340,7 +327,7 @@ gamm_core3<-function(df_src,return_mod=F){
         mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
       }
       if (class(mod)[1]!="try-error"){
-        if (return_mod){
+        if (test_mod){
           list_gamm_output<-c(list_gamm_output,list(mod))
         }
         p_table<-summary.gam(mod)$p.table
@@ -390,20 +377,23 @@ iterate_gamm3<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
   df_join<-inner_join(df_join,df_edge,by=c("from","to"))
   list_src_gamm<-split(df_join,df_join$id_edge)
   
-  if (test_mod){
-    list_dst_gamm<-gamm_core3(list_src_gamm[[1]],return_mod=T)
-    mod<-list_dst_gamm[["mod"]]
-    return(list("mod"=mod))
+  if(test_mod){
+    list_src_gamm<-list_src_gamm[1]
+  }
+  
+  if (progressbar){
+    list_dst_gamm<-pblapply(list_src_gamm,gamm_core3,cl=clust)
   }else{
-    if (progressbar){
-      list_dst_gamm<-pblapply(list_src_gamm,gamm_core3,cl=clust)
-    }else{
-      list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core3)
-    }
-    df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
-    df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
-    df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
-    rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+    list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core3)
+  }
+  df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
+  df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
+  df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
+  rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+  
+  if(test_mod){
+    return(list_dst_gamm[[1]])
+  }else{
     return(list("df_gamm"=df_gamm,"df_aic"=df_aic,"df_anova"=df_anova))
   }
 }
