@@ -10,8 +10,8 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/SSD_01/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-dir_out<-"431_fc_aroma_gsr"
 #list_atlas<-"ho112"
@@ -87,7 +87,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,calc_slope,list_plot,list_sex,
                    df_roi,df_edge,df_grp,thr_p_cdt,n_perm,thr_p_perm,calc_parallel,test_mod=F){
   print(paste("Calculating model, atlas: ",atlas,", wave: ",wave,sep=""))
-  if (calc_paralllel){
+  if (calc_parallel){
     clust<-makeCluster(floor(detectCores()*3/4))
   }else{
     clust<-makeCluster(1)
@@ -113,6 +113,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,calc_slope,list_plot,
     for (idx_perm in seq(n_perm)){
       df_clin_perm<-df_clin
       df_clin_perm$sex<-sample(df_clin_perm$sex)
+      print(as.character(idx_perm))
       data_nbs_perm<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin_perm,
                                    df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
                                    thr_p_cdt=thr_p_cdt,list_plot=list_plot,
