@@ -1,5 +1,12 @@
-#source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
-source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
+
+
+#setMKLthreads(1)
+#getMKLthreads()
+
+####
+
+source('D:/atiro/GitHub/MRI_Analysis/analyze/connection_cs.R')
+#source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection_cs.R')
 
 ####
 
@@ -118,43 +125,45 @@ if(calc_slope){
 }
 df_edge$label_from<-df_edge$label_to<-NULL
 df_edge$id_edge<-seq(nrow(df_edge))
-data_gamm<-iterate_gamm3(clust,df_join,df_edge,progressbar=progressbar,test_mod=test_mod)
+#data_gamm<-iterate_gamm3(clust,df_join,df_edge,progressbar=progressbar,test_mod=test_mod)
 
 
 ####
+####
 
-if(test_mod){
-  return(data_gamm$mod)
-}else{
-  list_out_bfs<-list()
-  for (model in names(list_mod)){
-    list_out_model<-list()
-    for (plot in names(list_plot)){
-      var_exp<-list_plot[[plot]][["var_exp"]]
-      df_gamm<-data_gamm$df_gamm
-      idx_subset<-which(df_gamm$model==model & df_gamm$term==var_exp)
-      df_gamm_subset<-df_gamm[idx_subset,]
-      #df_gamm_subset<-data_gamm$df_gamm[(data_gamm$df_gamm$model==model & data_gamm$df_gamm$term==var_exp),]
-      if (nrow(df_gamm_subset)>0){
-        df_gamm_sign<-df_gamm_subset[df_gamm_subset$p<thr_p_cdt*2,] # multiply with 2: two-sided to one-sided
-        df_m<-df_gamm_sign[df_gamm_sign$t<0,]
-        data_bfs_m<-func_bfs(df_m)
-        df_f<-df_gamm_sign[df_gamm_sign$t>0,]
-        data_bfs_f<-func_bfs(df_f)
-        list_out_plot<-list(list("m"=data_bfs_m,"f"=data_bfs_f))
-        names(list_out_plot)<-plot
-        list_out_model<-c(list_out_model,list_out_plot)
-      }
-    }
-    list_out_model<-list(list_out_model)
-    names(list_out_model)<-model
-    list_out_bfs<-c(list_out_bfs,list_out_model)
-  }
-  if (!output_gamm){
-    data_gamm<-NULL
-  }
-  #return(list("data_nbs"=list_out_bfs,"data_gamm"=data_gamm))
+df_join<-inner_join(df_join,df_edge,by=c("from","to"))
+#list_src_gamm<-split(df_join,df_join$id_edge)
+
+####
+
+df_join$id_edge<-factor(df_join$id_edge)
+
+df_join_1<-df_join[df_join$id_edge==1,]
+df_join_2<-df_join[df_join$id_edge==2,]
+df_join_12<-df_join[df_join$id_edge %in% c(1,2),]
+df_join_10<-df_join[df_join$id_edge %in% seq(10),]
+df_join_100<-df_join[df_join$id_edge %in% seq(100),]
+
+####
+
+func_model<-function(df_src,formula_model){
+  t_start<-Sys.time()
+  #mod<-gam(as.formula(formula_model),data=df_src,method="REML")
+  #mod<-bam(as.formula(formula_model),data=df_src,method="REML")
+  mod<-bam(as.formula(formula_model),data=df_src,method="fREML",nthreads=1)
+  t_elapsed<-Sys.time()-t_start
+  return(list("mod"=mod,"t_elapsed"=t_elapsed))
 }
+
+mod<-func_model(df_join_1,"value ~ sex + age + s(ID_pnTTC,bs='re')")
+mod<-func_model(df_join_2,"value ~ sex + age + s(ID_pnTTC,bs='re')")
+mod<-func_model(df_join_12,"value ~ id_edge + sex:id_edge + age:id_edge + s(ID_pnTTC,id_edge,bs='re')")
+mod<-func_model(df_join_12,"value ~ id_edge + sex:id_edge + age:id_edge + te(ID_pnTTC,id_edge,bs='re')")
+mod<-func_model(df_join_10,"value ~ id_edge + sex:id_edge + age:id_edge + s(ID_pnTTC,id_edge,bs='re')")
+
+summary(mod$mod)
+print(mod$t_elapsed)
+#plot(mod)
 
 
 ####

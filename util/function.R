@@ -322,7 +322,8 @@ gamm_core3<-function(df_src){
       
       df_src_sex$value<-as.numeric(df_src_sex$value)
       if (calc_parallel){
-        mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
+        #mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
+        mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control = gam.control(nthreads = 1)), silent=F)
       }else{
         mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML"), silent=F)
       }

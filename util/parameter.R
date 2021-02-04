@@ -22,8 +22,7 @@ sex_diff_fc_subset_subj <- list("1"=list(list("key"="W1_T1QC","condition"="==1")
                                            list("key"="W2_Censor","condition"="<126")))
 sex_diff_fc_list_covar<-list("age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
                              "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex"))
-sex_diff_fc_list_mod_diff <- list("lin"  = "value ~ sex + mean_age",
-                                  "int"  = "value ~ sex*mean_age")
+sex_diff_fc_list_mod_diff <- list("int"  = "value ~ sex*mean_age")
 sex_diff_fc_list_mod_long <- list("lin"  = "value ~ sex + age + s(ID_pnTTC,bs='re')",
                                   "int"  = "value ~ sex*age + s(ID_pnTTC,bs='re')")
 sex_diff_fc_list_mod_cs   <- list("lin"  = "value ~ sex + age",

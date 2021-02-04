@@ -10,18 +10,18 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-dir_out<-"431_fc_aroma_gsr"
 #list_atlas<-"ho112"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_sex_diff_aroma_test"
-#list_atlas<-c("aal116","gordon333","ho112","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
-list_atlas<-c("aal116")
+dir_out<-"427_fc_sex_diff_aroma"
+list_atlas<-c("aal116","gordon333","ho112","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+#list_atlas<-c("aal116")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -213,7 +213,7 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
   # Increase memory limit
   memory.limit(1000000)
   for (atlas in list_atlas_){
-    if (!file.exists(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_perm.csv",sep="")))){
+    if (!file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")))){
       print(paste("Preparing data: ",atlas,sep=""))
       data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T,include_grp=F)
       data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,
@@ -240,8 +240,8 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
                calc_parallel=T,test_mod=F)
 
       # Generalized linear(/additive) mixed model analysis
-      df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
-
+      #df_fc_long<-data_fc$df_fc[data_fc$df_fc$ses %in% c(1,2),]
+      #df_clin_long<-data_clin$df_clin
 
       
       # Cross-sectional analysis
@@ -253,14 +253,18 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
   df_net<-df_size_net<-df_perm<-df_thr_size<-NULL
   for (atlas in list_atlas_){
     for (wave in c("diff")){
-      df_net<-rbind(df_net,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                         paste("atl-",atlas,"_wave-",wave,"_net.csv",sep="")))))
-      df_size_net<-rbind(df_size_net,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                                   paste("atl-",atlas,"_wave-",wave,"_size_net.csv",sep="")))))
-      df_thr_size<-rbind(df_thr_size,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                                   paste("atl-",atlas,"_wave-",wave,"_thr_perm.csv",sep="")))))
-      df_perm<-rbind(df_perm,as.data.frame(fread(file.path(paths$output,"output","temp",
-                                                           paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")))))
+      df_net<-rbind(df_net,
+                    as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                  paste("atl-",atlas,"_wave-",wave,"_net.csv",sep="")))))
+      df_size_net<-rbind(df_size_net,
+                         as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                       paste("atl-",atlas,"_wave-",wave,"_size_net.csv",sep="")))))
+      df_thr_size<-rbind(df_thr_size,
+                         as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                       paste("atl-",atlas,"_wave-",wave,"_thr_perm.csv",sep="")))))
+      df_perm<-rbind(df_perm,
+                     as.data.frame(fread(file.path(paths$output,"output","temp",
+                                                   paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")))))
     }
   }
   write.csv(df_net,file.path(paths$output,"output","result","net.csv"),row.names=F)
