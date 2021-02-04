@@ -32,8 +32,8 @@ sex_diff_fc_list_plot <- list("s"     =list("title"="Sex effect","var_exp"="sex2
                               "sxa"   =list("title"="Sex by age interaction","var_exp"="sex2:age"))
 sex_diff_fc_thr_p_cdt <- 0.001
 sex_diff_fc_thr_p_perm <- 0.05
-#sex_diff_fc_n_perm <- 1000
-sex_diff_fc_n_perm <- 3
+sex_diff_fc_n_perm <- 1000
+#sex_diff_fc_n_perm <- 3
 
 
 #**************************************************

@@ -113,7 +113,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,calc_slope,list_plot,
     for (idx_perm in seq(n_perm)){
       df_clin_perm<-df_clin
       df_clin_perm$sex<-sample(df_clin_perm$sex)
-      print(as.character(idx_perm))
+      #print(as.character(idx_perm))
       data_nbs_perm<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin_perm,
                                    df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
                                    thr_p_cdt=thr_p_cdt,list_plot=list_plot,
