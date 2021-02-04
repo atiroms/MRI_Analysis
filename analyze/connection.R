@@ -213,7 +213,8 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
   # Increase memory limit
   memory.limit(1000000)
   for (atlas in list_atlas_){
-    if (!file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")))){
+    #if (!file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_wave-",wave,"_perm.csv",sep="")))){
+    if (!file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_wave-diff_perm.csv",sep="")))){
       print(paste("Preparing data: ",atlas,sep=""))
       data_fc<-prep_data_fc(paths_,atlas,key_group_,include_diff=T,include_grp=F)
       data_clin<-func_clinical_data_long(paths_,list_wave=c("1","2"),subset_subj_,list_covar_,rem_na_clin=T,

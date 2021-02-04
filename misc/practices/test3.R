@@ -76,11 +76,16 @@ df_clin_long<-data_clin$df_clin
 
 paths=paths_
 atlas=atlas
-wave="long"
-df_fc=df_fc_long
-df_clin=df_clin_long
-list_mod=list_mod_long_
-calc_slope=F
+#wave="long"
+#df_fc=df_fc_long
+#df_clin=df_clin_long
+#list_mod=list_mod_long_
+#calc_slope=F
+wave="diff"
+df_fc=df_fc_diff
+df_clin=df_clin_diff
+list_mod=list_mod_diff_
+calc_slope=T
 list_plot=list_plot_
 list_sex=list(c(1,2))
 df_roi=data_fc$df_roi
@@ -89,8 +94,8 @@ df_grp=data_fc$df_grp
 thr_p_cdt=thr_p_cdt_
 n_perm=n_perm_
 thr_p_perm=thr_p_perm_
-#calc_parallel=T
-calc_parallel=F
+calc_parallel=T
+#calc_parallel=F
 test_mod=F
 #test_mod=T
 
@@ -109,11 +114,11 @@ clusterExport(clust,
 #data_nbs<-func_nbs_core(clust=clust,df_fc=df_fc,df_clin=df_clin,
 #                        df_roi=df_roi,df_edge=df_edge,list_mod=list_mod,
 #                        thr_p_cdt=thr_p_cdt,list_plot=list_plot,
-#                        progressbar=F,output_gamm=F,calc_slope=T,test_mod=test_mod)
+#                        progressbar=F,output_gamm=F,calc_slope=calc_slpoe,test_mod=test_mod)
 
 ####
 
-progressbar=T
+progressbar=F
 output_gamm=F
 
 ####
@@ -132,7 +137,25 @@ df_edge$id_edge<-seq(nrow(df_edge))
 ####
 
 df_join<-inner_join(df_join,df_edge,by=c("from","to"))
-#list_src_gamm<-split(df_join,df_join$id_edge)
+list_src_gamm<-split(df_join,df_join$id_edge)
+
+if(test_mod){
+  list_src_gamm<-list_src_gamm[1]
+}
+
+if (progressbar){
+  list_dst_gamm<-pblapply(list_src_gamm,gamm_core3,cl=clust)
+}else{
+  list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core3)
+}
+df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
+df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
+df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
+rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+
+
+
+
 
 ####
 
