@@ -9,68 +9,12 @@
 #**************************************************
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/clin"
 #path_exp <- "Dropbox/MRI/pnTTC/Puberty/Stats/func_XCP/test_5sub"
+path_exp_full<-NULL
 
 dir_in<-""
-#dir_out<-"01_clin"
+dir_out<-"01_clin_test"
 #dir_out<-"02_clin_pair"
-dir_out<-"03_clin_long"
-
-list_wave <- c(1,2)
-
-#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
-#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
-#                    "2"=list(list("key"="W2_T1QC","value"=1),
-#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
-subset_subj <- list("1"=list(),
-                    "2"=list())
-list_mod <- list("l"="value ~ age + s(ID_pnTTC,bs='re')",
-                 "a"="value ~ s(age,k=3) + s(ID_pnTTC,bs='re')",
-                 "q"="value ~ poly(age,2) + s(ID_pnTTC,bs='re')")
-
-list_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
-                  "full"=list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
-                  "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
-                                 "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-                                 "label"="Tanner stage (gonadal)"),
-                  "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
-                                 "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-                                 "label"="Tanner stage (adrenal)"))
-list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
-                        "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
-                        "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-spec_graph_tanner<-list("title"="Tanner vs Age","x_axis"="age",
-                        "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                      "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                        "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                     "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
-
-list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-                   "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-                   "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-                   "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
-list_covar_hormone<-list("hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
-                         "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
-                         "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-spec_graph_hormone<-list("title"="Hormone vs Age","x_axis"="age",
-                         "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                       "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                         "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                      "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
-
-list_pair<-list(c("gonadal","testo"),c("gonadal","dheas"),c("adrenal","testo"),c("adrenal","dheas"),
-                c("max","testo"),c("max","dheas"))
-list_mod_pair <- list("l"="value ~ hormone + s(ID_pnTTC,bs='re')",
-                      "a"="value ~ s(hormone,k=3) + s(ID_pnTTC,bs='re')",
-                      "q"="value ~ poly(hormone,2) + s(ID_pnTTC,bs='re')")
-list_covar_pair<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
-                      "hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
-                      "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
-                      "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
-spec_graph_pair<-list("title"="Tanner vs Hormone","x_axis"="hormone",
-                      "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
-                                    "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
-                      "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
-                                   "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
+#dir_out<-"03_clin_long_test"
 
 
 #**************************************************
@@ -79,45 +23,66 @@ spec_graph_pair<-list("title"="Tanner vs Hormone","x_axis"="hormone",
 library(mgcv)
 library(dplyr)
 library(ggplot2)
-library(itsadug)
+#library(itsadug)
 library(ggrepel)
 library(ggpubr)
 library(plyr)
 
 
 #**************************************************
-# Create path list ================================
-#**************************************************
-func_path<-function(list_path_root = c("D:/atiroms","C:/Users/atiro","/home/atiroms","C:/Users/NICT_WS"),
-                    path_exp_=path_exp,
-                    dir_in_=dir_in,
-                    dir_out_=dir_out){
-  path_root<-NA
-  for(p in list_path_root){
-    if(file.exists(p)){
-      path_root<-p
-    }
-  }
-  if(is.na(path_root)){
-    print("Error: root path could not be found.")
-  }
-  path_script <- file.path(path_root,"GitHub/MRI_Analysis")
-  path_common <- file.path(path_root,"DropBox/MRI_img/pnTTC/puberty/common")
-  path_in     <- file.path(path_root,path_exp_,dir_in_)
-  path_out    <- file.path(path_root,path_exp_,dir_out_)
-  output <- list("script"=path_script,"input"=path_in,"output"=path_out,
-                 "common"=path_common,"dir_in"=dir_in_,"dir_out"=dir_out_)
-  return(output)
-}
-
-paths<-func_path()
-
-
-#**************************************************
 # Original library ================================
 #**************************************************
-source(file.path(paths$script,"util/function.R"))
-source(file.path(paths$script,"util/plot.R"))
+source(file.path(getwd(),"util/function.R"))
+source(file.path(getwd(),"util/plot.R"))
+source(file.path(getwd(),"util/parameter.R"))
+paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
+
+
+#**************************************************
+# Standardize Clinical data =======================
+#**************************************************
+std_clin<-function(paths_=paths,param=param_std_clin){
+  print("Starting std_clin().")
+  nullobj<-func_createdirs(paths_,"std_clin()")
+  
+  list_depvar<-c(param$list_tanner,param$list_hormone)
+  for (depvar in names(list_depvar)){
+    print(paste('Calculating: ',list_depvar[[depvar]][["label"]]))
+    
+    # Prepare source dataframe
+    list_covar<-param$list_covar
+    list_covar[["depvar"]]<-list_depvar[[depvar]]
+    data_clin<-func_clinical_data_long(paths_,param$list_wave,param$subset_subj,list_covar,
+                                       rem_na_clin=T,prefix=paste("depvar-",depvar,sep=""),print_terminal=F)
+    df_plot<-data_clin$df_clin
+    df_plot$sex=as.factor(df_plot$sex)
+    df_plot$wave=as.factor(df_plot$wave)
+    colnames(df_plot)[colnames(df_plot)==depvar]<-"depvar"
+    df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave","depvar")]
+    write.csv(df_plot,file.path(paths_$output,"output","temp",paste("depvar-",depvar,"_src.csv",sep="")),row.names = F)
+    
+    for (idx_mod in names(param$list_mod)){
+      plot<-ggplot()
+      for (idx_sex in c(1,2)){
+        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
+        colnames(df_plot_sex)[colnames(df_plot_sex)=="depvar"]<-"value"
+        mod_gamm<-gam(as.formula(param$list_mod[[idx_mod]]),data=df_plot_sex)
+        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,param$spec_graph)
+      }
+      label_axis_y<-list_depvar[[depvar]][["label"]]
+      plot<-(plot
+             + ggtitle(paste(label_axis_y,' - Age, model: ',idx_mod,sep=''))
+             + xlab("Age (day)")
+             + ylab(label_axis_y)
+             + theme(legend.position = "none"))
+      filename_plot<-paste("depvar-",depvar,"_mod-",idx_mod,"_clin_long.eps",sep="")
+      ggsave(filename_plot,plot=plot,device=cairo_ps,
+             path=file.path(paths_$output,"output","plot"),
+             dpi=600,height=7,width=7,limitsize=F)
+    }
+  }
+  print("Finished std_clin().")
+}
 
 
 #**************************************************
@@ -127,7 +92,7 @@ plot_long<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
                     list_tanner_=list_tanner,list_hormone_=list_hormone
                     ){
   print("Starting plot_long().")
-  nullobj<-func_createdirs(paths_)
+  nullobj<-func_createdirs(paths_,"plot_long()")
   list_covar<-c(list_tanner_,list_hormone_,
                 list("age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                      "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex")))
@@ -226,87 +191,88 @@ plot_pair<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
 }
 
 
+#OBSOLETE, incorporated into std_clin
 #**************************************************
 # Plot Longitudinal clinical data =================
 #**************************************************
-plot_clin<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
-                    list_mod_=list_mod,
-                    list_tanner_=list_tanner,list_covar_tanner_=list_covar_tanner,
-                    spec_graph_tanner_=spec_graph_tanner,
-                    list_hormone_=list_hormone,list_covar_hormone_=list_covar_hormone,
-                    spec_graph_hormone_=spec_graph_hormone
-                    ){
-  print("Starting plot_clin().")
-  nullobj<-func_createdirs(paths_)
-
-  # Longitudinal clinical plot
-  for (tanner in names(list_tanner_)){
-    print(paste('Calculating: ',list_tanner_[[tanner]][["label"]]))
-    list_covar<-list_covar_tanner_
-    list_covar[["tanner"]]<-list_tanner_[[tanner]]
-    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T)
-    df_plot<-data_clin$df_clin
-    df_plot$sex=as.factor(df_plot$sex)
-    df_plot$wave=as.factor(df_plot$wave)
-    colnames(df_plot)[colnames(df_plot)==tanner]<-"tanner"
-    df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave","tanner")]
-    write.csv(df_plot,file.path(paths_$output,"output",paste("var-tanner_",tanner,"_src.csv",sep="")),row.names = F)
-    
-    # GAM fit plot
-    for (idx_mod in names(list_mod_)){
-      plot<-NULL
-      for (idx_sex in c(1,2)){
-        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
-        colnames(df_plot_sex)[colnames(df_plot_sex)=="tanner"]<-"value"
-        mod_gamm<-gam(as.formula(list_mod_[[idx_mod]]),data=df_plot_sex)
-        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_tanner_)
-      }
-      label_axis_y<-list_tanner_[[tanner]][["label"]]
-      plot<-(plot
-             + ggtitle(paste(label_axis_y,' - Age','\n',idx_mod,sep=''))
-             + xlab("Age")
-             + ylab(label_axis_y)
-             + theme(legend.position = "none"))
-      filename_plot<-paste("var-tanner_",tanner,"_mod-",idx_mod,"_clin_long.eps",sep="")
-      ggsave(filename_plot,plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
-    }
-  }
-  
-  for (hormone in names(list_hormone_)){
-    print(paste('Calculating: ',list_hormone_[[hormone]][["label"]]))
-    list_covar<-list_covar_hormone_
-    list_covar[["hormone"]]<-list_hormone_[[hormone]]
-    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T)
-    df_plot<-data_clin$df_clin
-    df_plot$sex=as.factor(df_plot$sex)
-    df_plot$wave=as.factor(df_plot$wave)
-    colnames(df_plot)[colnames(df_plot)==hormone]<-"hormone"
-    df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave","hormone")]
-    write.csv(df_plot,file.path(paths_$output,"output",paste("var-hormone_",hormone,"_src.csv",sep="")),row.names = F)
-    
-    # GAM fit plot
-    for (idx_mod in names(list_mod_)){
-      plot<-NULL
-      for (idx_sex in c(1,2)){
-        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
-        colnames(df_plot_sex)[colnames(df_plot_sex)=="hormone"]<-"value"
-        mod_gamm<-gam(as.formula(list_mod_[[idx_mod]]),data=df_plot_sex)
-        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_hormone_)
-      }
-      label_axis_y<-list_hormone_[[hormone]][["label"]]
-      plot<-(plot
-             + ggtitle(paste(label_axis_y,' - Age','\n',idx_mod,sep=''))
-             + xlab("Age")
-             + ylab(label_axis_y)
-             + theme(legend.position = "none"))
-      filename_plot<-paste("var-hormone_",hormone,"_mod-",idx_mod,"_clin_long.eps",sep="")
-      ggsave(filename_plot,plot=plot,device=cairo_ps,
-             path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
-    }
-  }
-  print("Finished plot_clin().")
-}
+#plot_clin<-function(paths_=paths,list_wave_=list_wave,subset_subj_=subset_subj,
+#                    list_mod_=list_mod,
+#                    list_tanner_=list_tanner,list_covar_tanner_=list_covar_tanner,
+#                    spec_graph_tanner_=spec_graph_tanner,
+#                    list_hormone_=list_hormone,list_covar_hormone_=list_covar_hormone,
+#                    spec_graph_hormone_=spec_graph_hormone
+#                    ){
+#  print("Starting plot_clin().")
+#  nullobj<-func_createdirs(paths_)
+#
+#  # Longitudinal clinical plot
+#  for (tanner in names(list_tanner_)){
+#    print(paste('Calculating: ',list_tanner_[[tanner]][["label"]]))
+#    list_covar<-list_covar_tanner_
+#    list_covar[["tanner"]]<-list_tanner_[[tanner]]
+#    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T)
+#    df_plot<-data_clin$df_clin
+#    df_plot$sex=as.factor(df_plot$sex)
+#    df_plot$wave=as.factor(df_plot$wave)
+#    colnames(df_plot)[colnames(df_plot)==tanner]<-"tanner"
+#    df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave","tanner")]
+#    write.csv(df_plot,file.path(paths_$output,"output",paste("var-tanner_",tanner,"_src.csv",sep="")),row.names = F)
+#    
+#    # GAM fit plot
+#    for (idx_mod in names(list_mod_)){
+#      plot<-NULL
+#      for (idx_sex in c(1,2)){
+#        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
+#        colnames(df_plot_sex)[colnames(df_plot_sex)=="tanner"]<-"value"
+#        mod_gamm<-gam(as.formula(list_mod_[[idx_mod]]),data=df_plot_sex)
+#        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_tanner_)
+#      }
+#      label_axis_y<-list_tanner_[[tanner]][["label"]]
+#      plot<-(plot
+#             + ggtitle(paste(label_axis_y,' - Age','\n',idx_mod,sep=''))
+#             + xlab("Age")
+#             + ylab(label_axis_y)
+#             + theme(legend.position = "none"))
+#      filename_plot<-paste("var-tanner_",tanner,"_mod-",idx_mod,"_clin_long.eps",sep="")
+#      ggsave(filename_plot,plot=plot,device=cairo_ps,
+#             path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
+#    }
+#  }
+#  
+#  for (hormone in names(list_hormone_)){
+#    print(paste('Calculating: ',list_hormone_[[hormone]][["label"]]))
+#    list_covar<-list_covar_hormone_
+#    list_covar[["hormone"]]<-list_hormone_[[hormone]]
+#    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T)
+#    df_plot<-data_clin$df_clin
+#    df_plot$sex=as.factor(df_plot$sex)
+#    df_plot$wave=as.factor(df_plot$wave)
+#    colnames(df_plot)[colnames(df_plot)==hormone]<-"hormone"
+#    df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave","hormone")]
+#    write.csv(df_plot,file.path(paths_$output,"output",paste("var-hormone_",hormone,"_src.csv",sep="")),row.names = F)
+#    
+#    # GAM fit plot
+#    for (idx_mod in names(list_mod_)){
+#      plot<-NULL
+#      for (idx_sex in c(1,2)){
+#        df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
+#        colnames(df_plot_sex)[colnames(df_plot_sex)=="hormone"]<-"value"
+#        mod_gamm<-gam(as.formula(list_mod_[[idx_mod]]),data=df_plot_sex)
+#        plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,spec_graph_hormone_)
+#      }
+#      label_axis_y<-list_hormone_[[hormone]][["label"]]
+#      plot<-(plot
+#             + ggtitle(paste(label_axis_y,' - Age','\n',idx_mod,sep=''))
+#             + xlab("Age")
+#             + ylab(label_axis_y)
+#             + theme(legend.position = "none"))
+#      filename_plot<-paste("var-hormone_",hormone,"_mod-",idx_mod,"_clin_long.eps",sep="")
+#      ggsave(filename_plot,plot=plot,device=cairo_ps,
+#             path=file.path(paths_$output,"output"),dpi=600,height=7,width=7,limitsize=F)
+#    }
+#  }
+#  print("Finished plot_clin().")
+#}
 
 
 # OBSOLETE

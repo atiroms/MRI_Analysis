@@ -5,6 +5,39 @@
 
 
 #**************************************************
+# std_clin() ======================================
+#**************************************************
+param_std_clin<-list(
+  "list_wave"=c(1,2),
+  "subset_subj"=list("1"=list(),"2"=list()),
+  "list_tanner"=list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+                     "full"=list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
+                     "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+                                    "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                    "label"="Tanner stage (gonadal)"),
+                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
+                                    "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+                                    "label"="Tanner stage (adrenal)")),
+  "list_hormone"=list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                      "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                      "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                      "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
+  "list_covar"=list("age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                    "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
+  "list_mod"=list("l"="value ~ age + s(ID_pnTTC,bs='re')",
+                  "a"="value ~ s(age,k=3) + s(ID_pnTTC,bs='re')",
+                  #"a"="value ~ s(age) + s(ID_pnTTC,bs='re')",
+                  "q"="value ~ poly(age,2) + s(ID_pnTTC,bs='re')",
+                  "c"="value ~ poly(age,3) + s(ID_pnTTC,bs='re')"),
+  "spec_graph"=list("title"="Tanner vs Age","x_axis"="age",
+                    "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+                                  "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+                    "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+                                 "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
+)
+
+
+#**************************************************
 # sex_diff_fc() ===================================
 #**************************************************
 
@@ -242,6 +275,67 @@ gamm_fc_list_plot_hormone <- list("a"=list("title"="Age effect","var_exp"="age")
                                   #"s(a)"=list("title"="Age effect","var_exp"="s(age)"),
                                   "h"=list("title"="Hormone effect","var_exp"="hormone"),
                                   "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)"))
+
+
+#**************************************************
+# plot_clin(), plot_pair(), plot_long() ===========
+#**************************************************
+
+#list_wave <- c(1,2)
+#subset_subj <- list("1"=list(list("key"="W1_T1QC","value"=1),
+#                             list("key"="W1_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)),
+#                    "2"=list(list("key"="W2_T1QC","value"=1),
+#                             list("key"="W2_T1QC_new_mild_rsfMRIexist_motionQC3","value"=1)))
+#subset_subj <- list("1"=list(),
+#                    "2"=list())
+#list_mod <- list("l"="value ~ age + s(ID_pnTTC,bs='re')",
+#                 "a"="value ~ s(age,k=3) + s(ID_pnTTC,bs='re')",
+#                 "q"="value ~ poly(age,2) + s(ID_pnTTC,bs='re')")
+#
+#list_tanner<-list("max" =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+#                  "full"=list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
+#                  "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+#                                 "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+#                                 "label"="Tanner stage (gonadal)"),
+#                  "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
+#                                 "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+#                                 "label"="Tanner stage (adrenal)"))
+#list_covar_tanner<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+#                        "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+#                        "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
+#spec_graph_tanner<-list("title"="Tanner vs Age","x_axis"="age",
+#                        "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                      "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                        "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                     "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
+#
+#list_hormone<-list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+#                   "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+#                   "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+#                   "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
+#list_covar_hormone<-list("hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
+#                         "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+#                         "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
+#spec_graph_hormone<-list("title"="Hormone vs Age","x_axis"="age",
+#                         "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                       "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                         "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                      "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
+#
+#list_pair<-list(c("gonadal","testo"),c("gonadal","dheas"),c("adrenal","testo"),c("adrenal","dheas"),
+#                c("max","testo"),c("max","dheas"))
+#list_mod_pair <- list("l"="value ~ hormone + s(ID_pnTTC,bs='re')",
+#                      "a"="value ~ s(hormone,k=3) + s(ID_pnTTC,bs='re')",
+#                      "q"="value ~ poly(hormone,2) + s(ID_pnTTC,bs='re')")
+#list_covar_pair<-list("tanner"=list("1"="W1_Tanner_Max","2"="W2_Tanner_Max","label"="Tanner stage (max)"),
+#                      "hormone"=list("1"="W1_Hormone",   "2"="W2_Hormone",   "label"="Hormone"),
+#                      "age"   =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+#                      "sex"   =list("1"="Sex",          "2"="Sex",          "label"="Sex"))
+#spec_graph_pair<-list("title"="Tanner vs Hormone","x_axis"="hormone",
+#                      "smooth"=list("Male"=list("fix"=list("sex"=1),"color"="steelblue2","alpha"=1,"ribbon"=T),
+#                                    "Female"=list("fix"=list("sex"=2),"color"="lightcoral","alpha"=1,"ribbon"=T)),
+#                      "point"=list("Male"=list("subset"=list("sex"=1),"color"="steelblue2","alpha"=1),
+#                                   "Female"=list("subset"=list("sex"=2),"color"="lightcoral","alpha"=1)))
 
 
 #**************************************************

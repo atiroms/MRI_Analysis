@@ -826,10 +826,12 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   
   # Subset clinical data according to subsetting condition
   #print('Clinical: subsetting clinical data according to specified condition.')
+  list_log<-print_log(list_log,'Clinical: subsetting clinical data according to specified condition.',print_terminal)
   list_id_subset<-list()
   for (wave in list_wave){
     str_wave<-as.character(wave)
     #print(paste('Clinical: checking wave ',str_wave,sep=''))
+    list_log<-print_log(list_log,paste('Clinical: checking wave ',str_wave,sep=''),print_terminal)
     df_clin_wave<-df_clin_long[df_clin_long['wave']==wave,]
     #print(paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified',sep=''))
     list_log<-print_log(list_log,paste('Clinical: ',as.character(nrow(df_clin_wave)),' source clinical data identified.',sep=''),print_terminal)
