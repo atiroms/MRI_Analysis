@@ -607,11 +607,11 @@ plot_ca_old<-function(df_src,list_name_covar,n_dim){
 
 plot_gamm<-function(plot_in,mod_gamm,df_in,spec_graph){
   
-  #if (is.null(plot_in)){
-  #  plot<-ggplot()
-  #}else{
-  #  plot<-plot_in
-  #}
+  if (is.null(plot_in)){
+    plot<-ggplot()
+  }else{
+    plot<-plot_in
+  }
   
   key_df_src<-c("value",names(mod_gamm$var.summary))
   for (key in c("ID_pnTTC","sex")){
@@ -619,12 +619,6 @@ plot_gamm<-function(plot_in,mod_gamm,df_in,spec_graph){
       key_df_src<-c(key_df_src, key)
     }
   }
-  #if (!("ID_pnTTC" %in% key_df_src)){
-  #  key_df_src<-c(key_df_src, "ID_pnTTC")
-  #}
-  #if (!("sex" %in% key_df_src)){
-  #  key_df_src<-c(key_df_src, "sex")
-  #}
   df_src <- df_in[key_df_src]
   
   # add prediction line + ribbon to plot

@@ -39,48 +39,59 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 
 
 #**************************************************
-# Standardize Clinical data =======================
+# Standardize clinical data using mixed models ====
 #**************************************************
 std_clin<-function(paths_=paths,param=param_std_clin){
   print("Starting std_clin().")
   nullobj<-func_createdirs(paths_,"std_clin()")
   
   list_depvar<-c(param$list_tanner,param$list_hormone)
+  df_gamm_bind<-df_aic_bind<-df_anova_bind<-df_fit_bind<-data.frame()
   for (depvar in names(list_depvar)){
     print(paste('Calculating: ',list_depvar[[depvar]][["label"]]))
     
     # Prepare source dataframe
     list_covar<-param$list_covar
     list_covar[["depvar"]]<-list_depvar[[depvar]]
-    data_clin<-func_clinical_data_long(paths_,param$list_wave,param$subset_subj,list_covar,
-                                       rem_na_clin=T,prefix=paste("depvar-",depvar,sep=""),print_terminal=F)
-    df_plot<-data_clin$df_clin
+    df_plot<-func_clinical_data_long(paths_,param$list_wave,param$subset_subj,list_covar,
+                                       rem_na_clin=T,prefix=paste("depvar-",depvar,sep=""),print_terminal=F)$df_clin
     df_plot$sex=as.factor(df_plot$sex)
     df_plot$wave=as.factor(df_plot$wave)
-    colnames(df_plot)[colnames(df_plot)==depvar]<-"depvar"
     df_plot<-df_plot[,c("ID_pnTTC","age","sex","wave","depvar")]
     write.csv(df_plot,file.path(paths_$output,"output","temp",paste("depvar-",depvar,"_src.csv",sep="")),row.names = F)
+    colnames(df_plot)[colnames(df_plot)=="depvar"]<-"value"
     
+    data_gamm<-gamm_core3(df_plot,list_mod_in=param$list_mod,list_sex_in=list(1,2),
+                          calc_parallel_in=F,test_mod_in=T)
+    
+    df_gamm_bind<-rbind(df_gamm_bind,cbind("depvar"=depvar,data_gamm$df_gamm))
+    df_aic_bind<-rbind(df_aic_bind,cbind("depvar"=depvar,data_gamm$df_aic))
+    df_anova_bind<-rbind(df_anova_bind,cbind("depvar"=depvar,data_gamm$df_anova))
+
     for (idx_mod in names(param$list_mod)){
-      plot<-ggplot()
+      plot<-NULL
       for (idx_sex in c(1,2)){
+        mod_gamm<-data_gamm[["mod"]][[paste("mod-",idx_mod,"_sex-",idx_sex,sep="")]]
         df_plot_sex<-df_plot[df_plot$sex==idx_sex,]
-        colnames(df_plot_sex)[colnames(df_plot_sex)=="depvar"]<-"value"
-        mod_gamm<-gam(as.formula(param$list_mod[[idx_mod]]),data=df_plot_sex)
+        df_fit<-cbind(df_plot_sex,as.data.frame(predict.gam(mod_gamm, df_plot_sex[,c("ID_pnTTC","age")], exclude="s(ID_pnTTC)",se.fit = TRUE)))
+        df_fit$z<-(df_fit$value-df_fit$fit)/(df_fit$se.fit*sqrt(nrow(df_fit)))
+        df_fit_bind<-rbind(df_fit_bind,cbind("depvar"=depvar,"mod"=idx_mod,df_fit))
         plot<-plot_gamm(plot_in=plot,mod_gamm,df_plot_sex,param$spec_graph)
       }
       label_axis_y<-list_depvar[[depvar]][["label"]]
       plot<-(plot
              + ggtitle(paste(label_axis_y,' - Age, model: ',idx_mod,sep=''))
-             + xlab("Age (day)")
-             + ylab(label_axis_y)
+             + xlab("Age (day)") + ylab(label_axis_y)
              + theme(legend.position = "none"))
-      filename_plot<-paste("depvar-",depvar,"_mod-",idx_mod,"_clin_long.eps",sep="")
-      ggsave(filename_plot,plot=plot,device=cairo_ps,
+      ggsave(paste("depvar-",depvar,"_mod-",idx_mod,"_clin_long.eps",sep=""),plot=plot,device=cairo_ps,
              path=file.path(paths_$output,"output","plot"),
              dpi=600,height=7,width=7,limitsize=F)
     }
   }
+  write.csv(df_fit_bind,file.path(paths_$output,"output","result","std_clin.csv"),row.names=F)
+  write.csv(df_gamm_bind,file.path(paths_$output,"output","result","gamm.csv"),row.names=F)
+  write.csv(df_aic_bind,file.path(paths_$output,"output","result","aic.csv"),row.names=F)
+  write.csv(df_anova_bind,file.path(paths_$output,"output","result","anova.csv"),row.names=F)
   print("Finished std_clin().")
 }
 
