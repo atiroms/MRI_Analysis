@@ -22,9 +22,6 @@ path_exp_full<-NULL
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"433_fc_gam_aroma_gsr"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"435_fc_ca_aroma_gsr"
-
 list_dim_ca<-c(10,20,40)
 #list_dim_ca<-10
 #ratio_vis<-0.01
@@ -33,12 +30,12 @@ list_dim_ca<-c(10,20,40)
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-c("aal116","gordon333","ho112","power264",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
-#list_atlas<-"ho112"
+#list_atlas<-c("aal116","gordon333","ho112","power264",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+#list_atlas<-c("aal116","ho112")
 #list_atlas<-c("aal116","power264","shen268")
-#list_atlas<-"aal116"
+list_atlas<-"aal116"
 
 #list_type_p=c("p","p_bh","seed_p_bh")
 list_type_p=c("p_bh") # Benjamini-Hochberg method of FDR
@@ -212,7 +209,7 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
         df_pca_mri<-df_pca_subj<-df_pca_vaf<-df_ica_mri<-df_ica_subj<-df_ica_vaf<-NULL
         for (label_sex in names(list_sex_)){
           
-          # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified mri wave
+          # Prepare subject subsetting condition (MRI QC criteria and sex) according to specified MRI wave
           # Existence of clinical variables are not considered here
           subset_subj_temp<-list(c(subset_subj_[[as.character(wave_mri)]],
                                    list(list("key"="Sex","condition"=list_sex_[[label_sex]]))))
@@ -310,8 +307,9 @@ ca_fc_cs_multi<-function(paths_=paths,#list_waves_=ca_fc_list_waves,
         write.csv(df_pca_mri_grp,path_pca_mri_grp,row.names=F)
         # ICA
         for (dim in list_dim_ca_){
+          df_ica_mri_subset<-df_ica_mri[df_ica_mri$dim==dim,]
           df_ica_mri_grp<-rbind.fill(df_ica_mri_grp,
-                                     group_factor(df_pca_mri,dim,dict_roi,list_group,list_sex_))
+                                     group_factor(df_ica_mri_subset,dim,dict_roi,list_group,list_sex_))
         }
         write.csv(df_ica_mri_grp,path_ica_mri_grp,row.names=F)
       }
@@ -825,30 +823,6 @@ gam_fc_cs_multi<-function(paths_=paths,list_atlas_=list_atlas,
 #**************************************************
 # Additive/Linear model of FC in cross-section ====
 #**************************************************
-
-join_fc_clin<-function(df_fc,df_clin,wave_clin,wave_mri){
-  df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
-  colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
-  df_fc<-df_fc[df_fc$ses==wave_mri,]
-  df_fc$ses<-NULL
-  #colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
-  df_fc<-df_fc[,c("ID_pnTTC","from","to","value")]
-  
-  df_clin<-df_clin[df_clin$wave==wave_clin,]
-  df_clin$wave<-NULL
-  
-  # Join clinical and FC data frames
-  #print('Joining clinical and FC data.')
-  #df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
-  df_join<-inner_join(df_fc,df_clin,by='ID_pnTTC')
-  for (key in c('ID_pnTTC','wave','sex')){
-    if (key %in% colnames(df_join)){
-      df_join[,key]<-as.factor(df_join[,key])
-    }
-  }
-  return(df_join)
-}
-
 gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
                     list_atlas_=list_atlas,
                     list_mod_=list_mod,list_plot_=list_plot,key_group_='group_3',
@@ -877,7 +851,7 @@ gam_fc_cs<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar
     if (!file.exists(path_file_check)){
       # Load ROI-wise FC data
       df_fc<-as.data.frame(fread(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep=''))))
-      df_join<-join_fc_clin(df_fc,df_clin,wave_clin,wave_mri)
+      df_join<-join_fc_clin_cs(df_fc,df_clin,wave_clin,wave_mri)
       
       # Calculate and save ROI-wise GAMM of FC
       print(paste('Calculating GAM, atlas: ',atlas,sep=''))

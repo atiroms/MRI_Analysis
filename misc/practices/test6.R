@@ -1,253 +1,126 @@
-ca_fc_list_tanner<-ca_fc_list_tanner[1]
-ca_fc_list_hormone<-ca_fc_list_hormone[1]
-list_atlas<-list_atlas[1]
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+
+dir_in<-"421_fc_aroma"
+dir_out<-"427_fc_gamm_aroma"
+
+library(data.table)
+library(mgcv)
+source(file.path(getwd(),"util/function.R"))
+
+paths_<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
 ####
 
-paths_=paths
-list_wave_mri_=ca_fc_list_wave_mri
-list_wave_clin_=ca_fc_list_wave_clin
-subset_subj_=ca_fc_subset_subj
-list_sex_=ca_fc_list_sex
-list_atlas_=list_atlas
-list_covar_tanner_=ca_fc_list_covar_tanner
-list_tanner_=ca_fc_list_tanner
-list_covar_hormone_=ca_fc_list_covar_hormone
-list_hormone_=ca_fc_list_hormone
-list_dim_ca_=list_dim_ca
-skip_ca_plot=T
-
-####
-
-print("Starting ca_fc_cs_multi()")
-nullobj<-func_createdirs(paths_,str_proc="ca_fc_cs_multi()",copy_log=T)
-# Increase memory limit for later ICA calculation
 memory.limit(1000000)
-#df_cor<-NULL
+
+atlas<-"aal116"
+
+print(paste("Preparing FC data: ",atlas,sep=""))
+df_fc<-as.data.frame(fread(file.path(paths_$input,"output",
+                                     paste("atl-",atlas,"_fc.csv",sep=""))))
+df_fc<-df_fc[df_fc$ses!="2-1",]
 
 ####
 
-atlas<-list_atlas_[1]
+list_covar<-list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
+                 "age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
+                 "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex"))
+list_tanner_<-list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)"),
+                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
+                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+                                  "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                  "label"="Tanner stage (gonadal)"),
+                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
+                                  "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+                                  "label"="Tanner stage (adrenal)"))
+idx_tanner<-names(list_tanner_)[1]
+list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
+
+list_wave_<-c(1,2)
+subset_subj_<- list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+                            list("key"="W1_rsfMRIexist","condition"="==1"),
+                            list("key"="W1_Censor","condition"="<126")),
+                   "2"=list(list("key"="W2_T1QC","condition"="==1"),
+                            list("key"="W2_rsfMRIexist","condition"="==1"),
+                            list("key"="W2_Censor","condition"="<126")))
+
 
 ####
 
-# Group-wise average of factor-MRI matrix
-print(paste("Calculating group-wise contribution to factors:",atlas,sep=" "))
-dict_roi<-func_dict_roi(paths_)
-dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
-list_group<-unique(dict_roi$group_3)
-for (label_wave_mri in names(list_wave_mri_)){
-  wave_mri<-list_wave_mri_[[label_wave_mri]]
-  path_pca_mri_grp<-file.path(paths_$output,"output","temp",
-                              paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep=""))
-  path_ica_mri_grp<-file.path(paths_$output,"output","temp",
-                              paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep=""))
-  #if (!(file.exists(path_pca_mri_grp) & file.exists(path_ica_mri_grp))){
-    df_pca_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
-                                              paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep=""))))
-    df_ica_mri<-as.data.frame(fread(file.path(paths_$output,"output","temp",
-                                              paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep=""))))
-    df_pca_mri_grp<-df_ica_mri_grp<-data.frame()
-    # PCA
-    dim<-max(list_dim_ca_)
-    df_pca_mri_grp<-group_factor(df_pca_mri,dim,dict_roi,list_group,list_sex_)
-    write.csv(df_pca_mri_grp,path_pca_mri_grp,row.names=F)
-    # ICA
-    for (dim in list_dim_ca_){
-      df_ica_mri_grp<-rbind.fill(df_ica_mri_grp,
-                                 group_factor(df_pca_mri,dim,dict_roi,list_group,list_sex_))
-    }
-    write.csv(df_ica_mri_grp,path_ica_mri_grp,row.names=F)
-  #}
-}
+# Prepare clinical data
+data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T,
+                                   prefix=paste("var-",idx_tanner,sep=""),print_terminal=F)
+df_clin<-data_clin$df_clin
 
-####
-
-label_wave_mri<-names(list_wave_mri_)[1]
-
-####
-
-wave_mri<-list_wave_mri_[[label_wave_mri]]
-
-####
-
-#print(paste("MRI wave: ",wave_mri,", loading PCA/ICA results.",sep=""))
-df_pca_mri<-read.csv(file.path(paths_$output,"output","temp",
-                               paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var.csv",sep="")))
-df_pca_mri_grp<-read.csv(file.path(paths_$output,"output","temp",
-                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_pca_var_grp.csv",sep="")))
-#df_ica_mri<-read.csv(file.path(paths_$output,"output","temp",
-#                               paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var.csv",sep="")))
-#df_ica_mri_grp<-read.csv(file.path(paths_$output,"output","temp",
-#                                   paste("atl-",atlas,"_ses-m",wave_mri,"_fc_ica_var_grp.csv",sep="")))
-
-# Visual output of PCA/I
-
-####
-
-label_sex<-names(list_sex_)[1]
-
-####
-
-# PCA
-dim_ca<-max(list_dim_ca_)
-df_pca_mri_subset<-df_pca_mri[df_pca_mri$sex==label_sex & df_pca_mri$dim==dim_ca,]
-df_pca_mri_grp_subset<-df_pca_mri_grp[df_pca_mri_grp$sex==label_sex & df_pca_mri_grp$dim==dim_ca,]
-df_pca_mri_subset$sex<-df_pca_mri_subset$dim<-df_pca_mri_grp_subset$sex<-df_pca_mri_grp_subset$dim<-NULL
-# Visualize factor-FC matrix in heatmap plot
-#plot_ca_fc_heatmap(paths_=paths_,df_pca_mri_subset,df_pca_mri_grp_subset,atlas=atlas,dim_ca=dim_ca,
-#                   method="pca",label_sex=label_sex,ses=wave_mri)
-
-####
-
-df_comp_mri=df_pca_mri_subset
-df_comp_mri_grp=df_pca_mri_grp_subset
-method="pca"
-ses=wave_mri
-
-####
-
-print(paste("Generationg heatmap plot of factors, Session: ",as.character(ses),
-            ", Sex: ",label_sex,", Method: ",method,", Dim: ",as.character(dim_ca),sep="")) 
-dict_roi<-func_dict_roi(paths_)
-dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
-dict_roi$label<-as.character(dict_roi$label)
-#dict_roi<-dict_roi[order(dict_roi$group_3),]
-
-# Create list of ROIs with blanks between groups
-list_group<-unique(dict_roi$group_3)
-list_roi_axis<-NULL
-title_axis<-"Groups: "
-for (group in list_group){
-  list_roi_axis<-c(list_roi_axis,dict_roi[dict_roi$group_3==group,"label"],"")
-  title_axis<-paste(title_axis,group,", ",sep="")
-}
-list_roi_axis<-list_roi_axis[1:length(list_roi_axis)-1]
-title_axis<-substr(title_axis,1,nchar(title_axis)-2)
-
-# Convert ROI ID to label
-df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("from"="id"))
-colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"from_label"
-df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("to"="id"))
-colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"to_label"
-
-list_plot<-list()
-for (idx_comp in 1:dim_ca){
-  list_subplot<-list()
-  
-  # ROI-ROI heatmap
-  df_edge<-df_comp_mri[,c("from_label","to_label",sprintf("comp_%03d",idx_comp))]
-  colnames(df_edge)<-c("row","column","r")
-  limits<-max(max(df_edge$r),-min(df_edge$r))
-  limits<-c(-limits,limits)
-  df_edge_inv<-data.frame(row=df_edge$column, column=df_edge$row,r=df_edge$r)
-  df_edge_identical<-data.frame(row=dict_roi$label,column=dict_roi$label,r=NA)
-  df_edge<-rbind(df_edge,df_edge_inv,df_edge_identical)
-  df_edge$row<-as.character(df_edge$row)
-  df_edge$column<-as.character(df_edge$column)
-  
-  plot<-(ggplot(df_edge, aes(column, row))
-         + geom_tile(aes(fill = r))
-         + scale_fill_gradientn(colors = matlab.like2(100),name="z",limits=limits)
-         #       + scale_y_discrete(limits = rev(dict_roi$label))
-         #       + scale_x_discrete(limits = dict_roi$label, position="top")
-         + scale_y_discrete(limits = rev(list_roi_axis))
-         + scale_x_discrete(limits = list_roi_axis, position="top")
-         #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
-         #                ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
-         #                ", Sex: ",label_sex,sep=""))
-         #+ xlab(title_axis)
-         + theme_linedraw()
-         + theme(
-           #axis.text.x = element_text(size=29/log(length(list_roi_axis),2),angle = 90,vjust=0,hjust=0),
-           #axis.text.y = element_text(size=29/log(length(list_roi_axis),2)),
-           axis.text.x = element_text(size=1.5,angle = 90,vjust=0,hjust=0),
-           axis.text.y = element_text(size=1.5),
-           panel.grid.major=element_blank(),
-           panel.grid.minor = element_blank(),
-           panel.border = element_blank(),
-           panel.background = element_blank(),
-           #legend.title=element_blank(),
-           plot.title = element_text(hjust = 0.5),
-           #axis.title.x=element_text(size=5),
-           axis.title.x=element_blank(),
-           axis.title.y=element_blank(),
-           axis.ticks=element_blank()
-         )
-  )
-  list_subplot<-c(list_subplot,list(plot))
-  
-  # group-group heatmap
-  for (abs_mean in c(F,T)){
-    df_edge<-df_comp_mri_grp[df_comp_mri_grp$abs==abs_mean,c("from","to",sprintf("comp_%03d",idx_comp))]
-    colnames(df_edge)<-c("row","column","r")
-    limits<-max(max(df_edge$r),-min(df_edge$r))
-    limits<-c(-limits,limits)
-    df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
-    df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,r=df_edge_inv$r)
-    df_edge<-rbind(df_edge,df_edge_inv)
-    
-    plot<-(ggplot(df_edge, aes(column, row))
-           + geom_tile(aes(fill = r))
-           #+ scale_fill_gradientn(colors = matlab.like2(100),name="mean z",limits=limits)
-           + scale_y_discrete(limits = rev(list_group))
-           + scale_x_discrete(limits = list_group, position="top")
-           #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
-           #                ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
-           #                ", Sex: ",label_sex,sep=""))
-           #+ theme_light()
-           + theme_linedraw()
-           + theme(
-             #axis.text.x = element_text(size=29/log(length(list_group),2),angle = 90,vjust=0,hjust=0),
-             #axis.text.y = element_text(size=29/log(length(list_group),2)),
-             axis.text.x = element_text(size=8.5,angle = 90,vjust=0,hjust=0),
-             axis.text.y = element_text(size=8.5),
-             panel.grid.major=element_blank(),
-             panel.grid.minor = element_blank(),
-             panel.border = element_blank(),
-             panel.background = element_blank(),
-             #legend.title=element_blank(),
-             plot.title = element_text(hjust = 0.5),
-             #axis.title.x=element_text(size=5),
-             axis.title.x=element_blank(),
-             axis.title.y=element_blank(),
-             axis.ticks=element_blank()
-           )
-    )
-    if (abs_mean){
-      plot<-(plot
-             + scale_fill_gradientn(colors=viridis(100),name="mean(abs(z))"))
-    }else{
-      plot<-(plot
-             + scale_fill_gradientn(colors = matlab.like2(100),name="mean(z)",limits=limits))
-    }
-    list_subplot<-c(list_subplot,list(plot))
+# Join FC and clinical data
+df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
+colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
+colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
+df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
+                -which(colnames(df_fc)=="p"))]
+df_clin$wave<-as.character(df_clin$wave)
+df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
+for (key in c('ID_pnTTC','wave','sex')){
+  if (key %in% colnames(df_join)){
+    df_join[,key]<-as.factor(df_join[,key])
   }
-  arranged_plot<-ggarrange(list_subplot[[1]],
-                           ggarrange(list_subplot[[2]],list_subplot[[3]],
-                                     ncol=2,
-                                     labels=c("Group(signed)","Group(absolute)"),
-                                     label.x=-0.05,
-                                     font.label = list(size = 10,face="plain")),
-                           nrow=2,heights=c(2,1),
-                           labels="ROI",
-                           font.label = list(size = 10,face="plain"))
-  
-  arranged_plot<-annotate_figure(arranged_plot,
-                                 top = text_grob(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
-                                                       ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
-                                                       ", Sex: ",label_sex,sep=""), color = "black", size = 14))
-  
-  list_plot<-c(list_plot,list(list("file"=paste("atl-",atlas,"_method-",method,"_ses-",as.character(ses),
-                                                "_sex-",label_sex,"_dim-",sprintf("%03d",dim_ca),
-                                                "_comp-",sprintf("%03d",idx_comp),"_fc_ca.png",sep=""),
-                                   "path"=file.path(paths_$output,"output","plot"),
-                                   "plot"=arranged_plot)))
 }
-n_cluster<-floor(detectCores()*3/4)
-clust<-makeCluster(n_cluster)
-clusterExport(clust,
-              varlist=c("ggsave"),
-              envir=environment())
-nullobj<-pblapply(list_plot,plot_ca_fc_heatmap_core,cl=clust)
-stopCluster(clust)
+df_join$value<-as.numeric.factor(df_join$value)
+
+####
+
+df_join_subset<-df_join
+
+list_node<-sort(unique(c(df_join$from,df_join$to)))
+list_node<-list_node[1:10]
+df_join_subset<-df_join[(df_join$from %in% list_node) & (df_join$to %in% list_node),]
+
+df_join_subset$edge<-paste(df_join_subset$from,df_join_subset$to,sep='_')
+df_join_subset$edge<-factor(df_join_subset$edge,ordered=F)
+df_join_subset$from<-df_join_subset$to<-NULL
+df_join_subset$value<-as.numeric(df_join_subset$value)
+
+####
+
+#mod1<-gam(value ~ age + s(tanner,k=3) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+#summary(mod1)
+#plot(mod1, shade = TRUE, pages = 1, scale = 0, seWithMean = TRUE)
+
+####
+
+mod2<-gam(value ~ age + te(edge,tanner,bs=c('re','tp')) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod2)
+plot(mod2, shade = TRUE, pages = 1, scale = 0, seWithMean = TRUE)
+vis.gam(mod2, view=c("edge","tanner"), color="cm", theta=0,phi=0)
+vis.gam(mod2, view=c("edge","tanner"), color="cm", theta=45)
+
+####
+# BAM implementation of above
+mod3<-bam(value ~ age + te(edge,tanner,bs=c('re','tp')) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod3)
+plot(mod3, shade = TRUE, pages = 1, scale = 0, seWithMean = TRUE)
+
+####
+
+mod4<-gam(value ~ age + s(tanner,id=1,by=edge,k=3) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod4)
+vis.gam(mod4, view=c("edge","tanner"), color="cm", theta=45)
+
+####
+
+mod5<-gam(value ~ age + s(tanner,id=1,by=edge,k=5) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod5)
+vis.gam(mod5, view=c("edge","tanner"), color="cm", theta=45)
+
+####
+
+mod6<-gam(value ~ age + s(tanner,bs='cr',id=1,by=edge,k=5) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod6)
+vis.gam(mod6, view=c("edge","tanner"), color="cm", theta=45)
+
+####
+
+mod7<-gam(value ~ age + s(tanner,bs='cr',id=1,by=edge,k=5) + s(ID_pnTTC,bs='re'),data=df_join_subset,method="REML")
+summary(mod7)
+vis.gam(mod7, view=c("edge","tanner"), color="cm", theta=45)
