@@ -148,6 +148,7 @@ func_bfs<-function(df_edge){
 # Join FC and clinical data =======================
 #**************************************************
 join_fc_clin<-function(df_fc,df_clin){
+  df_fc$z_r<-as.numeric.factor(df_fc$z_r)
   df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
   colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
   colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
@@ -263,8 +264,18 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
   }else{
     df_fc_grp<-NULL
   }
+  
+  # Prepare dataframe of group edges
+  df_edge_grp<-NULL
+  for (idx_grp in seq(nrow(df_grp))){
+    df_edge_grp_add<-cbind(df_grp[idx_grp,c("id","label")],
+                           rbind(df_grp[idx_grp,c("id","label")],df_grp[-seq(idx_grp),c("id","label")]),
+                           row.names=NULL)
+    colnames(df_edge_grp_add)<-c("from","label_from","to","label_to")
+    df_edge_grp<-rbind(df_edge_grp,df_edge_grp_add)
+  }
 
-  return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_edge"=df_edge,"df_grp"=df_grp))
+  return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_edge"=df_edge,"df_grp"=df_grp,"df_edge_grp"=df_edge_grp))
 }
 
 
@@ -679,8 +690,8 @@ mltcomp_corr<-function(input){
   return(output)
 }
 
-add_mltcmp<-function(df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE){
-  df_plot_gamm_concat<-NULL
+add_mltcmp<-function(df_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE){
+  df_gamm_bind<-NULL
   for (idx_mod in names(list_mod)){
     for (idx_plot in names(list_plot)){
       var_exp<-list_plot[[idx_plot]][["var_exp"]]
@@ -691,25 +702,25 @@ add_mltcmp<-function(df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE)
         }else{
           label_sex<-"f"
         }
-        df_plot_gamm<-df_out_gamm[df_out_gamm$model==idx_mod 
-                                  & df_out_gamm$term==var_exp
-                                  & df_out_gamm$sex==idx_sex,]
-        if (nrow(df_plot_gamm)>0){
+        df_gamm_subset<-df_gamm[df_gamm$model==idx_mod 
+                              & df_gamm$term==var_exp
+                              & df_gamm$sex==idx_sex,]
+        if (nrow(df_gamm_subset)>0){
           # Calculate graph-level multiple comparison-corrected p values
-          df_plot_gamm<-cbind(df_plot_gamm,mltcomp_corr(df_plot_gamm))
+          df_gamm_subset<-cbind(df_gamm_subset,mltcomp_corr(df_gamm_subset))
           
           # Calculate seed-level multiple comparison-corrected p values
           if (calc_seed_level){
             for (idx_roi in as.character(df_roi$id)){
-              list_row_seed<-sort(union(which(df_plot_gamm$from==idx_roi),
-                                        which(df_plot_gamm$to==idx_roi)))
-              df_plot_gamm_seed<-df_plot_gamm[list_row_seed,]
-              df_p_seed<-mltcomp_corr(df_plot_gamm_seed)
+              list_row_seed<-sort(union(which(df_gamm_subset$from==idx_roi),
+                                        which(df_gamm_subset$to==idx_roi)))
+              df_gamm_subset_seed<-df_gamm_subset[list_row_seed,]
+              df_p_seed<-mltcomp_corr(df_gamm_subset_seed)
               for (idx_edge in seq(length(list_row_seed))){# iterate over edges which starts / ends at idx_roi
                 for (type_p in colnames(df_p_seed)){  # iterate over types of p values
-                  # Enter corrected p to df_plot_gamm if empty or new value is smaller
-                  df_plot_gamm[list_row_seed[idx_edge],
-                               paste("seed",type_p,sep="_")]<-min(df_plot_gamm[list_row_seed[idx_edge],
+                  # Enter corrected p to df_gamm_subset if empty or new value is smaller
+                  df_gamm_subset[list_row_seed[idx_edge],
+                               paste("seed",type_p,sep="_")]<-min(df_gamm_subset[list_row_seed[idx_edge],
                                                                                paste("seed",type_p,sep="_")],
                                                                   df_p_seed[idx_edge,type_p],
                                                                   na.rm=T)
@@ -717,12 +728,12 @@ add_mltcmp<-function(df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE)
               }
             }
           }
+          df_gamm_bind<-rbind(df_gamm_bind,df_gamm_subset)
         }
-        df_plot_gamm_concat<-rbind(df_plot_gamm_concat,df_plot_gamm)
       }
     }
   }
-  return(df_plot_gamm_concat)
+  return(df_gamm_bind)
 }
 
 
