@@ -134,6 +134,86 @@ plot_sex_diff_fc<-function(paths_,df_edge,atlas,wave,df_roi,df_grp,mod,plot,sex,
 #**************************************************
 # Heatmap Plot of GAM of FC =======================
 #**************************************************
+plot_gam_fc_core3<-function(df_sign,df_full,label_axis,label_legend,size_label){
+  
+  if (nrow(df_sign)>0){
+    limits<-max(max(df_sign$weight),-min(df_sign$weight))
+    limits<-c(-limits,limits)
+  }else{
+    limits<-c(0,0)
+  }
+  
+  df_edge<-left_join(df_full,df_sign,by=c("from","to"))
+  df_edge<-df_edge[,c("label_from","label_to","weight")]
+  colnames(df_edge)<-c("row","column","weight")
+  df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
+  df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,weight=df_edge_inv$weight)
+  df_edge<-rbind(df_edge,df_edge_inv)
+  
+  plot<-(ggplot(df_edge, aes(column, row))
+         + geom_tile(aes(fill = weight))
+         + scale_fill_gradientn(colors = matlab.like2(100),name=label_legend,limits=limits)
+         + scale_y_discrete(limits = rev(label_axis))
+         + scale_x_discrete(limits = label_axis, position="top")
+         + theme_linedraw()
+         + theme(
+           axis.text.x = element_text(size=size_label,angle = 90,vjust=0,hjust=0),
+           axis.text.y = element_text(size=size_label),
+           panel.grid.major=element_blank(),
+           panel.grid.minor = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           plot.title = element_text(hjust = 0.5),
+           axis.title.x=element_blank(),
+           axis.title.y=element_blank(),
+           axis.ticks=element_blank()
+         )
+  )
+  return(plot)
+}
+
+plot_gam_fc3<-function(df_gam,df_gam_grp,data_fc){
+  
+  title_group<-paste("Groups:",paste(data_fc$df_grp$label,collapse=", "),sep=" ")
+  list_roi_spaced<-NULL
+  for (group in data_fc$df_grp$id){
+    list_roi_spaced<-c(list_roi_spaced,as.character(data_fc$df_roi[data_fc$df_roi$group==group,"label"]),"")
+  }
+  list_roi_spaced<-list_roi_spaced[1:length(list_roi_spaced)-1]
+  list_label_grp<-data_fc$df_grp$label
+  
+  if (!is.na(df_gam[1,"estimate"])){
+    df_gam<-rename(df_gam,c("estimate"="weight"),warn_missing=F)
+    df_gam_grp<-rename(df_gam_grp,c("estimate"="weight"),warn_missing=F)
+    label_legend<-"beta"
+  }else{
+    df_gam<-rename(df_gam,c("F"="weight"),warn_missing=F)
+    df_gam_grp<-rename(df_gam_grp,c("F"="weight"),warn_missing=F)
+    label_legend<-"F"
+  }
+  df_gam<-df_gam[,c("from","to","weight")]
+  df_gam_grp<-df_gam_grp[,c("from","to","weight")]
+  
+  list_subplot<-list()
+  list_subplot<-c(list_subplot,
+                  list(plot_gam_fc_core3(df_gam,data_fc$df_edge,
+                                         label_axis=list_roi_spaced,label_legend,1.5)))
+  list_subplot<-c(list_subplot,
+                  list(plot_gam_fc_core3(df_gam_grp,data_fc$df_edge_grp,
+                                         label_axis=data_fc$df_grp$label,label_legend,8.5)))
+  list_subplot<-c(list_subplot,list(NULL))
+  arranged_plot<-ggarrange(list_subplot[[1]],
+                           ggarrange(list_subplot[[2]],list_subplot[[3]],
+                                     ncol=2,
+                                     labels=c("Group",""),
+                                     label.x=0,
+                                     font.label = list(size = 10,face="plain")),
+                           nrow=2,heights=c(2,1),
+                           labels="ROI",
+                           font.label = list(size = 10,face="plain"))
+  return(arranged_plot)
+}
+
 
 #plot_gam_fc<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,method,label_sex,ses){
 plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,

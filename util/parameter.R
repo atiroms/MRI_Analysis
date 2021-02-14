@@ -10,11 +10,9 @@
 param_gamm_fc<-list(
   "key_group"="group_3",
   "list_wave"=c(1,2),
-  #"list_type_"=c("p","p_bh","seed_p_bh"),
-  #"list_type_p"="p_bh",
-  #"thr_p"= 0.05,
-  "list_type_p"="p",
-  "thr_p"= 0.001,
+  "list_p"<-list(list("type"="p","threshold"=0.001),
+                 list("type"="p_bh","threshold"=0.05)),
+
   "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                               list("key"="W1_rsfMRIexist","condition"="==1"),
                               list("key"="W1_Censor","condition"="<126")),
