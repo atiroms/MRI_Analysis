@@ -63,8 +63,6 @@ gamm_fc_core<-function(paths,data_fc,atlas,list_wave,list_sex,subset_subj,
                        list_covar,list_mod,list_plot,idx_var,list_p,#list_type_p,thr_p,
                        calc_parallel,test_mod
                        ){
-  df_fc_grp<-data_fc$df_fc_grp
-  df_grp<-data_fc$df_grp
   file_check<-file.path(paths$output,"output","temp",
                         paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))
   if (file.exists(file_check)){

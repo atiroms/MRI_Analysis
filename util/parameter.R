@@ -12,7 +12,6 @@ param_gamm_fc<-list(
   "list_wave"=c(1,2),
   "list_p"<-list(list("type"="p","threshold"=0.001),
                  list("type"="p_bh","threshold"=0.05)),
-
   "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),
                               list("key"="W1_rsfMRIexist","condition"="==1"),
                               list("key"="W1_Censor","condition"="<126")),
