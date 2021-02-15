@@ -4,7 +4,7 @@
 
 paths_=paths
 list_atlas_=list_atlas
-param=param_gamm_fc
+param<-param_gamm_fc
 
 ####
 
@@ -52,7 +52,7 @@ test_mod=F
 
 df_clin<-func_clinical_data_long(paths,list_wave,subset_subj,list_covar,rem_na_clin=T,
                                  prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
-clust<-makeCluster(2)
+clust<-makeCluster(1)
 clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","sort","gam","as.formula","summary.gam",
                               "anova.gam","as.numeric.factor"),
               envir=environment())
