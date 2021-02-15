@@ -15,10 +15,10 @@ path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
 dir_out<-"424_fc_gamm_aroma_test"
-#list_atlas<-c("aal116","gordon333","ho112","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
-list_atlas<-c("aal116")
+list_atlas<-c("aal116","gordon333","ho112","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+#list_atlas<-c("aal116")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -70,7 +70,8 @@ gamm_fc_core<-function(paths,data_fc,atlas,list_wave,list_sex,subset_subj,
   }else{
     df_clin<-func_clinical_data_long(paths,list_wave,subset_subj,list_covar,rem_na_clin=T,
                                      prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
-    clust<-makeCluster(2)
+    #clust<-makeCluster(2)
+    clust<-makeCluster(1)
     clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","sort","gam","as.formula","summary.gam",
                                   "anova.gam","as.numeric.factor"),
                   envir=environment())
