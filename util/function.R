@@ -194,13 +194,17 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T){
+prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T,abs_nfc=F){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
                                        paste("atl-",atlas,"_fc.csv",sep=""))))
   if (!include_diff){
     df_fc<-df_fc[df_fc$ses!="2-1",]
+  }
+  if (abs_nfc){ # Absolute value for negative functional connectivity
+    df_fc$r<-abs(df_fc$r)
+    df_fc$z_r<-abs(df_fc$z_r)
   }
   
   # Prepare dataframe of ROIs

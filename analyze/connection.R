@@ -144,7 +144,7 @@ gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
   # Loop over atlases
   for (atlas in list_atlas_){
     print(paste("Preparing FC data: ",atlas,sep=""))
-    data_fc<-prep_data_fc(paths_,atlas,param$key_group)
+    data_fc<-prep_data_fc(paths_,atlas,param$key_group,abs_nfc=param$abs_nfc)
     #data_fc$df_edge$label_from<-data_fc$df_edge$label_to<-NULL
     data_fc$df_edge$id_edge<-seq(nrow(data_fc$df_edge))
     #data_fc$df_edge_grp$label_from<-data_fc$df_edge_grp$label_to<-NULL
