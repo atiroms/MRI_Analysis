@@ -15,10 +15,10 @@ path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
 dir_out<-"424_fc_gamm_aroma_test"
-list_atlas<-c("aal116","gordon333","ho112","power264",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
-#list_atlas<-c("aal116")
+#list_atlas<-c("aal116","gordon333","ho112","power264",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+list_atlas<-c("aal116")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
