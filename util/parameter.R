@@ -8,7 +8,7 @@
 # gamm_fc() =================================
 #**************************************************
 param_gamm_fc<-list(
-  "abs_nfc"=T, # absolute value for negative functional connectivity
+  "abs_nfc"=F, # absolute value for negative functional connectivity
   "key_group"="group_3",
   "list_wave"=c(1,2),
   "list_p"=list(list("type"="p","threshold"=0.001),
@@ -32,7 +32,7 @@ param_gamm_fc<-list(
   #                                  "label"="Tanner stage (adrenal)")),
   "list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
                                     "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-                                    "label"="Tanner stage (gonadal)")),
+                                    "label"="Tanner stage (gonadal)","dtype"="factor")),
   "list_mod_tanner"=list("l" = "value ~ age + tanner + s(ID_pnTTC,bs='re')",
                          "li"= "value ~ age * tanner + s(ID_pnTTC,bs='re')"),
   #"a"= "value ~ age + s(tanner,k=3) + s(ID_pnTTC,bs='re')"),

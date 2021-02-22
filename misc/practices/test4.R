@@ -47,25 +47,37 @@ idx_var<-idx_tanner
 list_p<-param$list_p
 calc_parallel=F
 test_mod=F
+#test_mod=T
 
 ####
 
-df_clin<-func_clinical_data_long(paths,list_wave,subset_subj,list_covar,rem_na_clin=T,
-                                 prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
 clust<-makeCluster(1)
 clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","sort","gam","as.formula","summary.gam",
                               "anova.gam","as.numeric.factor"),
               envir=environment())
 
+# Prepare clinical data and demean
+df_clin<-func_clinical_data_long(paths,list_wave,subset_subj,list_covar,rem_na_clin=T,
+                                 prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
+df_clin<-func_demean_clin(df_clin,thr_cont=6,separate_sex=T)$df_clin # thr_cont=4 to demean Tanner, =5 not to
+
 # ROI-wise GAMM of FC
 df_join<-join_fc_clin(data_fc$df_fc,df_clin)
 data_gamm<-iterate_gamm3(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
 df_gamm<-as.data.frame(add_mltcmp(data_gamm$df_gamm,data_fc$df_roi,list_mod,list_plot,calc_seed_level=F))
+df_anova<-as.data.frame(add_mltcmp(data_gamm$df_anova,data_fc$df_roi,list_mod,list_plot,calc_seed_level=F))
+write.csv(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+write.csv(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
+write.csv(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
 
 # Group-wise GAMM of FC
 df_join_grp<-join_fc_clin(data_fc$df_fc_grp,df_clin)
 data_gamm_grp<-iterate_gamm3(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
 df_gamm_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_gamm,data_fc$df_grp,list_mod,list_plot,calc_seed_level=F))
+df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_plot,calc_seed_level=F))
+write.csv(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
+write.csv(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
+write.csv(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
 
 stopCluster(clust)
 

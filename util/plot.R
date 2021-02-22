@@ -135,7 +135,7 @@ plot_sex_diff_fc<-function(paths_,df_edge,atlas,wave,df_roi,df_grp,mod,plot,sex,
 # Heatmap Plot of GAM of FC =======================
 #**************************************************
 plot_gam_fc_core3<-function(df_sign,df_full,label_axis,label_legend,size_label){
-  
+  df_sign$weight<-as.numeric(df_sign$weight)
   if (nrow(df_sign)>0){
     limits<-max(max(df_sign$weight),-min(df_sign$weight))
     limits<-c(-limits,limits)
@@ -182,7 +182,8 @@ plot_gam_fc3<-function(df_gam,df_gam_grp,data_fc){
   list_roi_spaced<-list_roi_spaced[1:length(list_roi_spaced)-1]
   list_label_grp<-data_fc$df_grp$label
   
-  if (!is.na(df_gam[1,"estimate"])){
+  #if (!is.na(df_gam[1,"estimate"])){
+  if (is.na(df_gam[1,"F"])){
     df_gam<-rename(df_gam,c("estimate"="weight"),warn_missing=F)
     df_gam_grp<-rename(df_gam_grp,c("estimate"="weight"),warn_missing=F)
     label_legend<-"beta"

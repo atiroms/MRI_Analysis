@@ -24,15 +24,23 @@ library(wranglR)
 #**************************************************
 # Demean clinical data ============================
 #**************************************************
-func_demean_clin<-function(df_clin,thr_cont){
-  df_mean<-data.frame(matrix(ncol=ncol(df_clin),nrow=1))
+func_demean_clin<-function(df_clin,thr_cont=10,separate_sex=T){
+  df_mean<-data.frame(matrix(ncol=ncol(df_clin)))
   colnames(df_mean)<-colnames(df_clin)
   for (idx_col in colnames(df_clin)){
-    if (idx_col!="ID_pnTTC"){
+    if (idx_col %nin% c("ID_pnTTC","wave")){
       if(length(unique(df_clin[,idx_col]))>thr_cont){
-        mean<-mean(df_clin[,idx_col])
-        df_mean[1,idx_col]<-mean
-        df_clin[,idx_col]<-df_clin[,idx_col]-mean
+        if (separate_sex){
+          for (sex in c(1,2)){
+            mean<-mean(df_clin[df_clin$sex==sex,idx_col])
+            df_mean[sex,c("sex",idx_col)]<-c(sex,mean)
+            df_clin[df_clin$sex==sex,idx_col]<-df_clin[df_clin$sex==sex,idx_col]-mean
+          }
+        }else{
+          mean<-mean(df_clin[,idx_col])
+          df_mean[1,idx_col]<-mean
+          df_clin[,idx_col]<-df_clin[,idx_col]-mean
+        }
       }
     }
   }
@@ -944,6 +952,14 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
   }
   colnames(df_clin_exist)<-c('ID_pnTTC','wave',names(list_covar))
   rownames(df_clin_exist)<-NULL
+  
+  for (covar in names(list_covar)){
+    if (!is.null(list_covar[[covar]][["dtype"]])){
+      if (list_covar[[covar]][["dtype"]]=="factor"){
+        df_clin_exist[,covar]<-as.factor(df_clin_exist[,covar])
+      }
+    }
+  }
   
   writeLines(list_log, file.path(paths$output,"output","temp",paste(prefix,"clin_long.txt",sep="_")))
   
