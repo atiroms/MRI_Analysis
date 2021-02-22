@@ -765,7 +765,7 @@ as.numeric.factor <- function(x) {
 #**************************************************
 # Experiment folder preparation ===================
 #**************************************************
-func_createdirs<-function(paths,str_proc="",copy_log=T){
+func_createdirs<-function(paths,str_proc="",copy_log=T,list_param=NULL){
   list_createdirs<-c(paths$output,
                      file.path(paths$output,"output"),
                      file.path(paths$output,"output","plot"),
@@ -778,6 +778,7 @@ func_createdirs<-function(paths,str_proc="",copy_log=T){
       dir.create(d)
     }
   }
+
   if (copy_log){
     if (file.exists(file.path(paths$input,"log"))){
       if (file.exists(file.path(paths$output,"log"))){
@@ -788,6 +789,9 @@ func_createdirs<-function(paths,str_proc="",copy_log=T){
         list_log<-c(list_log,paste("\t",str_proc,sep=""))
         list_log<-c(list_log,paths$dir_out)
         writeLines(list_log,file.path(paths$output,"log","pipeline.log"))
+      }
+      if (!is.null(list_param)){
+        dput(list_param,file.path(paths$output,"log",paste(str_proc,"_param.txt",sep="")))
       }
     }else{
       print("Source log folder does not exist.")
