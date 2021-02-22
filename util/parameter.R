@@ -5,7 +5,53 @@
 
 
 #**************************************************
-# gamm_fc() =================================
+# gam_fc_diff() ===================================
+#**************************************************
+param_gam_fc_diff<-list(
+  "abs_nfc"=F, # absolute value for negative functional connectivity
+  "key_group"="group_3",
+  "list_wave"=c(1,2),
+  "list_p"=list(list("type"="p","threshold"=0.001),
+                list("type"="p_bh","threshold"=0.05)),
+  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+                              list("key"="W1_rsfMRIexist","condition"="==1"),
+                              list("key"="W1_Censor","condition"="<126")),
+                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
+                              list("key"="W2_rsfMRIexist","condition"="==1"),
+                              list("key"="W2_Censor","condition"="<126"))),
+  "list_covar_tanner"=list("tanner"=NULL,
+                           "age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
+                           "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex")),
+  "list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+                                    "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                    "label"="Tanner stage (gonadal)","dtype"="factor")),
+  "list_mod_tanner"=list("l" = "value ~ ses1_age + ses1_tanner + ses2_age + ses2_tanner"),
+                         #"li"= "value ~ age * tanner"),
+  "list_plot_tanner"=list("a1"=list("title"="1st wave Age effect","var_exp"="ses1_age"),
+                          "t1"=list("title"="1st wave Tanner effect","var_exp"="ses1_tanner"),
+                          "a2"=list("title"="2nd wave Age effect","var_exp"="ses2_age"),
+                          "t2"=list("title"="2nd wave Tanner effect","var_exp"="ses2_tanner")),
+                          #"a"=list("title"="Age effect","var_exp"="age"),
+                          #"s(a)"=list("title"="Age effect","var_exp"="s(age)"),
+                          #"t"=list("title"="Tanner effect","var_exp"="tanner"),
+                          #"at"=list("title"="Age by Tanner interaction","var_exp"="age:tanner"),
+                          #"s(t)"=list("title"="Tanner effect","var_exp"="s(tanner)")),
+  "list_covar_hormone"=list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
+                            "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                            "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
+  "list_hormone"=NULL,
+  "list_mod_hormone"=list("l" = "value ~ ses1_age + ses1_hormone",
+                          "li"= "value ~ age * hormone"),
+  "list_plot_hormone"=list("a"=list("title"="Age effect","var_exp"="age"),
+                           "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
+                           "h"=list("title"="Hormone effect","var_exp"="hormone"),
+                           "ah"=list("title"="Age by Hormone interaction","var_exp"="age:hormone"),
+                           "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)"))
+)
+
+
+#**************************************************
+# gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
   "abs_nfc"=F, # absolute value for negative functional connectivity
