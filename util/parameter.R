@@ -56,7 +56,13 @@ param_gam_fc_diff<-list(
                            "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
                            "h"=list("title"="Hormone effect","var_exp"="hormone"),
                            "ah"=list("title"="Age by Hormone interaction","var_exp"="age:hormone"),
-                           "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)"))
+                           "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)")),
+  "param_nbs"=list("list_mod"="l",
+                   "list_term"=c("ses1_tanner","ses2_tanner"),
+                   "p_cdt_type"="p",
+                   "p_cdt_threshold"=0.001,
+                   "p_perm_threshold"=0.05,
+                   "n_perm"=3)
 )
 
 
