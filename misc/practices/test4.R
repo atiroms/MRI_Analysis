@@ -38,9 +38,10 @@ list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
 paths<-paths_
 list_sex<-list(1,2)
 list_mod<-param$list_mod_tanner
-list_plot<-param$list_plot_tanner
+list_term<-param$list_term_tanner
 idx_var<-idx_tanner
-calc_parallel=F
+#calc_parallel=F
+calc_parallel=T
 test_mod=F
 #test_mod=T
 
@@ -91,8 +92,10 @@ for (idx_perm in seq(param$param_nbs$n_perm)){
     for (idx_mod in param$param_nbs$list_mod){
       for (idx_sex in list_sex){
         # Subset GAMM result dataframe for plotting
+        df_gamm<-data_gamm$df_gamm
         df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp & df_gamm$sex==idx_sex,]
         if (nrow(df_gamm_subset)==0){
+          df_anova<-data_gamm$df_anova
           df_anova_subset<-df_anova[df_anova$model==idx_mod & df_anova$term==var_exp & df_anova$sex==idx_sex,]
           if (nrow(df_anova_subset)>0){
             # In case the term does not exist in df_gamm, plot using df_anova instead
@@ -101,7 +104,7 @@ for (idx_perm in seq(param$param_nbs$n_perm)){
         }
         if (nrow(df_gamm_subset)>0){ # If the model/expvar/sex exist either in df_gamm or df_anova
           df_sign<-df_gamm_subset[df_gamm_subset$p<param$param_nbs$p_cdt_threshold,]
-          max_size<-data_bfs<-func_bfs(df_sign)$max_size
+          max_size<-func_bfs(df_sign)$max_size
           df_max_size<-rbind(df_max_size,data.frame(id_perm=idx_perm,model=idx_mod,term=var_exp,sex=idx_sex,max_size=max_size))
         }
       }
@@ -117,8 +120,8 @@ for (idx_mod in param$param_nbs$list_mod){
   for (idx_term in param$param_nbs$list_term){
     var_exp<-list_term[[idx_term]][["var_exp"]]
     for (idx_sex in list_sex){
-      list_max_size<-df_max_size[[df_max_size$model==idx_mod & df_max_size$term==var_exp
-                                  & df_max_size$sex==idx_sex,"max_size"]]
+      list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp
+                                  & df_max_size$sex==idx_sex,"max_size"]
       list_max_size<-sort(list_max_size)
       thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
       df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp,sex=idx_sex,

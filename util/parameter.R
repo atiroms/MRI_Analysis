@@ -58,11 +58,11 @@ param_gam_fc_diff<-list(
                            "ah"=list("title"="Age by Hormone interaction","var_exp"="age:hormone"),
                            "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)")),
   "param_nbs"=list("list_mod"="l",
-                   #"list_term"=c("t1","t2"),
-                   "list_term"="t2",
+                   "list_term"=c("t1","t2"),
+                   #"list_term"="t2",
                    "p_cdt_threshold"=0.001,
                    "p_perm_threshold"=0.05,
-                   "n_perm"=3)
+                   "n_perm"=100)
 )
 
 
