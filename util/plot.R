@@ -193,11 +193,11 @@ plot_gam_fc3<-function(df_gam,df_gam_grp,data_fc){
     label_legend<-"F"
   }
   if (label_legend=="beta"){
-    df_gam<-dplyr::rename(df_gam,c("weight"="estimate"))
-    df_gam_grp<-dplyr::rename(df_gam_grp,c("weight"="estimate"))
+    df_gam<-dplyr::rename(df_gam,"weight"="estimate")
+    df_gam_grp<-dplyr::rename(df_gam_grp,"weight"="estimate")
   }else{
-    df_gam<-dplyr::rename(df_gam,c("weight"="F"))
-    df_gam_grp<-dplyr::rename(df_gam_grp,c("weight"="F"))
+    df_gam<-dplyr::rename(df_gam,"weight"="F")
+    df_gam_grp<-dplyr::rename(df_gam_grp,"weight"="F")
   }
   df_gam<-df_gam[,c("from","to","weight")]
   df_gam_grp<-df_gam_grp[,c("from","to","weight")]

@@ -14,7 +14,8 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.1_fc_gam_aroma_test"
+dir_out<-"424_fc_gamm_aroma_test4"
+#dir_out<-"423.1_fc_gam_aroma_test"
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
@@ -31,6 +32,7 @@ list_atlas<-c("aal116")
 library(easypackages)
 #libraries(ggplot2,GGally,igraph,ggrepel,colorRamps,tidyverse,parallel,mgcv,car,plyr,dplyr,data.table,pbapply,stringr)
 libraries("ggplot2","colorRamps","tidyverse","parallel","mgcv","dplyr","data.table","pbapply","stringr")
+
 
 #**************************************************
 # Original library ================================
@@ -104,6 +106,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,list_wave,list_sex,subset_subj,
     write.csv(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
   } # End if file exists
   
+  # Threshold and plot graph edges
   df_plot<-df_plot_grp<-data.frame()
   for (idx_mod in names(list_mod)){
     for (idx_plot in names(list_plot)){
@@ -162,6 +165,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,list_wave,list_sex,subset_subj,
   if (nrow(df_plot_grp)>0){
     write.csv(df_plot_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot_grp.csv",sep="")),row.names = F)
   }
+  
+  # Network-based statistics
 }
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
