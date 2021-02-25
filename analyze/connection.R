@@ -51,6 +51,24 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
                            list_covar,list_mod,list_term,idx_var,
                            calc_parallel,test_mod
                            ){
+  # Prepare clinical data and demean
+  data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
+                                     prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+  list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+  df_clin_diff<-data_clin$df_clin
+  colnames(df_clin_diff)[colnames(df_clin_diff)=="wave"]<-"ses"
+  df_clin_diff<-func_clinical_data_diffmean(df_clin_diff,list_id_subj,list_covar)
+  df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=6,separate_sex=T)$df_clin # thr_cont=3 to demean Tanner, =6 not to
+  df_clin_diff$wave<-"2-1"
+  fwrite(df_clin_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin_diff.csv",sep="")),row.names=F)
+  
+  # Prepare FC data
+  df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
+  df_fc_grp_diff<-data_fc$df_fc_grp[data_fc$df_fc_grp$ses=="2-1",]
+  fwrite(df_fc_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_diff.csv",sep="")),row.names=F)
+  fwrite(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp_diff.csv",sep="")),row.names=F)
+  
+  # Calculate model
   file_check<-file.path(paths$output,"output","temp",
                         paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))
   if (file.exists(file_check)){
@@ -59,27 +77,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     df_anova<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep=""))))
     df_gamm_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep=""))))
     df_anova_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep=""))))
-    df_clin_diff<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin_diff.csv",sep=""))))
-    df_fc_diff<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_diff.csv",sep=""))))
-    df_fc_grp_diff<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp_diff.csv",sep=""))))
   }else{
-    # Prepare clinical data and demean
-    data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
-                                       prefix=paste("var-",idx_var,sep=""),print_terminal=F)
-    list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
-    df_clin_diff<-data_clin$df_clin
-    colnames(df_clin_diff)[colnames(df_clin_diff)=="wave"]<-"ses"
-    df_clin_diff<-func_clinical_data_diffmean(df_clin_diff,list_id_subj,list_covar)
-    df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=6,separate_sex=T)$df_clin # thr_cont=3 to demean Tanner, =6 not to
-    df_clin_diff$wave<-"2-1"
-    write.csv(df_clin_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin_diff.csv",sep="")),row.names=F)
-    
-    # Prepare FC data
-    df_fc_diff<-data_fc$df_fc[data_fc$df_fc$ses=="2-1",]
-    df_fc_grp_diff<-data_fc$df_fc_grp[data_fc$df_fc_grp$ses=="2-1",]
-    write.csv(df_fc_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_diff.csv",sep="")),row.names=F)
-    write.csv(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp_diff.csv",sep="")),row.names=F)
-    
     # Join FC and clinical data
     df_join_diff<-join_fc_clin(df_fc_diff,df_clin_diff)
     df_join_grp_diff<-join_fc_clin(df_fc_grp_diff,df_clin_diff)
@@ -107,12 +105,12 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
     
     # Save results
-    write.csv(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
-    write.csv(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
-    write.csv(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
-    write.csv(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
-    write.csv(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
-    write.csv(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
+    fwrite(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
+    fwrite(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+    fwrite(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
+    fwrite(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
+    fwrite(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
+    fwrite(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
   } # End if file exists
   
   # Threshold and plot graph edges
@@ -172,10 +170,10 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     }
     # Save results
     if (nrow(df_plot)>0){
-      write.csv(df_plot,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")),row.names = F)
+      fwrite(df_plot,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")),row.names = F)
     }
     if (nrow(df_plot_grp)>0){
-      write.csv(df_plot_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep="")),row.names = F)
+      fwrite(df_plot_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep="")),row.names = F)
     }
   }
   
@@ -207,9 +205,9 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
         }
       }
     }
-    write.csv(df_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_edge.csv",sep="")),row.names = F)
-    write.csv(df_node,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep="")),row.names = F)
-    write.csv(df_size_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep="")),row.names = F)
+    fwrite(df_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_edge.csv",sep="")),row.names = F)
+    fwrite(df_node,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep="")),row.names = F)
+    fwrite(df_size_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep="")),row.names = F)
   }
   
   # Permutation for NBS
@@ -223,7 +221,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
                                 "sort","gam","as.formula","summary.gam",
                                 "anova.gam","as.numeric.factor"),
                 envir=environment())
-  
+  set.seed(0)
   df_max_size<-data.frame()
   for (idx_perm in seq(param$param_nbs$n_perm)){
     for (idx_term in param$param_nbs$list_term){
@@ -242,7 +240,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
       # Calculate model
       data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
       #data_gamm_grp<-iterate_gamm3(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
-      
+      df_gamm<-data_gamm$df_gamm
+      df_anova<-data_gamm$df_anova
       for (idx_mod in param$param_nbs$list_mod){
         for (idx_sex in list_sex){
           # Subset GAMM result dataframe for plotting
@@ -264,7 +263,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     }
   }
   stopCluster(clust)
-  write.csv(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep="")),row.names = F)
+  fwrite(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep="")),row.names = F)
   
   # Summarize permutation result
   df_threshold_size<-NULL
@@ -281,7 +280,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
       }
     }
   }
-  write.csv(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep="")),row.names = F)
+  fwrite(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep="")),row.names = F)
 }
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
@@ -304,7 +303,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
       gam_fc_diff_core(paths_,data_fc,atlas,param,list(1,2),
                        list_covar,param$list_mod_tanner,param$list_term_tanner,idx_tanner,
-                       calc_parallel=T,test_mod=F)
+                       calc_parallel=F,test_mod=F)
     } # Finished looping over Tanner stages
     
     #2 Hormones
@@ -319,21 +318,21 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
   } # Finished looping over atlas
   
   print("Combining results.")
-  df_gamm<-df_aic<-df_plot<-df_anova<-df_gamm_grp<-df_aic_grp<-df_plot_grp<-df_anova_grp<-df_net<-df_node<-df_size_net<-data.frame()
+  df_gamm<-df_aic<-df_plot<-df_anova<-df_gamm_grp<-df_aic_grp<-df_plot_grp<-df_anova_grp<-df_net<-df_node<-df_size_net<-df_perm_max<-df_perm_thr<-data.frame()
   list_var<-c(param$list_tanner,param$list_hormone)
   for (atlas in list_atlas_){
     for (idx_var in names(list_var)){
       df_head<-data.frame(atlas=atlas,variable=idx_var)
       # ROI GAM results
       df_gamm<-rbind(df_gamm,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep=""))))))
-      if(file.exists(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_gamm_plot.csv",sep="")))){
+      if(file.exists(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_plot.csv",sep="")))){
         df_plot<-bind_rows(df_plot,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_plot.csv",sep=""))))))
       }
       df_anova<-rbind(df_anova,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep=""))))))
       df_aic<-rbind(df_aic,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep=""))))))
       # Group GAM results
       df_gamm_grp<-rbind(df_gamm_grp,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep=""))))))
-      if(file.exists(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_gamm_plot_grp.csv",sep="")))){
+      if(file.exists(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_plot_grp.csv",sep="")))){
         df_plot_grp<-bind_rows(df_plot_grp,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_plot_grp.csv",sep=""))))))
       }
       df_anova_grp<-rbind(df_anova_grp,cbind(df_head,as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep=""))))))
@@ -343,20 +342,23 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       df_node<-rbind(df_node,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep=""))))))
       df_size_net<-rbind(df_size_net,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep=""))))))
       # Permutation results
-      
+      df_perm_max<-rbind(df_perm_max,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep=""))))))
+      df_perm_thr<-rbind(df_perm_thr,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep=""))))))
     }
   }
-  write.csv(df_gamm,file.path(paths_$output,"output","result","gamm.csv"),row.names = F)
-  write.csv(df_plot,file.path(paths_$output,"output","result","plot.csv"),row.names = F)
-  write.csv(df_anova,file.path(paths_$output,"output","result","gamm_anova.csv"),row.names = F)
-  write.csv(df_aic,file.path(paths_$output,"output","result","gamm_aic.csv"),row.names = F)
-  write.csv(df_gamm_grp,file.path(paths_$output,"output","result","gamm_grp.csv"),row.names = F)
-  write.csv(df_plot_grp,file.path(paths_$output,"output","result","plot_grp.csv"),row.names = F)
-  write.csv(df_anova_grp,file.path(paths_$output,"output","result","gamm_anova_grp.csv"),row.names = F)
-  write.csv(df_aic_grp,file.path(paths_$output,"output","result","gamm_aic_grp.csv"),row.names = F)
-  write.csv(df_net,file.path(paths_$output,"output","result","bfs_edge.csv"),row.names = F)
-  write.csv(df_node,file.path(paths_$output,"output","result","bfs_node.csv"),row.names = F)
-  write.csv(df_size_net,file.path(paths_$output,"output","result","bfs_size.csv"),row.names = F)
+  fwrite(df_gamm,file.path(paths_$output,"output","result","gamm.csv"),row.names = F)
+  fwrite(df_plot,file.path(paths_$output,"output","result","plot.csv"),row.names = F)
+  fwrite(df_anova,file.path(paths_$output,"output","result","gamm_anova.csv"),row.names = F)
+  fwrite(df_aic,file.path(paths_$output,"output","result","gamm_aic.csv"),row.names = F)
+  fwrite(df_gamm_grp,file.path(paths_$output,"output","result","gamm_grp.csv"),row.names = F)
+  fwrite(df_plot_grp,file.path(paths_$output,"output","result","plot_grp.csv"),row.names = F)
+  fwrite(df_anova_grp,file.path(paths_$output,"output","result","gamm_anova_grp.csv"),row.names = F)
+  fwrite(df_aic_grp,file.path(paths_$output,"output","result","gamm_aic_grp.csv"),row.names = F)
+  fwrite(df_net,file.path(paths_$output,"output","result","bfs_edge.csv"),row.names = F)
+  fwrite(df_node,file.path(paths_$output,"output","result","bfs_node.csv"),row.names = F)
+  fwrite(df_size_net,file.path(paths_$output,"output","result","bfs_size.csv"),row.names = F)
+  fwrite(df_perm_max,file.path(paths_$output,"output","result","perm_max.csv"),row.names = F)
+  fwrite(df_perm_thr,file.path(paths_$output,"output","result","perm_thr.csv"),row.names = F)
   print("Finished gam_fc_diff().")
 }
 
