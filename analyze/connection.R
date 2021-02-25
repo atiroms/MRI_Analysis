@@ -222,7 +222,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
                                 "anova.gam","as.numeric.factor"),
                 envir=environment())
   set.seed(0)
-  pb<-txtProgressBar(min=0,max=n_perm,style=3,width=50)
+  pb<-txtProgressBar(min=0,max=param$param_nbs$n_perm,style=3,width=50)
   df_max_size<-data.frame()
   for (idx_perm in seq(param$param_nbs$n_perm)){
     for (idx_term in param$param_nbs$list_term){
