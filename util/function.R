@@ -1,7 +1,6 @@
 #**************************************************
 # Description =====================================
 #**************************************************
-
 # R script for common MRI analysis functions
 
 
@@ -11,12 +10,11 @@
 libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","pbapply","ggpubr","wranglR")
 
 
-
 #**************************************************
 # Iterate ANCOVA on FC edges ======================
 #**************************************************
 
-ancova_core<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
+glm_core<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
                       calc_parallel_in=NULL,test_mod_in=NULL){
   if(!is.null(list_mod_in)){list_mod<-list_mod_in}
   if(!is.null(list_sex_in)){list_sex<-list_sex_in}
@@ -79,7 +77,7 @@ ancova_core<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
 }
 
 # Faster version
-iterate_ancova<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
+iterate_glm<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
   df_join<-inner_join(df_join,df_edge,by=c("from","to"))
   list_src<-split(df_join,df_join$id_edge)
   
@@ -88,9 +86,9 @@ iterate_ancova<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
   }
   
   if (progressbar){
-    list_dst<-pblapply(list_src,ancova_core,cl=clust)
+    list_dst<-pblapply(list_src,glm_core,cl=clust)
   }else{
-    list_dst<-parLapply(clust,list_src,ancova_core)
+    list_dst<-parLapply(clust,list_src,glm_core)
   }
   df_gamm<-rbindlist(ListExtract(list_dst,"df_gamm"))
   df_aic<-rbindlist(ListExtract(list_dst,"df_aic"))
@@ -222,7 +220,12 @@ func_bfs<-function(df_edge){
     size_net<-nrow(df_edge_net)
     list_size<-c(list_size,size_net)
     list_node_net<-unique(list_node_net)
-    list_network<-c(list_network,list(list("df_edge"=df_edge_net,"list_node"=list_node_net,"size_net"=size_net)))
+    df_node_net<-data.frame(node=list_node_net,degree=NA)
+    for (idx_node in seq(nrow(df_node_net))){
+      node<-df_node_net[idx_node,"node"]
+      df_node_net[idx_node,"degree"]<-nrow(df_edge_net[df_edge_net$from==node | df_edge_net$to==node,])
+    }
+    list_network<-c(list_network,list(list("df_edge"=df_edge_net,"df_node"=df_node_net,"list_node"=list_node_net,"size_net"=size_net)))
   }
   if(is.null(list_size)){
     max_size<-0

@@ -14,7 +14,7 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.1_fc_gam_aroma_test4"
+dir_out<-"423.1_fc_gam_aroma_test5"
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
@@ -100,8 +100,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     # Calculate model
     #data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
     #data_gamm_grp<-iterate_gamm3(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
-    data_gamm<-iterate_ancova(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-    data_gamm_grp<-iterate_ancova(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    data_gamm<-iterate_glm(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    data_gamm_grp<-iterate_glm(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
     stopCluster(clust)
     
     # Add multiple comparison-corrected p values
@@ -194,15 +194,22 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
           df_sign<-df_plot[df_plot$p_type=="p" & df_plot$p_threshold==param$param_nbs$p_cdt_threshold
                            & df_plot$model==idx_mod & df_plot$term==var_exp & df_plot$sex==idx_sex,]
           data_bfs<-func_bfs(df_sign)
+          if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
           if(length(data_bfs$list_network)>0){
             for (idx_net in seq(length(data_bfs$list_network))){
               network<-data_bfs$list_network[[idx_net]]
-              #list_output<-c(list_output,
-              #               list(plot_sex_diff_fc(paths,network$df_edge,atlas,wave,df_roi,df_grp,
-              #                                     model,plot,sex,title_plot,title_sex,idx_net)))
+              plot_subnet<-plot_circular2(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi,rule_order="degree")
+              plot_subnet<-(plot_subnet
+                            +ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,
+                                           ", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,
+                                           ", #",as.character(idx_net),sep="")))
+              ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,
+                           "_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,
+                           "_idx-",as.character(idx_net),"_subnet.png",sep=""),
+                     plot=plot_subnet,path=file.path(paths$output,"output","plot"),height=10,width=10,dpi=600)
               df_head<-data.frame(model=idx_mod,term=var_exp,sex=idx_sex)
               df_net<-rbind(df_net,data.frame(id_net=idx_net,network$df_edge))
-              df_node_add<-inner_join(data.frame(id_net=idx_net,node=network$list_node),data_fc$df_roi,by=c("node"="id"))
+              df_node_add<-inner_join(data.frame(id_net=idx_net,network$df_node),data_fc$df_roi,by=c("node"="id"))
               df_node_add<-dplyr::rename(df_node_add,"label_node"="label","group_node"="group")
               df_node<-rbind(df_node,cbind(df_head,df_node_add))
               df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(id_net=idx_net,size=network$size_net)))
@@ -223,9 +230,13 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   }else{
     clust<-makeCluster(1)
   }
+  #clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
+  #                              "sort","gam","as.formula","summary.gam",
+  #                              "anova.gam","as.numeric.factor"),
+  #              envir=environment())
   clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
-                                "sort","gam","as.formula","summary.gam",
-                                "anova.gam","as.numeric.factor"),
+                                "sort","as.formula","as.numeric.factor",
+                                "lm","summary","anova","AIC"),
                 envir=environment())
   set.seed(0)
   pb<-txtProgressBar(min=0,max=param$param_nbs$n_perm,style=3,width=50)
@@ -246,7 +257,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
       
       # Calculate model
       #data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-      data_gamm<-iterate_ancova(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+      data_gamm<-iterate_glm(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
       #data_gamm_grp<-iterate_gamm3(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
       df_gamm<-data_gamm$df_gamm
       df_anova<-data_gamm$df_anova

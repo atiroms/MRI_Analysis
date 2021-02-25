@@ -1,5 +1,5 @@
-source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection.R')
-#source('D:/atiro/GitHub/MRI_Analysis/analyze/connection.R')
+#source('C:/Users/NICT_WS/GitHub/MRI_Analysis/analyze/connection.R')
+source('D:/atiro/GitHub/MRI_Analysis/analyze/connection.R')
 
 ####
 
@@ -117,6 +117,114 @@ fwrite(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_v
 fwrite(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
 fwrite(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
 
+####
+
+# Threshold and plot graph edges
+if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))){
+  df_plot<-read.csv(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))
+}else{
+  df_plot<-df_plot_grp<-data.frame()
+  for (idx_mod in names(list_mod)){
+    for (idx_term in names(list_term)){
+      var_exp<-list_term[[idx_term]][["var_exp"]]
+      for (idx_sex in list_sex){
+        # Subset GAMM result dataframe for plotting
+        df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp & df_gamm$sex==idx_sex,]
+        df_gamm_grp_subset<-df_gamm_grp[df_gamm_grp$model==idx_mod & df_gamm_grp$term==var_exp & df_gamm_grp$sex==idx_sex,]
+        if (nrow(df_gamm_subset)==0){
+          df_anova_subset<-df_anova[df_anova$model==idx_mod & df_anova$term==var_exp & df_anova$sex==idx_sex,]
+          df_anova_grp_subset<-df_anova_grp[df_anova_grp$model==idx_mod & df_anova_grp$term==var_exp & df_anova_grp$sex==idx_sex,]
+          if (nrow(df_anova_subset)>0){
+            # In case the term does not exist in df_gamm, plot using df_anova instead
+            df_gamm_subset<-df_anova_subset
+            df_gamm_grp_subset<-df_anova_grp_subset
+          }
+        }
+        if (nrow(df_gamm_subset)>0){
+          plot_gamm<-plot_gam_fc3(df_gamm_subset,df_gamm_grp_subset,data_fc)
+          if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
+          plot_gamm<-annotate_figure(plot_gamm,
+                                     top = text_grob(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,
+                                                           ", expvar: ",var_exp,", sex: ",label_sex,", p value: all",sep=""),
+                                                     color = "black", size = 14))
+          ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,
+                       "_sex-",label_sex,"_pval-all_net.png",sep=""),
+                 plot=plot_gamm,path=file.path(paths$output,"output","plot"),height=13,width=10,dpi=600)
+          for (p in param$list_p){
+            df_plot_subset<-df_gamm_subset[df_gamm_subset[[p$type]]<p$threshold,]
+            df_plot_grp_subset<-df_gamm_grp_subset[df_gamm_grp_subset[[p$type]]<p$threshold,]
+            plot_gamm<-plot_gam_fc3(df_plot_subset,df_plot_grp_subset,data_fc)
+            plot_gamm<-annotate_figure(plot_gamm,
+                                       top = text_grob(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,
+                                                             ", expvar: ",var_exp,", sex: ",label_sex,", p value: ",p$type,"<",p$threshold,sep=""),
+                                                       color = "black", size = 14))
+            ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,
+                         "_sex-",label_sex,"_pval-",p$type,"_",p$threshold,
+                         "_net.png",sep=""),
+                   plot=plot_gamm,path=file.path(paths$output,"output","plot"),height=13,width=10,dpi=600)
+            df_head<-data.frame(p_type=p$type,p_threshold=p$threshold)
+            if (nrow(df_plot_subset)>0){
+              df_plot<-bind_rows(df_plot,cbind(df_head,df_plot_subset))
+            }
+            if (nrow(df_plot_grp_subset)>0){
+              df_plot_grp<-bind_rows(df_plot_grp,cbind(df_head,df_plot_grp_subset))
+            }
+          }# end of loop over list_p
+        }
+      }
+    }
+  }
+  # Save results
+  if (nrow(df_plot)>0){
+    fwrite(df_plot,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")),row.names = F)
+  }
+  if (nrow(df_plot_grp)>0){
+    fwrite(df_plot_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep="")),row.names = F)
+  }
+}
+
+# Detect sub-network by breadth-first approach
+if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))){
+  df_net<-df_node<-df_size_net<-NULL
+  #list_output<-list()
+  for (idx_mod in param$param_nbs$list_mod){
+    for (idx_term in param$param_nbs$list_term){
+      var_exp<-list_term[[idx_term]][["var_exp"]]
+      for (idx_sex in list_sex){
+        df_sign<-df_plot[df_plot$p_type=="p" & df_plot$p_threshold==param$param_nbs$p_cdt_threshold
+                         & df_plot$model==idx_mod & df_plot$term==var_exp & df_plot$sex==idx_sex,]
+        data_bfs<-func_bfs(df_sign)
+        if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
+        if(length(data_bfs$list_network)>0){
+          for (idx_net in seq(length(data_bfs$list_network))){
+            network<-data_bfs$list_network[[idx_net]]
+            plot_subnet<-plot_circular2(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi,rule_order="degree")
+            plot_subnet<-(plot_subnet
+                          +ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,
+                                       ", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,
+                                       ", #",as.character(idx_net),sep="")))
+            ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,
+                         "_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,
+                         "_idx-",as.character(idx_net),"_subnet.png",sep=""),
+                   plot=plot_subnet,path=file.path(paths$output,"output","plot"),height=10,width=10,dpi=600)
+            df_head<-data.frame(model=idx_mod,term=var_exp,sex=idx_sex)
+            df_net<-rbind(df_net,data.frame(id_net=idx_net,network$df_edge))
+            df_node_add<-inner_join(data.frame(id_net=idx_net,node=network$list_node),data_fc$df_roi,by=c("node"="id"))
+            df_node_add<-dplyr::rename(df_node_add,"label_node"="label","group_node"="group")
+            df_node<-rbind(df_node,cbind(df_head,df_node_add))
+            df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(id_net=idx_net,size=network$size_net)))
+          }
+        }
+      }
+    }
+  }
+  fwrite(df_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_edge.csv",sep="")),row.names = F)
+  fwrite(df_node,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep="")),row.names = F)
+  fwrite(df_size_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep="")),row.names = F)
+}
+
+
+####
 ####
 
 df_join_diff_subset<-df_join_diff[df_join_diff$from=="ho112_00001" & df_join_diff$to=="ho112_00002",]

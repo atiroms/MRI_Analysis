@@ -1,19 +1,13 @@
 #**************************************************
 # Description =====================================
 #**************************************************
-
 # R script for common visualization functionalities in MRI analysis
 
 
 #**************************************************
 # Libraries =======================================
 #**************************************************
-library(ggplot2)
-library(ggraph)
-library(igraph)
-library(colorRamps)
-library(purrr)
-library(viridis)
+libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 
 
 #**************************************************
@@ -40,7 +34,7 @@ plot_parallel<-function(clust,list_data_plot){
 plot_permutation<-function(paths_,list_max,thr_size_perm,
                            atlas,var,wave,model,term,sex,title_plot,title_sex,color_plt){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
-        + geom_histogram(binwidth=5,fill=color_plt)
+        + geom_histogram(binwidth=2,fill=color_plt)
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
         + ggtitle(paste("Atlas: ",atlas,", Wave: ",wave,", Model: ",model,
@@ -594,6 +588,73 @@ plot_ca_fc_circular<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,l
 #**************************************************
 # Circular graph ==================================
 #**************************************************
+plot_circular2<-function(df_edge,df_node,df_roi,rule_order="degree",limit_color=NULL){
+  
+  df_node<-dplyr::inner_join(df_node,df_roi,by=c("node"="id"))
+  df_node<-dplyr::rename(df_node,"id"="node")
+
+  # Change order of nodes for circular plot aesthetics
+  if (rule_order=="rl"){
+    df_node<-df_node[order(df_node$id),]
+    idx_node_r<-grep("^R ",df_node$label)
+    idx_node_l<-rev(grep("^L ",df_node$label))
+    if (length(idx_node_r)+length(idx_node_l)>0){
+      df_node<-rbind(df_node[idx_node_r,],
+                     df_node[c(-idx_node_r,-idx_node_l),],
+                     df_node[idx_node_l,])
+    }
+  }else if (rule_order=="id"){
+    df_node<-df_node[order(df_node$id),]
+  }else if (rule_order=="degree"){
+    df_node<-df_node[order(df_node$id),]
+    df_node<-df_node[rev(order(df_node$degree)),]
+  }
+  
+  # Add circular plot specs 
+  df_node$angle <- 90 - 360 * ((1:nrow(df_node))-0.5) / nrow(df_node)
+  df_node$hjust<-ifelse(df_node$angle < -90, 1, 0)
+  df_node$angle<-ifelse(df_node$angle < -90, df_node$angle+180, df_node$angle)
+  
+  # Prepare df_edge
+  if(is.na(df_edge[1,"estimate"])){
+    term_plot<-"F"
+  }else{
+    term_plot<-"estimate"
+  }
+  df_edge<-df_edge[,c("from","to",term_plot)]
+  colnames(df_edge)<-c("from","to","weight")
+  
+  # Convert edge/node dataframes into igraph object
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  # Calculate color limit if not specified
+  if(is.null(limit_color)){
+    if (nrow(df_edge)>0){
+      limit_color <- max(abs(max(df_edge$weight)),abs(min(df_edge$weight)))
+      limit_color <- c(-limit_color,limit_color)
+    }
+  }
+  
+  plot<-ggraph(igraph_plot, layout = "linear",circular = T) +
+    geom_node_text(aes(x = x*1.03, y=y*1.03,
+                       label=label, angle = angle, hjust=hjust,vjust=0.2),
+                   size=min(5,10/log(nrow(df_node))), alpha=1) +
+    #               size=min(5,20/log(nrow(df_node))), alpha=1) +
+    geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
+    scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
+    expand_limits(x = c(-2, 2), y = c(-2, 2))+
+    #expand_limits(x = c(-1.5, 1.5), y = c(-1.5, 1.5))+
+    #ggtitle(input_title) +
+    theme_void() +
+    #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
+    theme(legend.justification=c(1,1), legend.position=c(1,1),plot.title = element_text(hjust = 0.5))
+  if (nrow(df_edge)>0){
+    plot<-plot+
+      geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
+  }
+  return(plot)
+}
+
 plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
   
   # Subset edges according to p value criteria
