@@ -62,7 +62,7 @@ param_gam_fc_diff<-list(
                    #"list_term"="t2",
                    "p_cdt_threshold"=0.001,
                    "p_perm_threshold"=0.05,
-                   "n_perm"=30)
+                   "n_perm"=60)
 )
 
 

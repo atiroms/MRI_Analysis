@@ -14,7 +14,7 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.1_fc_gam_aroma_test3"
+dir_out<-"423.1_fc_gam_aroma_test4"
 #list_atlas<-c("aal116","gordon333","ho112","power264",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
@@ -88,14 +88,20 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     }else{
       clust<-makeCluster(1)
     }
+    #clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
+    #                              "sort","gam","as.formula","summary.gam",
+    #                              "anova.gam","as.numeric.factor"),
+    #              envir=environment())
     clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
-                                  "sort","gam","as.formula","summary.gam",
-                                  "anova.gam","as.numeric.factor"),
+                                  "sort","as.formula","as.numeric.factor",
+                                  "lm","summary","anova","AIC"),
                   envir=environment())
     
     # Calculate model
-    data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-    data_gamm_grp<-iterate_gamm3(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    #data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    #data_gamm_grp<-iterate_gamm3(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    data_gamm<-iterate_ancova(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    data_gamm_grp<-iterate_ancova(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
     stopCluster(clust)
     
     # Add multiple comparison-corrected p values
@@ -239,7 +245,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
       #df_join_grp_diff<-join_fc_clin(df_fc_grp_diff,df_clin_perm)
       
       # Calculate model
-      data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+      #data_gamm<-iterate_gamm3(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+      data_gamm<-iterate_ancova(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
       #data_gamm_grp<-iterate_gamm3(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
       df_gamm<-data_gamm$df_gamm
       df_anova<-data_gamm$df_anova
@@ -291,7 +298,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
       }
     }
   }
-  fwrite(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep="")),row.names = F)
+  fwrite(df_threshold_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep="")),row.names = F)
 }
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
@@ -314,7 +321,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
       gam_fc_diff_core(paths_,data_fc,atlas,param,list(1,2),
                        list_covar,param$list_mod_tanner,param$list_term_tanner,idx_tanner,
-                       calc_parallel=F,test_mod=F)
+                       calc_parallel=T,test_mod=F)
     } # Finished looping over Tanner stages
     
     #2 Hormones
@@ -324,7 +331,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
       gam_fc_diff_core(paths_,data_fc,atlas,param,list(1,2),
                        list_covar,param$list_mod_hormone,param$list_term_hormone,idx_hormone,
-                       calc_parallel=F,test_mod=F)
+                       calc_parallel=T,test_mod=F)
     } # Finished looping over Hormones
   } # Finished looping over atlas
   
@@ -358,11 +365,15 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
     }
   }
   fwrite(df_gamm,file.path(paths_$output,"output","result","gamm.csv"),row.names = F)
-  fwrite(df_plot,file.path(paths_$output,"output","result","plot.csv"),row.names = F)
+  if (nrow(df_plot)>0){
+    fwrite(df_plot,file.path(paths_$output,"output","result","plot.csv"),row.names = F)
+  }
   fwrite(df_anova,file.path(paths_$output,"output","result","gamm_anova.csv"),row.names = F)
   fwrite(df_aic,file.path(paths_$output,"output","result","gamm_aic.csv"),row.names = F)
   fwrite(df_gamm_grp,file.path(paths_$output,"output","result","gamm_grp.csv"),row.names = F)
-  fwrite(df_plot_grp,file.path(paths_$output,"output","result","plot_grp.csv"),row.names = F)
+  if (nrow(df_plot_grp)>0){
+    fwrite(df_plot_grp,file.path(paths_$output,"output","result","plot_grp.csv"),row.names = F)
+  }
   fwrite(df_anova_grp,file.path(paths_$output,"output","result","gamm_anova_grp.csv"),row.names = F)
   fwrite(df_aic_grp,file.path(paths_$output,"output","result","gamm_aic_grp.csv"),row.names = F)
   fwrite(df_net,file.path(paths_$output,"output","result","bfs_edge.csv"),row.names = F)
