@@ -426,7 +426,7 @@ iterate_gamm3<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
   df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
   df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
   df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
-  df_anova$p<-as.numeric(df_anova$p)
+  df_anova$p<-as.numeric(as.numeric.factor(df_anova$p))
   rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
   
   if(test_mod){

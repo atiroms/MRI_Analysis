@@ -222,6 +222,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
                                 "anova.gam","as.numeric.factor"),
                 envir=environment())
   set.seed(0)
+  pb<-txtProgressBar(min=0,max=n_perm,style=3,width=50)
   df_max_size<-data.frame()
   for (idx_perm in seq(param$param_nbs$n_perm)){
     for (idx_term in param$param_nbs$list_term){
@@ -261,8 +262,10 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
         }
       }
     }
+    setTxtProgressBar(pb,idx_perm)
   }
   stopCluster(clust)
+  close(pb)
   fwrite(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep="")),row.names = F)
   
   # Summarize permutation result
@@ -277,6 +280,14 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
         thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
         df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp,sex=idx_sex,
                                                               max_size=max_size,thr_size=thr_size_nbs))
+        if (idx_sex==1){
+          label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
+        }else{
+          label_sex<-"f";title_sex<-"female";color_plt<-"lightcoral"
+        }
+        title_plot<-list_term[[idx_term]][["title"]]
+        plot_permutation(paths,list_max=list_max_size,thr_size_nbs,
+                         atlas,var=idx_var,wave="2-1",idx_mod,idx_term,label_sex,title_plot,title_sex,color_plt)
       }
     }
   }
@@ -623,7 +634,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,calc_slope,list_plot,
           #               list(plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
           #                                     atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)))
           plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
-                           atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)
+                           atlas,var="sex",wave,model,plot,sex,title_plot,title_sex,color_plt)
           df_head<-data.frame(atlas=atlas,wave=wave,mod=model,plot=plot,sex=sex)
           list_network_sign<-list()
           if(length(data_nbs_subset$list_network)>0){

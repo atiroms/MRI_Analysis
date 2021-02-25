@@ -38,7 +38,7 @@ plot_parallel<-function(clust,list_data_plot){
 # Histogram of Permutaion =========================
 #**************************************************
 plot_permutation<-function(paths_,list_max,thr_size_perm,
-                           atlas,wave,model,plot,sex,title_plot,title_sex,color_plt){
+                           atlas,var,wave,model,term,sex,title_plot,title_sex,color_plt){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
         + geom_histogram(binwidth=5,fill=color_plt)
         + geom_vline(aes(xintercept=thr_size_perm),
@@ -50,7 +50,7 @@ plot_permutation<-function(paths_,list_max,thr_size_perm,
         + theme_light()
         + theme(plot.title = element_text(hjust = 0.5))
   )
-  ggsave(paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
+  ggsave(paste("atl-",atlas,"_var-",var,"_wave-",wave,"_mod-",model,"_trm-",term,
                "_sex-",sex,"_perm.png",sep=""),
          plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
   #output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
