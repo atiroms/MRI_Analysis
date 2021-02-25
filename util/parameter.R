@@ -34,7 +34,13 @@ param_gam_fc_diff<-list(
   #                                  "label"="Tanner stage (adrenal)","dtype"="factor")),
   "list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
                                     "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-                                    "label"="Tanner stage (gonadal)","dtype"="factor")),
+                                    "label"="Tanner stage (gonadal)","dtype"="factor"),
+                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),
+                                    "2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+                                    "label"="Tanner stage (adrenal)","dtype"="factor")),
+  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),
+  #                                  "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="factor")),
   "list_mod_tanner"=list("l" = "value ~ ses1_age + ses1_tanner + ses2_age + ses2_tanner"),
                          #"li"= "value ~ age * tanner"),
   "list_term_tanner"=list("a1"=list("title"="1st wave Age effect","var_exp"="ses1_age"),
@@ -62,7 +68,7 @@ param_gam_fc_diff<-list(
                    #"list_term"="t2",
                    "p_cdt_threshold"=0.001,
                    "p_perm_threshold"=0.05,
-                   "n_perm"=3)
+                   "n_perm"=100)
 )
 
 

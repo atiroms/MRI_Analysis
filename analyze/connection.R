@@ -15,11 +15,11 @@ path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
 dir_out<-"423.1_fc_gam_aroma_test5"
-#list_atlas<-c("aal116","gordon333","ho112","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
+list_atlas<-c("aal116","gordon333","ho112","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 #list_atlas<-c("aal116")
-list_atlas<-c("ho112")
+#list_atlas<-c("ho112")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -297,7 +297,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
         list_max_size<-sort(list_max_size)
         thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
         df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp,sex=idx_sex,
-                                                              max_size=max_size,thr_size=thr_size_nbs))
+                                                              thr_size=thr_size_nbs))
         if (idx_sex==1){
           label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
         }else{
