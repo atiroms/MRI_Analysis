@@ -274,7 +274,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
           }
           if (nrow(df_gamm_subset)>0){ # If the model/expvar/sex exist either in df_gamm or df_anova
             df_sign<-df_gamm_subset[df_gamm_subset$p<param$param_nbs$p_cdt_threshold,]
-            max_size<-data_bfs<-func_bfs(df_sign)$max_size
+            max_size<-func_bfs(df_sign)$max_size
             df_max_size<-rbind(df_max_size,data.frame(id_perm=idx_perm,model=idx_mod,term=var_exp,sex=idx_sex,max_size=max_size))
           }
         }
