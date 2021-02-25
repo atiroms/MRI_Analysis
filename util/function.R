@@ -8,18 +8,102 @@
 #**************************************************
 # Libraries =======================================
 #**************************************************
-library(tidyverse)
-library(dplyr)
-library(Hmisc)
-library(FactoMineR)
-library(missMDA)
-library(ica)
-library(parallel)
-#library(DescTools)
-library(pbapply)
-library(ggpubr)
-library(wranglR)
+libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","pbapply","ggpubr","wranglR")
 
+
+
+#**************************************************
+# Iterate ANCOVA on FC edges ======================
+#**************************************************
+
+ancova_core<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
+                      calc_parallel_in=NULL,test_mod_in=NULL){
+  if(!is.null(list_mod_in)){list_mod<-list_mod_in}
+  if(!is.null(list_sex_in)){list_sex<-list_sex_in}
+  if(!is.null(calc_parallel_in)){calc_parallel<-calc_parallel_in}
+  if(!is.null(test_mod_in)){test_mod<-test_mod_in}
+  
+  df_gamm<-df_anova<-df_aic<-data.frame()
+  list_gamm_output<-NULL
+  for (idx_mod in names(list_mod)){
+    for (idx_sex in list_sex){
+      label_sex<-paste(idx_sex,collapse="_")
+      df_src_sex<-df_src[df_src$sex %in% idx_sex,]
+      df_src_sex$value<-as.numeric(df_src_sex$value)
+      mod<-try(lm(as.formula(list_mod[[idx_mod]]),data=df_src_sex), silent=F)
+      
+      #mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
+      if (class(mod)[1]!="try-error"){
+        if (test_mod){
+          list_gamm<-list("mod"=mod)
+          names(list_gamm)<-paste("mod-",idx_mod,"_sex-",label_sex,sep="")
+          list_gamm_output<-c(list_gamm_output,list_gamm)
+        }
+        p_table<-summary(mod)$coefficients
+        df_gamm_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                p=p_table[,'Pr(>|t|)'])
+        df_gamm<-rbind(df_gamm,
+                       cbind(sex=label_sex,model=idx_mod,df_gamm_add))
+        df_aic<-rbind(df_aic,
+                      data.frame(sex=label_sex,model=idx_mod,aic=AIC(mod),aic_best=0))
+        p_table_anova<-anova(mod)
+        p_table_anova<-p_table_anova[rownames(p_table_anova)!="Residuals",c("Df","F value","Pr(>F)")]
+        colnames(p_table_anova)<-c("df","F","p")
+        df_anova<-rbind(df_anova,
+                        cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
+                              p_table_anova))
+      }
+    } # Finished looping over sex
+  }# Finished looping over model
+  
+  # Compare AICs of GAMM models
+  df_aic_compare<-data.frame()
+  for (idx_sex in list_sex){
+    label_sex<-paste(idx_sex,collapse="_")
+    df_aic_sex<-df_aic[df_aic$sex==label_sex,]
+    df_aic_sex[which(df_aic_sex$aic==min(df_aic_sex$aic)),'aic_best']<-1
+    df_aic_compare<-rbind(df_aic_compare,df_aic_sex)
+  }
+  
+  # Prepare output dataframe
+  if ("from" %in% colnames(df_src)){
+    df_id<-df_src[1,c("from","to")]
+    rownames(df_id)<-NULL
+    df_gamm<-cbind(df_id,df_gamm)
+    df_aic_compare<-cbind(df_id,df_aic_compare)
+    df_anova<-cbind(df_id,df_anova)
+  }
+  
+  return(list("df_gamm"=df_gamm,"df_aic"=df_aic_compare,"df_anova"=df_anova,"mod"=list_gamm_output))
+}
+
+# Faster version
+iterate_ancova<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
+  df_join<-inner_join(df_join,df_edge,by=c("from","to"))
+  list_src<-split(df_join,df_join$id_edge)
+  
+  if(test_mod){
+    list_src<-list_src[1]
+  }
+  
+  if (progressbar){
+    list_dst<-pblapply(list_src,ancova_core,cl=clust)
+  }else{
+    list_dst<-parLapply(clust,list_src,ancova_core)
+  }
+  df_gamm<-rbindlist(ListExtract(list_dst,"df_gamm"))
+  df_aic<-rbindlist(ListExtract(list_dst,"df_aic"))
+  df_anova<-rbindlist(ListExtract(list_dst,"df_anova"))
+  #df_anova$p<-as.numeric(as.numeric.factor(df_anova$p))
+  rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+  
+  if(test_mod){
+    return(list_dst_gamm[[1]])
+  }else{
+    return(list("df_gamm"=df_gamm,"df_aic"=df_aic,"df_anova"=df_anova))
+  }
+}
 
 #**************************************************
 # Demean clinical data ============================
@@ -272,7 +356,8 @@ prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T,abs_nf
       }
     }
     df_fc_grp$ID_pnTTC<-as.numeric(as.numeric.factor(df_fc_grp$ID_pnTTC))
-    df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
+    #df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
+    df_fc_grp$ses<-as.character(df_fc_grp$ses)
   }else{
     df_fc_grp<-NULL
   }
