@@ -102,7 +102,8 @@ param_gamm_fc<-list(
                                     "2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
                                     "label"="Tanner stage (gonadal)","dtype"="factor")),
   "list_mod_tanner"=list(#"l" = "value ~ age + tanner + s(ID_pnTTC,bs='re')",
-                         "li"= "value ~ age * tanner + s(ID_pnTTC,bs='re')"),
+                         #"li"= "value ~ age * tanner + s(ID_pnTTC,bs='re')"),
+                         "l"= "value ~ age + tanner + (1|ID_pnTTC)"),
   #"a"= "value ~ age + s(tanner,k=3) + s(ID_pnTTC,bs='re')"),
   #"a"= "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')",
   #"q"="value ~ poly(age,2) + poly(tanner,2) + s(ID_pnTTC,bs='re')")
