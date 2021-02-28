@@ -107,7 +107,7 @@ param_gamm_fc<-list(
   #"a"= "value ~ age + s(tanner,k=3) + s(ID_pnTTC,bs='re')"),
   #"a"= "value ~ s(age,k=3) + s(tanner,k=3) + s(ID_pnTTC,bs='re')",
   #"q"="value ~ poly(age,2) + poly(tanner,2) + s(ID_pnTTC,bs='re')")
-  "list_plot_tanner"=list("a"=list("title"="Age effect","var_exp"="age"),
+  "list_term_tanner"=list("a"=list("title"="Age effect","var_exp"="age"),
                           "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
                           "t"=list("title"="Tanner effect","var_exp"="tanner"),
                           "at"=list("title"="Age by Tanner interaction","var_exp"="age:tanner"),
@@ -125,7 +125,7 @@ param_gamm_fc<-list(
   #"a"= "value ~ age + s(hormone,k=3) + s(ID_pnTTC,bs='re')"),
   #"a"= "value ~ s(age,k=3) + s(hormone,k=3) + s(ID_pnTTC,bs='re')",
   #"q"="value ~ poly(age,2) + poly(hormone,2) + s(ID_pnTTC,bs='re')")
-  "list_plot_hormone"=list("a"=list("title"="Age effect","var_exp"="age"),
+  "list_term_hormone"=list("a"=list("title"="Age effect","var_exp"="age"),
                            "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
                            "h"=list("title"="Hormone effect","var_exp"="hormone"),
                            "ah"=list("title"="Age by Hormone interaction","var_exp"="age:hormone"),

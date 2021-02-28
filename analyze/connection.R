@@ -91,12 +91,13 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     }
     clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
                                   "as.formula","as.numeric.factor",
-                                  "lm","summary","anova","AIC"),
+                                  "lm","lmer","gam",
+                                  "summary","anova","summary.gam","anova.gam","AIC"),
                   envir=environment())
     
     # Calculate model
-    data_gamm<-iterate_glm(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-    data_gamm_grp<-iterate_glm(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    data_gamm<-iterate_gamm4(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    data_gamm_grp<-iterate_gamm4(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
     stopCluster(clust)
     
     # Add multiple comparison-corrected p values
@@ -227,7 +228,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   }
   clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
                                 "as.formula","as.numeric.factor",
-                                "lm","summary","anova","AIC"),
+                                "lm","lmer","gam",
+                                "summary","anova","summary.gam","anova.gam","AIC"),
                 envir=environment())
   set.seed(0)
   pb<-txtProgressBar(min=0,max=param$param_nbs$n_perm,style=3,width=50)
@@ -246,7 +248,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
       df_join_diff<-join_fc_clin(df_fc_diff,df_clin_perm)
       
       # Calculate model
-      data_gamm<-iterate_glm(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+      data_gamm<-iterate_gamm4(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
       df_gamm<-data_gamm$df_gamm
       df_anova<-data_gamm$df_anova
       for (idx_mod in param$param_nbs$list_mod){
@@ -407,14 +409,18 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,list_sex,
     df_join_grp<-join_fc_clin(data_fc$df_fc_grp,df_clin)
     
     # Calculate model
-    #clust<-makeCluster(2)
-    clust<-makeCluster(1)
+    if (calc_parallel){
+      clust<-makeCluster(floor(detectCores()*3/4))
+    }else{
+      clust<-makeCluster(1)
+    }
     clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
                                   "as.formula","as.numeric.factor",
-                                  "gam","summary.gam","anova.gam"),
+                                  "lm","lmer","gam",
+                                  "summary","anova","summary.gam","anova.gam","AIC"),
                   envir=environment())
-    data_gamm<-iterate_gamm3(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-    data_gamm_grp<-iterate_gamm3(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    data_gamm_grp<-iterate_gamm4(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
     stopCluster(clust)
     
     # Add multiple comparison-corrected p values

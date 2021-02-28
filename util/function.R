@@ -515,6 +515,147 @@ func_path<-function(list_path_root = c("C:/Users/atiro","D:/atiro","/home/atirom
 #**************************************************
 # Iterate GAM/GLM over ROI paiers in FC ===========
 #**************************************************
+gamm_core4<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
+                     calc_parallel_in=NULL,test_mod_in=NULL){
+  if(!is.null(list_mod_in)){list_mod<-list_mod_in}
+  if(!is.null(list_sex_in)){list_sex<-list_sex_in}
+  if(!is.null(calc_parallel_in)){calc_parallel<-calc_parallel_in}
+  if(!is.null(test_mod_in)){test_mod<-test_mod_in}
+  
+  df_aic<-df_gamm<-df_anova<-data.frame()
+  list_label_sex<-list_gamm_output<-NULL
+  for (idx_mod in names(list_mod)){
+    for (idx_sex in list_sex){
+      label_sex<-paste(idx_sex,collapse="_")
+      df_src_sex<-df_src[df_src$sex %in% idx_sex,]
+      df_src_sex$value<-as.numeric(df_src_sex$value)
+      if(grepl("s\\(",list_mod[[idx_mod]])){ # Use mgcv::gam()
+        mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
+        if (class(mod)[1]!="try-error"){
+          if (test_mod){
+            list_gamm<-list("mod"=mod)
+            names(list_gamm)<-paste("mod-",idx_mod,"_sex-",label_sex,sep="")
+            list_gamm_output<-c(list_gamm_output,list_gamm)
+          }
+          p_table<-summary.gam(mod)$p.table
+          df_gamm_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                  se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                  p=p_table[,'Pr(>|t|)'])
+          s_table<-summary.gam(mod)$s.table
+          if(!is.null(s_table)){
+            df_gamm_add<-rbind(df_gamm_add,
+                               data.frame(term=rownames(s_table),estimate=NA,se=NA,F=s_table[,'F'],
+                                          t=NA,p=s_table[,'p-value']))
+          }
+          df_gamm<-rbind(df_gamm,
+                         cbind(sex=label_sex,model=idx_mod,df_gamm_add))
+          df_aic<-rbind(df_aic,
+                        data.frame(sex=label_sex,model=idx_mod,aic=mod$aic,aic_best=0))
+          p_table_anova<-anova.gam(mod)$pTerms.table
+          if (!is.null(p_table_anova)){
+            colnames(p_table_anova)<-c("df","F","p")
+            df_anova<-rbind(df_anova,
+                            cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
+                                  p_table_anova))
+          }
+        }
+      }else if(grepl("\\|",list_mod[[idx_mod]])){ # Use lme4:lemr()
+        mod<-try(lmer(as.formula(list_mod[[idx_mod]]),data=df_src_sex), silent=F)
+        if (class(mod)[1]!="try-error"){
+          if (test_mod){
+            list_gamm<-list("mod"=mod)
+            names(list_gamm)<-paste("mod-",idx_mod,"_sex-",label_sex,sep="")
+            list_gamm_output<-c(list_gamm_output,list_gamm)
+          }
+          p_table<-summary(mod)$coefficients
+          df_gamm_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                  se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                  p=p_table[,'Pr(>|t|)'])
+          df_gamm<-rbind(df_gamm,
+                         cbind(sex=label_sex,model=idx_mod,df_gamm_add))
+          df_aic<-rbind(df_aic,
+                        data.frame(sex=label_sex,model=idx_mod,aic=AIC(mod),aic_best=0))
+          p_table_anova<-anova(mod)
+          p_table_anova<-p_table_anova[,c("NumDF","F value","Pr(>F)")]
+          colnames(p_table_anova)<-c("df","F","p")
+          df_anova<-rbind(df_anova,
+                          cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
+                                p_table_anova))
+        }
+      }else{ # Use base::lm()
+        mod<-try(lm(as.formula(list_mod[[idx_mod]]),data=df_src_sex), silent=F)
+        if (class(mod)[1]!="try-error"){
+          if (test_mod){
+            list_gamm<-list("mod"=mod)
+            names(list_gamm)<-paste("mod-",idx_mod,"_sex-",label_sex,sep="")
+            list_gamm_output<-c(list_gamm_output,list_gamm)
+          }
+          p_table<-summary(mod)$coefficients
+          df_gamm_add<-data.frame(term=rownames(p_table),estimate=p_table[,'Estimate'],
+                                  se=p_table[,'Std. Error'],F=NA,t=p_table[,'t value'],
+                                  p=p_table[,'Pr(>|t|)'])
+          df_gamm<-rbind(df_gamm,
+                         cbind(sex=label_sex,model=idx_mod,df_gamm_add))
+          df_aic<-rbind(df_aic,
+                        data.frame(sex=label_sex,model=idx_mod,aic=AIC(mod),aic_best=0))
+          p_table_anova<-anova(mod)
+          p_table_anova<-p_table_anova[rownames(p_table_anova)!="Residuals",c("Df","F value","Pr(>F)")]
+          colnames(p_table_anova)<-c("df","F","p")
+          df_anova<-rbind(df_anova,
+                          cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
+                                p_table_anova))
+        }
+      }
+    } # Finished looping over sex
+  }# Finished looping over model
+  
+  # Compare AICs of GAMM models
+  df_aic_compare<-data.frame()
+  for (idx_sex in list_sex){
+    label_sex<-paste(idx_sex,collapse="_")
+    df_aic_sex<-df_aic[df_aic$sex==label_sex,]
+    df_aic_sex[which(df_aic_sex$aic==min(df_aic_sex$aic)),'aic_best']<-1
+    df_aic_compare<-rbind(df_aic_compare,df_aic_sex)
+  }
+  
+  # Prepare output dataframe
+  if ("from" %in% colnames(df_src)){
+    df_id<-df_src[1,c("from","to")]
+    rownames(df_id)<-NULL
+    df_gamm<-cbind(df_id,df_gamm)
+    df_aic_compare<-cbind(df_id,df_aic_compare)
+    df_anova<-cbind(df_id,df_anova)
+  }
+  
+  return(list("df_gamm"=df_gamm,"df_aic"=df_aic_compare,"df_anova"=df_anova,"mod"=list_gamm_output))
+}
+
+# Automatically switch among mgcv::gam(), lme4:lmer() and base::lm()
+iterate_gamm4<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
+  df_join<-inner_join(df_join,df_edge,by=c("from","to"))
+  list_src_gamm<-split(df_join,df_join$id_edge)
+  
+  if(test_mod){
+    list_src_gamm<-list_src_gamm[1]
+  }
+  
+  if (progressbar){
+    list_dst_gamm<-pblapply(list_src_gamm,gamm_core4,cl=clust)
+  }else{
+    list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core4)
+  }
+  df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
+  df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
+  df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
+  df_anova$p<-as.numeric(as.numeric.factor(df_anova$p))
+  rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+  
+  if(test_mod){
+    return(list_dst_gamm[[1]])
+  }else{
+    return(list("df_gamm"=df_gamm,"df_aic"=df_aic,"df_anova"=df_anova))
+  }
+}
 
 gamm_core3<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
                      calc_parallel_in=NULL,test_mod_in=NULL){
@@ -885,21 +1026,14 @@ mltcomp_corr<-function(input){
   return(output)
 }
 
-add_mltcmp<-function(df_gamm,df_roi,list_mod,list_plot,calc_seed_level=TRUE){
+add_mltcmp<-function(df_gamm,df_roi,list_mod,list_term,calc_seed_level=T){
   df_gamm_bind<-NULL
   for (idx_mod in names(list_mod)){
-    for (idx_plot in names(list_plot)){
-      var_exp<-list_plot[[idx_plot]][["var_exp"]]
+    for (idx_term in names(list_term)){
+      var_exp<-list_term[[idx_term]][["var_exp"]]
       for (idx_sex in c(1,2)){
         # Subset GAMM result dataframe for plotting
-        if (idx_sex==1){
-          label_sex<-"m"
-        }else{
-          label_sex<-"f"
-        }
-        df_gamm_subset<-df_gamm[df_gamm$model==idx_mod 
-                              & df_gamm$term==var_exp
-                              & df_gamm$sex==idx_sex,]
+        df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp & df_gamm$sex==idx_sex,]
         if (nrow(df_gamm_subset)>0){
           # Calculate graph-level multiple comparison-corrected p values
           df_gamm_subset<-cbind(df_gamm_subset,mltcomp_corr(df_gamm_subset))

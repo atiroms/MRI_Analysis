@@ -1,6 +1,7 @@
 # when installing on Ubuntu, execute the following in bash terminal before installing tidyverse and ggraph
 #sudo apt-get install libxml2-dev libssl-dev libcurl4-openssl-dev libudunits2-dev 
 
+install.packages("curl")
 install.packages("ggpubr")
 install.packages("tidyverse")
 install.packages("ggraph")

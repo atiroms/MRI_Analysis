@@ -46,8 +46,8 @@ list_sex<-list(1,2)
 list_mod<-param$list_mod_tanner
 list_term<-param$list_term_tanner
 idx_var<-idx_tanner
-calc_parallel=F
-#calc_parallel=T
+#calc_parallel=F
+calc_parallel=T
 test_mod=F
 #test_mod=T
 
@@ -59,6 +59,39 @@ df_clin<-func_demean_clin(df_clin,thr_cont=6,separate_sex=T)$df_clin # thr_cont=
 df_join<-join_fc_clin(data_fc$df_fc,df_clin)
 df_join_grp<-join_fc_clin(data_fc$df_fc_grp,df_clin)
 
+####
+
+if (calc_parallel){
+  clust<-makeCluster(floor(detectCores()*3/4))
+}else{
+  clust<-makeCluster(1)
+}
+clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
+                              "as.formula","as.numeric.factor",
+                              "lm","lmer","gam",
+                              "summary","anova","summary.gam","anova.gam","AIC"),
+              envir=environment())
+data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+data_gamm_grp<-iterate_gamm4(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+stopCluster(clust)
+
+# Add multiple comparison-corrected p values
+df_gamm<-as.data.frame(add_mltcmp(data_gamm$df_gamm,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
+
+df_anova<-as.data.frame(add_mltcmp(data_gamm$df_anova,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
+df_gamm_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_gamm,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+
+# Save results
+write.csv(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+write.csv(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
+write.csv(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
+write.csv(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
+write.csv(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
+write.csv(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
+
+
+####
 ####
 
 list_mod<-list("l"="value ~ age + tanner + (1|ID_pnTTC)")
@@ -75,10 +108,11 @@ clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
 # Calculate model
 t_start<-Sys.time()
 data_gamm<-iterate_glmm(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-print(Sys.time()-t_start) # Time difference of 12.04399 mins
+print(Sys.time()-t_start) # Time difference of 12.04399 mins(MRO 4.0.2, single) Time difference of 3.16382 mins(R native 4.0.2, parallel)
 stopCluster(clust)
 
 ####
+
 list_mod<-list("l"="value ~ age + tanner + s(ID_pnTTC,bs='re')")
 # Prepare parallelization cluster
 if (calc_parallel){
@@ -92,7 +126,26 @@ clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
               envir=environment())
 t_start<-Sys.time()
 data_gamm<-iterate_gamm3(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-print(Sys.time()-t_start) # Time difference of 46.00904 mins
+print(Sys.time()-t_start) # Time difference of 46.00904 mins(MRO 4.0.2, single) Time difference of 41.33795 mins (R native 4.0.2, parallel)
+stopCluster(clust)
+
+####
+
+list_mod<-list("l"="value ~ age + tanner + (1|ID_pnTTC)")
+# Prepare parallelization cluster
+if (calc_parallel){
+  clust<-makeCluster(floor(detectCores()*3/4))
+}else{
+  clust<-makeCluster(1)
+}
+clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod",
+                              "as.formula","as.numeric.factor",
+                              "lm","lmer","gam",
+                              "summary","anova","summary.gam","anova.gam","AIC"),
+              envir=environment())
+t_start<-Sys.time()
+data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+print(Sys.time()-t_start) # Time difference of 3.09792 mins (native R 4.0.2, parallel)
 stopCluster(clust)
 
 ####
