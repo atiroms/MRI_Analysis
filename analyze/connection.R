@@ -404,7 +404,7 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,list_sex,
     # Prepare clinical data and demean
     df_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
                                      prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
-    df_clin<-func_demean_clin(df_clin,thr_cont=6,separate_sex=T)$df_clin # thr_cont=4 to demean Tanner, =5 not to
+    df_clin<-func_demean_clin(df_clin,thr_cont=4,separate_sex=T)$df_clin # thr_cont=4 to demean Tanner, =5 not to
     df_join<-join_fc_clin(data_fc$df_fc,df_clin)
     df_join_grp<-join_fc_clin(data_fc$df_fc_grp,df_clin)
     
