@@ -8,7 +8,7 @@
 # gam_fc_diff() ===================================
 #**************************************************
 param_gam_fc_diff<-list(
-  "abs_nfc"=F, # absolute value for negative functional connectivity
+  "abs_nfc"=T, # absolute value for negative functional connectivity
   "key_group"="group_3",
   "list_wave"=c(1,2),
   "list_p"=list(list("type"="p","threshold"=0.001),
