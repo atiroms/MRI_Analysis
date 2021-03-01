@@ -196,6 +196,109 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
+prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F){
+  dict_roi <- func_dict_roi(paths)
+  
+  df_fc<-as.data.frame(fread(file.path(paths$input,"output",
+                                       paste("atl-",atlas,"_fc.csv",sep=""))))
+  
+  df_fc<-df_fc[df_fc$ses!="2-1",] # exclude pre-calculated longitudinal difference (not usable for absolute NFC)
+  #df_fc<-df_fc[df_fc$ses %in% list_wave,]
+  
+  if (abs_nfc){ # Absolute value for negative functional connectivity
+    df_fc$r<-abs(df_fc$r)
+    df_fc$z_r<-abs(df_fc$z_r)
+  }
+  
+  if ("2-1" %in% list_wave){
+    df_fc_diff<-inner_join(df_fc[df_fc$ses=="1",],df_fc[df_fc$ses=="2",],by=c("ID_pnTTC","from","to"))
+    df_fc_diff$ses<-"2-1"
+    df_fc_diff$p<-NA
+    df_fc_diff$r<-df_fc_diff$r.y-df_fc_diff$r.x
+    df_fc_diff$z_r<-df_fc_diff$z_r.y-df_fc_diff$z_r.x
+    df_fc_diff<-df_fc_diff[,c("ses","ID_pnTTC","from","to","r","p","z_r")]
+    df_fc<-rbind(df_fc,df_fc_diff)
+  }
+  
+  df_fc<-df_fc[df_fc$ses %in% list_wave,]
+  
+  # Prepare dataframe of ROIs
+  list_roi<-sort(unique(c(as.character(df_fc$from),as.character(df_fc$to))))
+  df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group)]
+  colnames(df_roi)[colnames(df_roi)==key_group]<-"group"
+  df_roi$id<-as.character(df_roi$id)
+  df_roi$label<-as.character(df_roi$label)
+  df_roi$group<-as.character(df_roi$group)
+  
+  # Prepare dataframe of edges
+  df_edge<-NULL
+  for (idx_roi in seq(nrow(df_roi)-1)){
+    df_edge_add<-cbind(df_roi[idx_roi,c("id","label")],df_roi[-seq(idx_roi),c("id","label")],row.names=NULL)
+    colnames(df_edge_add)<-c("from","label_from","to","label_to")
+    df_edge<-rbind(df_edge,df_edge_add)
+  }
+  
+  # Prepare dataframe of groups
+  list_group<-unique(as.character(df_roi$group))
+  df_grp<-data.frame(id=list_group,label=str_to_title(gsub("_"," ",as.character(list_group))))
+  
+  # Prepare dataframe of group-wise FC averages
+  if (include_grp){
+    df_fc_temp<-df_fc
+    df_fc_temp$z_r[which(is.nan(df_fc_temp$z_r))]<-0
+    df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("from"="id"))
+    colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"from_group"
+    df_fc_temp<-inner_join(df_fc_temp,df_roi[,c("id","group")],by=c("to"="id"))
+    colnames(df_fc_temp)[colnames(df_fc_temp)=="group"]<-"to_group"
+    df_subj<-NULL
+    list_subj<-sort(unique(df_fc$ID_pnTTC))
+    for (id_subj in list_subj){
+      list_ses<-sort(unique(df_fc[df_fc$ID_pnTTC==id_subj,"ses"]))
+      df_subj<-rbind(df_subj,data.frame(ID_pnTTC=id_subj,ses=list_ses))
+    }
+    df_subj$ses<-as.character(df_subj$ses)
+    
+    df_fc_grp<-data.frame()
+    for (idx_subj_ses in seq(dim(df_subj)[1])){
+      #print(paste(df_subj[idx_subj_ses,"ID_pnTTC"],df_subj[idx_subj_ses,"ses"]))
+      df_fc_subset1<-df_fc_temp[df_fc_temp$ID_pnTTC==df_subj[idx_subj_ses,"ID_pnTTC"]
+                                & df_fc_temp$ses==df_subj[idx_subj_ses,"ses"],]
+      for (idx_grp1 in seq(length(list_group))){
+        for (idx_grp2 in seq(idx_grp1,length(list_group))){
+          # data in df_fc_subset2 is doubled for connections within same group,
+          # but does not affect z_r average calculation
+          df_fc_subset2<-rbind(df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp1]
+                                             & df_fc_subset1$to_group==list_group[idx_grp2],],
+                               df_fc_subset1[df_fc_subset1$from_group==list_group[idx_grp2]
+                                             & df_fc_subset1$to_group==list_group[idx_grp1],])
+          df_fc_grp<-rbind(df_fc_grp,
+                           cbind(ID_pnTTC=df_subj[idx_subj_ses,"ID_pnTTC"],ses=df_subj[idx_subj_ses,"ses"],
+                                 from=list_group[idx_grp1],to=list_group[idx_grp2],
+                                 z_r=mean(df_fc_subset2$z_r)))
+        }
+      }
+    }
+    df_fc_grp$ID_pnTTC<-as.numeric(as.numeric.factor(df_fc_grp$ID_pnTTC))
+    #df_fc_grp$ses<-as.character(as.numeric.factor(df_fc_grp$ses))
+    df_fc_grp$ses<-as.character(df_fc_grp$ses)
+  }else{
+    df_fc_grp<-NULL
+  }
+  
+  # Prepare dataframe of group edges
+  df_edge_grp<-NULL
+  for (idx_grp in seq(nrow(df_grp))){
+    df_edge_grp_add<-cbind(df_grp[idx_grp,c("id","label")],
+                           rbind(df_grp[idx_grp,c("id","label")],df_grp[-seq(idx_grp),c("id","label")]),
+                           row.names=NULL)
+    colnames(df_edge_grp_add)<-c("from","label_from","to","label_to")
+    df_edge_grp<-rbind(df_edge_grp,df_edge_grp_add)
+  }
+  
+  return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_edge"=df_edge,"df_grp"=df_grp,"df_edge_grp"=df_edge_grp))
+}
+
+
 prep_data_fc<-function(paths,atlas,key_group,include_diff=F,include_grp=T,abs_nfc=F){
   dict_roi <- func_dict_roi(paths)
   
