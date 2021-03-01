@@ -14,14 +14,15 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_01/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.1_fc_gam_aroma_test1" 
+#dir_out<-"423.1_fc_gam_aroma_test1" 
+dir_out<-"424_fc_gamm_aroma_test2"
 #dir_out<-"424_fc_gamm_aroma_test3" # on Ubuntu_1
 #dir_out<-"424_fc_gamm_aroma_test4" # on Ubuntu_2
-#list_atlas<-c("aal116","gordon333","ho112","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
+list_atlas<-c("aal116","gordon333","ho112","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 #list_atlas<-c("aal116")
-list_atlas<-c("ho112")
+#list_atlas<-c("ho112")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -406,7 +407,7 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,list_sex,
     # Prepare clinical data and demean
     df_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
                                      prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
-    df_clin<-func_demean_clin(df_clin,thr_cont=6,separate_sex=T)$df_clin # thr_cont=4 to demean Tanner, =5 not to
+    df_clin<-func_demean_clin(df_clin,thr_cont=4,separate_sex=T)$df_clin # thr_cont=4 to demean Tanner, =5 not to
     fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin_diff.csv",sep="")),row.names=F)
     df_join<-join_fc_clin(data_fc$df_fc,df_clin)
     df_join_grp<-join_fc_clin(data_fc$df_fc_grp,df_clin)
