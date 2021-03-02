@@ -14,8 +14,8 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_01/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-#dir_out<-"423.1_fc_gam_aroma_test1" 
-dir_out<-"424_fc_gamm_aroma_test2"
+dir_out<-"423.1_fc_gam_aroma_test3" 
+#dir_out<-"424_fc_gamm_aroma_test2"
 #dir_out<-"424_fc_gamm_aroma_test3" # on Ubuntu_1
 #dir_out<-"424_fc_gamm_aroma_test4" # on Ubuntu_2
 list_atlas<-c("aal116","gordon333","ho112","power264",
@@ -119,7 +119,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   
   # Threshold and plot graph edges
   if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))){
-    df_plot<-read.csv(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))
+    df_plot<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep=""))))
   }else{
     df_plot<-df_plot_grp<-data.frame()
     for (idx_mod in names(list_mod)){
@@ -182,8 +182,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   }
   
   # Detect sub-network by breadth-first approach
-  if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))){
-    df_net<-df_node<-df_size_net<-NULL
+  if (nrow(df_plot)>0){
+    df_net<-df_node<-df_size_net<-df_pred_ancova<-NULL
     #list_output<-list()
     for (idx_mod in param$param_nbs$list_mod){
       for (idx_term in param$param_nbs$list_term){
@@ -196,15 +196,22 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
           if(length(data_bfs$list_network)>0){
             for (idx_net in seq(length(data_bfs$list_network))){
               network<-data_bfs$list_network[[idx_net]]
-              plot_subnet<-plot_circular2(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi,rule_order="degree")
-              plot_subnet<-(plot_subnet
-                            +ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,
-                                           ", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,
-                                           ", #",as.character(idx_net),sep="")))
-              ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,
-                           "_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,
-                           "_idx-",as.character(idx_net),"_subnet.png",sep=""),
+              #plot_subnet<-plot_circular2(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi,rule_order="degree")
+              plot_subnet<-plot_net(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi)
+              plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term]][["title"]]))
+              ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,"_idx-",as.character(idx_net),"_subnet.png",sep=""),
                      plot=plot_subnet,path=file.path(paths$output,"output","plot"),height=10,width=10,dpi=600)
+              #filename_plot<-file.path(paths$output,"output","plot",paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,"_idx-",as.character(idx_net),"_subnet.png",sep=""))
+              #title_plot<-paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep="")
+              #plot_subnet<-plot_lgl(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi,filename_plot,title_plot)
+              if(idx_term %in% names(param$param_ancova_pred)){
+                data_pred_ancova<-plot_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term,var_exp)
+                df_pred_ancova<-rbind(df_pred_ancova,data.frame(id_net=idx_net,data_pred_ancova$df_plot))
+                plot_pred<-(data_pred_ancova$plot+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,"\nexpvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep="")))
+                ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,"_idx-",as.character(idx_net),"_pred.png",sep=""),
+                       plot=plot_pred,path=file.path(paths$output,"output","plot"),height=5,width=5,dpi=600)
+                
+              }
               df_head<-data.frame(model=idx_mod,term=var_exp,sex=idx_sex)
               df_net<-rbind(df_net,data.frame(id_net=idx_net,network$df_edge))
               df_node_add<-inner_join(data.frame(id_net=idx_net,network$df_node),data_fc$df_roi,by=c("node"="id"))
@@ -219,6 +226,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     fwrite(df_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_edge.csv",sep="")),row.names = F)
     fwrite(df_node,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep="")),row.names = F)
     fwrite(df_size_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep="")),row.names = F)
+    fwrite(df_pred_ancova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_pred.csv",sep="")),row.names = F)
   }
   
   # Permutation for NBS
@@ -279,7 +287,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   fwrite(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep="")),row.names = F)
   
   # Summarize permutation result
-  df_threshold_size<-NULL
+  df_threshold_size<-df_size_net_p<-NULL
   for (idx_mod in param$param_nbs$list_mod){
     for (idx_term in param$param_nbs$list_term){
       var_exp<-list_term[[idx_term]][["var_exp"]]
@@ -287,6 +295,13 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
         list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp
                                    & df_max_size$sex==idx_sex,"max_size"]
         list_max_size<-sort(list_max_size)
+        df_size_net_subset<-df_size_net[df_size_net$model==idx_mod & df_size_net$term==var_exp & df_size_net$sex==idx_sex,]
+        if(nrow(df_size_net_subset)>0){
+          for (idx_row in seq(nrow(df_size_net_subset))){
+            df_size_net_subset[idx_row,"p"]<-sum(list_max_size>df_size_net_subset[idx_row,"size"])/param$param_nbs$n_perm
+          }
+          df_size_net_p<-rbind(df_size_net_p,df_size_net_subset)
+        }
         thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
         df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp,sex=idx_sex,
                                                               thr_size=thr_size_nbs))
@@ -302,6 +317,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
     }
   }
   fwrite(df_threshold_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep="")),row.names = F)
+  fwrite(df_size_net_p,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep="")),row.names = F)
 }
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
@@ -340,7 +356,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
   } # Finished looping over atlas
   
   print("Combining results.")
-  df_gamm<-df_aic<-df_plot<-df_anova<-df_gamm_grp<-df_aic_grp<-df_plot_grp<-df_anova_grp<-df_net<-df_node<-df_size_net<-df_perm_max<-df_perm_thr<-data.frame()
+  df_gamm<-df_aic<-df_plot<-df_anova<-df_gamm_grp<-df_aic_grp<-df_plot_grp<-df_anova_grp<-df_net<-df_node<-df_size_net<-df_pred_ancova<-df_perm_max<-df_perm_thr<-data.frame()
   list_var<-c(param$list_tanner,param$list_hormone)
   for (atlas in list_atlas_){
     for (idx_var in names(list_var)){
@@ -363,6 +379,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       df_net<-rbind(df_net,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_edge.csv",sep=""))))))
       df_node<-rbind(df_node,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep=""))))))
       df_size_net<-rbind(df_size_net,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep=""))))))
+      df_pred_ancova<-rbind(df_pred_ancova,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_pred.csv",sep=""))))))
       # Permutation results
       df_perm_max<-rbind(df_perm_max,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep=""))))))
       df_perm_thr<-rbind(df_perm_thr,cbind(df_head,as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep=""))))))
@@ -383,6 +400,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
   fwrite(df_net,file.path(paths_$output,"output","result","bfs_edge.csv"),row.names = F)
   fwrite(df_node,file.path(paths_$output,"output","result","bfs_node.csv"),row.names = F)
   fwrite(df_size_net,file.path(paths_$output,"output","result","bfs_size.csv"),row.names = F)
+  fwrite(df_pred_ancova,file.path(paths$output,"output","result","bfs_pred.csv"),row.names = F)
   fwrite(df_perm_max,file.path(paths_$output,"output","result","perm_max.csv"),row.names = F)
   fwrite(df_perm_thr,file.path(paths_$output,"output","result","perm_thr.csv"),row.names = F)
   print("Finished gam_fc_diff().")

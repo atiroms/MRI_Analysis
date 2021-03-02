@@ -11,6 +11,102 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 
 
 #**************************************************
+# Plot network ====================================
+#**************************************************
+plot_net<-function(df_edge,df_node,df_roi){
+  
+  # Prepare df\node
+  df_node<-dplyr::inner_join(df_node,df_roi,by=c("node"="id"))
+  df_node<-dplyr::rename(df_node,"id"="node")
+  
+  # Prepare df_edge
+  if(is.na(df_edge[1,"estimate"])){
+    term_plot<-"F"
+  }else{
+    term_plot<-"estimate"
+  }
+  df_edge<-df_edge[,c("from","to",term_plot)]
+  colnames(df_edge)<-c("from","to","weight")
+  
+  # Convert edge/node dataframes into igraph object
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  plot<-(ggraph(igraph_plot,layout="stress")
+         + geom_node_point(aes(size=10*sqrt(degree)),shape=21,fill="grey50",color="transparent")
+         + geom_edge_link(edge_color="grey50",edge_width=1)
+         + geom_node_text(aes(label=label),size=3,repel=T,force=30,segment.color="grey70")
+         + expand_limits(x = c(-6, 6), y = c(-5, 5))
+         + theme_void()
+         + theme(plot.title = element_text(hjust = 0.5),
+                 legend.position="none")
+         )
+  return(plot)
+}
+
+#**************************************************
+# Plot graph with LGL algorithm ===================
+#**************************************************
+plot_lgl<-function(df_edge,df_node,df_roi,filename,title){
+  
+  # Prepare df\node
+  df_node<-dplyr::inner_join(df_node,df_roi,by=c("node"="id"))
+  df_node<-dplyr::rename(df_node,"id"="node")
+  
+  # Prepare df_edge
+  if(is.na(df_edge[1,"estimate"])){
+    term_plot<-"F"
+  }else{
+    term_plot<-"estimate"
+  }
+  df_edge<-df_edge[,c("from","to",term_plot)]
+  colnames(df_edge)<-c("from","to","weight")
+  
+  # Convert edge/node dataframes into igraph object
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  png(filename,width=1000,height=1000)
+  plot.igraph<-plot(igraph_plot,layout=norm_coords(layout_with_lgl(igraph_plot), ymin=-1, ymax=1, xmin=-1, xmax=1),
+               vertex.size=2*sqrt(V(igraph_plot)$degree),vertex.color="grey50",vertex.frame.color="transparent",vertex.label.color="black")
+  title(title)
+  dev.off()
+  
+}
+
+
+#**************************************************
+# Plot ANCOVA prediction===========================
+#**************************************************
+
+plot_pred_ancova<-function(df_edge,df_gamm,data_fc,param_ancova_pred,idx_term,var_exp){
+  df_edge<-df_edge[,c("from","to","sex","model")]
+  #df_edge$sex<-as.character(df_edge$sex)
+  df_gamm<-df_gamm[df_gamm$term %in% param_ancova_pred[[idx_term]]$term,c("from","to","sex","model","term","estimate")]
+  df_gamm<-inner_join(df_edge,df_gamm,by=c("from","to","sex","model"))
+  df_gamm<-inner_join(df_gamm,data_fc$df_edge,by=c("from","to"))
+  df_plot<-NULL
+  for (id_edge in unique(df_gamm$id_edge)){
+    df_plot_add<-df_gamm[df_gamm$id_edge==id_edge,]
+    df_plot_add[df_plot_add$term!="(Intercept)","estimate"]<-df_plot_add[df_plot_add$term!="(Intercept)","estimate"]+df_plot_add[df_plot_add$term=="(Intercept)","estimate"]
+    df_plot<-rbind(df_plot,df_plot_add)
+  }
+  df_plot<-inner_join(df_plot,param_ancova_pred[[idx_term]],by="term")
+  df_plot$term<-var_exp
+  df_plot$label_edge<-paste(df_plot$label_from,df_plot$label_to,sep=" - ")
+  df_plot<-df_plot[,c("from","to","label_from","label_to","label_edge","sex","model","term","level","estimate")]
+  
+  plot <- (ggplot(data=df_plot)
+           + geom_point(aes(x=level,y=estimate),color="grey50",shape=1,size=2)
+           + geom_path(aes(x=level,y=estimate,group=label_edge),
+                       color="grey50",size=0.3,alpha=0.5,linetype="dashed")
+           #+ xlab(list_term[[idx_term]][["title"]])
+           + ylab("Predicted z(r)")
+           + theme_light()
+           + theme(plot.title = element_text(hjust = 0.5)))
+  return(list("plot"=plot,"df_plot"=df_plot))
+}
+
+
+#**************************************************
 # Parallel ggsave output for complex figures ======
 #**************************************************
 

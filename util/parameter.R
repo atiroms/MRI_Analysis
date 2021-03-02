@@ -8,7 +8,7 @@
 # gam_fc_diff() ===================================
 #**************************************************
 param_gam_fc_diff<-list(
-  "abs_nfc"=T, # absolute value for negative functional connectivity
+  "abs_nfc"=F, # absolute value for negative functional connectivity
   "key_group"="group_3",
   "list_wave"=c(1,2),
   "list_p"=list(list("type"="p","threshold"=0.001),
@@ -43,10 +43,10 @@ param_gam_fc_diff<-list(
   #                                  "label"="Tanner stage (gonadal)","dtype"="factor")),
   "list_mod_tanner"=list("l" = "value ~ ses1_age + ses1_tanner + ses2_age + ses2_tanner"),
                          #"li"= "value ~ age * tanner"),
-  "list_term_tanner"=list("a1"=list("title"="1st wave Age effect","var_exp"="ses1_age"),
-                          "t1"=list("title"="1st wave Tanner effect","var_exp"="ses1_tanner"),
-                          "a2"=list("title"="2nd wave Age effect","var_exp"="ses2_age"),
-                          "t2"=list("title"="2nd wave Tanner effect","var_exp"="ses2_tanner")),
+  "list_term_tanner"=list("a1"=list("title"="1st wave Age","var_exp"="ses1_age"),
+                          "t1"=list("title"="1st wave Tanner","var_exp"="ses1_tanner"),
+                          "a2"=list("title"="2nd wave Age","var_exp"="ses2_age"),
+                          "t2"=list("title"="2nd wave Tanner","var_exp"="ses2_tanner")),
                           #"a"=list("title"="Age effect","var_exp"="age"),
                           #"s(a)"=list("title"="Age effect","var_exp"="s(age)"),
                           #"t"=list("title"="Tanner effect","var_exp"="tanner"),
@@ -68,7 +68,11 @@ param_gam_fc_diff<-list(
                    #"list_term"="t2",
                    "p_cdt_threshold"=0.001,
                    "p_perm_threshold"=0.05,
-                   "n_perm"=100)
+                   "n_perm"=100),
+  "param_ancova_pred"=list("t1"=data.frame(term=c("(Intercept)","ses1_tanner2","ses1_tanner3","ses1_tanner4","ses1_tanner5"),
+                                           level=c(1,2,3,4,5)),
+                           "t2"=data.frame(term=c("(Intercept)","ses2_tanner2","ses2_tanner3","ses2_tanner4","ses2_tanner5"),
+                                           level=c(1,2,3,4,5)))
 )
 
 
