@@ -198,7 +198,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
               network<-data_bfs$list_network[[idx_net]]
               #plot_subnet<-plot_circular2(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi,rule_order="degree")
               plot_subnet<-plot_net(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi)
-              plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term]][["title"]]))
+              plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep="")))
               ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,"_idx-",as.character(idx_net),"_subnet.png",sep=""),
                      plot=plot_subnet,path=file.path(paths$output,"output","plot"),height=10,width=10,dpi=600)
               #filename_plot<-file.path(paths$output,"output","plot",paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,"_idx-",as.character(idx_net),"_subnet.png",sep=""))
@@ -207,7 +207,7 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
               if(idx_term %in% names(param$param_ancova_pred)){
                 data_pred_ancova<-plot_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term,var_exp)
                 df_pred_ancova<-rbind(df_pred_ancova,data.frame(id_net=idx_net,data_pred_ancova$df_plot))
-                plot_pred<-(data_pred_ancova$plot+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,"\nexpvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep="")))
+                plot_pred<-(data_pred_ancova$plot+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,"\nexpvar: ",var_exp,", sex: ",label_sex,", p value: p<",param$param_nbs$p_cdt_threshold,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term]][["title"]]))
                 ggsave(paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-p_",param$param_nbs$p_cdt_threshold,"_idx-",as.character(idx_net),"_pred.png",sep=""),
                        plot=plot_pred,path=file.path(paths$output,"output","plot"),height=5,width=5,dpi=600)
                 
