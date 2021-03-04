@@ -33,5 +33,5 @@ remotes::install_github("phively/wranglR")
 install.packages("mgcViz",type="source")
 install.packages("easypackages",type="source")
 install.packages("lmerTest",type="source")
-install.packages("RhpcBLASctl",type="source")
+install.packages("RhpcBLASctl")
 
