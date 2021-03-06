@@ -71,7 +71,7 @@ param_gam_fc_diff<-list(
                    #"p_cdt_threshold"=0.001,
                    "p_cdt_threshold"=c(0.001,0.005,0.01),
                    "p_perm_threshold"=0.05,
-                   "n_perm"=100),
+                   "n_perm"=1000),
                    #"n_perm"=5),
   "param_ancova_pred"=list("t1"=data.frame(term=c("(Intercept)","ses1_tanner2","ses1_tanner3","ses1_tanner4","ses1_tanner5"),
                                            level=c(1,2,3,4,5)),
