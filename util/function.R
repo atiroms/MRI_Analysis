@@ -11,6 +11,29 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 
 
 #**************************************************
+# Combine results ~~~~~============================
+#**************************************************
+func_combine_result<-function(paths,list_atlas_,list_var,list_filename){
+  for (filename in list_filename){
+    df_dst<-data.frame()
+    for (atlas in list_atlas_){
+      for (idx_var in names(list_var)){
+        df_head<-data.frame(atlas=atlas,variable=idx_var)
+        path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_",filename,".csv",sep=""))
+        if(file.exists(path_src)){
+          df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src))))
+        }
+      }
+    }
+    
+    if (nrow(df_dst)>0){
+      fwrite(df_dst,file.path(paths$output,"output","result",paste(filename,".csv",sep="")),row.names = F)
+    }
+  }
+}
+
+
+#**************************************************
 # Demean clinical data ============================
 #**************************************************
 func_demean_clin<-function(df_clin,thr_cont=10,separate_sex=T){

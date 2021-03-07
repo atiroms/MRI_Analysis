@@ -86,7 +86,8 @@ plot_pred_ancova<-function(df_edge,df_gamm,data_fc,param_ancova_pred,idx_term,va
   df_plot<-NULL
   for (id_edge in unique(df_gamm$id_edge)){
     df_plot_add<-df_gamm[df_gamm$id_edge==id_edge,]
-    df_plot_add[df_plot_add$term!="(Intercept)","estimate"]<-df_plot_add[df_plot_add$term!="(Intercept)","estimate"]+df_plot_add[df_plot_add$term=="(Intercept)","estimate"]
+    term_base<-param_ancova_pred[[idx_term]][1,"term"]
+    df_plot_add[df_plot_add$term!=term_base,"estimate"]<-df_plot_add[df_plot_add$term!=term_base,"estimate"]+df_plot_add[df_plot_add$term==term_base,"estimate"]
     df_plot<-rbind(df_plot,df_plot_add)
   }
   df_plot<-inner_join(df_plot,param_ancova_pred[[idx_term]],by="term")
