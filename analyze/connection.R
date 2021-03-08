@@ -11,7 +11,7 @@
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_01/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
 #dir_out<-"423.1_fc_gam_aroma_test8" 
