@@ -18,7 +18,7 @@ dir_in<-"421_fc_aroma"
 #dir_out<-"424_fc_gamm_aroma_test2"
 #dir_out<-"424_fc_gamm_aroma_test3" # on Ubuntu_1
 #dir_out<-"424_fc_gamm_aroma_test4" # on Ubuntu_2
-dir_out<-"424_fc_gamm_aroma_test7"
+dir_out<-"424_fc_gamm_aroma_test8"
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
