@@ -86,7 +86,7 @@ param_gam_fc_diff<-list(
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
-  "abs_nfc"=T, # absolute value for negative functional connectivity
+  "abs_nfc"=F, # absolute value for negative functional connectivity
   "key_group"="group_3",
   "list_wave"=c(1,2),
   "list_p"=list(list("type"="p","threshold"=0.001),
@@ -166,7 +166,7 @@ param_gamm_fc<-list(
                    #"n_perm"=1000),
                    #"n_perm"=100),
                    "n_perm"=20),
-                   #"n_perm"=3),  
+                   #"n_perm"=3),
   "param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),
                                            level=c(1,2,3,4,5)),
                            "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),
