@@ -13,15 +13,17 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 #**************************************************
 # Combine results ~~~~~============================
 #**************************************************
-func_combine_result<-function(paths,list_atlas_,list_var,list_filename){
+func_combine_result<-function(paths,list_atlas_,list_var,list_wave,list_filename){
   for (filename in list_filename){
     df_dst<-data.frame()
     for (atlas in list_atlas_){
       for (idx_var in names(list_var)){
-        df_head<-data.frame(atlas=atlas,variable=idx_var)
-        path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_",filename,".csv",sep=""))
-        if(file.exists(path_src)){
-          df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src))))
+        for (label_wave in list_wave){
+          df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
+          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+          if(file.exists(path_src)){
+            df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src))))
+          }
         }
       }
     }
@@ -36,12 +38,14 @@ func_combine_result<-function(paths,list_atlas_,list_var,list_filename){
 #**************************************************
 # Demean clinical data ============================
 #**************************************************
-func_demean_clin<-function(df_clin,thr_cont=10,separate_sex=T){
+#func_demean_clin<-function(df_clin,thr_cont=10,separate_sex=T){
+func_demean_clin<-function(df_clin,separate_sex=T){
   df_mean<-data.frame(matrix(ncol=ncol(df_clin)))
   colnames(df_mean)<-colnames(df_clin)
   for (idx_col in colnames(df_clin)){
-    if (idx_col %nin% c("ID_pnTTC","wave")){
-      if(length(unique(df_clin[,idx_col]))>thr_cont){
+    if (idx_col %nin% c("ID_pnTTC","wave","sex")){
+      #if(length(unique(df_clin[,idx_col]))>thr_cont){
+      if(class(df_clin[,idx_col])!="factor"){
         if (separate_sex){
           for (sex in c(1,2)){
             mean<-mean(df_clin[df_clin$sex==sex,idx_col])
@@ -223,7 +227,7 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
-                                       paste("atl-",atlas,"_fc.csv",sep=""))))
+                                       paste("atl-",atlas,"_fc.csv",sep="")),showProgress=F))
   
   df_fc<-df_fc[df_fc$ses!="2-1",] # exclude pre-calculated longitudinal difference (not usable for absolute NFC)
   #df_fc<-df_fc[df_fc$ses %in% list_wave,]
@@ -260,6 +264,8 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
     colnames(df_edge_add)<-c("from","label_from","to","label_to")
     df_edge<-rbind(df_edge,df_edge_add)
   }
+  df_edge$id_edge<-seq(nrow(df_edge))
+  df_edge<-df_edge[,c("id_edge","from","label_from","to","label_to")]
   
   # Prepare dataframe of groups
   list_group<-unique(as.character(df_roi$group))
@@ -317,6 +323,8 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
     colnames(df_edge_grp_add)<-c("from","label_from","to","label_to")
     df_edge_grp<-rbind(df_edge_grp,df_edge_grp_add)
   }
+  df_edge_grp$id_edge<-seq(nrow(df_edge_grp))
+  df_edge_grp<-df_edge_grp[,c("id_edge","from","label_from","to","label_to")]
   
   return(list("df_fc"=df_fc,"df_fc_grp"=df_fc_grp,"df_roi"=df_roi,"df_edge"=df_edge,"df_grp"=df_grp,"df_edge_grp"=df_edge_grp))
 }
