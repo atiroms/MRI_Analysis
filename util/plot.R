@@ -1,19 +1,110 @@
 #**************************************************
 # Description =====================================
 #**************************************************
-
 # R script for common visualization functionalities in MRI analysis
 
 
 #**************************************************
 # Libraries =======================================
 #**************************************************
-library(ggplot2)
-library(ggraph)
-library(igraph)
-library(colorRamps)
-library(purrr)
-library(viridis)
+libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
+
+
+#**************************************************
+# Plot network ====================================
+#**************************************************
+plot_net<-function(df_edge,df_node,df_roi){
+  
+  # Prepare df\node
+  df_node<-dplyr::inner_join(df_node,df_roi,by=c("node"="id"))
+  df_node<-dplyr::rename(df_node,"id"="node")
+  
+  # Prepare df_edge
+  if(is.na(df_edge[1,"estimate"])){
+    term_plot<-"F"
+  }else{
+    term_plot<-"estimate"
+  }
+  df_edge<-df_edge[,c("from","to",term_plot)]
+  colnames(df_edge)<-c("from","to","weight")
+  
+  # Convert edge/node dataframes into igraph object
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  plot<-(ggraph(igraph_plot,layout="stress")
+         + geom_node_point(aes(size=10*sqrt(degree)),shape=21,fill="grey50",color="transparent")
+         + geom_edge_link(edge_color="grey50",edge_width=1)
+         + geom_node_text(aes(label=label),size=3,repel=T,force=30,segment.color="grey70")
+         + expand_limits(x = c(-10, 10), y = c(-10, 10))
+         + theme_void()
+         + theme(plot.title = element_text(hjust = 0.5),
+                 legend.position="none")
+         )
+  return(plot)
+}
+
+#**************************************************
+# Plot graph with LGL algorithm ===================
+#**************************************************
+plot_lgl<-function(df_edge,df_node,df_roi,filename,title){
+  
+  # Prepare df\node
+  df_node<-dplyr::inner_join(df_node,df_roi,by=c("node"="id"))
+  df_node<-dplyr::rename(df_node,"id"="node")
+  
+  # Prepare df_edge
+  if(is.na(df_edge[1,"estimate"])){
+    term_plot<-"F"
+  }else{
+    term_plot<-"estimate"
+  }
+  df_edge<-df_edge[,c("from","to",term_plot)]
+  colnames(df_edge)<-c("from","to","weight")
+  
+  # Convert edge/node dataframes into igraph object
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  png(filename,width=1000,height=1000)
+  plot.igraph<-plot(igraph_plot,layout=norm_coords(layout_with_lgl(igraph_plot), ymin=-1, ymax=1, xmin=-1, xmax=1),
+               vertex.size=2*sqrt(V(igraph_plot)$degree),vertex.color="grey50",vertex.frame.color="transparent",vertex.label.color="black")
+  title(title)
+  dev.off()
+  
+}
+
+
+#**************************************************
+# Plot ANCOVA prediction===========================
+#**************************************************
+
+plot_pred_ancova<-function(df_edge,df_gamm,data_fc,param_ancova_pred,idx_term,var_exp){
+  df_edge<-df_edge[,c("from","to","sex","model")]
+  #df_edge$sex<-as.character(df_edge$sex)
+  df_gamm<-df_gamm[df_gamm$term %in% param_ancova_pred[[idx_term]]$term,c("from","to","sex","model","term","estimate")]
+  df_gamm<-inner_join(df_edge,df_gamm,by=c("from","to","sex","model"))
+  df_gamm<-inner_join(df_gamm,data_fc$df_edge,by=c("from","to"))
+  df_plot<-NULL
+  for (id_edge in unique(df_gamm$id_edge)){
+    df_plot_add<-df_gamm[df_gamm$id_edge==id_edge,]
+    term_base<-param_ancova_pred[[idx_term]][1,"term"]
+    df_plot_add[df_plot_add$term!=term_base,"estimate"]<-df_plot_add[df_plot_add$term!=term_base,"estimate"]+df_plot_add[df_plot_add$term==term_base,"estimate"]
+    df_plot<-rbind(df_plot,df_plot_add)
+  }
+  df_plot<-inner_join(df_plot,param_ancova_pred[[idx_term]],by="term")
+  df_plot$term<-var_exp
+  df_plot$label_edge<-paste(df_plot$label_from,df_plot$label_to,sep=" - ")
+  df_plot<-df_plot[,c("from","to","label_from","label_to","label_edge","sex","model","term","level","estimate")]
+  
+  plot <- (ggplot(data=df_plot)
+           + geom_point(aes(x=level,y=estimate),color="grey50",shape=1,size=2)
+           + geom_path(aes(x=level,y=estimate,group=label_edge),
+                       color="grey50",size=0.3,alpha=0.5,linetype="dashed")
+           #+ xlab(list_term[[idx_term]][["title"]])
+           + ylab("Predicted z(r)")
+           + theme_light()
+           + theme(plot.title = element_text(hjust = 0.5)))
+  return(list("plot"=plot,"df_plot"=df_plot))
+}
 
 
 #**************************************************
@@ -26,11 +117,15 @@ plot_parallel_core<-function(data_plot){
   #return(T)
 }
 
-plot_parallel<-function(clust,list_data_plot){
+plot_parallel<-function(clust,list_data_plot,progressbar=F){
   clusterExport(clust,
                 varlist=c("ggsave"),
                 envir=environment())
-  nullobj<-pblapply(list_data_plot,plot_parallel_core,cl=clust)
+  if (progressbar){
+    nullobj<-pblapply(list_data_plot,plot_parallel_core,cl=clust)
+  }else{
+    nullobj<-parLapply(clust,list_data_plot,plot_parallel_core)
+  }
 }
 
 
@@ -38,20 +133,20 @@ plot_parallel<-function(clust,list_data_plot){
 # Histogram of Permutaion =========================
 #**************************************************
 plot_permutation<-function(paths_,list_max,thr_size_perm,
-                           atlas,wave,model,plot,sex,title_plot,title_sex,color_plt){
+                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,color_plt){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
-        + geom_histogram(binwidth=5,fill=color_plt)
+        + geom_histogram(binwidth=2,fill=color_plt)
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
         + ggtitle(paste("Atlas: ",atlas,", Wave: ",wave,", Model: ",model,
-                        "\nPlot: ",title_plot,", Sex: ",title_sex,sep=""))
+                        "\nPlot: ",title_plot,", Sex: ",title_sex,", CDT: p<",as.character(p_cdt),sep=""))
         + xlab("Size")
         + ylab("Count")
         + theme_light()
         + theme(plot.title = element_text(hjust = 0.5))
   )
-  ggsave(paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
-               "_sex-",sex,"_perm.png",sep=""),
+  ggsave(paste("atl-",atlas,"_var-",var,"_wave-",wave,"_mod-",model,"_trm-",term,
+               "_sex-",sex,"_pval-p_",as.character(p_cdt),"_perm.png",sep=""),
          plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
   #output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
   #                              "_sex-",sex,"_perm.png",sep=""),
@@ -134,6 +229,94 @@ plot_sex_diff_fc<-function(paths_,df_edge,atlas,wave,df_roi,df_grp,mod,plot,sex,
 #**************************************************
 # Heatmap Plot of GAM of FC =======================
 #**************************************************
+plot_gam_fc_core3<-function(df_sign,df_full,label_axis,label_legend,size_label){
+  df_sign$weight<-as.numeric(df_sign$weight)
+  if (nrow(df_sign)>0){
+    limits<-max(max(df_sign$weight),-min(df_sign$weight))
+    limits<-c(-limits,limits)
+  }else{
+    limits<-c(0,0)
+  }
+  
+  df_edge<-left_join(df_full,df_sign,by=c("from","to"))
+  df_edge<-df_edge[,c("label_from","label_to","weight")]
+  colnames(df_edge)<-c("row","column","weight")
+  df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
+  df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,weight=df_edge_inv$weight)
+  df_edge<-rbind(df_edge,df_edge_inv)
+  
+  plot<-(ggplot(df_edge, aes(column, row))
+         + geom_tile(aes(fill = weight))
+         + scale_fill_gradientn(colors = matlab.like2(100),name=label_legend,limits=limits)
+         + scale_y_discrete(limits = rev(label_axis))
+         + scale_x_discrete(limits = label_axis, position="top")
+         + theme_linedraw()
+         + theme(
+           axis.text.x = element_text(size=size_label,angle = 90,vjust=0,hjust=0),
+           axis.text.y = element_text(size=size_label),
+           panel.grid.major=element_blank(),
+           panel.grid.minor = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           plot.title = element_text(hjust = 0.5),
+           axis.title.x=element_blank(),
+           axis.title.y=element_blank(),
+           axis.ticks=element_blank()
+         )
+  )
+  return(plot)
+}
+
+plot_gam_fc3<-function(df_gam,df_gam_grp,data_fc){
+  
+  title_group<-paste("Groups:",paste(data_fc$df_grp$label,collapse=", "),sep=" ")
+  list_roi_spaced<-NULL
+  for (group in data_fc$df_grp$id){
+    list_roi_spaced<-c(list_roi_spaced,as.character(data_fc$df_roi[data_fc$df_roi$group==group,"label"]),"")
+  }
+  list_roi_spaced<-list_roi_spaced[1:length(list_roi_spaced)-1]
+  list_label_grp<-data_fc$df_grp$label
+  
+  #if (!is.na(df_gam[1,"estimate"])){
+  if ("estimate" %in% colnames(df_gam)){
+    if (!is.na(df_gam[1,"estimate"])){
+      label_legend<-"beta"
+    }else{
+      label_legend<-"F"
+    }
+  }else{
+    label_legend<-"F"
+  }
+  if (label_legend=="beta"){
+    df_gam<-dplyr::rename(df_gam,"weight"="estimate")
+    df_gam_grp<-dplyr::rename(df_gam_grp,"weight"="estimate")
+  }else{
+    df_gam<-dplyr::rename(df_gam,"weight"="F")
+    df_gam_grp<-dplyr::rename(df_gam_grp,"weight"="F")
+  }
+  df_gam<-df_gam[,c("from","to","weight")]
+  df_gam_grp<-df_gam_grp[,c("from","to","weight")]
+  
+  list_subplot<-list()
+  list_subplot<-c(list_subplot,
+                  list(plot_gam_fc_core3(df_gam,data_fc$df_edge,
+                                         label_axis=list_roi_spaced,label_legend,1.5)))
+  list_subplot<-c(list_subplot,
+                  list(plot_gam_fc_core3(df_gam_grp,data_fc$df_edge_grp,
+                                         label_axis=data_fc$df_grp$label,label_legend,8.5)))
+  list_subplot<-c(list_subplot,list(NULL))
+  arranged_plot<-ggarrange(list_subplot[[1]],
+                           ggarrange(list_subplot[[2]],list_subplot[[3]],
+                                     ncol=2,
+                                     labels=c("Group",""),
+                                     label.x=0,
+                                     font.label = list(size = 10,face="plain")),
+                           nrow=2,heights=c(2,1),
+                           labels="ROI",
+                           font.label = list(size = 10,face="plain"))
+  return(arranged_plot)
+}
+
 
 #plot_gam_fc<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,method,label_sex,ses){
 plot_gam_fc<-function(paths_,df_gam,df_gam_grp_sign,df_gam_grp_abs,atlas,
@@ -506,6 +689,73 @@ plot_ca_fc_circular<-function(paths_,df_comp_mri,atlas,dim_ca,ratio_vis,method,l
 #**************************************************
 # Circular graph ==================================
 #**************************************************
+plot_circular2<-function(df_edge,df_node,df_roi,rule_order="degree",limit_color=NULL){
+  
+  df_node<-dplyr::inner_join(df_node,df_roi,by=c("node"="id"))
+  df_node<-dplyr::rename(df_node,"id"="node")
+
+  # Change order of nodes for circular plot aesthetics
+  if (rule_order=="rl"){
+    df_node<-df_node[order(df_node$id),]
+    idx_node_r<-grep("^R ",df_node$label)
+    idx_node_l<-rev(grep("^L ",df_node$label))
+    if (length(idx_node_r)+length(idx_node_l)>0){
+      df_node<-rbind(df_node[idx_node_r,],
+                     df_node[c(-idx_node_r,-idx_node_l),],
+                     df_node[idx_node_l,])
+    }
+  }else if (rule_order=="id"){
+    df_node<-df_node[order(df_node$id),]
+  }else if (rule_order=="degree"){
+    df_node<-df_node[order(df_node$id),]
+    df_node<-df_node[rev(order(df_node$degree)),]
+  }
+  
+  # Add circular plot specs 
+  df_node$angle <- 90 - 360 * ((1:nrow(df_node))-0.5) / nrow(df_node)
+  df_node$hjust<-ifelse(df_node$angle < -90, 1, 0)
+  df_node$angle<-ifelse(df_node$angle < -90, df_node$angle+180, df_node$angle)
+  
+  # Prepare df_edge
+  if(is.na(df_edge[1,"estimate"])){
+    term_plot<-"F"
+  }else{
+    term_plot<-"estimate"
+  }
+  df_edge<-df_edge[,c("from","to",term_plot)]
+  colnames(df_edge)<-c("from","to","weight")
+  
+  # Convert edge/node dataframes into igraph object
+  igraph_plot<-graph_from_data_frame(d = df_edge, vertices = df_node, directed = F)
+  
+  # Calculate color limit if not specified
+  if(is.null(limit_color)){
+    if (nrow(df_edge)>0){
+      limit_color <- max(abs(max(df_edge$weight)),abs(min(df_edge$weight)))
+      limit_color <- c(-limit_color,limit_color)
+    }
+  }
+  
+  plot<-ggraph(igraph_plot, layout = "linear",circular = T) +
+    geom_node_text(aes(x = x*1.03, y=y*1.03,
+                       label=label, angle = angle, hjust=hjust,vjust=0.2),
+                   size=min(5,10/log(nrow(df_node))), alpha=1) +
+    #               size=min(5,20/log(nrow(df_node))), alpha=1) +
+    geom_node_point(aes(x=x, y=y),size=1, alpha=1,colour="grey50") +
+    scale_edge_color_gradientn(colors=matlab.like2(100),limits=limit_color,na.value="grey50")+
+    expand_limits(x = c(-2, 2), y = c(-2, 2))+
+    #expand_limits(x = c(-1.5, 1.5), y = c(-1.5, 1.5))+
+    #ggtitle(input_title) +
+    theme_void() +
+    #theme(plot.title = element_text(hjust = 0.5),legend.justification=c(1,1), legend.position=c(1,1))
+    theme(legend.justification=c(1,1), legend.position=c(1,1),plot.title = element_text(hjust = 0.5))
+  if (nrow(df_edge)>0){
+    plot<-plot+
+      geom_edge_arc(aes(color=weight),width=1,alpha=0.5)
+  }
+  return(plot)
+}
+
 plot_circular<-function(igraph_in,type_p,thr_p,limit_color=NULL){
   
   # Subset edges according to p value criteria

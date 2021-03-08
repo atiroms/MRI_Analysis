@@ -10,64 +10,33 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
-
-#dir_in<-dir_out<-"431_fc_aroma_gsr"
-#list_atlas<-"ho112"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_sex_diff_aroma"
+#dir_out<-"423.1_fc_gam_aroma_test8" 
+#dir_out<-"424_fc_gamm_aroma_test2"
+#dir_out<-"424_fc_gamm_aroma_test3" # on Ubuntu_1
+#dir_out<-"424_fc_gamm_aroma_test4" # on Ubuntu_2
+dir_out<-"424_fc_gamm_aroma_test8"
 list_atlas<-c("aal116","gordon333","ho112","power264",
               "schaefer100x17","schaefer200x17","schaefer400x17",
               "shen268")
 #list_atlas<-c("aal116")
+#list_atlas<-c("ho112")
+#list_atlas<-c("aal116","ho112","power264","shen268")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
 
 
-#path_exp_full<-"/media/veracrypt1/MRI_img/pnTTC/puberty/stats/func_XCP"
-
-#path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_CONN"
-#dir_in<-"56.2_fc"
-#dir_out<-"56.3_gamm_fc"
-#list_atlas<-c("cnn","hoa","power264")
-#list_atlas<-"cnn"
-#list_atlas<-"hoa"
-
-list_wave <- c(1,2)
-
-#list_type_p=c("p","p_bh","seed_p_bh")
-list_type_p="p_bh"
-thr_p <- 0.05
-
-list_cost<-seq(0.15,0.40,0.01)
-absolute<-T
-threshold<-NA
-
-list_dim_ca<-c(5,10,20,40)
-
-
 #**************************************************
 # Libraries =======================================
 #**************************************************
-library(ggplot2)
-library(GGally)
-library(igraph)
-#library(qgraph)
-library(ggrepel)
-library(colorRamps)
-library(tidyverse)
-library(parallel)
-library(mgcv)
-library(car)
-library(plyr)
-library(dplyr)
-library(data.table)
-library(pbapply)
-library(stringr)
+library(easypackages)
+#libraries(ggplot2,GGally,igraph,ggrepel,colorRamps,tidyverse,parallel,mgcv,car,plyr,dplyr,data.table,pbapply,stringr)
+libraries("ggplot2","colorRamps","tidyverse","parallel","mgcv","dplyr","data.table","pbapply","stringr","lmerTest")
 
 
 #**************************************************
@@ -78,6 +47,478 @@ source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/gta_function.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
+
+
+#**************************************************
+# GLM/GAM of FC longitudinal difference ===========
+#**************************************************
+
+func_threshold_gamm<-function(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                              atlas,param,list_sex,list_covar,list_mod,list_term,idx_var){
+  if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))){
+    print("Thresholded GAMM/ANOVA already exists.")
+    df_plot<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep=""))))
+    if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep="")))){
+      df_plot_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep=""))))
+    }else{
+      df_plot_grp<-data.frame()
+    }
+  }else{
+    list_plot<-list()
+    df_plot<-df_plot_grp<-data.frame()
+    for (idx_mod in names(list_mod)){
+      for (idx_term in names(list_term)){
+        var_exp<-list_term[[idx_term]][["var_exp"]]
+        for (idx_sex in list_sex){
+          # Subset GAMM result dataframe for plotting
+          df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp & df_gamm$sex==idx_sex,]
+          df_gamm_grp_subset<-df_gamm_grp[df_gamm_grp$model==idx_mod & df_gamm_grp$term==var_exp & df_gamm_grp$sex==idx_sex,]
+          if (nrow(df_gamm_subset)==0){
+            df_anova_subset<-df_anova[df_anova$model==idx_mod & df_anova$term==var_exp & df_anova$sex==idx_sex,]
+            df_anova_grp_subset<-df_anova_grp[df_anova_grp$model==idx_mod & df_anova_grp$term==var_exp & df_anova_grp$sex==idx_sex,]
+            if (nrow(df_anova_subset)>0){
+              # In case the term does not exist in df_gamm, plot using df_anova instead
+              df_gamm_subset<-df_anova_subset
+              df_gamm_grp_subset<-df_anova_grp_subset
+            }
+          }
+          if (nrow(df_gamm_subset)>0){
+            plot_gamm<-plot_gam_fc3(df_gamm_subset,df_gamm_grp_subset,data_fc)
+            if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
+            plot_gamm<-annotate_figure(plot_gamm,
+                                       top = text_grob(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp,", sex: ",label_sex,", p value: all",sep=""),
+                                                       color = "black", size = 14))
+            list_plot<-c(list_plot,list(list("plot"=plot_gamm,"height"=13,"width"=10,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                             "filename"=paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-all_net.png",sep=""))))
+            for (p in param$list_p){
+              df_plot_subset<-df_gamm_subset[df_gamm_subset[[p$type]]<p$threshold,]
+              df_plot_grp_subset<-df_gamm_grp_subset[df_gamm_grp_subset[[p$type]]<p$threshold,]
+              plot_gamm<-plot_gam_fc3(df_plot_subset,df_plot_grp_subset,data_fc)
+              plot_gamm<-annotate_figure(plot_gamm,
+                                         top = text_grob(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp,", sex: ",label_sex,", p value: ",p$type,"<",p$threshold,sep=""),
+                                                         color = "black", size = 14))
+              list_plot<-c(list_plot,list(list("plot"=plot_gamm,"height"=13,"width"=10,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                               "filename"=paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term,"_sex-",label_sex,"_pval-",p$type,"_",p$threshold,"_net.png",sep=""))))
+              df_head<-data.frame(p_type=p$type,p_threshold=p$threshold)
+              if (nrow(df_plot_subset)>0){
+                df_plot<-bind_rows(df_plot,cbind(df_head,df_plot_subset))
+              }
+              if (nrow(df_plot_grp_subset)>0){
+                df_plot_grp<-bind_rows(df_plot_grp,cbind(df_head,df_plot_grp_subset))
+              }
+            }# end of loop over list_p
+          }
+        }
+      }
+    }
+    
+    clust<-makeCluster(floor(detectCores()*3/4))
+    plot_parallel(clust,list_plot)
+    stopCluster(clust)
+    
+    # Save results
+    if (nrow(df_plot)>0){
+      fwrite(df_plot,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")),row.names = F)
+    }
+    if (nrow(df_plot_grp)>0){
+      fwrite(df_plot_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep="")),row.names = F)
+    }
+  }
+  return(list("df_plot"=df_plot,"df_plot_grp"=df_plot_grp))
+}
+
+func_detect_subnset<-function(paths,df_plot,df_gamm,data_fc,
+                              atlas,param,list_sex,list_covar,list_mod,list_term,idx_var){
+  if (nrow(df_plot)>0){
+    list_plot<-list()
+    df_net<-df_node<-df_size_net<-df_pred_ancova<-NULL
+    #list_output<-list()
+    for (idx_mod in param$param_nbs$list_mod){
+      for (set_term in param$param_nbs$list_term){
+        for (idx_term_detect in set_term$term_detect){
+          var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
+          for (idx_sex in list_sex){
+            for (p_cdt in param$param_nbs$p_cdt_threshold){
+              df_sign<-df_plot[df_plot$p_type=="p" & df_plot$p_threshold==p_cdt
+                               & df_plot$model==idx_mod & df_plot$term==var_exp_detect & df_plot$sex==idx_sex,]
+              data_bfs<-func_bfs(df_sign)
+              if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
+              if(length(data_bfs$list_network)>0){
+                for (idx_net in seq(length(data_bfs$list_network))){
+                  network<-data_bfs$list_network[[idx_net]]
+                  plot_subnet<-plot_net(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi)
+                  plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", #",as.character(idx_net),sep="")))
+                  list_plot<-c(list_plot,list(list("plot"=plot_subnet,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                   "filename"=paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_idx-",as.character(idx_net),"_subnet.png",sep=""))))
+                  if(idx_term_detect %in% names(param$param_ancova_pred)){
+                    data_pred_ancova<-plot_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term_detect,var_exp_detect)
+                    df_pred_ancova<-rbind(df_pred_ancova,data.frame(p_threshold=p_cdt,id_net=idx_net,data_pred_ancova$df_plot))
+                    plot_pred<-(data_pred_ancova$plot+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", model: ",idx_mod,"\nexpvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term_detect]][["title"]]))
+                    list_plot<-c(list_plot,list(list("plot"=plot_pred,"height"=5,"width"=5,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                     "filename"=paste("atl-",atlas,"_var-",idx_var,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_idx-",as.character(idx_net),"_pred.png",sep=""))))
+                  }
+                  df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex)
+                  df_net<-rbind(df_net,data.frame(p_threshold=p_cdt,id_net=idx_net,network$df_edge))
+                  df_node_add<-inner_join(data.frame(p_threshold=p_cdt,id_net=idx_net,network$df_node),data_fc$df_roi,by=c("node"="id"))
+                  df_node_add<-dplyr::rename(df_node_add,"label_node"="label","group_node"="group")
+                  df_node<-rbind(df_node,cbind(df_head,df_node_add))
+                  df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(p_threshold=p_cdt,id_net=idx_net,size=network$size_net)))
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    clust<-makeCluster(floor(detectCores()*3/4))
+    plot_parallel(clust,list_plot)
+    stopCluster(clust)
+    fwrite(df_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_edge.csv",sep="")),row.names = F)
+    fwrite(df_node,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_node.csv",sep="")),row.names = F)
+    fwrite(df_size_net,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_size.csv",sep="")),row.names = F)
+    fwrite(df_pred_ancova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_bfs_pred.csv",sep="")),row.names = F)
+  }
+  return(list("df_net"=df_net,"df_node"=df_node,"df_size_net"=df_size_net,"df_pred_ancova"=df_pred_ancova))
+}
+
+func_nbs_permutation<-function(paths,df_fc,df_clin,df_size_net,data_fc,calc_parallel,
+                               atlas,param,list_sex,list_covar,list_mod,list_term,idx_var){
+  
+  # Prepare parallelization cluster
+  test_mod<-F
+  if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+  clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
+                envir=environment())
+  set.seed(0)
+  pb<-txtProgressBar(min=0,max=param$param_nbs$n_perm,style=3,width=50)
+  df_max_size<-data.frame()
+  for (idx_perm in seq(param$param_nbs$n_perm)){
+    for (set_term in param$param_nbs$list_term){
+      var_exp_perm<-list_term[[set_term[["term_perm"]]]][["var_exp"]]
+      # Sex-wise permutation of term (expvar) of interst
+      df_clin_perm<-NULL
+      for (idx_sex in list_sex){
+        df_clin_perm_add<-df_clin[df_clin$sex==idx_sex,]
+        df_clin_perm_add[,var_exp_perm]<-sample(df_clin_perm_add[,var_exp_perm])
+        df_clin_perm<-rbind(df_clin_perm,df_clin_perm_add)
+      }
+      # Join FC and permuted clinical data
+      df_join<-join_fc_clin(df_fc,df_clin_perm)
+      
+      # Calculate model
+      data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+      df_gamm<-data_gamm$df_gamm
+      df_anova<-data_gamm$df_anova
+      for (idx_mod in param$param_nbs$list_mod){
+        list_term_detect<-set_term$term_detect
+        for (idx_term_detect in list_term_detect){
+          var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
+          for (idx_sex in list_sex){
+            # Subset GAMM result dataframe for plotting
+            df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp_detect & df_gamm$sex==idx_sex,]
+            if (nrow(df_gamm_subset)==0){
+              df_anova_subset<-df_anova[df_anova$model==idx_mod & df_anova$term==var_exp_detect & df_anova$sex==idx_sex,]
+              if (nrow(df_anova_subset)>0){
+                # In case the term does not exist in df_gamm, plot using df_anova instead
+                df_gamm_subset<-df_anova_subset
+              }
+            }
+            if (nrow(df_gamm_subset)>0){ # If the model/expvar/sex exist either in df_gamm or df_anova
+              for (p_cdt in param$param_nbs$p_cdt_threshold){
+                df_sign<-df_gamm_subset[df_gamm_subset$p<p_cdt,]
+                max_size<-func_bfs(df_sign)$max_size
+                df_max_size<-rbind(df_max_size,data.frame(id_perm=idx_perm,model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,max_size=max_size))
+              }
+            }
+          }
+        }
+      }
+    }
+    setTxtProgressBar(pb,idx_perm)
+  }
+  stopCluster(clust)
+  close(pb)
+  fwrite(df_max_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_max.csv",sep="")),row.names = F)
+  
+  # Summarize permutation result
+  df_threshold_size<-df_fwep<-NULL
+  for (idx_mod in param$param_nbs$list_mod){
+    for (set_term in param$param_nbs$list_term){
+      for (idx_term_detect in set_term$term_detect){
+        var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
+        for (idx_sex in list_sex){
+          for (p_cdt in param$param_nbs$p_cdt_threshold){
+            list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp_detect
+                                       & df_max_size$p_threshold==p_cdt & df_max_size$sex==idx_sex,"max_size"]
+            if (length(list_max_size)>0){
+              list_max_size<-sort(list_max_size)
+              df_size_net_subset<-df_size_net[df_size_net$model==idx_mod & df_size_net$term==var_exp_detect
+                                              & df_size_net$p_threshold==p_cdt & df_size_net$sex==idx_sex,]
+              if(nrow(df_size_net_subset)>0){
+                for (idx_row in seq(nrow(df_size_net_subset))){
+                  df_size_net_subset[idx_row,"p_fwe"]<-sum(list_max_size>df_size_net_subset[idx_row,"size"])/param$param_nbs$n_perm
+                }
+                df_fwep<-rbind(df_fwep,df_size_net_subset)
+              }
+              thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
+              df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,
+                                                                    thr_size=thr_size_nbs))
+              if (idx_sex==1){
+                label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
+              }else{
+                label_sex<-"f";title_sex<-"female";color_plt<-"lightcoral"
+              }
+              title_plot<-list_term[[idx_term_detect]][["title"]]
+              plot_permutation(paths,list_max=list_max_size,thr_size_nbs,
+                               atlas,var=idx_var,wave="2-1",idx_mod,idx_term_detect,label_sex,title_plot,title_sex,p_cdt,color_plt)
+            }
+          }
+        }
+      }
+    }
+  }
+  fwrite(df_threshold_size,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_thr.csv",sep="")),row.names = F)
+  fwrite(df_fwep,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_perm_fwep.csv",sep="")),row.names = F)
+  return(list("df_max_size"=df_max_size,"df_threshold_size"=df_threshold_size,"df_size_net"=df_fwep))
+}
+
+gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
+                           list_covar,list_mod,list_term,idx_var,
+                           calc_parallel,test_mod
+                           ){
+  # Prepare clinical data and demean
+  data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
+                                     prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+  list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+  df_clin_diff<-data_clin$df_clin
+  colnames(df_clin_diff)[colnames(df_clin_diff)=="wave"]<-"ses"
+  df_clin_diff<-func_clinical_data_diffmean(df_clin_diff,list_id_subj,list_covar)
+  df_clin_diff<-func_demean_clin(df_clin_diff,thr_cont=6,separate_sex=T)$df_clin # thr_cont=3 to demean Tanner, =6 not to
+  df_clin_diff$wave<-"2-1"
+  fwrite(df_clin_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin.csv",sep="")),row.names=F)
+  
+  # Prepare FC data
+  df_fc_diff<-data_fc$df_fc
+  df_fc_grp_diff<-data_fc$df_fc_grp
+  fwrite(df_fc_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc.csv",sep="")),row.names=F)
+  fwrite(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
+  
+  # Calculate model
+  file_check<-file.path(paths$output,"output","temp",
+                        paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))
+  if (file.exists(file_check)){
+    print("Calculated GAMM/ANOVA already exists.")
+    df_gamm<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep=""))))
+    df_anova<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep=""))))
+    df_gamm_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep=""))))
+    df_anova_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep=""))))
+  }else{
+    print("Calculating GAMM/ANOVA")
+    # Join FC and clinical data
+    df_join_diff<-join_fc_clin(df_fc_diff,df_clin_diff)
+    df_join_grp_diff<-join_fc_clin(df_fc_grp_diff,df_clin_diff)
+    
+    # Prepare parallelization cluster
+    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
+                  envir=environment())
+    
+    # Calculate model
+    data_gamm<-iterate_gamm4(clust,df_join_diff,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    data_gamm_grp<-iterate_gamm4(clust,df_join_grp_diff,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    stopCluster(clust)
+    
+    # Add multiple comparison-corrected p values
+    df_gamm<-as.data.frame(add_mltcmp(data_gamm$df_gamm,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
+    df_anova<-as.data.frame(add_mltcmp(data_gamm$df_anova,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
+    df_gamm_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_gamm,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+    df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+    
+    # Save results
+    fwrite(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
+    fwrite(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+    fwrite(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
+    fwrite(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
+    fwrite(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
+    fwrite(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
+  } # End if file exists
+  
+  # Threshold and plot graph edges
+  print("Thresholding and plotting results")
+  data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var)
+  df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
+  
+  # Detect sub-network by breadth-first approach
+  print("Detecting subnetworks")
+  data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,
+                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var)
+  df_net<-data_bfs$df_net; df_node<-data_bfs$df_node; df_size_net<-data_bfs$df_size_net; df_pred_ancova<-data_bfs$df_pred_ancova
+  
+  # Permutation test
+  print("Calculating permutation")
+  data_nbs<-func_nbs_permutation(paths,df_fc_diff,df_clin_diff,df_size_net,data_fc,calc_parallel,
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var)
+  }
+
+gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
+  print("Starting gam_fc_diff().")
+  nullobj<-func_createdirs(paths_,str_proc="gam_fc_diff()",copy_log=T,list_param=param)
+  memory.limit(1000000)
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    print(paste("Preparing FC data: ",atlas,sep=""))
+    #data_fc<-prep_data_fc(paths_,atlas,param$key_group,include_diff=T,abs_nfc=param$abs_nfc)
+    data_fc<-prep_data_fc2(paths_,atlas,param$key_group,list_wave="2-1",include_grp=T,abs_nfc=param$abs_nfc)
+    data_fc$df_edge$id_edge<-seq(nrow(data_fc$df_edge))
+    data_fc$df_edge_grp$id_edge<-seq(nrow(data_fc$df_edge_grp))
+    
+    # Loop over clinical variables
+    #1 Tanner stage
+    for (idx_tanner in names(param$list_tanner)){
+      print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
+      list_covar<-param$list_covar_tanner
+      list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list(1,2),list_covar,
+                       param$list_mod_tanner,param$list_term_tanner,idx_tanner,
+                       calc_parallel=T,test_mod=F)
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(param$list_hormone)){
+      print(paste("Atlas: ",atlas,", Hormone type: ",param$list_hormone[[idx_hormone]][["label"]],sep=""))
+      list_covar<-param$list_covar_hormone
+      list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list(1,2),list_covar,
+                       param$list_mod_hormone,param$list_term_hormone,idx_hormone,
+                       calc_parallel=T,test_mod=F)
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  print("Combining results.")
+  list_var<-c(param$list_tanner,param$list_hormone)
+  func_combine_result(paths_,list_atlas_,list_var,c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  
+  print("Finished gam_fc_diff().")
+}
+
+#**************************************************
+# GLMM/GAMM of FC =================================
+#**************************************************
+gamm_fc_core<-function(paths,data_fc,atlas,param,list_sex,
+                       list_covar,list_mod,list_term,idx_var,
+                       calc_parallel,test_mod
+                       ){
+  # Prepare clinical data and demean
+  df_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
+                                   prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
+  df_clin<-func_demean_clin(df_clin,thr_cont=6,separate_sex=T)$df_clin # thr_cont=4 to demean Tanner, =6 not to
+  fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin.csv",sep="")),row.names=F)
+  
+  # Prepare FC data
+  df_fc<-data_fc$df_fc
+  df_fc_grp<-data_fc$df_fc_grp
+  fwrite(df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc.csv",sep="")),row.names=F)
+  fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
+  
+  file_check<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))
+  if (file.exists(file_check)){
+    print("Calculated result already exists.")
+    df_gamm<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep=""))))
+    df_gamm_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep=""))))
+    df_anova<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep=""))))
+    df_anova_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep=""))))
+  }else{
+    # Join clinical and FC data
+    df_join<-join_fc_clin(df_fc,df_clin)
+    df_join_grp<-join_fc_clin(df_fc_grp,df_clin)
+    
+    # Calculate model
+    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
+                  envir=environment())
+    data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+    data_gamm_grp<-iterate_gamm4(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
+    stopCluster(clust)
+    
+    # Add multiple comparison-corrected p values
+    df_gamm<-as.data.frame(add_mltcmp(data_gamm$df_gamm,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
+    df_anova<-as.data.frame(add_mltcmp(data_gamm$df_anova,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
+    df_gamm_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_gamm,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+    df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+    
+    # Save results
+    fwrite(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+    fwrite(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
+    fwrite(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
+    fwrite(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
+    fwrite(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
+    fwrite(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
+  }
+  
+  # Threshold and plot graph edges
+  print("Thresholding and plotting results")
+  data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var)
+  df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
+  
+  # Detect sub-network by breadth-first approach
+  print("Detecting subnetworks")
+  data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,
+                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var)
+  df_net<-data_bfs$df_net; df_node<-data_bfs$df_node; df_size_net<-data_bfs$df_size_net; df_pred_ancova<-data_bfs$df_pred_ancova
+  
+  # Permutation test
+  print("Calculating permutation")
+  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,df_size_net,data_fc,calc_parallel,
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var)
+}
+
+gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
+  print("Starting gamm_fc().")
+  nullobj<-func_createdirs(paths_,str_proc="gamm_fc()",copy_log=T,list_param=param)
+  memory.limit(1000000)
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    print(paste("Preparing FC data: ",atlas,sep=""))
+    #data_fc<-prep_data_fc(paths_,atlas,param$key_group,abs_nfc=param$abs_nfc)
+    data_fc<-prep_data_fc2(paths_,atlas,param$key_group,list_wave=c("1","2"),include_grp=T,abs_nfc=param$abs_nfc)
+    data_fc$df_edge$id_edge<-seq(nrow(data_fc$df_edge))
+    data_fc$df_edge_grp$id_edge<-seq(nrow(data_fc$df_edge_grp))
+    
+    # Loop over clinical variables
+    #1 Tanner stage
+    for (idx_tanner in names(param$list_tanner)){
+      print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
+      list_covar<-param$list_covar_tanner
+      list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
+      gamm_fc_core(paths_,data_fc,atlas,param,list(1,2),list_covar,
+                   param$list_mod_tanner,param$list_term_tanner,idx_tanner,
+                   calc_parallel=T,test_mod=F)
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(param$list_hormone)){
+      print(paste("Atlas: ",atlas,", Hormone type: ",param$list_hormone[[idx_hormone]][["label"]],sep=""))
+      list_covar<-param$list_covar_hormone
+      list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
+      gamm_fc_core(paths_,data_fc,atlas,param,list(1,2),list_covar,
+                   param$list_mod_hormone,param$list_term_hormone,idx_hormone,
+                   calc_parallel=T,test_mod=F)
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  print("Combining results.")
+  list_var<-c(param$list_tanner,param$list_hormone)
+  func_combine_result(paths_,list_atlas_,list_var,c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  
+  print("Finished gamm_fc().")
+}
 
 
 #**************************************************
@@ -160,7 +601,7 @@ func_nbs<-function(paths,atlas,wave,df_fc,df_clin,list_mod,calc_slope,list_plot,
           #               list(plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
           #                                     atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)))
           plot_permutation(paths,list_max=list_max_subset_sort,thr_size_perm,
-                           atlas,wave,model,plot,sex,title_plot,title_sex,color_plt)
+                           atlas,var="sex",wave,model,plot,sex,title_plot,title_sex,color_plt)
           df_head<-data.frame(atlas=atlas,wave=wave,mod=model,plot=plot,sex=sex)
           list_network_sign<-list()
           if(length(data_nbs_subset$list_network)>0){
@@ -273,154 +714,6 @@ sex_diff_fc<-function(paths_=paths,list_atlas_=list_atlas,key_group_='group_3',
   write.csv(df_thr_size,file.path(paths$output,"output","result","thr_perm.csv"),row.names=F)
   write.csv(df_perm,file.path(paths$output,"output","result","perm.csv"),row.names=F)
   print("Finished sex_diff_fc()")
-}
-
-
-#**************************************************
-# GLM/GAM of FCs ==================================
-#**************************************************
-
-gamm_fc_core<-function(paths_,data_fc,atlas,list_wave_,subset_subj_,
-                       list_covar,list_mod,list_plot,idx_var,
-                       list_type_p_=list_type_p,thr_p_=thr_p
-                       ){
-  df_fc<-data_fc$df_fc
-  df_fc_grp<-data_fc$df_fc_grp
-  df_roi<-data_fc$df_roi
-  df_grp<-data_fc$df_grp
-  file_check<-file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot_grp.csv",sep=""))
-  if (file.exists(file_check)){
-    print("Calculated result already exists.")
-  }else{
-    # Prepare clinical data
-    data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,list_covar,rem_na_clin=T,
-                                       prefix=paste("var-",idx_var,sep=""),print_terminal=F)
-    df_clin<-data_clin$df_clin
-    
-    # Join FC and clinical data
-    df_fc$z_r[which(is.nan(df_fc$z_r))]<-0
-    colnames(df_fc)[colnames(df_fc)=="z_r"]<-"value"
-    colnames(df_fc)[colnames(df_fc)=="ses"]<-"wave"
-    df_fc<-df_fc[,c(-which(colnames(df_fc)=="r"),
-                    -which(colnames(df_fc)=="p"))]
-    df_clin$wave<-as.character(df_clin$wave)
-    df_join<-inner_join(df_fc,df_clin,by=c('ID_pnTTC','wave'))
-    for (key in c('ID_pnTTC','wave','sex')){
-      if (key %in% colnames(df_join)){
-        df_join[,key]<-as.factor(df_join[,key])
-      }
-    }
-    df_join$value<-as.numeric.factor(df_join$value)
-    
-    # Calculate ROI-wise GAMM of FC
-    data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=F,calc_identical=F)
-    #data_gamm<-iterate_gamm(df_join,df_roi,list_mod,calc_parallel=T,calc_identical=F)
-    df_plot<-add_mltcmp(data_gamm$df_out_gamm,df_roi,list_mod,list_plot,calc_seed_level=F)
-    
-    # Join group-wise FC and clinical data
-    colnames(df_fc_grp)[colnames(df_fc_grp)=="z_r"]<-"value"
-    colnames(df_fc_grp)[colnames(df_fc_grp)=="ses"]<-"wave"
-    df_fc_grp$ID_pnTTC<-as.character(as.numeric.factor(df_fc_grp$ID_pnTTC))
-    df_fc_grp$wave<-as.character(as.numeric.factor(df_fc_grp$wave))
-    df_clin$ID_pnTTC<-as.character(as.numeric.factor(df_clin$ID_pnTTC))
-    df_clin$wave<-as.character(as.numeric.factor(df_clin$wave))
-    df_join_grp<-inner_join(df_fc_grp,df_clin,by=c('ID_pnTTC','wave'))
-    for (key in c('ID_pnTTC','wave','sex')){
-      if (key %in% colnames(df_join_grp)){
-        df_join_grp[,key]<-as.factor(df_join_grp[,key])
-      }
-    }
-    df_join_grp$value<-as.numeric.factor(df_join_grp$value)
-    
-    # Calculate Group-wise GAMM of FC
-    data_gamm_grp<-iterate_gamm(df_join_grp,df_grp,list_mod,calc_parallel=F,calc_identical=T)
-    df_plot_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_grp,list_mod,list_plot,calc_seed_level=F)
-    
-    # Graphical output of ROI- and group-wise GAMM of FC
-    plot_gam_fc(paths_,df_gam=df_plot,df_gam_grp_sign=df_plot_grp,df_gam_grp_abs=NULL,atlas,
-                list_mod,list_plot,list_type_p=list_type_p_,thr_p=thr_p_,waves=NULL,idx_var)
-    
-    # Save results
-    write.csv(data_gamm$df_out_gamm,
-              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
-    write.csv(data_gamm$df_out_aic,
-              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
-    write.csv(df_plot,
-              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot.csv",sep="")),row.names = F)
-    write.csv(data_gamm_grp$df_out_gamm,
-              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
-    write.csv(data_gamm_grp$df_out_aic,
-              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
-    write.csv(df_plot_grp,
-              file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_plot_grp.csv",sep="")),row.names = F)
-  }
-}
-
-gamm_fc_multi<-function(paths_=paths,subset_subj_=gamm_fc_subset_subj,list_wave_=list_wave,
-                        list_atlas_=list_atlas,key_group_='group_3',
-                        list_covar_tanner_=gamm_fc_list_covar_tanner,list_tanner_=gamm_fc_list_tanner,
-                        list_mod_tanner_=gamm_fc_list_mod_tanner,list_plot_tanner_=gamm_fc_list_plot_tanner,
-                        list_covar_hormone_=gamm_fc_list_covar_hormone,list_hormone_=gamm_fc_list_hormone,
-                        list_mod_hormone_=gamm_fc_list_mod_hormone,list_plot_hormone_=gamm_fc_list_plot_hormone
-                        ){
-  
-  print("Starting gamm_fc_multi().")
-  nullobj<-func_createdirs(paths_,str_proc="gamm_fc_multi()",copy_log=T)
-  memory.limit(1000000)
-  
-  # Loop over atlases
-  for (atlas in list_atlas_){
-    
-    print(paste("Preparing FC data: ",atlas,sep=""))
-    data_fc<-prep_data_fc(paths_,atlas,key_group_)
-    
-    # Loop over clinical variables
-    #1 Tanner stage
-    for (idx_tanner in names(list_tanner_)){
-      print(paste("Atlas: ",atlas,", Tanner type: ",list_tanner_[[idx_tanner]][["label"]],sep=""))
-      list_covar<-list_covar_tanner_
-      list_covar[["tanner"]]<-list_tanner_[[idx_tanner]]
-      gamm_fc_core(paths_,data_fc,atlas,list_wave_,subset_subj_,
-                   list_covar,list_mod_tanner_,list_plot_tanner_,idx_tanner)
-    } # Finished looping over Tanner stages
-    
-    #2 Hormones
-    for (idx_hormone in names(list_hormone_)){
-      print(paste("Atlas: ",atlas,", Hormone type: ",list_hormone_[[idx_hormone]][["label"]],sep=""))
-      list_covar<-list_covar_hormone_
-      list_covar[["hormone"]]<-list_hormone_[[idx_hormone]]
-      gamm_fc_core(paths_,data_fc,atlas,list_wave_,subset_subj_,
-                   list_covar,list_mod_hormone_,list_plot_hormone_,idx_hormone)
-    } # Finished looping over Hormones
-  } # Finished looping over atlas
-  
-  print("Combining results.")
-  df_gamm<-df_aic<-df_plot<-df_gamm_grp<-df_aic_grp<-df_plot_grp<-data.frame()
-  list_var<-c(list_tanner_,list_hormone_)
-  for (atlas in list_atlas_){
-    for (idx_var in names(list_var)){
-      df_gamm_add<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep=""))))
-      df_gamm<-rbind(df_gamm,cbind(atlas=atlas,variable=idx_var,df_gamm_add))
-      df_aic_add<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep=""))))
-      df_aic<-rbind(df_aic,cbind(atlas=atlas,variable=idx_var,df_aic_add))
-      df_plot_add<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_gamm_plot.csv",sep=""))))
-      df_plot<-rbind(df_plot,cbind(atlas=atlas,variable=idx_var,df_plot_add))
-      df_gamm_grp_add<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep=""))))
-      df_gamm_grp<-rbind(df_gamm_grp,cbind(atlas=atlas,variable=idx_var,df_gamm_grp_add))
-      df_aic_grp_add<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))))
-      df_aic_grp<-rbind(df_aic_grp,cbind(atlas=atlas,variable=idx_var,df_aic_grp_add))
-      df_plot_grp_add<-as.data.frame(fread(file.path(paths_$output,"output","temp",paste("atl-",atlas,"_var-",idx_var, "_gamm_plot_grp.csv",sep=""))))
-      df_plot_grp<-rbind(df_plot_grp,cbind(atlas=atlas,variable=idx_var,df_plot_grp_add))
-    }
-  } # Finished looping over atlas
-  
-  write.csv(df_gamm,file.path(paths_$output,"output","result","gamm.csv"),row.names = F)
-  write.csv(df_aic,file.path(paths_$output,"output","result","gamm_aic.csv"),row.names = F)
-  write.csv(df_plot,file.path(paths_$output,"output","result","gamm_plot.csv"),row.names = F)
-  write.csv(df_gamm_grp,file.path(paths_$output,"output","result","gamm_grp.csv"),row.names = F)
-  write.csv(df_aic_grp,file.path(paths_$output,"output","result","gamm_aic_grp.csv"),row.names = F)
-  write.csv(df_plot_grp,file.path(paths_$output,"output","result","gamm_plot_grp.csv"),row.names = F)
-  print("Finished gamm_fc_multi().")
 }
 
 
@@ -1144,121 +1437,121 @@ fc_corr<-function(paths_=paths,subset_subj_=subset_subj){
 #**************************************************
 # OBSOLETE ========================================
 #**************************************************
-gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
-                  list_wave_=list_wave,list_atlas_=list_atlas,
-                  #list_measure_=list_measure,list_str_group_=list_str_group,
-                  list_mod_=list_mod,list_plot_=list_plot,key_group_='group_3',
-                  list_type_p_=list_type_p,thr_p_=thr_p
-){
-  print("Starting gamm_fc().")
-  nullobj<-func_createdirs(paths_,str_proc="gamm_fc()",copy_log=T)
-  dict_roi <- func_dict_roi(paths_)
-  
-  # Load and subset clinical data according to specified subsetting condition and covariate availability
-  print('Loading clinical data.')
-  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
-                                     list_covar=list_covar_,rem_na_clin=T)
-  df_clin<-data_clin$df_clin
-  
-  
-  for (atlas in list_atlas_){
-    
-    #****************************
-    # ROI-wise FC GAMM calculation
-    #****************************
-    # Load ROI-wise FC data
-    print(paste('Loading FC data, atlas:',atlas,sep=' '))
-    df_fc<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
-    df_join<-join_fc_clin(df_fc,df_clin)
-    write.csv(df_join,file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_src.csv",sep="")),
-              row.names=F)
-    
-    # Calculate and save ROI-wise GAMM of FC
-    print(paste('Calculating GAMM, atlas: ',atlas,sep=''))
-    list_roi<-sort(unique(c(as.character(df_join$from),as.character(df_join$to))))
-    df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
-    colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
-    data_gamm<-iterate_gamm(df_join,df_roi,list_mod_)
-    write.csv(data_gamm$df_out_gamm,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm.csv",sep="")),row.names = F)
-    write.csv(data_gamm$df_out_aic,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm_aic.csv",sep="")),row.names = F)
-    
-    # Calculate multiple comparison-corrected p values
-    df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
-                             list_mod,list_plot,calc_seed_level=T)
-    write.csv(df_plot_gamm,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm_plt.csv",sep="")),row.names = F)
-    
-    # Graphical output of ROI-wise GAMM of FC
-    plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
-                list_type_p_,thr_p,paths_)
-    
-    #****************************
-    # Group-wise FC GAMM calculation
-    #****************************
-    # Load group-wise FC data
-    print(paste('Loading group FC data, atlas:',atlas,sep=' '))
-    df_fc_grp<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc_grp.csv',sep='')))
-    df_join_grp<-join_fc_clin(df_fc_grp,df_clin)
-    write.csv(df_join_grp,file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_src.csv",sep="")),
-              row.names=F)
-    
-    # Calculate and save group-wise GAMM of FC
-    print(paste('Calculating GAMM, atlas: ',atlas,sep=''))
-    list_roi_grp<-sort(unique(c(as.character(df_join_grp$from),as.character(df_join_grp$to))))
-    #df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
-    df_roi_grp<-data.frame(id=list_roi_grp,label=capitalize(list_roi_grp),group="group")
-    data_gamm_grp<-iterate_gamm(df_join_grp,df_roi_grp,list_mod_)
-    write.csv(data_gamm_grp$df_out_gamm,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm.csv",sep="")),row.names = F)
-    write.csv(data_gamm_grp$df_out_aic,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm_aic.csv",sep="")),row.names = F)
-    
-    # Calculate multiple comparison-corrected p values
-    df_plot_gamm_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_roi_grp,analysis="grp",atlas,
-                                 list_mod,list_plot,calc_seed_level=T)
-    write.csv(df_plot_gamm_grp,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm_plt.csv",sep="")),row.names = F)
-    
-    # Graphical output of group-wise GAMM of FC
-    plot_gam_fc(df_plot_gamm_grp,df_roi_grp,analysis="grp",atlas,list_mod,list_plot,
-                list_type_p_,thr_p,paths_)
-    
-    #****************************
-    # Multi-scale FC GAMM calculation
-    #****************************
-    # Subset ROI-wise GAMM result to include only within-group connections
-    df_gamm_ms<-NULL
-    for (group in list_roi_grp){
-      list_roi_within_grp<-as.character(df_roi[df_roi$group==group,"id"])
-      df_gamm_ms_add<-data_gamm$df_out_gamm[which(is.element(as.character(data_gamm$df_out_gamm[,"from"]),list_roi_within_grp)
-                                                  & is.element(as.character(data_gamm$df_out_gamm[,"to"]),list_roi_within_grp)),]
-      df_gamm_ms_add<-cbind(group=group,df_gamm_ms_add)
-      df_gamm_ms<-rbind(df_gamm_ms,df_gamm_ms_add)
-    }
-    
-    # Combine within-group ROI-wise GAMM results and between-group GAMM results
-    df_gamm_ms<-rbind(df_gamm_ms,cbind(group="group",data_gamm_grp$df_out_gamm))
-    
-    # Calculate multiple comparison-corrected p values
-    df_plot_gamm_ms<-add_mltcmp(df_gamm_ms,df_roi_grp,analysis="grp",atlas,list_mod,list_plot,
-                                calc_seed_level=F)
-    write.csv(df_plot_gamm_ms,
-              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-ms_gamm_plt.csv",sep="")),row.names = F)
-    
-    # Split data into ROI-wise and group-wise GAMM results, graphical output
-    for (group in list_roi_grp){
-      df_plot_gamm_ms_split<-df_plot_gamm_ms[df_plot_gamm_ms$group==group,-1]
-      df_roi_split<-df_roi[df_roi$group==group,]
-      label_analysis<-paste("ms_grp-",group,sep="")
-      plot_gamm_fc(df_plot_gamm_ms_split,df_roi_split,analysis=label_analysis,atlas,list_mod,list_plot,
-                   list_type_p_,thr_p,paths_)
-    }
-    df_plot_gamm_ms_split<-df_plot_gamm_ms[df_plot_gamm_ms$group=="group",-1]
-    plot_gam_fc(df_plot_gamm_ms_split,df_roi_grp,analysis="ms_grp-group",atlas,list_mod,list_plot,
-                list_type_p_,thr_p,paths_)
-    
-  }
-  print('Finished gamm_fc().')
-}
+#gamm_fc<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,
+#                  list_wave_=list_wave,list_atlas_=list_atlas,
+#                  #list_measure_=list_measure,list_str_group_=list_str_group,
+#                  list_mod_=list_mod,list_plot_=list_plot,key_group_='group_3',
+#                  list_type_p_=list_type_p,thr_p_=thr_p
+#){
+#  print("Starting gamm_fc().")
+#  nullobj<-func_createdirs(paths_,str_proc="gamm_fc()",copy_log=T)
+#  dict_roi <- func_dict_roi(paths_)
+#  
+#  # Load and subset clinical data according to specified subsetting condition and covariate availability
+#  print('Loading clinical data.')
+#  data_clin<-func_clinical_data_long(paths_,list_wave_,subset_subj_,
+#                                     list_covar=list_covar_,rem_na_clin=T)
+#  df_clin<-data_clin$df_clin
+#  
+#  
+#  for (atlas in list_atlas_){
+#    
+#    #****************************
+#    # ROI-wise FC GAMM calculation
+#    #****************************
+#    # Load ROI-wise FC data
+#    print(paste('Loading FC data, atlas:',atlas,sep=' '))
+#    df_fc<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc.csv',sep='')))
+#    df_join<-join_fc_clin(df_fc,df_clin)
+#    write.csv(df_join,file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_src.csv",sep="")),
+#              row.names=F)
+#    
+#    # Calculate and save ROI-wise GAMM of FC
+#    print(paste('Calculating GAMM, atlas: ',atlas,sep=''))
+#    list_roi<-sort(unique(c(as.character(df_join$from),as.character(df_join$to))))
+#    df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
+#    colnames(df_roi)[colnames(df_roi)==key_group_]<-"group"
+#    data_gamm<-iterate_gamm(df_join,df_roi,list_mod_)
+#    write.csv(data_gamm$df_out_gamm,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm.csv",sep="")),row.names = F)
+#    write.csv(data_gamm$df_out_aic,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm_aic.csv",sep="")),row.names = F)
+#    
+#    # Calculate multiple comparison-corrected p values
+#    df_plot_gamm<-add_mltcmp(data_gamm$df_out_gamm,df_roi,analysis="roi",atlas,
+#                             list_mod,list_plot,calc_seed_level=T)
+#    write.csv(df_plot_gamm,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-roi_gamm_plt.csv",sep="")),row.names = F)
+#    
+#    # Graphical output of ROI-wise GAMM of FC
+#    plot_gam_fc(df_plot_gamm,df_roi,analysis="roi",atlas,list_mod,list_plot,
+#                list_type_p_,thr_p,paths_)
+#    
+#    #****************************
+#    # Group-wise FC GAMM calculation
+#    #****************************
+#    # Load group-wise FC data
+#    print(paste('Loading group FC data, atlas:',atlas,sep=' '))
+#    df_fc_grp<-read.csv(file.path(paths_$input,'output',paste('atl-',atlas,'_fc_grp.csv',sep='')))
+#    df_join_grp<-join_fc_clin(df_fc_grp,df_clin)
+#    write.csv(df_join_grp,file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_src.csv",sep="")),
+#              row.names=F)
+#    
+#    # Calculate and save group-wise GAMM of FC
+#    print(paste('Calculating GAMM, atlas: ',atlas,sep=''))
+#    list_roi_grp<-sort(unique(c(as.character(df_join_grp$from),as.character(df_join_grp$to))))
+#    #df_roi<-dict_roi[is.element(dict_roi$id,list_roi),c("id","label",key_group_)]
+#    df_roi_grp<-data.frame(id=list_roi_grp,label=capitalize(list_roi_grp),group="group")
+#    data_gamm_grp<-iterate_gamm(df_join_grp,df_roi_grp,list_mod_)
+#    write.csv(data_gamm_grp$df_out_gamm,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm.csv",sep="")),row.names = F)
+#    write.csv(data_gamm_grp$df_out_aic,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm_aic.csv",sep="")),row.names = F)
+#    
+#    # Calculate multiple comparison-corrected p values
+#    df_plot_gamm_grp<-add_mltcmp(data_gamm_grp$df_out_gamm,df_roi_grp,analysis="grp",atlas,
+#                                 list_mod,list_plot,calc_seed_level=T)
+#    write.csv(df_plot_gamm_grp,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-grp_gamm_plt.csv",sep="")),row.names = F)
+#    
+#    # Graphical output of group-wise GAMM of FC
+#    plot_gam_fc(df_plot_gamm_grp,df_roi_grp,analysis="grp",atlas,list_mod,list_plot,
+#                list_type_p_,thr_p,paths_)
+#    
+#    #****************************
+#    # Multi-scale FC GAMM calculation
+#    #****************************
+#    # Subset ROI-wise GAMM result to include only within-group connections
+#    df_gamm_ms<-NULL
+#    for (group in list_roi_grp){
+#      list_roi_within_grp<-as.character(df_roi[df_roi$group==group,"id"])
+#      df_gamm_ms_add<-data_gamm$df_out_gamm[which(is.element(as.character(data_gamm$df_out_gamm[,"from"]),list_roi_within_grp)
+#                                                  & is.element(as.character(data_gamm$df_out_gamm[,"to"]),list_roi_within_grp)),]
+#      df_gamm_ms_add<-cbind(group=group,df_gamm_ms_add)
+#      df_gamm_ms<-rbind(df_gamm_ms,df_gamm_ms_add)
+#    }
+#    
+#    # Combine within-group ROI-wise GAMM results and between-group GAMM results
+#    df_gamm_ms<-rbind(df_gamm_ms,cbind(group="group",data_gamm_grp$df_out_gamm))
+#    
+#    # Calculate multiple comparison-corrected p values
+#    df_plot_gamm_ms<-add_mltcmp(df_gamm_ms,df_roi_grp,analysis="grp",atlas,list_mod,list_plot,
+#                                calc_seed_level=F)
+#    write.csv(df_plot_gamm_ms,
+#              file.path(paths_$output,"output",paste("atl-",atlas,"_anl-ms_gamm_plt.csv",sep="")),row.names = F)
+#    
+#    # Split data into ROI-wise and group-wise GAMM results, graphical output
+#    for (group in list_roi_grp){
+#      df_plot_gamm_ms_split<-df_plot_gamm_ms[df_plot_gamm_ms$group==group,-1]
+#      df_roi_split<-df_roi[df_roi$group==group,]
+#      label_analysis<-paste("ms_grp-",group,sep="")
+#      plot_gamm_fc(df_plot_gamm_ms_split,df_roi_split,analysis=label_analysis,atlas,list_mod,list_plot,
+#                   list_type_p_,thr_p,paths_)
+#    }
+#    df_plot_gamm_ms_split<-df_plot_gamm_ms[df_plot_gamm_ms$group=="group",-1]
+#    plot_gam_fc(df_plot_gamm_ms_split,df_roi_grp,analysis="ms_grp-group",atlas,list_mod,list_plot,
+#                list_type_p_,thr_p,paths_)
+#    
+#  }
+#  print('Finished gamm_fc().')
+#}
