@@ -10,20 +10,20 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/SSD_01/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
 #dir_out<-"423.1_fc_gam_aroma_test8" 
 #dir_out<-"424_fc_gamm_aroma_test2"
 #dir_out<-"424_fc_gamm_aroma_test3" # on Ubuntu_1
 #dir_out<-"424_fc_gamm_aroma_test4" # on Ubuntu_2
-dir_out<-"424_fc_gamm_aroma_test8"
-#list_atlas<-c("aal116","gordon333","ho112","power264",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
+dir_out<-"424_fc_gamm_aroma_test7"
+list_atlas<-c("aal116","gordon333","ho112","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
 #list_atlas<-c("aal116")
-list_atlas<-c("ho112")
+#list_atlas<-c("ho112")
 #list_atlas<-c("aal116","ho112","power264","shen268")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
