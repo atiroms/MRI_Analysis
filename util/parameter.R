@@ -8,7 +8,7 @@
 # gam_fc() cross-sectional ========================
 #**************************************************
 param_gam_fc_cs<-list(
-  "abs_nfc"=F, # absolute value for negative functional connectivity
+  "abs_nfc"=T, # absolute value for negative functional connectivity
   "key_group"="group_3",
   "list_wave"=list("c1m1"=list("clin"=1,"mri"=1),
                    "c1m2"=list("clin"=1,"mri"=2),

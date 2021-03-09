@@ -14,7 +14,7 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.2_fc_gam_cs_aroma_test1" 
+dir_out<-"423.2_fc_gam_cs_aroma_test2" 
 #dir_out<-"424_fc_gamm_aroma_test2"
 #dir_out<-"424_fc_gamm_aroma_test3" # on Ubuntu_1
 #dir_out<-"424_fc_gamm_aroma_test4" # on Ubuntu_2
