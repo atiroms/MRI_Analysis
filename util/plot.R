@@ -77,24 +77,7 @@ plot_lgl<-function(df_edge,df_node,df_roi,filename,title){
 # Plot ANCOVA prediction===========================
 #**************************************************
 
-plot_pred_ancova<-function(df_edge,df_gamm,data_fc,param_ancova_pred,idx_term,var_exp){
-  df_edge<-df_edge[,c("from","to","sex","model")]
-  #df_edge$sex<-as.character(df_edge$sex)
-  df_gamm<-df_gamm[df_gamm$term %in% param_ancova_pred[[idx_term]]$term,c("from","to","sex","model","term","estimate")]
-  df_gamm<-inner_join(df_edge,df_gamm,by=c("from","to","sex","model"))
-  df_gamm<-inner_join(df_gamm,data_fc$df_edge,by=c("from","to"))
-  df_plot<-NULL
-  for (id_edge in unique(df_gamm$id_edge)){
-    df_plot_add<-df_gamm[df_gamm$id_edge==id_edge,]
-    term_base<-param_ancova_pred[[idx_term]][1,"term"]
-    df_plot_add[df_plot_add$term!=term_base,"estimate"]<-df_plot_add[df_plot_add$term!=term_base,"estimate"]+df_plot_add[df_plot_add$term==term_base,"estimate"]
-    df_plot<-rbind(df_plot,df_plot_add)
-  }
-  df_plot<-inner_join(df_plot,param_ancova_pred[[idx_term]],by="term")
-  df_plot$term<-var_exp
-  df_plot$label_edge<-paste(df_plot$label_from,df_plot$label_to,sep=" - ")
-  df_plot<-df_plot[,c("from","to","label_from","label_to","label_edge","sex","model","term","level","estimate")]
-  
+plot_pred_ancova<-function(df_plot){
   plot <- (ggplot(data=df_plot)
            + geom_point(aes(x=level,y=estimate),color="grey50",shape=1,size=2)
            + geom_path(aes(x=level,y=estimate,group=label_edge),
@@ -103,7 +86,7 @@ plot_pred_ancova<-function(df_edge,df_gamm,data_fc,param_ancova_pred,idx_term,va
            + ylab("Predicted z(r)")
            + theme_light()
            + theme(plot.title = element_text(hjust = 0.5)))
-  return(list("plot"=plot,"df_plot"=df_plot))
+  return(plot)
 }
 
 

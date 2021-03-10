@@ -22,7 +22,7 @@ func_combine_result<-function(paths,list_atlas_,list_var,list_wave,list_filename
           df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
           path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
           if(file.exists(path_src)){
-            df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src))))
+            df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
           }
         }
       }
