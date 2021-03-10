@@ -153,7 +153,7 @@ gam_fc_diff_core<-function(paths,atlas,param,list_sex,
   fwrite(df_fc_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc.csv",sep="")),row.names=F)
   fwrite(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
   
-  label_wave<-"diff"
+  label_wave<-"2-1"
   # Calculate model
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                             atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
