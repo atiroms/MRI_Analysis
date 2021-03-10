@@ -79,8 +79,7 @@ gam_fc_cs_core<-function(paths,atlas,param,list_sex,
     fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_src_fc_grp.csv",sep="")),row.names=F)
     
     # Calculate model
-    data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,
-                              calc_parallel,test_mod,
+    data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                               atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
     df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
     # Threshold and plot graph edges
@@ -155,20 +154,19 @@ gam_fc_diff_core<-function(paths,atlas,param,list_sex,
   fwrite(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
   
   # Calculate model
-  data_gamm<-func_calc_gamm(paths,df_clin_diff,df_fc_diff,df_fc_grp_diff,data_fc,
-                            calc_parallel,test_mod,
-                            atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="2-1")
+  data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
+                            atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
   # Threshold and plot graph edges
   data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="2-1")
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
   # Detect sub-network by breadth-first approach
   data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,plot_result=F,
-                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="2-1")
+                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   # Permutation test
-  data_nbs<-func_nbs_permutation(paths,df_fc_diff,df_clin_diff,data_bfs,data_fc,calc_parallel,plot_result=T,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="2-1")
+  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
 }
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
@@ -218,66 +216,27 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,list_sex,
   df_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,
                                    prefix=paste("var-",idx_var,sep=""),print_terminal=F)$df_clin
   df_clin<-func_demean_clin(df_clin,separate_sex=T)$df_clin
-  fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin.csv",sep="")),row.names=F)
+  fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
   
   # Prepare FC data
-  df_fc<-data_fc$df_fc
-  df_fc_grp<-data_fc$df_fc_grp
-  fwrite(df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc.csv",sep="")),row.names=F)
-  fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
+  df_fc<-data_fc$df_fc; df_fc_grp<-data_fc$df_fc_grp
+  fwrite(df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_fc.csv",sep="")),row.names=F)
+  fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_fc_grp.csv",sep="")),row.names=F)
   
-  file_check<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))
-  if (file.exists(file_check)){
-    print("Calculated result already exists.")
-    df_gamm<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep=""))))
-    df_gamm_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep=""))))
-    df_anova<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep=""))))
-    df_anova_grp<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep=""))))
-  }else{
-    # Join clinical and FC data
-    df_join<-join_fc_clin(df_fc,df_clin)
-    df_join_grp<-join_fc_clin(df_fc_grp,df_clin)
-    
-    # Calculate model
-    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
-    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
-                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
-                  envir=environment())
-    data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-    data_gamm_grp<-iterate_gamm4(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
-    stopCluster(clust)
-    
-    # Add multiple comparison-corrected p values
-    df_gamm<-as.data.frame(add_mltcmp(data_gamm$df_gamm,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
-    df_anova<-as.data.frame(add_mltcmp(data_gamm$df_anova,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
-    df_gamm_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_gamm,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
-    df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
-    
-    # Save results
-    fwrite(df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
-    fwrite(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
-    fwrite(df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
-    fwrite(df_gamm_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_grp.csv",sep="")),row.names = F)
-    fwrite(data_gamm_grp$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep="")),row.names = F)
-    fwrite(df_anova_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova_grp.csv",sep="")),row.names = F)
-  }
-  
+  # Calculate model
+  data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
+                            atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
   # Threshold and plot graph edges
-  print("Thresholding and plotting results")
   data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="long")
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
-  
   # Detect sub-network by breadth-first approach
-  print("Detecting subnetworks")
   data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,plot_result=F,
-                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="long")
-  df_net<-data_bfs$df_net; df_node<-data_bfs$df_node; df_size_net<-data_bfs$df_size_net; df_pred_ancova<-data_bfs$df_pred_ancova
-  
+                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   # Permutation test
-  print("Calculating permutation")
-  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,df_size_net,data_fc,calc_parallel,plot_result=T,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave="long")
+  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
+                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
 }
 
 gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
@@ -462,11 +421,11 @@ func_detect_subnset<-function(paths,df_plot,df_gamm,data_fc,plot_result=F,
           var_exp_detect<-list_term[[idx_term_detect]]$var_exp
           if (!is.null(var_exp_detect)){
             for (idx_sex in list_sex){
+              if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
               for (p_cdt in param$param_nbs$p_cdt_threshold){
                 df_sign<-df_plot[df_plot$p_type=="p" & df_plot$p_threshold==p_cdt
                                  & df_plot$model==idx_mod & df_plot$term==var_exp_detect & df_plot$sex==idx_sex,]
                 data_bfs<-func_bfs(df_sign)
-                if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
                 if(length(data_bfs$list_network)>0){
                   for (idx_net in seq(length(data_bfs$list_network))){
                     network<-data_bfs$list_network[[idx_net]]
@@ -590,6 +549,7 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
         for (idx_term_detect in set_term$term_detect){
           var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
           for (idx_sex in list_sex){
+            if (idx_sex==1){label_sex<-"m"}else{label_sex<-"f"}
             for (p_cdt in param$param_nbs$p_cdt_threshold){
               list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp_detect
                                          & df_max_size$p_threshold==p_cdt & df_max_size$sex==idx_sex,"max_size"]
