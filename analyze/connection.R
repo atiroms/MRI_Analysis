@@ -153,6 +153,7 @@ gam_fc_diff_core<-function(paths,atlas,param,list_sex,
   fwrite(df_fc_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc.csv",sep="")),row.names=F)
   fwrite(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
   
+  label_wave<-"diff"
   # Calculate model
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                             atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
@@ -223,6 +224,7 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,list_sex,
   fwrite(df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_fc.csv",sep="")),row.names=F)
   fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_fc_grp.csv",sep="")),row.names=F)
   
+  label_wave<-"long"
   # Calculate model
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                             atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
@@ -285,11 +287,10 @@ gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
 #**************************************************
 # gam_fc(), gamm_fc() common functions ============
 #**************************************************
-func_calc_gamm<-function(paths,df_clin,df_fc,df_fc_grp,data_fc,
-                         calc_parallel,test_mod,
+func_calc_gamm<-function(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                          atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave){
   
-  file_check<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic_grp.csv",sep=""))
+  file_check<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_gamm_aic_grp.csv",sep=""))
   if (file.exists(file_check)){
     print("Calculated GAMM/ANOVA already exists.")
     df_gamm<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_gamm.csv",sep=""))))
@@ -333,7 +334,7 @@ func_calc_gamm<-function(paths,df_clin,df_fc,df_fc_grp,data_fc,
 
 func_threshold_gamm<-function(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
                               atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave){
-  if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot.csv",sep="")))){
+  if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_plot.csv",sep="")))){
     print("Thresholded GAMM/ANOVA already exists.")
     df_plot<-as.data.frame(fread(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_plot.csv",sep=""))))
     if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_plot_grp.csv",sep="")))){
