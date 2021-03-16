@@ -10,24 +10,22 @@ from matplotlib import gridspec
 
 #path_atlas='D:/atiro/Dropbox/MRI_img/pnTTC/template_atlas/XCP_atlas_plot'
 #file_roi='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/common/ROI.csv'
-path_atlas='D:/NICT_WS/Dropbox/MRI_img/pnTTC/template_atlas/XCP_atlas_plot'
-path_exp='D:/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP'
-dir_in='423.2_fc_gam_cs_aroma_test3'
+path_atlas='D:/atiro/Dropbox/MRI_img/pnTTC/template_atlas/XCP_atlas_plot'
+path_exp='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP'
+dir_in='423.2_fc_gam_cs_aroma_test4'
 [atlas,variable,wave,model,term,sex,p_threshold,id_net]=\
-    ['power264','corti','c1m2','l','hormone',1,0.005,1]
+    ['aal116','corti','c1m2','l','hormone',1,0.005,1]
+#['power264','corti','c1m2','l','hormone',1,0.005,1]
 #['aal116','gonadal','c2m1','l','tanner',2,0.005,1]
-#['power264','gonadal','c2m1','l','tanner',2,0.01,1]
-#['power264','gonadal','c2m1','l','tanner',2,0.005,1]
 #['power264','gonadal','c2m1','l','tanner',2,0.001,1]
 #['ho112','gonadal','c2m1','l','tanner',2,0.01,1]
-#['ho112','gonadal','c2m1','l','tanner',2,0.005,1]
-#['ho112','gonadal','c2m1','l','tanner',2,0.001,1]
 
-file_roi='D:/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/ROI.csv'
+file_roi='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/common/ROI.csv'
 #list_atlas=['aal116','glasser360','gordon333','ho112','power264','schaefer100x7','schaefer100x17','schaefer200x7','schaefer200x17','schaefer400x7','schaefer400x17','shen268']
 transparency_roi=0.3
 
-cmap=plt.get_cmap('Wistia')
+#cmap=plt.get_cmap('Wistia')
+cmap=plt.get_cmap('cool')
 
 ####
 

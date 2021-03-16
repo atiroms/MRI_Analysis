@@ -33,7 +33,10 @@ nii_template=nib.load(file_template)
 arr_template=nii_template.get_fdata()
 arr_template=arr_template/arr_template.max()
 
-df_strength=pd.read_csv(os.path.join(path_exp,dir_in,'output','result','fc_ca_str.csv'))
+#df_strength=pd.read_csv(os.path.join(path_exp,dir_in,'output','result','fc_ca_str.csv'))
+df_strength=pd.read_csv(os.path.join(path_exp,dir_in,'output','result','fc_ca_str.csv'),converters={'wave_mri':str})
+
+[atlas,wave_mri, method, sex, dim,comp]=['ho112','1','pca','female',40,2]
 
 for atlas in list_atlas:
     df_roi_atlas=df_roi[df_roi['atlas']==atlas]
@@ -43,24 +46,26 @@ for atlas in list_atlas:
         nii_atlas=resample_img(nii_atlas,target_affine=nii_template.affine,target_shape=nii_template.shape,interpolation='nearest')
     arr_atlas=nii_atlas.get_fdata()
 
-    for wave_mri in [1,2,'2-1']:
+    for wave_mri in ['1','2','2-1']:
         for method in ['pca','ica']:
             for sex in ['male','female','both']:
                 for dim in [10,20,40]:
-                    for comp in range(1,dim+1):
-                        df_strength_subset=df_strength.copy()
-                        df_strength_subset=df_strength_subset[(df_strength['atlas']==atlas)\
-                        & (df_strength['wave_mri']==wave_mri) & (df_strength['method']==method)\
-                        & (df_strength['sex']==sex) & (df_strength['dim']==dim)\
-                        & (df_strength['comp']==comp)]
-                        if len(df_strength_subset)>0:
-                            df_strength_subset['strength_norm']=df_strength_subset['strength']/max(df_strength_subset['strength'])
+                    df_strength_subset=df_strength.copy()
+                    df_strength_subset=df_strength_subset[(df_strength['atlas']==atlas)\
+                    & (df_strength['wave_mri']==wave_mri) & (df_strength['method']==method)\
+                    & (df_strength['sex']==sex) & (df_strength['dim']==dim)]
+                    if len(df_strength_subset)>0:
+                        for comp in range(1,dim+1):
+                            df_strength_comp=df_strength_subset.copy()
+                            df_strength_comp=df_strength_comp[df_strength_comp['comp']==comp]
+
+                            df_strength_comp['strength_norm']=df_strength_comp['strength']/max(df_strength_comp['strength'])
                             
                             arr_mask=np.zeros(shape=arr_template.shape)
                             arr_colored_node=np.zeros(shape=arr_template.shape+tuple([3]))
 
-                            for id_row in range(df_strength_subset.shape[0]):
-                                [id_roi,strength_norm]=df_strength_subset.iloc[id_row][['node','strength_norm']]
+                            for id_row in range(df_strength_comp.shape[0]):
+                                [id_roi,strength_norm]=df_strength_comp.iloc[id_row][['node','strength_norm']]
                                 intensity_roi=int(df_roi[df_roi['id']==id_roi]['intensity'])
 
                                 arr_roi=np.zeros(shape=arr_template.shape)
@@ -94,7 +99,6 @@ for atlas in list_atlas:
                                 idx_fig+=1
 
                             plt.suptitle('atlas: '+atlas+', method: '+method+', wave: '+str(wave_mri)+', sex: '+sex+', dim: '+str(dim).zfill(3)+', comp: '+str(comp).zfill(3))
-                            plt.tight_layout()
 
                             filename='atl-'+atlas+'_method-'+method+'_ses-'+str(wave_mri)+'_sex-'+sex+'_dim-'+str(dim).zfill(3)+'_comp-'+str(comp).zfill(3)+'_fc_ca_str.png'
                             fig.savefig(os.path.join(path_exp,dir_in,'output','plot',filename))
