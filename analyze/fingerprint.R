@@ -44,7 +44,7 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # Variance attribution ============================
 #**************************************************
 func_stratify<-function(df_fp){
-  df_zr_group<-data.frame();df_stat_zr_group<-data.frame()
+  df_zr_group<-df_stat_zr_group<-NULL
   # Group similarity
   list_zr<-df_fp$z_r; strat<-"group"
   df_zr_group<-rbind(df_zr_group,data.frame(strat=strat,z_r=list_zr))
@@ -59,6 +59,9 @@ func_stratify<-function(df_fp){
   df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=strat,mean_z_r=mean(list_zr),n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
   # Group (+ sex) + individual similarity
   list_zr<-df_fp[df_fp$from_ID_pnTTC==df_fp$to_ID_pnTTC,"z_r"]; strat<-"group+individual"
+  if (length(list_zr)==0){
+    list_zr<-NA
+  }
   df_zr_group<-rbind(df_zr_group,data.frame(strat=strat,z_r=list_zr))
   df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=strat,mean_z_r=mean(list_zr),n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
   # Group + Tanner similarity
@@ -67,52 +70,31 @@ func_stratify<-function(df_fp){
   df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=strat,mean_z_r=mean(list_zr),n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
   # Group + individual + Tanner similarity
   list_zr<-df_fp[df_fp$from_ID_pnTTC==df_fp$to_ID_pnTTC & df_fp$from_tanner==df_fp$to_tanner,"z_r"]; strat<-"group+individual+tanner"
+  if (length(list_zr)==0){
+    list_zr<-NA
+  }
   df_zr_group<-rbind(df_zr_group,data.frame(strat=strat,z_r=list_zr))
   df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=strat,mean_z_r=mean(list_zr),n_z_r=length(list_zr),sd_z_r=sd(list_zr),sem_z_r=sd(list_zr)/sqrt(length(list_zr))))
   # Calculate relative mean_z_r
   #df_stat_zr_group$rel_mean_z_r<-df_stat_zr_group$mean_z_r/df_stat_zr_group[df_stat_zr_group$strat=="group+individual+tanner","mean_z_r"]
-  df_stat_zr_group$rel_mean_z_r<-df_stat_zr_group$mean_z_r/max(df_stat_zr_group$mean_z_r)
-  df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=c("individual","wave","tanner","individual+tanner"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
+  df_stat_zr_group$rel_mean_z_r<-df_stat_zr_group$mean_z_r/max(df_stat_zr_group$mean_z_r,na.rm=T)
+  df_stat_zr_group<-rbind(df_stat_zr_group,data.frame(strat=c("individual","wave","sex","tanner","individual+tanner"),mean_z_r=NA,n_z_r=NA,sd_z_r=NA,sem_z_r=NA,
                                                       rel_mean_z_r=c(df_stat_zr_group[df_stat_zr_group$strat=="group+individual","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group","rel_mean_z_r"],
                                                                      df_stat_zr_group[df_stat_zr_group$strat=="group+wave","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group","rel_mean_z_r"],
+                                                                     df_stat_zr_group[df_stat_zr_group$strat=="group+sex","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group","rel_mean_z_r"],
                                                                      df_stat_zr_group[df_stat_zr_group$strat=="group+tanner","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group","rel_mean_z_r"],
                                                                      df_stat_zr_group[df_stat_zr_group$strat=="group+individual+tanner","rel_mean_z_r"]-df_stat_zr_group[df_stat_zr_group$strat=="group+tanner","rel_mean_z_r"])))
   return(list("df_zr"=df_zr_group,"df_stat_zr"=df_stat_zr_group))
 }
 
-variance_fp<-function(paths_=paths,
-                      list_atlas_=list_atlas,param=param_variance_fp
-                      ){
+variance_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_variance_fp){
   print("Starting variance_fp().")
   nullobj<-func_createdirs(paths_,str_proc="variance_fp()",copy_log=T,list_param=param)
-  
-  # Load and subset clinical data according to specified subsetting condition and covariate availability
-  print('Loading clinical data.')
-  df_clin<-func_clinical_data_long(paths_,param$list_wave,param$subset_subj,
-                                     list_covar=param$list_covar,rem_na_clin=T,prefix="var_vp",print_terminal=F)$df_clin
-  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   
   df_zr<-df_stat_zr<-NULL
   for (atlas in list_atlas_){
     # Load fingerprint data
     df_fp<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep=""))))
-    print(paste("Atlas: ",atlas,sep=""))
-    
-    # Create list of subjects who meet subsetting condition and whose MRI data exist
-    list_id_subj_exist<-list()
-    for (ses in param$list_wave){
-      id_subj_exist_ses<-sort(unique(c(df_fp[df_fp$from_ses==ses,'from_ID_pnTTC'],df_fp[df_fp$to_ses==ses,'to_ID_pnTTC'])))
-      id_subj_subset_ses<-df_clin[df_clin$ses==ses,"ID_pnTTC"]
-      id_subj_exist_ses<-intersect(id_subj_exist_ses,id_subj_subset_ses)
-      list_id_subj_exist[[as.character(ses)]]<-sort(id_subj_exist_ses)
-    }
-    
-    # Identify subjects with longitudinal data
-    #list_id_subj_exist_twice<-sort(intersect(list_id_subj_exist[["1"]],
-    #                                         list_id_subj_exist[["2"]]))
-    #n_id_subj_exist_twice<-length(list_id_subj_exist_twice)
-    #df_fp_meas<-df_fp_meas[df_fp_meas$from_ID_pnTTC %in% list_id_subj_exist_twice
-    #                       & df_fp_meas$to_ID_pnTTC %in% list_id_subj_exist_twice,]
     
     # Create list of groups
     list_group<-unique(c(as.character(df_fp$group_1),as.character(df_fp$group_2)))
@@ -120,40 +102,52 @@ variance_fp<-function(paths_=paths,
       list_group<-c("whole",list_group[list_group!="whole"])
     }
     
-    list_group_pair<-NULL
-    for (idx_group_1 in seq(length(list_group))){
-      for (idx_group_2 in seq(idx_group_1,length(list_group))){
-        group_1<-list_group[idx_group_1]
-        group_2<-list_group[idx_group_2]
-        list_group_pair<-c(list_group_pair,paste(group_1,group_2,sep="-"))
-        
-        # Prepare dataframe for variance calculation
-        df_fp_group<-df_fp[df_fp$group_1==group_1 & df_fp$group_2==group_2,]
-        df_fp_group<-inner_join(df_fp_group,df_clin,by=c("from_ID_pnTTC"="ID_pnTTC","from_ses"="ses"))
-        colnames(df_fp_group)[colnames(df_fp_group)=="sex"]<-"from_sex"
-        colnames(df_fp_group)[colnames(df_fp_group)=="tanner"]<-"from_tanner"
-        df_fp_group<-inner_join(df_fp_group,df_clin,by=c("to_ID_pnTTC"="ID_pnTTC","to_ses"="ses"))
-        colnames(df_fp_group)[colnames(df_fp_group)=="sex"]<-"to_sex"
-        colnames(df_fp_group)[colnames(df_fp_group)=="tanner"]<-"to_tanner"
-        
-        # Male + Female
-        data_stratify<-func_stratify(df_fp_group)
-        df_zr<-rbind(df_zr,cbind(atlas=atlas,group_1=group_1,group_2=group_2,sex="all",data_stratify$df_zr))
-        df_stat_zr<-rbind(df_stat_zr,cbind(atlas=atlas,group_1=group_1,group_2=group_2,sex="all",data_stratify$df_stat_zr))
-        
-        # Male
-        data_stratify<-func_stratify(df_fp_group[df_fp_group$from_sex==1 & df_fp_group$to_sex==1,])
-        df_zr<-rbind(df_zr,cbind(atlas=atlas,group_1=group_1,group_2=group_2,sex="male",data_stratify$df_zr))
-        df_stat_zr<-rbind(df_stat_zr,cbind(atlas=atlas,group_1=group_1,group_2=group_2,sex="male",data_stratify$df_stat_zr))
-        
-        # Female
-        data_stratify<-func_stratify(df_fp_group[df_fp_group$from_sex==2 & df_fp_group$to_sex==2,])
-        df_zr<-rbind(df_zr,cbind(atlas=atlas,group_1=group_1,group_2=group_2,sex="female",data_stratify$df_zr))
-        df_stat_zr<-rbind(df_stat_zr,cbind(atlas=atlas,group_1=group_1,group_2=group_2,sex="female",data_stratify$df_stat_zr))
-        
+    for (label_wave in names(param$list_wave)){
+      print(paste("Calculating, atlas: ",atlas,", wave: ",label_wave,sep=""))
+      wave_clin<-param$list_wave[[label_wave]]$clin
+      wave_mri<-param$list_wave[[label_wave]]$mri
+      # Load and subset clinical data according to specified subsetting condition and covariate availability
+      if (label_wave=="long"){
+        df_clin<-func_clinical_data_long(paths,wave_clin,param$subset_sub,list_covar=param$list_covar,rem_na_clin=T,prefix=paste("wav-",label_wave,"_src",sep=""),print_terminal=F)$df_clin
+      }else{
+        # QC subsetting condition must accord with MRI wave, but under the name of clinical wave
+        subset_subj<-param$subset_subj[wave_mri]
+        names(subset_subj)<-wave_clin
+        df_clin<-func_clinical_data_long(paths,wave_clin,subset_subj,list_covar=param$list_covar,rem_na_clin=T,prefix=paste("wav-",label_wave,"_src",sep=""),print_terminal=F)$df_clin
+        # "wave" column must accord with MRI wave for later joining with FP data
+        df_clin$wave<-wave_mri
       }
-    } # End of loop over groups
+      df_clin<-dplyr::rename(df_clin,"ses"="wave")
+      
+      for (idx_group_1 in seq(length(list_group))){
+        for (idx_group_2 in seq(idx_group_1,length(list_group))){
+          group_1<-list_group[idx_group_1]; group_2<-list_group[idx_group_2]
+          
+          # Prepare dataframe for variance calculation
+          df_fp_subset<-df_fp[df_fp$group_1==group_1 & df_fp$group_2==group_2,]
+          df_fp_subset<-inner_join(df_fp_subset,df_clin,by=c("from_ID_pnTTC"="ID_pnTTC","from_ses"="ses"))
+          df_fp_subset<-dplyr::rename(df_fp_subset,"from_sex"="sex","from_tanner"="tanner")
+          df_fp_subset<-inner_join(df_fp_subset,df_clin,by=c("to_ID_pnTTC"="ID_pnTTC","to_ses"="ses"))
+          df_fp_subset<-dplyr::rename(df_fp_subset,"to_sex"="sex","to_tanner"="tanner")
+          
+          df_head<-data.frame(atlas=atlas,wave=label_wave,group_1=group_1,group_2=group_2)
+          # Male + Female
+          data_stratify<-func_stratify(df_fp_subset)
+          df_zr<-rbind(df_zr,cbind(df_head,sex="all",data_stratify$df_zr))
+          df_stat_zr<-rbind(df_stat_zr,cbind(df_head,sex="all",data_stratify$df_stat_zr))
+          # Male
+          data_stratify<-func_stratify(df_fp_subset[df_fp_subset$from_sex==1 & df_fp_subset$to_sex==1,])
+          df_zr<-rbind(df_zr,cbind(df_head,sex="male",data_stratify$df_zr))
+          df_stat_zr<-rbind(df_stat_zr,cbind(df_head,sex="male",data_stratify$df_stat_zr))
+          # Female
+          data_stratify<-func_stratify(df_fp_subset[df_fp_subset$from_sex==2 & df_fp_subset$to_sex==2,])
+          df_zr<-rbind(df_zr,cbind(df_head,sex="female",data_stratify$df_zr))
+          df_stat_zr<-rbind(df_stat_zr,cbind(df_head,sex="female",data_stratify$df_stat_zr))
+        }
+      } # End of loop over groups
+    } # End of loop over waves
   } # End of loop over atlas
+  
   # Save results
   fwrite(df_zr,file.path(paths_$output,"output","result","zr.csv"),row.names=F)
   fwrite(df_stat_zr,file.path(paths_$output,"output","result","stat_zr.csv"),row.names=F)
@@ -165,25 +159,30 @@ variance_fp<-function(paths_=paths,
   for (atlas in list_atlas_){
     list_group_pair<-unique(df_stat_zr[df_stat_zr$atlas==atlas,"group_pair"])
     list_label_group_pair<-unique(df_stat_zr[df_stat_zr$atlas==atlas,"label_group_pair"])
-
-    # Male + Female absolute
-    plot_variance(paths_,df_stat_zr,atlas=atlas,sex="all",levels=c("group","group+sex","group+wave","group+individual"),
-                  palette="Greys",list_group_pair,list_label_group_pair,type="abs")
-    # Male + Female relative
-    plot_variance(paths_,df_stat_zr,atlas=atlas,sex="all",levels=c("group","sex","individual"),
-                  palette="Greys",list_group_pair,list_label_group_pair,type="rel")
-    # Male absolute
-    plot_variance(paths_,df_stat_zr,atlas=atlas,sex="male",levels=c("group","group+wave","group+individual","group+tanner","group+individual+tanner"),
-                  palette="Blues",list_group_pair,list_label_group_pair,type="abs")
-    # Male relative
-    plot_variance(paths_,df_stat_zr,atlas=atlas,sex="male",levels=c("group","tanner","individual+tanner"),
-                  palette="Blues",list_group_pair,list_label_group_pair,type="rel")
-    # Female absolute
-    plot_variance(paths_,df_stat_zr,atlas=atlas,sex="female",levels=c("group","group+wave","group+individual","group+tanner","group+individual+tanner"),
-                  palette="Reds",list_group_pair,list_label_group_pair,type="abs") 
-    # Female relative
-    plot_variance(paths_,df_stat_zr,atlas=atlas,sex="female",levels=c("group","tanner","individual+tanner"),
-                  palette="Reds",list_group_pair,list_label_group_pair,type="rel")
+    for (label_wave in names(param$list_wave)){
+      print(paste("Preparing plot, atlas: ",atlas,", wave: ",label_wave,sep=""))
+      wave_clin<-param$list_wave[[label_wave]]$clin
+      wave_mri<-param$list_wave[[label_wave]]$mri
+      
+      # Male + Female absolute
+      plot_variance(paths_,df_stat_zr,atlas=atlas,wave=label_wave,sex="all",levels=c("group","group+sex","group+wave","group+individual"),
+                    palette="Greys",list_group_pair,list_label_group_pair,type="abs")
+      # Male + Female relative
+      plot_variance(paths_,df_stat_zr,atlas=atlas,wave=label_wave,sex="all",levels=c("group","sex","individual"),
+                    palette="Greys",list_group_pair,list_label_group_pair,type="rel")
+      # Male absolute
+      plot_variance(paths_,df_stat_zr,atlas=atlas,wave=label_wave,sex="male",levels=c("group","group+wave","group+individual","group+tanner","group+individual+tanner"),
+                    palette="Blues",list_group_pair,list_label_group_pair,type="abs")
+      # Male relative
+      plot_variance(paths_,df_stat_zr,atlas=atlas,wave=label_wave,sex="male",levels=c("group","tanner","individual+tanner"),
+                    palette="Blues",list_group_pair,list_label_group_pair,type="rel")
+      # Female absolute
+      plot_variance(paths_,df_stat_zr,atlas=atlas,wave=label_wave,sex="female",levels=c("group","group+wave","group+individual","group+tanner","group+individual+tanner"),
+                    palette="Reds",list_group_pair,list_label_group_pair,type="abs") 
+      # Female relative
+      plot_variance(paths_,df_stat_zr,atlas=atlas,wave=label_wave,sex="female",levels=c("group","tanner","individual+tanner"),
+                    palette="Reds",list_group_pair,list_label_group_pair,type="rel")
+    }
   }
   print("Finished variance_fp()")
 }

@@ -7,7 +7,12 @@
 # variance_fp() ===================================
 #**************************************************
 param_variance_fp<-list(
-  "list_wave"=c(1,2),
+  "list_wave"=list("long"=list("clin"=c(1,2),"mri"=c(1,2)),
+                   "c1m1"=list("clin"=1,"mri"=1),
+                   "c1m2"=list("clin"=1,"mri"=2),
+                   "c2m1"=list("clin"=2,"mri"=1),
+                   "c2m2"=list("clin"=2,"mri"=2)),
+  #"list_wave"=c(1,2),
   "list_covar"=list("tanner"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
                                   "label"="Tanner stage (gonadal)","dtype"="factor"),
                     #"age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
@@ -19,7 +24,7 @@ param_variance_fp<-list(
 
 
 #**************************************************
-# gam_fc_diff() ===================================
+# gam_fc_cs() =====================================
 #**************************************************
 param_gam_fc_cs<-list(
   "abs_nfc"=T, # absolute value for negative functional connectivity

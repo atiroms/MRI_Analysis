@@ -13,7 +13,7 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 #**************************************************
 # Plot variance of fingerprint ====================
 #**************************************************
-plot_variance<-function(paths,df_stat_zr,atlas,sex,levels,palette,list_group_pair,list_label_group_pair,type="abs"){
+plot_variance<-function(paths,df_stat_zr,atlas,wave,sex,levels,palette,list_group_pair,list_label_group_pair,type="abs"){
   df_stat_zr<-df_stat_zr[df_stat_zr$atlas==atlas & df_stat_zr$sex==sex & (df_stat_zr$strat %in% levels),]
   if (type=="abs"){
     fig<-(ggplot(data=df_stat_zr,aes(x=group_pair,y=mean_z_r,fill=factor(strat,levels=levels)))
@@ -22,7 +22,7 @@ plot_variance<-function(paths,df_stat_zr,atlas,sex,levels,palette,list_group_pai
           + scale_x_discrete(limits = list_group_pair,labels = list_label_group_pair)
           + scale_y_continuous(expand=c(0,0),limits=c(0,max(df_stat_zr$mean_z_r)+max(df_stat_zr$sd_z_r)+0.1))
           + scale_fill_brewer(palette=palette,direction=-1,name="Stratification")
-          + ggtitle(paste("Fingerprint similarity attribution, ",atlas,sep=""))
+          + ggtitle(paste("Fingerprint similarity attribution, ",atlas,", ",wave,", ",sex,sep=""))
           + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
           + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
                   legend.position="top",legend.justification="left",legend.direction="vertical")
@@ -33,13 +33,13 @@ plot_variance<-function(paths,df_stat_zr,atlas,sex,levels,palette,list_group_pai
           + scale_x_discrete(limits = list_group_pair,labels = list_label_group_pair)
           + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
           + scale_fill_brewer(palette=palette,direction=-1,name="Stratification")
-          + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
+          + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,", ",wave,", ",sex,sep=""))
           + xlab("Subnetworks") + ylab("Relative mean z(r)") + theme_classic()
           + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
                   legend.position="top",legend.justification="left",legend.direction="vertical")
     )
   }
-  ggsave(paste("atl-",atlas,"_sex-",sex,"_type-",type,"_fp_var.png",sep=""),plot=fig,path=file.path(paths$output,"output","plot"),height=7,width=14,limitsize=F)
+  ggsave(paste("atl-",atlas,"_wav-",wave,"_sex-",sex,"_type-",type,"_fp_var.png",sep=""),plot=fig,path=file.path(paths$output,"output","plot"),height=7,width=14,limitsize=F)
 
 }
 
