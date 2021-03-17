@@ -48,7 +48,7 @@ for atlas in list_atlas:
 
     for wave_mri in ['1','2','2-1']:
         for method in ['pca','ica']:
-            for sex in ['male','female','both']:
+            for sex in ['male','female','all']:
                 for dim in [10,20,40]:
                     df_strength_subset=df_strength.copy()
                     df_strength_subset=df_strength_subset[(df_strength['atlas']==atlas)\
