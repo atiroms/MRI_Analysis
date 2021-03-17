@@ -11,6 +11,40 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 
 
 #**************************************************
+# Plot variance of fingerprint ====================
+#**************************************************
+plot_variance<-function(paths,df_stat_zr,atlas,sex,levels,palette,list_group_pair,list_label_group_pair,type="abs"){
+  df_stat_zr<-df_stat_zr[df_stat_zr$atlas==atlas & df_stat_zr$sex==sex & (df_stat_zr$strat %in% levels),]
+  if (type=="abs"){
+    fig<-(ggplot(data=df_stat_zr,aes(x=group_pair,y=mean_z_r,fill=factor(strat,levels=levels)))
+          + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+          + geom_errorbar(aes(ymin=mean_z_r-sd_z_r,ymax=mean_z_r+sd_z_r),width=.1,position=position_dodge(0.7))
+          + scale_x_discrete(limits = list_group_pair,labels = list_label_group_pair)
+          + scale_y_continuous(expand=c(0,0),limits=c(0,max(df_stat_zr$mean_z_r)+max(df_stat_zr$sd_z_r)+0.1))
+          + scale_fill_brewer(palette=palette,direction=-1,name="Stratification")
+          + ggtitle(paste("Fingerprint similarity attribution, ",atlas,sep=""))
+          + xlab("Subnetworks") + ylab("Mean z(r)") + theme_classic()
+          + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                  legend.position="top",legend.justification="left",legend.direction="vertical")
+    )
+  }else{
+    fig<-(ggplot(data=df_stat_zr,aes(x=group_pair,y=rel_mean_z_r,fill=factor(strat,levels=levels)))
+          + geom_bar(stat="identity",color="white",width=0.5,position=position_stack(vjust=0,reverse=T))
+          + scale_x_discrete(limits = list_group_pair,labels = list_label_group_pair)
+          + scale_y_continuous(expand=c(0,0),limits=c(0,1.05))
+          + scale_fill_brewer(palette=palette,direction=-1,name="Stratification")
+          + ggtitle(paste("Fingerprint relative similarity attribution, ",atlas,sep=""))
+          + xlab("Subnetworks") + ylab("Relative mean z(r)") + theme_classic()
+          + theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 45,vjust=1,hjust=1),
+                  legend.position="top",legend.justification="left",legend.direction="vertical")
+    )
+  }
+  ggsave(paste("atl-",atlas,"_sex-",sex,"_type-",type,"_fp_var.png",sep=""),plot=fig,path=file.path(paths$output,"output","plot"),height=7,width=14,limitsize=F)
+
+}
+
+
+#**************************************************
 # Plot network ====================================
 #**************************************************
 plot_net<-function(df_edge,df_node,df_roi){
@@ -1100,4 +1134,48 @@ plot_gam_fc_old<-function(df_plot_gamm,df_roi,analysis,atlas,list_mod,list_plot,
       }
     }
   }
+}
+
+
+#**************************************************
+# heatmap subnetwork gamm fp results ==============
+#**************************************************
+heatmap_gammfp_old<-function(paths_=paths){
+  df_gammfp<-read.csv(file.path(paths_$input,"output","fp_glm.csv"))
+  df_gammfp<-df_gammfp[df_gammfp$atlas=="shen268" & df_gammfp$sex==2
+                       & df_gammfp$model=="ldm" & df_gammfp$term=="diff_tanner",]
+  list_group<-sort(unique(c(as.character(df_gammfp$group_1),as.character(df_gammfp$group_2))))
+  list_group<-list_group[list_group!="whole"]
+  df_gammfp<-df_gammfp[df_gammfp$group_1 %in% list_group
+                       & df_gammfp$group_2 %in% list_group,]
+  df_plot<-data.frame(matrix(ncol=length(list_group),nrow=length(list_group)))
+  colnames(df_plot)<-rownames(df_plot)<-list_group
+  df_sign<-data.frame(matrix(ncol=length(list_group),nrow=length(list_group)))
+  colnames(df_sign)<-rownames(df_sign)<-list_group
+  for (i_row in seq(dim(df_gammfp)[1])){
+    g1<-as.character(df_gammfp[i_row,"group_1"])
+    g2<-as.character(df_gammfp[i_row,"group_2"])
+    estimate<-as.numeric(df_gammfp[i_row,"estimate"])
+    if (df_gammfp[i_row,"p"]<0.001){
+      sign<-"**"
+    }else if (df_gammfp[i_row,"p"]<0.05){
+      sign<-"*"
+    }else{
+      sign<-""
+    }
+    
+    df_plot[g1,g2]<-df_plot[g2,g1]<-estimate
+    df_sign[g1,g2]<-df_sign[g2,g1]<-sign
+  }
+  plot<-plot_cor_heatmap(df_plot,df_sign)
+  suppressMessages(plot<-(plot
+                          + scale_fill_gradientn(colors = matlab.like2(100),
+                                                 lim=c(-max(max(df_plot),-min(df_plot)),max(max(df_plot),-min(df_plot))),
+                                                 name="beta")
+                          + ggtitle("Subnetwork-wise effect of Tanner difference")
+                          + theme(plot.title = element_text(hjust = 0.5),
+                                  axis.title=element_blank())))
+  ggsave(paste("atl-shen268_msr-fc_gammfp_subnetwork.eps",sep=""),plot=plot,device=cairo_ps,
+         path=file.path(paths_$output,"output"),height=7,width=7,limitsize=F)
+  
 }

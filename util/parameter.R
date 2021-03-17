@@ -3,9 +3,23 @@
 #**************************************************
 # R script for commonly used parameters in MRI data analysis
 
+#**************************************************
+# variance_fp() ===================================
+#**************************************************
+param_variance_fp<-list(
+  "list_wave"=c(1,2),
+  "list_covar"=list("tanner"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                  "label"="Tanner stage (gonadal)","dtype"="factor"),
+                    #"age"=list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                    "sex"=list("1"="Sex","2"="Sex","label"="Sex")),
+  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
+                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126")))
+  
+)
+
 
 #**************************************************
-# gam_fc() cross-sectional ========================
+# gam_fc_diff() ===================================
 #**************************************************
 param_gam_fc_cs<-list(
   "abs_nfc"=T, # absolute value for negative functional connectivity
@@ -77,7 +91,7 @@ param_gam_fc_cs<-list(
 )
 
 #**************************************************
-# gam_fc() longitudinal difference ================
+# gam_fc_diff() ===================================
 #**************************************************
 param_gam_fc_diff<-list(
   "abs_nfc"=F, # absolute value for negative functional connectivity
@@ -636,5 +650,5 @@ model_fp_list_graph_hormone <-list("d(a)"=list("title"="Age diff effect","x_axis
 #list_cost<-seq(0.15,0.40,0.01)
 #absolute<-T
 #threshold<-NA
-
-list_dim_ca<-c(5,10,20,40)
+#
+#list_dim_ca<-c(5,10,20,40)
