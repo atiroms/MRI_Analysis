@@ -14,7 +14,7 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 # Plot variance of fingerprint ====================
 #**************************************************
 plot_variance<-function(paths,df_stat_zr,atlas,wave,sex,levels,palette,list_group_pair,list_label_group_pair,type="abs"){
-  df_stat_zr<-df_stat_zr[df_stat_zr$atlas==atlas & df_stat_zr$sex==sex & (df_stat_zr$strat %in% levels),]
+  df_stat_zr<-df_stat_zr[df_stat_zr$atlas==atlas & df_stat_zr$wave==wave & df_stat_zr$sex==sex & (df_stat_zr$strat %in% levels),]
   if (type=="abs"){
     fig<-(ggplot(data=df_stat_zr,aes(x=group_pair,y=mean_z_r,fill=factor(strat,levels=levels)))
           + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())

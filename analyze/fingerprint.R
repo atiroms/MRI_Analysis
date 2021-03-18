@@ -17,11 +17,11 @@ path_exp_full <-NULL
 dir_in<-"422_fp_aroma"
 #dir_out<-"426_fp_gam_aroma"
 dir_out<-"428_fp_var_aroma_test1"
-#list_atlas<-c("aal116","glasser360","gordon333","power264",
-#              "schaefer100x7","schaefer200x7","schaefer400x7",
-#              "schaefer100x17","schaefer200x17","schaefer400x17",
-#              "shen268")
-list_atlas<-"aal116"
+list_atlas<-c("aal116","glasser360","gordon333","power264",
+              "schaefer100x7","schaefer200x7","schaefer400x7",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+#list_atlas<-"aal116"
 
 
 #**************************************************
@@ -133,15 +133,15 @@ variance_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_variance_f
           df_head<-data.frame(atlas=atlas,wave=label_wave,group_1=group_1,group_2=group_2)
           # Male + Female
           data_stratify<-func_stratify(df_fp_subset)
-          df_zr<-rbind(df_zr,cbind(df_head,sex="all",data_stratify$df_zr))
+          #df_zr<-rbind(df_zr,cbind(df_head,sex="all",data_stratify$df_zr))
           df_stat_zr<-rbind(df_stat_zr,cbind(df_head,sex="all",data_stratify$df_stat_zr))
           # Male
           data_stratify<-func_stratify(df_fp_subset[df_fp_subset$from_sex==1 & df_fp_subset$to_sex==1,])
-          df_zr<-rbind(df_zr,cbind(df_head,sex="male",data_stratify$df_zr))
+          #df_zr<-rbind(df_zr,cbind(df_head,sex="male",data_stratify$df_zr))
           df_stat_zr<-rbind(df_stat_zr,cbind(df_head,sex="male",data_stratify$df_stat_zr))
           # Female
           data_stratify<-func_stratify(df_fp_subset[df_fp_subset$from_sex==2 & df_fp_subset$to_sex==2,])
-          df_zr<-rbind(df_zr,cbind(df_head,sex="female",data_stratify$df_zr))
+          #df_zr<-rbind(df_zr,cbind(df_head,sex="female",data_stratify$df_zr))
           df_stat_zr<-rbind(df_stat_zr,cbind(df_head,sex="female",data_stratify$df_stat_zr))
         }
       } # End of loop over groups
@@ -149,7 +149,7 @@ variance_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_variance_f
   } # End of loop over atlas
   
   # Save results
-  fwrite(df_zr,file.path(paths_$output,"output","result","zr.csv"),row.names=F)
+  #fwrite(df_zr,file.path(paths_$output,"output","result","zr.csv"),row.names=F)
   fwrite(df_stat_zr,file.path(paths_$output,"output","result","stat_zr.csv"),row.names=F)
   
   # Graphical output
