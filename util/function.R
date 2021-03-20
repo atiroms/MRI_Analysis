@@ -13,21 +13,30 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 #**************************************************
 # Combine results ~~~~~============================
 #**************************************************
-func_combine_result<-function(paths,list_atlas_,list_var,list_wave,list_filename){
+func_combine_result<-function(paths,list_atlas,list_var,list_wave,list_filename){
   for (filename in list_filename){
     df_dst<-data.frame()
-    for (atlas in list_atlas_){
-      for (idx_var in names(list_var)){
+    for (atlas in list_atlas){
+      if (is.null(list_var)){
         for (label_wave in list_wave){
-          df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
-          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+          df_head<-data.frame(atlas=atlas,wave=label_wave)
+          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_wav-",label_wave, "_",filename,".csv",sep=""))
           if(file.exists(path_src)){
             df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
           }
         }
+      }else{
+        for (idx_var in names(list_var)){
+          for (label_wave in list_wave){
+            df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
+            path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+            if(file.exists(path_src)){
+              df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
+            }
+          }
+        }
       }
     }
-    
     if (nrow(df_dst)>0){
       fwrite(df_dst,file.path(paths$output,"output","result",paste(filename,".csv",sep="")),row.names = F)
     }

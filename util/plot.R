@@ -11,6 +11,48 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 
 
 #**************************************************
+# Plot factor-clinical corr, in ca_fc_cs() ========
+#**************************************************
+plot_ca_clin<-function(df_plot,list_var,idx_var){
+  
+  #Visualize df_plot
+  df_plot<-df_plot[df_plot$covar!="sex",]
+  df_plot<-df_plot[df_plot$comp<=10,]
+  df_plot[df_plot$covar=="age","covar"]<-"Age"
+  df_plot[df_plot$covar=="tanner","covar"]<-list_var[[idx_var]][["label"]]
+  df_plot[df_plot$covar=="hormone","covar"]<-list_var[[idx_var]][["label"]]
+  df_plot$wave_clin<-as.character(df_plot$wave_clin)
+  df_plot[df_plot$wave_clin=="c1","wave_clin"]<-"1st wave"
+  df_plot[df_plot$wave_clin=="c2","wave_clin"]<-"2nd wave"
+  df_plot$covar<-paste(df_plot$wave_clin,df_plot$covar,sep=" ")
+  df_plot$significance<-""
+  df_plot[df_plot$p<0.05,"significance"]<-"*"
+  df_plot[df_plot$p<0.001,"significance"]<-"**"
+  
+  fig<-(ggplot(data=df_plot,aes(x=comp,y=r,fill=covar))
+        + geom_bar(stat="identity",color="white",width=0.7,position=position_dodge())
+        #+ scale_fill_brewer(palette="Accent")
+        + scale_fill_manual(values=c("darkgreen","mediumpurple4","limegreen","mediumpurple2"))
+        + scale_x_continuous(breaks=seq(10),limits=c(0.5,10.5),expand=c(0.003,0.003))
+        + scale_y_continuous(breaks=seq(-0.5,0.5,0.1),limits=c(-0.5,0.5))
+        + geom_hline(yintercept = 0, linetype = 2)
+        + geom_text(
+          aes(label = significance, group = covar), 
+          position = position_dodge(0.7),
+          vjust = 0, size = 3.5
+        )
+        #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Variable: ",idx_var,
+        #                ", MRI wave: ",wave_mri,
+        #                ", Dimension: ",as.character(dim),
+        #                ", Sex: ",label_sex,sep=""))
+        + xlab("Factor") + ylab("r or rho") + theme_classic()
+        + theme(plot.title = element_text(hjust = 0.5),
+                legend.position="top",legend.justification="center",legend.direction="horizontal",legend.title=element_blank())
+  )
+  return(fig)
+}
+
+#**************************************************
 # Plot variance of fingerprint ====================
 #**************************************************
 plot_variance<-function(paths,df_stat_zr,atlas,wave,sex,levels,palette,list_group_pair,list_label_group_pair,type="abs"){
@@ -503,61 +545,44 @@ plot_ca_fc_heatmap_core<-function(data_plot){
   return(T)
 }
 
-plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,method,label_sex,ses){
-  print(paste("Generationg heatmap plot of factors, Session: ",as.character(ses),
-              ", Sex: ",label_sex,", Method: ",method,", Dim: ",as.character(dim_ca),sep="")) 
-  dict_roi<-func_dict_roi(paths_)
-  dict_roi<-dict_roi[dict_roi$atlas==atlas,c("id","label","group_3")]
-  dict_roi$label<-as.character(dict_roi$label)
-  #dict_roi<-dict_roi[order(dict_roi$group_3),]
+plot_ca_fc_heatmap<-function(paths_,data_fc,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,method,label_sex,ses){
   
-  # Create list of ROIs with blanks between groups
-  list_group<-unique(dict_roi$group_3)
-  list_roi_axis<-NULL
-  title_axis<-"Groups: "
-  for (group in list_group){
-    list_roi_axis<-c(list_roi_axis,dict_roi[dict_roi$group_3==group,"label"],"")
-    title_axis<-paste(title_axis,group,", ",sep="")
+  title_group<-paste("Groups:",paste(data_fc$df_grp$label,collapse=", "),sep=" ")
+  list_roi_spaced<-NULL
+  for (group in data_fc$df_grp$id){
+    list_roi_spaced<-c(list_roi_spaced,as.character(data_fc$df_roi[data_fc$df_roi$group==group,"label"]),"")
   }
-  list_roi_axis<-list_roi_axis[1:length(list_roi_axis)-1]
-  title_axis<-substr(title_axis,1,nchar(title_axis)-2)
-  
-  # Convert ROI ID to label
-  df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("from"="id"))
-  colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"from_label"
-  df_comp_mri<-inner_join(df_comp_mri,dict_roi[,c("id","label")],by=c("to"="id"))
-  colnames(df_comp_mri)[colnames(df_comp_mri)=="label"]<-"to_label"
+  list_roi_spaced<-list_roi_spaced[1:length(list_roi_spaced)-1]
+  list_label_grp<-data_fc$df_grp$label
   
   list_plot<-list()
   for (idx_comp in 1:dim_ca){
     list_subplot<-list()
     
     # ROI-ROI heatmap
-    df_edge<-df_comp_mri[,c("from_label","to_label",sprintf("comp_%03d",idx_comp))]
+    df_edge<-df_comp_mri[,c("label_from","label_to",sprintf("comp_%03d",idx_comp))]
     colnames(df_edge)<-c("row","column","r")
     limits<-max(max(df_edge$r),-min(df_edge$r))
     limits<-c(-limits,limits)
-    df_edge_inv<-data.frame(row=df_edge$column, column=df_edge$row,r=df_edge$r)
-    df_edge_identical<-data.frame(row=dict_roi$label,column=dict_roi$label,r=NA)
-    df_edge<-rbind(df_edge,df_edge_inv,df_edge_identical)
-    df_edge$row<-as.character(df_edge$row)
-    df_edge$column<-as.character(df_edge$column)
+    df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
+    df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,r=df_edge_inv$r)
+    df_edge<-rbind(df_edge,df_edge_inv)
     
     plot<-(ggplot(df_edge, aes(column, row))
            + geom_tile(aes(fill = r))
            + scale_fill_gradientn(colors = matlab.like2(100),name="z",limits=limits)
            #       + scale_y_discrete(limits = rev(dict_roi$label))
            #       + scale_x_discrete(limits = dict_roi$label, position="top")
-           + scale_y_discrete(limits = rev(list_roi_axis))
-           + scale_x_discrete(limits = list_roi_axis, position="top")
+           + scale_y_discrete(limits = rev(list_roi_spaced))
+           + scale_x_discrete(limits = list_roi_spaced, position="top")
            #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
            #                ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
            #                ", Sex: ",label_sex,sep=""))
-           #+ xlab(title_axis)
+           #+ xlab(title_group)
            + theme_linedraw()
            + theme(
-                   #axis.text.x = element_text(size=29/log(length(list_roi_axis),2),angle = 90,vjust=0,hjust=0),
-                   #axis.text.y = element_text(size=29/log(length(list_roi_axis),2)),
+                   #axis.text.x = element_text(size=29/log(length(list_roi_spaced),2),angle = 90,vjust=0,hjust=0),
+                   #axis.text.y = element_text(size=29/log(length(list_roi_spaced),2)),
                    axis.text.x = element_text(size=1.5,angle = 90,vjust=0,hjust=0),
                    axis.text.y = element_text(size=1.5),
                    panel.grid.major=element_blank(),
@@ -576,9 +601,9 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
     
     # group-group heatmap
     for (abs_mean in c(F,T)){
-      df_edge<-df_comp_mri_grp[df_comp_mri_grp$abs==abs_mean,c("from","to",sprintf("comp_%03d",idx_comp))]
+      df_edge<-df_comp_mri_grp[df_comp_mri_grp$abs==abs_mean,c("label_from","label_to",sprintf("comp_%03d",idx_comp))]
       colnames(df_edge)<-c("row","column","r")
-      limits<-max(max(df_edge$r),-min(df_edge$r))
+      limits<-max(max(df_edge$r),-1*min(df_edge$r))
       limits<-c(-limits,limits)
       df_edge_inv<-df_edge[df_edge$row!=df_edge$column,]
       df_edge_inv<-data.frame(row=df_edge_inv$column, column=df_edge_inv$row,r=df_edge_inv$r)
@@ -587,8 +612,8 @@ plot_ca_fc_heatmap<-function(paths_,df_comp_mri,df_comp_mri_grp,atlas,dim_ca,met
       plot<-(ggplot(df_edge, aes(column, row))
              + geom_tile(aes(fill = r))
              #+ scale_fill_gradientn(colors = matlab.like2(100),name="mean z",limits=limits)
-             + scale_y_discrete(limits = rev(list_group))
-             + scale_x_discrete(limits = list_group, position="top")
+             + scale_y_discrete(limits = rev(data_fc$df_grp$label))
+             + scale_x_discrete(limits = data_fc$df_grp$label, position="top")
              #+ ggtitle(paste("Method: ",method,", Atlas: ",atlas,", Wave: ",as.character(ses),
              #                ", Component: ",sprintf("%03d",idx_comp),"/",sprintf("%03d",dim_ca),
              #                ", Sex: ",label_sex,sep=""))
