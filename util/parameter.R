@@ -37,14 +37,25 @@ param_ca_fc_cs<-list(
                                     "label"="Tanner stage (gonadal)","dtype"="factor"),
                      "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
                                     "label"="Tanner stage (adrenal)","dtype"="factor")),
+  "list_mod_tanner"=list("l" = "value ~ age + tanner","li"= "value ~ age * tanner"),
+  "list_term_tanner"=list("a"=list("title"="Age","var_exp"="age"),
+                          "s(a)"=list("title"="Age","var_exp"="s(age)"),
+                          "t"=list("title"="Tanner","var_exp"="tanner"),
+                          "at"=list("title"="Age by Tanner interaction","var_exp"="age:tanner"),
+                          "s(t)"=list("title"="Tanner","var_exp"="s(tanner)")),
   "list_covar_hormone"=list("hormone"=NULL,
                             "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                             "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
   "list_hormone"=list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
                       "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
                       "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-                      "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S"))
-  
+                      "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
+  "list_mod_hormone"=list("l" = "value ~ age + hormone","li"= "value ~ age * hormone"),
+  "list_term_hormone"=list("a"=list("title"="Age","var_exp"="age"),
+                           "s(a)"=list("title"="Age","var_exp"="s(age)"),
+                           "h"=list("title"="Hormone","var_exp"="hormone"),
+                           "ah"=list("title"="Age by Hormone interaction","var_exp"="age:hormone"),
+                           "s(h)"=list("title"="Hormone","var_exp"="s(hormone)"))
 )
 
 

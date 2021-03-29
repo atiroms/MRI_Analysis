@@ -479,7 +479,7 @@ gamm_core4<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
   if(!is.null(test_mod_in)){test_mod<-test_mod_in}
   
   df_aic<-df_gamm<-df_anova<-data.frame()
-  list_label_sex<-list_gamm_output<-NULL
+  list_gamm_output<-NULL
   for (idx_mod in names(list_mod)){
     for (idx_sex in list_sex){
       label_sex<-paste(idx_sex,collapse="_")
