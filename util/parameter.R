@@ -8,7 +8,9 @@
 # ca_fc_cs() ====================================== 
 #**************************************************
 param_ca_fc_cs<-list(
-  "abs_nfc"=T, # absolute value for negative functional connectivity
+  "abs_nfc"=F, # absolute value for negative functional connectivity
+  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "div_mean_fc"=F, # normalize z values with division with mean
   "list_dim_ca"=c(10,20,40),
   "key_group"="group_3",
   "subset_subj" = list("1"  =list(list("key"="W1_T1QC","condition"="==1"),

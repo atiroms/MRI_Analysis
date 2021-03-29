@@ -232,14 +232,13 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F){
+prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F,std_fc=F){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
                                        paste("atl-",atlas,"_fc.csv",sep="")),showProgress=F))
   
   df_fc<-df_fc[df_fc$ses!="2-1",] # exclude pre-calculated longitudinal difference (not usable for absolute NFC)
-  #df_fc<-df_fc[df_fc$ses %in% list_wave,]
   
   if (abs_nfc){ # Absolute value for negative functional connectivity
     df_fc$r<-abs(df_fc$r)

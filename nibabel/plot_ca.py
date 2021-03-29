@@ -12,11 +12,13 @@ from matplotlib import gridspec
 #file_roi='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/common/ROI.csv'
 path_atlas='D:/atiro/Dropbox/MRI_img/pnTTC/template_atlas/XCP_atlas_plot'
 path_exp='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP'
-dir_in='425_fc_ca_aroma'
+#dir_in='425_fc_ca_aroma'
+dir_in='425_fc_ca_aroma_test5'
 
 file_roi='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/common/ROI.csv'
 #list_atlas=['aal116','glasser360','gordon333','ho112','power264','schaefer100x7','schaefer100x17','schaefer200x7','schaefer200x17','schaefer400x7','schaefer400x17','shen268']
-list_atlas=['aal116','gordon333','ho112','power264','schaefer100x17','schaefer200x17','schaefer400x17','shen268']
+#list_atlas=['aal116','gordon333','ho112','power264','schaefer100x17','schaefer200x17','schaefer400x17','shen268']
+list_atlas=['ho112']
 transparency_roi=0.3
 
 #cmap=plt.get_cmap('Wistia')
@@ -46,13 +48,13 @@ for atlas in list_atlas:
         nii_atlas=resample_img(nii_atlas,target_affine=nii_template.affine,target_shape=nii_template.shape,interpolation='nearest')
     arr_atlas=nii_atlas.get_fdata()
 
-    for wave_mri in ['1','2','2-1']:
+    for wave_mri in ['m1','m2','m2-1']:
         for method in ['pca','ica']:
             for sex in ['male','female','all']:
                 for dim in [10,20,40]:
                     df_strength_subset=df_strength.copy()
                     df_strength_subset=df_strength_subset[(df_strength['atlas']==atlas)\
-                    & (df_strength['wave_mri']==wave_mri) & (df_strength['method']==method)\
+                    & (df_strength['wave']==wave_mri) & (df_strength['method']==method)\
                     & (df_strength['sex']==sex) & (df_strength['dim']==dim)]
                     if len(df_strength_subset)>0:
                         for comp in range(1,dim+1):

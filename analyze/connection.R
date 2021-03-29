@@ -14,7 +14,7 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"425_fc_ca_aroma_test2" 
+dir_out<-"425_fc_ca_aroma_test7" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
 
@@ -23,6 +23,7 @@ list_atlas<-c("aal116","gordon333","ho112","power264",
               "shen268")
 #list_atlas<-"aal116"
 #list_atlas<-"ho112"
+#list_atlas<-c("ho112","power264")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -196,11 +197,16 @@ ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,param=param_ca_fc_cs,skip
           df_fc_ses<-df_fc[df_fc$ses==wave_mri,]
           df_fc_calc<-df_clin_exist<-NULL
           for (id_subj in df_clin$ID_pnTTC){
-            #df_fc_subj<-df_fc_ses[df_fc_ses$ID_pnTTC==id_subj,]
-            df_fc_calc<-rbind(df_fc_calc,df_fc_ses[df_fc_ses$ID_pnTTC==id_subj,"z_r"])
+            df_fc_subj<-df_fc_ses[df_fc_ses$ID_pnTTC==id_subj,"z_r"]
+            if (param$std_fc){
+              df_fc_subj<-(df_fc_subj-mean(df_fc_subj))/sd(df_fc_subj)
+            }else if(param$div_mean_fc){
+              df_fc_subj<-df_fc_subj/mean(df_fc_subj)
+            }
+            df_fc_calc<-rbind(df_fc_calc,df_fc_subj)
             df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
           }
-          rownames(df_fc_calc)<-as.character(seq(nrow(df_fc_calc))); colnames(df_fc_calc)<-NULL
+          rownames(df_fc_calc)<-as.character(seq(nrow(df_fc_calc))); colnames(df_fc_calc)<-as.character(seq(ncol(df_fc_calc)))
           colnames(df_clin_exist)<-colnames(df_clin)
           #df_clin_exist$ses<-paste("m",as.character(df_clin_exist$ses),sep="")
           df_clin_exist$ses<-NULL
