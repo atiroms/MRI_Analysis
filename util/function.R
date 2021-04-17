@@ -13,21 +13,30 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 #**************************************************
 # Combine results ~~~~~============================
 #**************************************************
-func_combine_result<-function(paths,list_atlas_,list_var,list_wave,list_filename){
+func_combine_result<-function(paths,list_atlas,list_var,list_wave,list_filename){
   for (filename in list_filename){
     df_dst<-data.frame()
-    for (atlas in list_atlas_){
-      for (idx_var in names(list_var)){
+    for (atlas in list_atlas){
+      if (is.null(list_var)){
         for (label_wave in list_wave){
-          df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
-          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+          df_head<-data.frame(atlas=atlas,wave=label_wave)
+          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_wav-",label_wave, "_",filename,".csv",sep=""))
           if(file.exists(path_src)){
             df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
           }
         }
+      }else{
+        for (idx_var in names(list_var)){
+          for (label_wave in list_wave){
+            df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
+            path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+            if(file.exists(path_src)){
+              df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
+            }
+          }
+        }
       }
     }
-    
     if (nrow(df_dst)>0){
       fwrite(df_dst,file.path(paths$output,"output","result",paste(filename,".csv",sep="")),row.names = F)
     }
@@ -223,14 +232,13 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F){
+prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F,std_fc=F){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
                                        paste("atl-",atlas,"_fc.csv",sep="")),showProgress=F))
   
   df_fc<-df_fc[df_fc$ses!="2-1",] # exclude pre-calculated longitudinal difference (not usable for absolute NFC)
-  #df_fc<-df_fc[df_fc$ses %in% list_wave,]
   
   if (abs_nfc){ # Absolute value for negative functional connectivity
     df_fc$r<-abs(df_fc$r)
@@ -471,7 +479,7 @@ gamm_core4<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
   if(!is.null(test_mod_in)){test_mod<-test_mod_in}
   
   df_aic<-df_gamm<-df_anova<-data.frame()
-  list_label_sex<-list_gamm_output<-NULL
+  list_gamm_output<-NULL
   for (idx_mod in names(list_mod)){
     for (idx_sex in list_sex){
       label_sex<-paste(idx_sex,collapse="_")
