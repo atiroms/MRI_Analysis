@@ -25,24 +25,29 @@ shutil.copyfileobj = _copyfileobj_patched
 # Pickup SPM-preprocessed nii files for CS analysis
 ##################################################
 
-def Prep_cs(
-    path_src='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/preproc',
-    #file_clin='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv',
-    file_clin='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv',
-    file_vol='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv',
-    prefix_file='smwc1',
-    suffix_file='_T1w.nii',
-    path_dst='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/T1QC_TannerGonadalFemale',
-    list_covar=[['W1_T1QC','==1'],['W2_Age_at_MRI','>0'],['Sex','==2'],['W2_Tanner_Female_Breast','>0']],
-    ses_mri=2
-    ):
-    print('Starting Prep_cs()')
+def Prep_cs():
+    # Parameters
+    #path_src='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/preproc'
+    path_src='J:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/preproc'
+    #file_clin='C:/Users/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv'
+    file_clin='D:/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv'
+    #file_vol='D:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv'
+    file_vol='J:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv'
+    prefix_file='smwc1'
+    suffix_file='_T1w.nii'
+    path_dst='J:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/c2m1_gonadal_f_regression'
+    list_covar=[['W1_T1QC','==1'],['W2_Age_at_MRI','>0'],['Sex','==2'],['W2_Tanner_Female_Breast','>1']]
+    list_groups=None
+    #list_groups=['W2_Tanner_Female_Breast',[1,2,3,4,5]]
+    ses_mri=1
 
+
+    print('Starting Prep_cs()')
     # Create cross-sectional clinical data
     df_clin=pd.read_csv(file_clin,encoding = 'unicode_escape')
     df_clin_subset=df_clin.copy()
     list_column=['ID_pnTTC']
-    for crt_subset in list_covar[1:]:
+    for crt_subset in list_covar:
         df_clin_subset=df_clin_subset[eval('df_clin_subset["'+crt_subset[0]+'"]'+crt_subset[1])]
         list_column=list_column+[crt_subset[0]]
     df_clin_subset=df_clin_subset.reset_index()
@@ -52,15 +57,32 @@ def Prep_cs(
     # Pickup nii files
     df_clin_subset_exist=pd.DataFrame(columns=df_clin_subset.columns)
     list_absent=[]
-    for idx_row in tqdm(range(len(df_clin_subset))):
-        file_src=prefix_file+'sub-'+str(df_clin_subset.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(ses_mri).zfill(2)+suffix_file
-        path_file_src=glob.glob(path_src+'/'+file_src,recursive=True)
-        if len(path_file_src)>0:
-            path_file_src=path_file_src[0]
-            shutil.copy(path_file_src,path_dst)
-            df_clin_subset_exist=df_clin_subset_exist.append(df_clin_subset.loc[idx_row,:])
-        else:
-            list_absent.append(file_src)
+    if list_groups is None:
+        for idx_row in tqdm(range(len(df_clin_subset))):
+            file_src=prefix_file+'sub-'+str(df_clin_subset.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(ses_mri).zfill(2)+suffix_file
+            path_file_src=glob.glob(path_src+'/'+file_src,recursive=True)
+            if len(path_file_src)>0:
+                path_file_src=path_file_src[0]
+                shutil.copy(path_file_src,path_dst)
+                df_clin_subset_exist=df_clin_subset_exist.append(df_clin_subset.loc[idx_row,:])
+            else:
+                list_absent.append(file_src)
+    else:
+        for group in list_groups[1]:
+            os.makedirs(os.path.join(path_dst,str(group)))
+            df_clin_group=df_clin_subset.copy()
+            df_clin_group=df_clin_group.loc[df_clin_group[list_groups[0]]==group,:]
+            df_clin_group=df_clin_group.sort_values(by=['ID_pnTTC'])
+            df_clin_group=df_clin_group.reset_index(drop=True)
+            for idx_row in range(len(df_clin_group)):
+                file_src=prefix_file+'sub-'+str(df_clin_group.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(ses_mri).zfill(2)+suffix_file
+                path_file_src=glob.glob(path_src+'/'+file_src,recursive=True)
+                if len(path_file_src)>0:
+                    path_file_src=path_file_src[0]
+                    shutil.copy(path_file_src,os.path.join(path_dst,str(group)))
+                    df_clin_subset_exist=df_clin_subset_exist.append(df_clin_group.loc[idx_row,:])
+                else:
+                    list_absent.append(file_src)
 
     if len(list_absent)>0:
         print('Absent data:')
@@ -79,10 +101,11 @@ def Prep_cs(
     df_covar=df_clin_subset_exist.copy()
     df_covar['TBV']=pd.Series()
     df_covar['ICV']=pd.Series()
+    df_covar=df_covar.reset_index(drop=True)
     for idx_row in range(len(df_covar)):
         df_covar.loc[idx_row,['TBV','ICV']]=df_vol.loc[df_vol['ID_pnTTC']==df_covar.loc[idx_row,'ID_pnTTC'],['TBV','ICV']].values.tolist()[0]
-    df_covar=df_covar.sort_values(by=['ID_pnTTC'])
-    df_covar=df_covar.reset_index(drop=True)
+    #df_covar=df_covar.sort_values(by=['ID_pnTTC'])
+    #df_covar=df_covar.reset_index(drop=True)
 
     df_covar.to_csv(os.path.join(path_dst,'df_covar.csv'),index=False)
 
