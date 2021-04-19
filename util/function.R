@@ -613,6 +613,32 @@ iterate_gamm4<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
   }
 }
 
+# structure version
+iterate_gamm4_str<-function(clust,df_join,progressbar=T,test_mod=F){
+  list_src_gamm<-split(df_join,df_join$roi)
+  
+  if(test_mod){
+    list_src_gamm<-list_src_gamm[1]
+  }
+  
+  if (progressbar){
+    list_dst_gamm<-pblapply(list_src_gamm,gamm_core4,cl=clust)
+  }else{
+    list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core4)
+  }
+  df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
+  df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
+  df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
+  df_anova$p<-as.numeric(as.numeric.factor(df_anova$p))
+  rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+  
+  if(test_mod){
+    return(list_dst_gamm[[1]])
+  }else{
+    return(list("df_gamm"=df_gamm,"df_aic"=df_aic,"df_anova"=df_anova))
+  }
+}
+
 
 #**************************************************
 # Add multiple comparison-corrected p values ======
