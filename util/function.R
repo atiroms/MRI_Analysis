@@ -13,23 +13,29 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 #**************************************************
 # Combine results ~~~~~============================
 #**************************************************
-func_combine_result<-function(paths,list_atlas,list_var,list_wave,list_filename){
+func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_type_measure="",list_filename){
   for (filename in list_filename){
     df_dst<-data.frame()
     for (atlas in list_atlas){
-      if (is.null(list_var)){
+      for (idx_var in names(list_var)){
         for (label_wave in list_wave){
-          df_head<-data.frame(atlas=atlas,wave=label_wave)
-          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_wav-",label_wave, "_",filename,".csv",sep=""))
-          if(file.exists(path_src)){
-            df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
-          }
-        }
-      }else{
-        for (idx_var in names(list_var)){
-          for (label_wave in list_wave){
-            df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
-            path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+          for (type_measure in list_type_measure){
+            df_head<-data.frame(atlas=atlas)
+            prefix_fname<-paste("atl-",atlas,sep="")
+            if (idx_var!=""){
+              df_head<-cbind(df_head,data.frame(variable=idx_var))
+              prefix_fname<-paste(prefix_fname,"_var-",idx_var,sep="")
+            }
+            if (label_wave!=""){
+              df_head<-cbind(df_head,data.frame(wave=label_wave))
+              prefix_fname<-paste(prefix_fname,"_wav-",label_wave,sep="")
+            }
+            if (type_measure$measure!=""){
+              measure=type_measure$measure
+              df_head<-cbind(df_head,data.frame(measure=measure))
+              prefix_fname<-paste(prefix_fname,"_msr-",measure,sep="")
+            }
+            path_src<-file.path(paths$output,"output","temp",paste(prefix_fname, "_",filename,".csv",sep=""))
             if(file.exists(path_src)){
               df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
             }
@@ -37,6 +43,7 @@ func_combine_result<-function(paths,list_atlas,list_var,list_wave,list_filename)
         }
       }
     }
+    
     if (nrow(df_dst)>0){
       fwrite(df_dst,file.path(paths$output,"output","result",paste(filename,".csv",sep="")),row.names = F)
     }
@@ -581,6 +588,12 @@ gamm_core4<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
     df_gamm<-cbind(df_id,df_gamm)
     df_aic_compare<-cbind(df_id,df_aic_compare)
     df_anova<-cbind(df_id,df_anova)
+  }
+  if ("roi" %in% colnames(df_src)){
+    id<-df_src[1,"roi"]
+    df_gamm<-cbind(id,df_gamm)
+    df_aic_compare<-cbind(id,df_aic_compare)
+    df_anova<-cbind(id,df_anova)
   }
   
   return(list("df_gamm"=df_gamm,"df_aic"=df_aic_compare,"df_anova"=df_anova,"mod"=list_gamm_output))

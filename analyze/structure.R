@@ -12,7 +12,7 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 path_exp_full<-NULL
 dir_in <-"01_extract"
-dir_out <-"03_gam"
+dir_out <-"03_glm"
 #dir_in <-"31_meas"
 #dir_out <-"32_fp"
 
@@ -34,7 +34,7 @@ dir_out <-"03_gam"
 # Libraries =======================================
 #**************************************************
 library(easypackages)
-libraries('Hmisc','FactoMineR','ica','tidyverse','Rtsne','tidyr','parallel','data.table')
+libraries('Hmisc','FactoMineR','ica','tidyverse','Rtsne','tidyr','parallel','data.table','lme4','mgcv')
 
 
 #**************************************************
@@ -50,104 +50,98 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # GAM of structural measures ======================
 #**************************************************
 
-gam_str_core<-function(paths){
-  # Prepare clinical data and demean
-  # QC subsetting condition must accord with MRI wave, but under the name of clinical wave
-  subset_subj<-param$subset_subj[wave_mri]
-  names(subset_subj)<-wave_clin
-  data_clin<-func_clinical_data_long(paths,wave_clin,subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,"_wav-",label_wave,"_src",sep=""),print_terminal=F)
-  df_clin<-func_demean_clin(data_clin$df_clin,separate_sex=T)$df_clin
-  fwrite(df_clin,file.path(paths$output,"output","temp",paste("var-",idx_var,"_wav-",label_wave,"_src_clin.csv",sep="")),row.names=F)
-  df_clin$wave<-wave_mri # Need to meet MRI wave for later joining
-  
-  # Join structure and clinical data
-  df_join<-inner_join(df_str,df_clin,by=c('ID_pnTTC','wave'))
-  for (key in c('ID_pnTTC','wave','sex')){
-    if (key %in% colnames(df_join)){
-      df_join[,key]<-as.factor(df_join[,key])
-    }
-  }
-  df_join$value<-as.numeric.factor(df_join$value)
-  
-  for (measure in param$list_type_measure){
-    print(paste("Starting to calculate GAM of ",meas,sep=""))
-    df_join_measure<-df_join[which(df_join$measure==measure & df_join$wave==wave_mri),]
-    list_roi<-sort(unique(df_join_measure$roi))
-    df_roi<-func_dict_roi(paths)
-    df_roi<-df_roi[df_roi$id %in% list_roi,c('id','label',param$key_group)]
-    colnames(df_roi)<-c('id','label','group')
+gam_str_core<-function(paths,df_str,param,list_sex,list_covar,
+                       list_mod_src,list_term,idx_var,calc_parallel=T,test_mod=F){
+  for (label_wave in names(param$list_wave)){
+    wave_clin<-param$list_wave[[label_wave]]$clin
+    wave_mri<-param$list_wave[[label_wave]]$mri
     
-    # Prepare parallelization cluster
-    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
-    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
-                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
-                  envir=environment())
+    # Prepare clinical data and demean
+    # QC subsetting condition must accord with MRI wave, but under the name of clinical wave
+    subset_subj<-param$subset_subj[wave_mri]
+    names(subset_subj)<-wave_clin
+    data_clin<-func_clinical_data_long(paths,wave_clin,subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,"_wav-",label_wave,"_src",sep=""),print_terminal=F)
+    df_clin<-func_demean_clin(data_clin$df_clin,separate_sex=T)$df_clin
+    fwrite(df_clin,file.path(paths$output,"output","temp",paste("var-",idx_var,"_wav-",label_wave,"_src_clin.csv",sep="")),row.names=F)
+    df_clin$wave<-wave_mri # Need to meet MRI wave for later joining
     
-    # Calculate model
-    data_gamm<-iterate_gamm4_str(clust,df_join_measure,progressbar=F,test_mod=test_mod)
-    stopCluster(clust)
+    # Prepare global covariate data
+    df_global_covar<-df_str[df_str$measure=="global" & df_str$wave==wave_mri & df_str$roi==param$key_global_covar,c("ID_pnTTC","wave","value")]
+    colnames(df_global_covar)<-c("ID_pnTTC","wave","global")
+    df_global_covar<-df_global_covar[df_global_covar$ID_pnTTC %in% df_clin$ID_pnTTC,]
+    df_global_covar<-inner_join(df_global_covar,df_clin[,c("ID_pnTTC","sex")],by="ID_pnTTC")
+    df_global_covar<-func_demean_clin(df_global_covar,separate_sex=T)$df_clin
+    df_global_covar<-df_global_covar[,c("ID_pnTTC","wave","global")]
     
-    
-    ####
-    
-    if (meas=="volume"){
-      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_,df_global_covar=df_global_covar,key_global_covar=key_global_covar_)
-    }else{
-      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_)
-    }
-    for (i in seq(length(data_glm))){
-      if (is.element("roi",colnames(data_glm[[i]]))){
-        id_roicol<-which(colnames(data_glm[[i]])=="roi")
-        label_roi<-NULL
-        for(j in data_glm[[i]]$roi){
-          label_roi<-c(label_roi,as.character(dict_roi[which(dict_roi$id==j),"label"]))
-        }
-        data_glm[[i]]<-cbind(data_glm[[i]][,1:id_roicol],"label_roi"=label_roi,data_glm[[i]][,(1+id_roicol):ncol(data_glm[[i]])])
+    # Join structure, clinical and global covariate data
+    df_join<-inner_join(df_str,df_clin,by=c('ID_pnTTC','wave'))
+    df_join<-inner_join(df_join,df_global_covar,by=c("ID_pnTTC","wave"))
+    for (key in c('ID_pnTTC','wave','sex')){
+      if (key %in% colnames(df_join)){
+        df_join[,key]<-as.factor(df_join[,key])
       }
     }
-    write.csv(data_glm$glm,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_glm.csv",sep="")),row.names = F)
-    write.csv(data_glm$ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_ic.csv",sep="")),row.names = F)
-    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_min_ic.csv",sep="")),row.names = F)
-    write.csv(data_glm$vif,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_vif.csv",sep="")),row.names = F)
-    print(paste("    Finished calculating GLM of ",meas,sep=""))
+    df_join$value<-as.numeric.factor(df_join$value)
+    
+    for (type_measure in param$list_type_measure){
+      measure<-type_measure$measure
+      use_global<-type_measure$global
+      df_join_measure<-df_join[which(df_join$measure==measure & df_join$wave==wave_mri),]
+      list_roi<-sort(unique(df_join_measure$roi))
+      df_roi<-func_dict_roi(paths)
+      df_roi<-df_roi[df_roi$id %in% list_roi,c('id','label',param$key_group)]
+      colnames(df_roi)<-c('id','label','group')
+      
+      # add global covariate term to list_mod
+      list_mod<-list_mod_src
+      for (name_mod in names(list_mod)){
+        list_mod[[name_mod]]<-paste(list_mod[[name_mod]]," + global",sep="")
+      }
+      
+      # Prepare parallelization cluster
+      if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+      clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                    "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
+                    envir=environment())
+      
+      # Calculate model
+      data_gamm<-iterate_gamm4_str(clust,df_join_measure,progressbar=F,test_mod=test_mod)
+      stopCluster(clust)
+      
+      df_gamm<-inner_join(data_gamm$df_gamm,df_roi,by="id")
+      df_aic<-inner_join(data_gamm$df_aic,df_roi,by="id")
+      df_anova<-inner_join(data_gamm$df_anova,df_roi,by="id")
+      fwrite(df_gamm,file.path(paths$output,"output","temp",paste("atl-dk_var-",idx_var,"_wav-",label_wave,"_msr-",measure,"_gamm.csv",sep="")),row.names = F)
+      fwrite(df_aic,file.path(paths$output,"output","temp",paste("atl-dk_var-",idx_var,"_wav-",label_wave,"_msr-",measure,"_aic.csv",sep="")),row.names = F)
+      fwrite(df_anova,file.path(paths$output,"output","temp",paste("atl-dk_var-",idx_var,"_wav-",label_wave,"_msr-",measure,"_anova.csv",sep="")),row.names = F)
+    }
   }
 }
 
 gam_str<-function(paths_=paths,param=param_gam_str){
   print("Starting gam_str()")
   nullobj<-func_createdirs(paths_,str_proc="gam_str()",copy_log=T,list_param=param)
-
   df_str<-as.data.frame(fread(file.path(paths_$input,"output","fs_measure.csv")))
-  #df_str$value[which(is.nan(df_str$value))]<-0
-  #df_global_covar<-df_str[which(df_str$measure=="global" & df_str$wave==wave & df_str$roi==param$key_global_covar),]
-  
-  for (label_wave in names(param$list_wave)){
-    wave_clin<-param$list_wave[[label_wave]]$clin
-    wave_mri<-param$list_wave[[label_wave]]$mri
-    # Loop over Tanner stages
-    for (idx_tanner in names(param$list_tanner)){
-      list_covar<-param$list_covar_tanner
-      list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
-      gam_fc_cs_core(paths_,df_str,param,list_sex=list(1,2),list_covar,
-                     list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
-                     calc_parallel=T,test_mod=F)
-    }
-    # Loop over hormones
-    for (idx_hormone in names(param$list_hormone)){
-      list_covar<-param$list_covar_hormone
-      list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
-      gam_fc_cs_core(paths_,atlas,param,list_sex=list(1,2),list_covar,
-                     list_mod=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
-                     calc_parallel=T,test_mod=F)
-    } 
-    
 
-    
-
+  # Loop over Tanner stages
+  for (idx_tanner in names(param$list_tanner)){
+    list_covar<-param$list_covar_tanner
+    list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
+    gam_str_core(paths_,df_str,param,list_sex=list(1,2),list_covar,
+                 list_mod_src=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
+                 calc_parallel=T,test_mod=F)
   }
-  
-  
+  # Loop over hormones
+  for (idx_hormone in names(param$list_hormone)){
+    list_covar<-param$list_covar_hormone
+    list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
+    gam_str_core(paths_,df_str,param,list_sex=list(1,2),list_covar,
+                 list_mod_src=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
+                 calc_parallel=T,test_mod=F)
+  }
 
+  func_combine_result(paths_,list_atlas="dk",list_var=c(param$list_tanner,param$list_hormone),
+                      list_wave=names(param$list_wave),list_type_measure=param$list_type_measure,list_filename=c("gamm","aic","anova"))
 
   print("Finished gam_str().")
 }
