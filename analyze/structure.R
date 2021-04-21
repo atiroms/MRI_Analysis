@@ -12,7 +12,7 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 path_exp_full<-NULL
 dir_in <-"01_extract"
-dir_out <-"03_glm"
+dir_out <-"03.2_glm"
 #dir_in <-"31_meas"
 #dir_out <-"32_fp"
 
@@ -94,8 +94,10 @@ gam_str_core<-function(paths,df_str,param,list_sex,list_covar,
       
       # add global covariate term to list_mod
       list_mod<-list_mod_src
-      for (name_mod in names(list_mod)){
-        list_mod[[name_mod]]<-paste(list_mod[[name_mod]]," + global",sep="")
+      if (use_global){
+        for (name_mod in names(list_mod)){
+          list_mod[[name_mod]]<-paste(list_mod[[name_mod]]," + global",sep="")
+        }
       }
       
       # Prepare parallelization cluster
@@ -303,52 +305,55 @@ fp_str<-function(paths_=paths,
 }
 
 
-#**************************************************
-# GLM of structural measures ======================
-#**************************************************
-glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
-                  wave_=wave,key_global_covar_=key_global_covar
-                  ){
-  print("Starting glm_str()")
-  data_clinical<-func_clinical_data(paths_,subset_subj_)
-  nullobj<-func_createdirs(paths_,copy_log=T)
-  dict_roi<-func_dict_roi(paths_)
-  df_str<-read.csv(file.path(paths_$input,"output",file_input_))
-  df_str$value[which(is.nan(df_str$value))]<-0
-  df_global_covar<-df_str[which(df_str$measure=="global" & df_str$wave==wave & df_str$roi==key_global_covar_),]
-  for (meas in measure){
-    print(paste("    Starting to calculate GLM of ",meas,sep=""))
-    df_str_meas<-df_str[which(df_str$measure==meas & df_str$wave==wave_),]
-    if (meas=="volume"){
-      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_,df_global_covar=df_global_covar,key_global_covar=key_global_covar_)
-    }else{
-      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_)
-    }
-    for (i in seq(length(data_glm))){
-      if (is.element("roi",colnames(data_glm[[i]]))){
-        id_roicol<-which(colnames(data_glm[[i]])=="roi")
-        label_roi<-NULL
-        for(j in data_glm[[i]]$roi){
-          label_roi<-c(label_roi,as.character(dict_roi[which(dict_roi$id==j),"label"]))
-        }
-        data_glm[[i]]<-cbind(data_glm[[i]][,1:id_roicol],"label_roi"=label_roi,data_glm[[i]][,(1+id_roicol):ncol(data_glm[[i]])])
-      }
-    }
-    write.csv(data_glm$glm,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_glm.csv",sep="")),row.names = F)
-    write.csv(data_glm$ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_ic.csv",sep="")),row.names = F)
-    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_min_ic.csv",sep="")),row.names = F)
-    write.csv(data_glm$vif,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_vif.csv",sep="")),row.names = F)
-    print(paste("    Finished calculating GLM of ",meas,sep=""))
-  }
-  print("Finished glm_str().")
-  return(data_glm)
-  
-}
-
 
 #**************************************************
 # OBSOLETE ========================================
 #**************************************************
+
+
+#**************************************************
+# GLM of structural measures ======================
+#**************************************************
+#
+#glm_str<-function(paths_=paths,subset_subj_=subset_subj,list_covar_=list_covar,file_input_=file_input,
+#                  wave_=wave,key_global_covar_=key_global_covar
+#){
+#  print("Starting glm_str()")
+#  data_clinical<-func_clinical_data(paths_,subset_subj_)
+#  nullobj<-func_createdirs(paths_,copy_log=T)
+#  dict_roi<-func_dict_roi(paths_)
+#  df_str<-read.csv(file.path(paths_$input,"output",file_input_))
+#  df_str$value[which(is.nan(df_str$value))]<-0
+#  df_global_covar<-df_str[which(df_str$measure=="global" & df_str$wave==wave & df_str$roi==key_global_covar_),]
+#  for (meas in measure){
+#    print(paste("    Starting to calculate GLM of ",meas,sep=""))
+#    df_str_meas<-df_str[which(df_str$measure==meas & df_str$wave==wave_),]
+#    if (meas=="volume"){
+#      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_,df_global_covar=df_global_covar,key_global_covar=key_global_covar_)
+#    }else{
+#      data_glm<-func_glm(df_mri=df_str_meas,data_clinical,list_covar=list_covar_)
+#    }
+#    for (i in seq(length(data_glm))){
+#      if (is.element("roi",colnames(data_glm[[i]]))){
+#        id_roicol<-which(colnames(data_glm[[i]])=="roi")
+#        label_roi<-NULL
+#        for(j in data_glm[[i]]$roi){
+#          label_roi<-c(label_roi,as.character(dict_roi[which(dict_roi$id==j),"label"]))
+#        }
+#        data_glm[[i]]<-cbind(data_glm[[i]][,1:id_roicol],"label_roi"=label_roi,data_glm[[i]][,(1+id_roicol):ncol(data_glm[[i]])])
+#      }
+#    }
+#    write.csv(data_glm$glm,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_glm.csv",sep="")),row.names = F)
+#    write.csv(data_glm$ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_ic.csv",sep="")),row.names = F)
+#    write.csv(data_glm$min_ic,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_min_ic.csv",sep="")),row.names = F)
+#    write.csv(data_glm$vif,file.path(paths_$output,"output",paste("w",wave,"_",meas,"_vif.csv",sep="")),row.names = F)
+#    print(paste("    Finished calculating GLM of ",meas,sep=""))
+#  }
+#  print("Finished glm_str().")
+#  return(data_glm)
+#  
+#}
+
 
 ##### Parameters ####
 #p_uncorrected<-0.001

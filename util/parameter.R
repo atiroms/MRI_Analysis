@@ -10,7 +10,10 @@
 param_gam_str<-list(
   "key_group"="group_3",
   "key_global_covar"="eTIV",
-  "list_type_measure"=list(list("measure"="volume","global"=T),
+  #"list_type_measure"=list(list("measure"="volume","global"=T),
+  #                         list("measure"="thickness","global"=F),
+  #                         list("measure"="area","global"=F)),
+  "list_type_measure"=list(list("measure"="volume","global"=F),
                            list("measure"="thickness","global"=F),
                            list("measure"="area","global"=F)),
   "subset_subj" = list("1"  =list(list("key"="W1_T1QC","condition"="==1")),
