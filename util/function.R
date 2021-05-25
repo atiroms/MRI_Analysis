@@ -671,7 +671,7 @@ add_mltcmp<-function(df_gamm,df_roi,list_mod,list_term,calc_seed_level=T){
   for (idx_mod in names(list_mod)){
     for (idx_term in names(list_term)){
       var_exp<-list_term[[idx_term]][["var_exp"]]
-      for (idx_sex in c(1,2)){
+      for (idx_sex in c(1,2,"1_2")){
         # Subset GAMM result dataframe for plotting
         df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp & df_gamm$sex==idx_sex,c("from","to","sex","model","term","p")]
         if (nrow(df_gamm_subset)>0){

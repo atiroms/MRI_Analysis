@@ -12,7 +12,7 @@
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/str_FS"
 path_exp_full<-NULL
 dir_in <-"01_extract"
-dir_out <-"03.2_glm"
+dir_out <-"03.1_glm"
 #dir_in <-"31_meas"
 #dir_out <-"32_fp"
 
@@ -45,6 +45,42 @@ source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
+
+#**************************************************
+# CA of structural measures =======================
+#**************************************************
+ca_str_cs<-function(paths_=paths,param=param_ca_str_cs){
+  print("Starting ca_str_cs()")
+  nullobj<-func_createdirs(paths_,str_proc="ca_str_cs()",copy_log=T,list_param=param)
+  df_str<-as.data.frame(fread(file.path(paths_$input,"output","fs_measure.csv")))
+  
+  # Calculate components
+  for (wave_mri in param$list_wave_mri){
+    
+  }
+  
+  # Loop over Tanner stages
+  for (idx_tanner in names(param$list_tanner)){
+    list_covar<-param$list_covar_tanner
+    list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
+    gam_str_core(paths_,df_str,param,list_sex=list(1,2),list_covar,
+                 list_mod_src=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
+                 calc_parallel=T,test_mod=F)
+  }
+  # Loop over hormones
+  for (idx_hormone in names(param$list_hormone)){
+    list_covar<-param$list_covar_hormone
+    list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
+    gam_str_core(paths_,df_str,param,list_sex=list(1,2),list_covar,
+                 list_mod_src=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
+                 calc_parallel=T,test_mod=F)
+  }
+  
+  func_combine_result(paths_,list_atlas="dk",list_var=c(param$list_tanner,param$list_hormone),
+                      list_wave=names(param$list_wave),list_type_measure=param$list_type_measure,list_filename=c("gamm","aic","anova"))
+  
+  print("Finished ca_str_cs().")
+}
 
 #**************************************************
 # GAM of structural measures ======================
