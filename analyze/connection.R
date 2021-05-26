@@ -10,8 +10,8 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/SSD_02/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
 #dir_out<-"424_fc_gamm_aroma_test8" 
@@ -62,7 +62,9 @@ gamm_fc_mix_core<-function(paths,data_fc,atlas,param,
   # Fill Tanner=NA values with 1
   if (param$fill_na_tanner){
     for (col in c("tanner_m","tanner_f")){
-      df_clin[is.na(df_clin[col]),col]<-1
+      if (col %in% colnames(df_clin)){
+        df_clin[is.na(df_clin[col]),col]<-1
+      }
     }
   }
   # Select subjects with longitudinal data
@@ -186,7 +188,7 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
     df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
   }
   # Select subjects with non-decreasing data
-  if (!is.nan(param$omit_decreasing)){
+  if (!is.null(param$omit_decreasing)){
     list_id_subj<-sort(unique(df_clin$ID_pnTTC))
     list_id_subj_omit<-NULL
     for (var in param$omit_decreasing){
@@ -247,18 +249,6 @@ gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
                            abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
     data_fc$df_edge$id_edge<-seq(nrow(data_fc$df_edge))
     data_fc$df_edge_grp$id_edge<-seq(nrow(data_fc$df_edge_grp))
-    
-    for (id_subj in df_clin$ID_pnTTC){
-      df_fc_subj<-df_fc_ses[df_fc_ses$ID_pnTTC==id_subj,"z_r"]
-      if (param$std_fc){
-        df_fc_subj<-(df_fc_subj-mean(df_fc_subj))/sd(df_fc_subj)
-      }else if(param$div_mean_fc){
-        df_fc_subj<-df_fc_subj/mean(df_fc_subj)
-      }
-      df_fc_calc<-rbind(df_fc_calc,df_fc_subj)
-      df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
-    }
-    
     
     # Loop over clinical variables
     #1 Tanner stage
@@ -438,11 +428,11 @@ ca_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,param=param_ca_fc_cs,skip
           df_fc_calc<-df_clin_exist<-NULL
           for (id_subj in df_clin$ID_pnTTC){
             df_fc_subj<-df_fc_ses[df_fc_ses$ID_pnTTC==id_subj,"z_r"]
-            if (param$std_fc){
-              df_fc_subj<-(df_fc_subj-mean(df_fc_subj))/sd(df_fc_subj)
-            }else if(param$div_mean_fc){
-              df_fc_subj<-df_fc_subj/mean(df_fc_subj)
-            }
+            #if (param$std_fc){
+            #  df_fc_subj<-(df_fc_subj-mean(df_fc_subj))/sd(df_fc_subj)
+            #}else if(param$div_mean_fc){
+            #  df_fc_subj<-df_fc_subj/mean(df_fc_subj)
+            #}
             df_fc_calc<-rbind(df_fc_calc,df_fc_subj)
             df_clin_exist<-rbind(df_clin_exist,df_clin[df_clin$ID_pnTTC==id_subj,])
           }
@@ -764,7 +754,8 @@ gam_fc_cs_core<-function(paths,atlas,param,list_sex,
     
     # Prepare FC data
     print(paste("Preparing FC data: ",atlas,sep=""))
-    data_fc<-prep_data_fc2(paths,atlas,param$key_group,list_wave=wave_mri,include_grp=T,abs_nfc=param$abs_nfc)
+    data_fc<-prep_data_fc2(paths,atlas,param$key_group,list_wave=wave_mri,include_grp=T,
+                           abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
     df_fc<-data_fc$df_fc; df_fc_grp<-data_fc$df_fc_grp
     fwrite(df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_src_fc.csv",sep="")),row.names=F)
     fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_src_fc_grp.csv",sep="")),row.names=F)
@@ -815,7 +806,7 @@ gam_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_cs){
   
   print("Combining results.")
   list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,names(param$list_wave),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  func_combine_result(paths_,list_atlas_,list_var,names(param$list_wave),list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
   
   print("Finished gam_fc_cs().")
 }
@@ -892,7 +883,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
   
   print("Combining results.")
   list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,"2-1",c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
   
   print("Finished gam_fc_diff().")
 }

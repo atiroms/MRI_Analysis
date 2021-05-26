@@ -8,9 +8,16 @@
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
+  # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
+  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "div_mean_fc"=F, # normalize z values with division with mean
+  
+  # Parameters for clinical data subsetting
   "force_long"=T, # use longitudinal data only
-  "omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable 
+  "omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
+  #"omit_decreasing"=NULL,
+  
   "key_group"="group_3",
   "list_wave"=c(1,2),
   "list_sex"=list(1,2),
@@ -46,8 +53,9 @@ param_gamm_fc<-list(
   #"list_mod_tanner"=list("l" = "value ~ age + tanner + (1|ID_pnTTC)",
   #                       "li"= "value ~ age * tanner + (1|ID_pnTTC)"),
   #                       "a"= "value ~ age + s(tanner,k=3) + s(ID_pnTTC,bs='re')"),
-  "list_mod_tanner"=list("l" = "value ~ age + tanner + (1|ID_pnTTC)",
-                         "li"= "value ~ age * tanner + (1|ID_pnTTC)"),
+  #"list_mod_tanner"=list("l" = "value ~ age + tanner + (1|ID_pnTTC)",
+  #                       "li"= "value ~ age * tanner + (1|ID_pnTTC)"),
+  "list_mod_tanner"=list("l" = "value ~ age + tanner + (1|ID_pnTTC)"),
   "list_term_tanner"=list("a"=list("title"="Age effect","var_exp"="age"),
                           "s(a)"=list("title"="Age effect","var_exp"="s(age)"),
                           "t"=list("title"="Tanner effect","var_exp"="tanner"),
@@ -61,8 +69,9 @@ param_gamm_fc<-list(
   #                    "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
   #                    "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
   "list_hormone"=NULL,
-  "list_mod_hormone"=list("l" = "value ~ age + hormone + (1|ID_pnTTC))",
-                          "li"= "value ~ age * hormone + (1|ID_pnTTC)"),
+  #"list_mod_hormone"=list("l" = "value ~ age + hormone + (1|ID_pnTTC)",
+  #                        "li"= "value ~ age * hormone + (1|ID_pnTTC)"),
+  "list_mod_hormone"=list("l" = "value ~ age + hormone + (1|ID_pnTTC)"),
   #"a"= "value ~ age + s(hormone,k=3) + s(ID_pnTTC,bs='re')"),
   #"a"= "value ~ s(age,k=3) + s(hormone,k=3) + s(ID_pnTTC,bs='re')",
   #"q"="value ~ poly(age,2) + poly(hormone,2) + s(ID_pnTTC,bs='re')")
@@ -71,7 +80,8 @@ param_gamm_fc<-list(
                            "h"=list("title"="Hormone effect","var_exp"="hormone"),
                            "ah"=list("title"="Age by Hormone interaction","var_exp"="age:hormone"),
                            "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)")),
-  "param_nbs"=list("list_mod"=c("l","li"),
+  "param_nbs"=list(#"list_mod"=c("l","li"),
+                   "list_mod"="l",
                    "list_term"=list(list("term_perm"="t","term_detect"=c("t","at")),
                                     list("term_perm"="h","term_detect"=c("h","ah"))),
                    #"p_cdt_threshold"=0.001,
@@ -140,7 +150,8 @@ param_gamm_fc_mix<-list(
   "param_nbs"=list(#"list_mod"=c("l","li"),
                    "list_mod"="l",
                    "list_term"=list(list("term_perm"="t_m","term_detect"=c("t_m","at_m")),
-                                    list("term_perm"="t_f","term_detect"=c("t_f","at_f"))),
+                                    list("term_perm"="t_f","term_detect"=c("t_f","at_f")),
+                                    list("term_perm"="h","term_detect"=c("h","ah"))),
                    #"p_cdt_threshold"=0.001,
                    "p_cdt_threshold"=c(0.001,0.005,0.01),
                    "p_perm_threshold"=0.05,
