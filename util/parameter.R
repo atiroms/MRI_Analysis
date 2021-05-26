@@ -10,13 +10,13 @@
 param_gamm_fc<-list(
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "std_fc"=F, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
   "force_long"=T, # use longitudinal data only
-  "omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
-  #"omit_decreasing"=NULL,
+  #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
+  "omit_decreasing"=NULL,
   
   "key_group"="group_3",
   "list_wave"=c(1,2),
@@ -64,11 +64,11 @@ param_gamm_fc<-list(
   "list_covar_hormone"=list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
                             "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                             "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
-  #"list_hormone"=list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-  #                    "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-  #                    "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-  #                    "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
-  "list_hormone"=NULL,
+  "list_hormone"=list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+                      "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+                      "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+                      "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
+  #"list_hormone"=NULL,
   #"list_mod_hormone"=list("l" = "value ~ age + hormone + (1|ID_pnTTC)",
   #                        "li"= "value ~ age * hormone + (1|ID_pnTTC)"),
   "list_mod_hormone"=list("l" = "value ~ age + hormone + (1|ID_pnTTC)"),
