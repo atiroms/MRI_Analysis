@@ -239,7 +239,7 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F,std_fc=F){
+prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F,std_fc=F,div_mean_fc=F){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
@@ -247,9 +247,42 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
   
   df_fc<-df_fc[df_fc$ses!="2-1",] # exclude pre-calculated longitudinal difference (not usable for absolute NFC)
   
-  if (abs_nfc){ # Absolute value for negative functional connectivity
+  # Absolute value for negative functional connectivity
+  if (abs_nfc){
     df_fc$r<-abs(df_fc$r)
     df_fc$z_r<-abs(df_fc$z_r)
+  }
+  
+  # Standardization into z values within each recording
+  if (std_fc){
+    df_fc_std<-data.frame()
+    list_wave<-sort(unique(df_fc$ses))
+    for (wave in list_wave){
+      list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
+      for (id_subj in list_id_subj){
+        df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
+        mean_fc<-mean(df_fc_subset$z_r)
+        sd_fc<-sd(df_fc_subset$z_r)
+        df_fc_subset$z_r<-(df_fc_subset$z_r-mean_fc)/sd_fc
+        df_fc_std<-rbind(df_fc_std,df_fc_subset)
+      }
+    }
+    df_fc<-df_fc_std
+  
+  # Simle division with mean
+  }else if (div_mean_fc){
+    df_fc_std<-data.frame()
+    list_wave<-sort(unique(df_fc$ses))
+    for (wave in list_wave){
+      list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
+      for (id_subj in list_id_subj){
+        df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
+        mean_fc<-mean(df_fc_subset$z_r)
+        df_fc_subset$z_r<-df_fc_subset$z_r/mean_fc
+        df_fc_std<-rbind(df_fc_std,df_fc_subset)
+      }
+    }
+    df_fc<-df_fc_std
   }
   
   if ("2-1" %in% list_wave){
