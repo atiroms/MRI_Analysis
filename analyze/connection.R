@@ -1177,11 +1177,11 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
           var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
           for (idx_sex in list_sex){
             if (idx_sex==1){
-              label_sex<-"m"
+              label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
             }else if (idx_sex==2){
-              label_sex<-"f"
+              label_sex<-"f";title_sex<-"female";color_plt<-"lightcoral"
             }else{
-              label_sex<-"mf"
+              label_sex<-"mf";title_sex<-"both";color_plt<-"grey60"
             }
             for (p_cdt in param$param_nbs$p_cdt_threshold){
               list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp_detect
@@ -1219,11 +1219,7 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
                 thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
                 df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,
                                                                       thr_size=thr_size_nbs))
-                if (idx_sex==1){
-                  label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
-                }else{
-                  label_sex<-"f";title_sex<-"female";color_plt<-"lightcoral"
-                }
+
                 title_plot<-list_term[[idx_term_detect]][["title"]]
                 plot_permutation(paths,list_max=list_max_size,thr_size_nbs,
                                  atlas,var=idx_var,wave=label_wave,idx_mod,idx_term_detect,label_sex,title_plot,title_sex,p_cdt,color_plt)
