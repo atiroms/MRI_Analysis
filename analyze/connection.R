@@ -74,7 +74,7 @@ gamm_fc_mix_core<-function(paths,data_fc,atlas,param,
     df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
   }
   # Select subjects with non-decreasing data
-  if (!is.nan(param$omit_decreasing)){
+  if (!is.null(param$omit_decreasing)){
     list_id_subj<-sort(unique(df_clin$ID_pnTTC))
     list_id_subj_omit<-NULL
     for (var in param$omit_decreasing){
