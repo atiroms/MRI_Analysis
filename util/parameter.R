@@ -113,13 +113,13 @@ param_gamm_fc<-list(
 param_gamm_fc_mix<-list(
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "std_fc"=F, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  "force_long"=T, # use longitudinal data only
-  #"omit_decreasing"=NULL,
-  "omit_decreasing"=c("tanner_m","tanner_f"), # omit subjects with longitudinally decreasing data of the variable 
+  "force_long"=F, # use longitudinal data only
+  "omit_decreasing"=NULL,
+  #"omit_decreasing"=c("tanner_m","tanner_f"), # omit subjects with longitudinally decreasing data of the variable 
   "fill_na_tanner"=T,
   
   "key_group"="group_3",
