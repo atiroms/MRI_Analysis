@@ -256,8 +256,8 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
   # Standardization into z values within each recording
   if (std_fc){
     df_fc_std<-data.frame()
-    list_wave<-sort(unique(df_fc$ses))
-    for (wave in list_wave){
+    list_wave_exist<-sort(unique(df_fc$ses))
+    for (wave in list_wave_exist){
       list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
       for (id_subj in list_id_subj){
         df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
@@ -269,11 +269,11 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
     }
     df_fc<-df_fc_std
   
-  # Simle division with mean
+  # Simple division with mean
   }else if (div_mean_fc){
     df_fc_std<-data.frame()
-    list_wave<-sort(unique(df_fc$ses))
-    for (wave in list_wave){
+    list_wave_exist<-sort(unique(df_fc$ses))
+    for (wave in list_wave_exist){
       list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
       for (id_subj in list_id_subj){
         df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
@@ -968,7 +968,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
 #**************************************************
 func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
   
-  # Classify covaiates to fixed values and unfixed values
+  # Classify covariates to fixed values and unfixed values
   list_covar_fix<-list_covar_change<-NULL
   for (id_covar in names(list_covar)){
     if (list_covar[[id_covar]][["1"]][1]==list_covar[[id_covar]][["2"]][1]){
@@ -993,9 +993,28 @@ func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
     df_clin_change<-c(df_clin_change,df_clin_change_ses)
   }
   
+  list_col_factor<-NULL
+  for (col in colnames(df_clin_change[["1"]])){
+    if (class(df_clin_change[["1"]][[col]])=="factor"){
+      list_col_factor<-c(list_col_factor,col)
+    }
+  }
+
+  for (ses in c(1,2)){
+    for (col in list_col_factor){
+      df_clin_change[[ses]][[col]]<-as.numeric.factor(df_clin_change[[ses]][[col]])
+    } 
+  }
+  
   # Calculate difference and mean
   df_clin_diff<-df_clin_change[["2"]]-df_clin_change[["1"]]
   df_clin_mean<-(df_clin_change[["1"]]+df_clin_change[["2"]])/2
+  for (col in list_col_factor){
+    df_clin_change[["1"]][[col]]<-as.factor(df_clin_change[["1"]][[col]])
+    df_clin_change[["2"]][[col]]<-as.factor(df_clin_change[["2"]][[col]])
+    df_clin_diff[[col]]<-as.factor(df_clin_diff[[col]])
+    df_clin_mean[[col]]<-as.factor(df_clin_mean[[col]])
+  }
   
   # Change column names
   colnames(df_clin_change[["1"]])<-c(paste("ses1_",colnames(df_clin_change[["1"]]),sep=''))

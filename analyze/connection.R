@@ -10,12 +10,13 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
+dir_out<-"423.3_fc_gam_diff_aroma_test1" 
 #dir_out<-"424_fc_gamm_aroma_test15" 
-dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
+#dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
 
@@ -816,25 +817,44 @@ gam_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_cs){
 # GLM/GAM of FC longitudinal difference ===========
 #**************************************************
 
-gam_fc_diff_core<-function(paths,atlas,param,list_sex,
-                      list_covar,list_mod,list_term,idx_var,
-                      calc_parallel,test_mod
-                      ){
+gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
+                           list_covar,list_mod,list_term,idx_var,
+                           calc_parallel,test_mod
+                           ){
   # Prepare clinical data and demean
   data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,sep=""),print_terminal=F)
   list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
-  df_clin_diff<-data_clin$df_clin
-  colnames(df_clin_diff)[colnames(df_clin_diff)=="wave"]<-"ses"
-  df_clin_diff<-func_clinical_data_diffmean(df_clin_diff,list_id_subj,list_covar)
-  df_clin_diff<-data.frame(wave="2-1",func_demean_clin(df_clin_diff,separate_sex=T)$df_clin)
-  fwrite(df_clin_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_clin.csv",sep="")),row.names=F)
+  df_clin<-data_clin$df_clin
+  df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+  # Select subjects with non-decreasing data
+  if (!is.null(param$omit_decreasing)){
+    list_id_subj<-sort(unique(df_clin$ID_pnTTC))
+    list_id_subj_omit<-NULL
+    for (var in param$omit_decreasing){
+      if (var %in% colnames(df_clin)){
+        for (id_subj in list_id_subj){
+          value<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==param$list_wave[1],var])
+          for (wave in param$list_wave[-1]){
+            value_wave<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==wave,var])
+            if (value_wave<value){
+              list_id_subj_omit<-c(list_id_subj_omit,id_subj)
+            }
+            value<-value_wave
+          }
+        }
+      }
+    }
+    list_id_subj_omit<-sort(unique(list_id_subj_omit))
+    list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
+    df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+  }
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  df_clin<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar)
+  df_clin<-data.frame(wave="2-1",func_demean_clin(df_clin,separate_sex=T)$df_clin)
+  fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
   
   # Prepare FC data
-  print(paste("Preparing FC data: ",atlas,sep=""))
-  data_fc<-prep_data_fc2(paths,atlas,param$key_group,list_wave="2-1",include_grp=T,abs_nfc=param$abs_nfc)
-  df_fc_diff<-data_fc$df_fc; df_fc_grp_diff<-data_fc$df_fc_grp
-  fwrite(df_fc_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc.csv",sep="")),row.names=F)
-  fwrite(df_fc_grp_diff,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_fc_grp.csv",sep="")),row.names=F)
+  df_fc<-data_fc$df_fc; df_fc_grp<-data_fc$df_fc_grp
   
   label_wave<-"2-1"
   # Calculate model
@@ -855,19 +875,25 @@ gam_fc_diff_core<-function(paths,atlas,param,list_sex,
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
   print("Starting gam_fc_diff().")
-  nullobj<-func_createdirs(paths_,str_proc="gam_fc()",copy_log=T,list_param=param)
+  nullobj<-func_createdirs(paths_,str_proc="gam_fc_diff()",copy_log=T,list_param=param)
   memory.limit(1000000)
   
   # Loop over atlases
   for (atlas in list_atlas_){
+    print(paste("Preparing FC data: ",atlas,sep=""))
+    data_fc<-prep_data_fc2(paths_,atlas,param$key_group,list_wave="2-1",include_grp=T,
+                           abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
+    fwrite(data_fc$df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc.csv",sep="")),row.names=F)
+    fwrite(data_fc$df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc_grp.csv",sep="")),row.names=F)
+    
     # Loop over clinical variables
     #1 Tanner stage
     for (idx_tanner in names(param$list_tanner)){
       print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
       list_covar<-param$list_covar_tanner
       list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
-      gam_fc_diff_core(paths_,atlas,param,list(1,2),list_covar,
-                       param$list_mod_tanner,param$list_term_tanner,idx_tanner,
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list_sex=list(1,2),list_covar,
+                       list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
                        calc_parallel=T,test_mod=F)
     } # Finished looping over Tanner stages
     
@@ -876,8 +902,8 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       print(paste("Atlas: ",atlas,", Hormone type: ",param$list_hormone[[idx_hormone]][["label"]],sep=""))
       list_covar<-param$list_covar_hormone
       list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
-      gam_fc_diff_core(paths_,atlas,param,list(1,2),list_covar,
-                       param$list_mod_hormone,param$list_term_hormone,idx_hormone,
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list_sex=list(1,2),list_covar,
+                       list_mod=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
                        calc_parallel=T,test_mod=F)
     } # Finished looping over Hormones
   } # Finished looping over atlas
