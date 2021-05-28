@@ -10,11 +10,11 @@
 param_gamm_fc<-list(
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "std_fc"=F, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  "force_long"=T, # use longitudinal data only
+  "force_long"=F, # use longitudinal data only
   #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
   "omit_decreasing"=NULL,
   
@@ -98,7 +98,7 @@ param_gamm_fc<-list(
   "param_nbs"=list(#"list_mod"=c("l","li"),
                    "list_mod"="l",
                    "list_term"=list(list("term_perm"="t","term_detect"=c("t","at","tl")),
-                                    list("term_perm"="h","term_detect"=c("h","ah","hl"))),
+                                    list("term_perm"="h","term_detect"=c("h","ah"))),
                    #"p_cdt_threshold"=0.001,
                    "p_cdt_threshold"=c(0.001,0.005,0.01),
                    "p_perm_threshold"=0.05,

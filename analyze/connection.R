@@ -24,8 +24,8 @@ dir_out<-"424_fc_gamm_aroma_test17"
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
 #list_atlas<-"aal116"
-list_atlas<-"ho112"
-#list_atlas<-c("ho112","power264")
+#list_atlas<-"ho112"
+list_atlas<-c("ho112","power264")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
