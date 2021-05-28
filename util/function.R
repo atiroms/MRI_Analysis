@@ -52,6 +52,37 @@ func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_
 
 
 #**************************************************
+# Standardize clinical data =======================
+#**************************************************
+func_std_clin<-function(df_clin,separate_sex=T){
+  df_mean<-data.frame(matrix(ncol=ncol(df_clin)))
+  df_sd<-data.frame(matrix(ncol=ncol(df_clin)))
+  colnames(df_mean)<-colnames(df_clin)
+  for (idx_col in colnames(df_clin)){
+    if (idx_col %nin% c("ID_pnTTC","wave","sex")){
+      if(class(df_clin[,idx_col])[1] %nin% c("factor","ordered")){
+        if (separate_sex){
+          for (sex in c(1,2)){
+            mean_var<-mean(df_clin[df_clin$sex==sex,idx_col])
+            sd_var<-sd(df_clin[df_clin$sex==sex,idx_col])
+            df_mean[sex,c("sex",idx_col)]<-c(sex,mean_var)
+            df_sd[sex,c("sex",idx_col)]<-c(sex,sd_var)
+            df_clin[df_clin$sex==sex,idx_col]<-(df_clin[df_clin$sex==sex,idx_col]-mean_var)/sd_var
+          }
+        }else{
+          mean_var<-mean(df_clin[,idx_col])
+          sd_var<-sd(df_clin[,idx_col])
+          df_mean[1,idx_col]<-mean_var
+          df_sd[1,idx_col]<-sd_var
+          df_clin[,idx_col]<-(df_clin[,idx_col]-mean_var)/sd_var
+        }
+      }
+    }
+  }
+  return(list("df_clin"=df_clin,"df_mean"=df_mean,"df_sd"=df_sd))
+}
+
+#**************************************************
 # Demean clinical data ============================
 #**************************************************
 #func_demean_clin<-function(df_clin,thr_cont=10,separate_sex=T){
@@ -61,7 +92,7 @@ func_demean_clin<-function(df_clin,separate_sex=T){
   for (idx_col in colnames(df_clin)){
     if (idx_col %nin% c("ID_pnTTC","wave","sex")){
       #if(length(unique(df_clin[,idx_col]))>thr_cont){
-      if(class(df_clin[,idx_col])!="factor"){
+      if(class(df_clin[,idx_col])[1] %nin% c("factor","ordered")){
         if (separate_sex){
           for (sex in c(1,2)){
             mean<-mean(df_clin[df_clin$sex==sex,idx_col])
@@ -952,6 +983,8 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
     if (!is.null(list_covar[[covar]][["dtype"]])){
       if (list_covar[[covar]][["dtype"]]=="factor"){
         df_clin_exist[,covar]<-as.factor(df_clin_exist[,covar])
+      }else if (list_covar[[covar]][["dtype"]]=="ordered"){
+        df_clin_exist[,covar]<-ordered(df_clin_exist[,covar])
       }
     }
   }

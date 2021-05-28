@@ -15,7 +15,7 @@ path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
 #dir_out<-"423.3_fc_gam_diff_aroma_test1" 
-dir_out<-"424_fc_gamm_aroma_test16" 
+dir_out<-"424_fc_gamm_aroma_test17" 
 #dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
@@ -24,8 +24,8 @@ dir_out<-"424_fc_gamm_aroma_test16"
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
 #list_atlas<-"aal116"
-#list_atlas<-"ho112"
-list_atlas<-c("ho112","power264")
+list_atlas<-"ho112"
+#list_atlas<-c("ho112","power264")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -90,7 +90,7 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
     list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
     df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
   }
-  df_clin<-func_demean_clin(df_clin,separate_sex=T)$df_clin
+  df_clin<-func_std_clin(df_clin,separate_sex=T)$df_clin
   fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
   
   # Prepare FC data
