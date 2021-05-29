@@ -776,7 +776,7 @@ add_mltcmp<-function(df_gamm,df_roi,list_mod,list_term,calc_seed_level=T){
 # Factor to numeric function ======================
 #**************************************************
 as.numeric.factor <- function(x) {
-  if (class(x)=="factor"){
+  if (class(x)[1] %in% c("factor","ordered")){
     return(as.numeric(levels(x))[x])
   }else{
     return(x)
@@ -1027,9 +1027,12 @@ func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
   }
   
   list_col_factor<-NULL
+  list_col_ordered<-NULL
   for (col in colnames(df_clin_change[["1"]])){
     if (class(df_clin_change[["1"]][[col]])[1]=="factor"){
       list_col_factor<-c(list_col_factor,col)
+    }else if (class(df_clin_change[["1"]][[col]])[1]=="ordered"){
+      list_col_ordered<-c(list_col_ordered,col)
     }
   }
 
@@ -1047,6 +1050,12 @@ func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
     df_clin_change[["2"]][[col]]<-as.factor(df_clin_change[["2"]][[col]])
     df_clin_diff[[col]]<-as.factor(df_clin_diff[[col]])
     df_clin_mean[[col]]<-as.factor(df_clin_mean[[col]])
+  }
+  for (col in list_col_ordered){
+    df_clin_change[["1"]][[col]]<-ordered(df_clin_change[["1"]][[col]])
+    df_clin_change[["2"]][[col]]<-ordered(df_clin_change[["2"]][[col]])
+    df_clin_diff[[col]]<-ordered(df_clin_diff[[col]])
+    df_clin_mean[[col]]<-ordered(df_clin_mean[[col]])
   }
   
   # Change column names

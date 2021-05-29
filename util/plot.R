@@ -192,20 +192,20 @@ plot_parallel<-function(clust,list_data_plot,progressbar=F){
 # Histogram of Permutaion =========================
 #**************************************************
 plot_permutation<-function(paths_,list_max,thr_size_perm,
-                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,color_plt){
+                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,type_sign,color_plt){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
         + geom_histogram(binwidth=2,fill=color_plt)
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
         + ggtitle(paste("atlas: ",atlas,", measure: ",var,", wave: ",wave,", model: ",model,
-                        "\nexpvar: ",title_plot,", sex: ",title_sex,", CDT: p<",as.character(p_cdt),sep=""))
+                        "\nexpvar: ",title_plot,", sex: ",title_sex,", CDT: p<",as.character(p_cdt),", sign: ",type_sign,sep=""))
         + xlab("Size")
         + ylab("Count")
         + theme_light()
         + theme(plot.title = element_text(hjust = 0.5))
   )
   ggsave(paste("atl-",atlas,"_var-",var,"_wav-",wave,"_mod-",model,"_trm-",term,
-               "_sex-",sex,"_pval-p_",as.character(p_cdt),"_perm.png",sep=""),
+               "_sex-",sex,"_pval-p_",as.character(p_cdt),"_sgn-",type_sign,"_perm.png",sep=""),
          plot=plt,path=file.path(paths_$output,"output","plot"),height=5,width=7,dpi=300)
   #output<-list("filename"=paste("atl-",atlas,"_wave-",wave,"_mod-",model,"_plt-",plot,
   #                              "_sex-",sex,"_perm.png",sep=""),

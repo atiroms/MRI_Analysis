@@ -15,7 +15,7 @@ path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
 #dir_out<-"423.3_fc_gam_diff_aroma_test1" 
-dir_out<-"424_fc_gamm_aroma_test21" 
+dir_out<-"424_fc_gamm_aroma_test22" 
 #dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
@@ -95,9 +95,7 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
   
   # Prepare FC data
   df_fc<-data_fc$df_fc; df_fc_grp<-data_fc$df_fc_grp
-  fwrite(df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_fc.csv",sep="")),row.names=F)
-  fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_fc_grp.csv",sep="")),row.names=F)
-  
+
   label_wave<-"long"
   # Calculate model
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
@@ -130,6 +128,8 @@ gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
                            abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
     data_fc$df_edge$id_edge<-seq(nrow(data_fc$df_edge))
     data_fc$df_edge_grp$id_edge<-seq(nrow(data_fc$df_edge_grp))
+    fwrite(data_fc$df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc.csv",sep="")),row.names=F)
+    fwrite(data_fc$df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc_grp.csv",sep="")),row.names=F)
     
     # Loop over clinical variables
     #1 Tanner stage
@@ -1063,39 +1063,54 @@ func_detect_subnset<-function(paths,df_plot,df_gamm,data_fc,plot_result=F,
           var_exp_detect<-list_term[[idx_term_detect]]$var_exp
           if (!is.null(var_exp_detect)){
             for (idx_sex in list_sex){
-              if (idx_sex==1){
-                label_sex<-"m"
-              }else if (idx_sex==2){
-                label_sex<-"f"
-              }else{
-                label_sex<-"mf"
-              }
+              if (idx_sex==1){label_sex<-"m"}else if (idx_sex==2){label_sex<-"f"}else{label_sex<-"mf"}
               for (p_cdt in param$param_nbs$p_cdt_threshold){
                 df_sign<-df_plot[df_plot$p_type=="p" & df_plot$p_threshold==p_cdt
-                                 & df_plot$model==idx_mod & df_plot$term==var_exp_detect & df_plot$sex==idx_sex,]
-                data_bfs<-func_bfs(df_sign)
-                if(length(data_bfs$list_network)>0){
-                  for (idx_net in seq(length(data_bfs$list_network))){
-                    network<-data_bfs$list_network[[idx_net]]
-                    df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex)
-                    df_net<-rbind(df_net,data.frame(id_net=idx_net,network$df_edge))
-                    df_node_add<-inner_join(data.frame(p_threshold=p_cdt,id_net=idx_net,network$df_node),data_fc$df_roi,by=c("node"="id"))
-                    df_node_add<-dplyr::rename(df_node_add,"label_node"="label","group_node"="group")
-                    df_node<-rbind(df_node,cbind(df_head,df_node_add))
-                    df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(p_threshold=p_cdt,id_net=idx_net,size=network$size_net)))
-                    if (plot_result){
-                      plot_subnet<-plot_net(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi)
-                      plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", #",as.character(idx_net),sep="")))
-                      list_plot<-c(list_plot,list(list("plot"=plot_subnet,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
-                                                       "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_idx-",as.character(idx_net),"_subnet.png",sep=""))))
-                    }  
-                    if(idx_term_detect %in% names(param$param_ancova_pred)){
-                      df_pred_ancova_add<-func_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term_detect,var_exp_detect)
-                      df_pred_ancova<-rbind(df_pred_ancova,data.frame(p_threshold=p_cdt,id_net=idx_net,df_pred_ancova_add))
-                      if (plot_result){
-                        plot_pred<-(plot_pred_ancova(df_pred_ancova_add)+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,"\nexpvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term_detect]][["title"]]))
-                        list_plot<-c(list_plot,list(list("plot"=plot_pred,"height"=5,"width"=5,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
-                                                         "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_idx-",as.character(idx_net),"_pred.png",sep=""))))
+                                      & df_plot$model==idx_mod & df_plot$term==var_exp_detect & df_plot$sex==idx_sex,]
+                if (nrow(df_sign)>0){
+                  if (!is.na(df_sign[1,"estimate"])){ # GAMM result
+                    list_df_sign<-list("both"=df_sign,
+                                       "pos"=df_sign[df_sign$estimate>0,],
+                                       "neg"=df_sign[df_sign$estimate<0,])
+                  }else{ # ANCOVA result
+                    list_df_sign<-list("both"=df_sign,
+                                       "pos"=data.frame(),
+                                       "neg"=data.frame())
+                  }
+                }else{
+                  list_df_sign<-list("both"=data.frame(),
+                                     "pos"=data.frame(),
+                                     "neg"=data.frame())
+                }
+                
+                for (type_sign in names(list_df_sign)){
+                  df_sign_temp<-list_df_sign[[type_sign]]
+                  if (nrow(df_sign_temp)>0){
+                    data_bfs<-func_bfs(df_sign_temp)
+                    if(length(data_bfs$list_network)>0){
+                      for (idx_net in seq(length(data_bfs$list_network))){
+                        network<-data_bfs$list_network[[idx_net]]
+                        df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,sign=type_sign)
+                        df_net<-rbind(df_net,data.frame(sign=type_sign,id_net=idx_net,network$df_edge))
+                        df_node_add<-inner_join(data.frame(p_threshold=p_cdt,id_net=idx_net,network$df_node),data_fc$df_roi,by=c("node"="id"))
+                        df_node_add<-dplyr::rename(df_node_add,"label_node"="label","group_node"="group")
+                        df_node<-rbind(df_node,cbind(df_head,df_node_add))
+                        df_size_net<-rbind(df_size_net,cbind(df_head,data.frame(p_threshold=p_cdt,id_net=idx_net,size=network$size_net)))
+                        if (plot_result){
+                          plot_subnet<-plot_net(df_edge=network$df_edge,df_node=network$df_node,df_roi=data_fc$df_roi)
+                          plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", sign: ",type_sign,", #",as.character(idx_net),sep="")))
+                          list_plot<-c(list_plot,list(list("plot"=plot_subnet,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                           "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_sgn-",type_sign,"_idx-",as.character(idx_net),"_subnet.png",sep=""))))
+                        }  
+                        if(idx_term_detect %in% names(param$param_ancova_pred)){
+                          df_pred_ancova_add<-func_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term_detect,var_exp_detect)
+                          df_pred_ancova<-rbind(df_pred_ancova,data.frame(sign=type_sign,p_threshold=p_cdt,id_net=idx_net,df_pred_ancova_add))
+                          if (plot_result){
+                            plot_pred<-(plot_pred_ancova(df_pred_ancova_add)+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,"\nexpvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", sign: ",type_sign,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term_detect]][["title"]]))
+                            list_plot<-c(list_plot,list(list("plot"=plot_pred,"height"=5,"width"=5,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                             "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_sgn-",type_sign,"_idx-",as.character(idx_net),"_pred.png",sep=""))))
+                          }
+                        }
                       }
                     }
                   }
@@ -1173,8 +1188,31 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
                 if (nrow(df_gamm_subset)>0){ # If the model/expvar/sex exist either in df_gamm or df_anova
                   for (p_cdt in param$param_nbs$p_cdt_threshold){
                     df_sign<-df_gamm_subset[df_gamm_subset$p<p_cdt,]
-                    max_size<-func_bfs(df_sign)$max_size
-                    df_max_size<-rbind(df_max_size,data.frame(id_perm=idx_perm,model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,max_size=max_size))
+                    if (nrow(df_sign)>0){
+                      if (!is.na(df_sign[1,"estimate"])){ # GAMM result
+                        list_df_sign<-list("both"=df_sign,
+                                           "pos"=df_sign[df_sign$estimate>0,],
+                                           "neg"=df_sign[df_sign$estimate<0,])
+                      }else{ # ANCOVA result
+                        list_df_sign<-list("both"=df_sign,
+                                           "pos"=data.frame(),
+                                           "neg"=data.frame())
+                      }
+                    }else{
+                      list_df_sign<-list("both"=data.frame(),
+                                         "pos"=data.frame(),
+                                         "neg"=data.frame())
+                    }
+                    
+                    for (type_sign in names(list_df_sign)){
+                      df_sign_temp<-list_df_sign[[type_sign]]
+                      if (nrow(df_sign_temp)>0){
+                        max_size<-func_bfs(df_sign)$max_size
+                      }else{
+                        max_size<-0
+                      }
+                      df_max_size<-rbind(df_max_size,data.frame(id_perm=idx_perm,model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,sign=type_sign,max_size=max_size))
+                    }
                   }
                 }
               }
@@ -1205,45 +1243,48 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
               label_sex<-"mf";title_sex<-"both";color_plt<-"grey60"
             }
             for (p_cdt in param$param_nbs$p_cdt_threshold){
-              list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp_detect
-                                         & df_max_size$p_threshold==p_cdt & df_max_size$sex==idx_sex,"max_size"]
-              if (length(list_max_size)>0){
-                list_max_size<-sort(list_max_size)
-                df_size_net_subset<-df_size_net[df_size_net$model==idx_mod & df_size_net$term==var_exp_detect
-                                                & df_size_net$p_threshold==p_cdt & df_size_net$sex==idx_sex,]
-                if(nrow(df_size_net_subset)>0){
-                  for (idx_row in seq(nrow(df_size_net_subset))){
-                    p_fwe<-sum(list_max_size>df_size_net_subset[idx_row,"size"])/param$param_nbs$n_perm
-                    df_size_net_subset[idx_row,"p_fwe"]<-p_fwe
-                    if (p_fwe<param$param_nbs$p_perm_threshold){
-                      if (plot_result){
-                        idx_net<-as.character(df_size_net_subset[idx_row,"id_net"])
-                        df_net_subset<-df_net[df_net$model==idx_mod & df_net$term==var_exp_detect & df_net$p_threshold==p_cdt & df_net$sex==idx_sex & df_net$id_net==idx_net,]
-                        df_node_subset<-df_node[df_node$model==idx_mod & df_node$term==var_exp_detect & df_node$p_threshold==p_cdt & df_node$sex==idx_sex & df_node$id_net==idx_net,
-                                                c("node","degree","label_node","group_node")]
-                        plot_subnet<-plot_net(df_edge=df_net_subset,df_node=df_node_subset,df_roi=data_fc$df_roi)
-                        plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", #",as.character(idx_net),sep="")))
-                        list_plot<-c(list_plot,list(list("plot"=plot_subnet,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
-                                                         "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_idx-",as.character(idx_net),"_subnet.png",sep=""))))
-                        if(idx_term_detect %in% names(param$param_ancova_pred)){
-                          df_pred_ancova_subset<-df_pred_ancova[df_pred_ancova$model==idx_mod & df_pred_ancova$term==var_exp_detect & df_pred_ancova$p_threshold==p_cdt & df_pred_ancova$sex==idx_sex & df_pred_ancova$id_net==idx_net,]
-                          #plot_pred<-plot_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term_detect,var_exp_detect)
-                          plot_pred<-(plot_pred_ancova(df_pred_ancova_subset)+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,"\nexpvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term_detect]][["title"]]))
-                          list_plot<-c(list_plot,list(list("plot"=plot_pred,"height"=5,"width"=5,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
-                                                           "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_idx-",as.character(idx_net),"_pred.png",sep=""))))
-                        }
-                      }  
+              for (type_sign in c("both","pos","neg")){
+                list_max_size<-df_max_size[df_max_size$model==idx_mod & df_max_size$term==var_exp_detect
+                                           & df_max_size$p_threshold==p_cdt & df_max_size$sex==idx_sex & df_max_size$sign==type_sign,
+                                           "max_size"]
+                if (length(list_max_size)>0){
+                  list_max_size<-sort(list_max_size)
+                  df_size_net_subset<-df_size_net[df_size_net$model==idx_mod & df_size_net$term==var_exp_detect
+                                                  & df_size_net$p_threshold==p_cdt & df_size_net$sex==idx_sex & df_max_size$sign==type_sign,]
+                  if(nrow(df_size_net_subset)>0){
+                    for (idx_row in seq(nrow(df_size_net_subset))){
+                      p_fwe<-sum(list_max_size>df_size_net_subset[idx_row,"size"])/param$param_nbs$n_perm
+                      df_size_net_subset[idx_row,"p_fwe"]<-p_fwe
+                      if (p_fwe<param$param_nbs$p_perm_threshold){
+                        if (plot_result){
+                          idx_net<-as.character(df_size_net_subset[idx_row,"id_net"])
+                          df_net_subset<-df_net[df_net$model==idx_mod & df_net$term==var_exp_detect & df_net$p_threshold==p_cdt & df_net$sex==idx_sex & df_net$sign==type_sign & df_net$id_net==idx_net,]
+                          df_node_subset<-df_node[df_node$model==idx_mod & df_node$term==var_exp_detect & df_node$p_threshold==p_cdt & df_node$sex==idx_sex & df_node$sign==type_sign & df_node$id_net==idx_net,
+                                                  c("node","degree","label_node","group_node")]
+                          plot_subnet<-plot_net(df_edge=df_net_subset,df_node=df_node_subset,df_roi=data_fc$df_roi)
+                          plot_subnet<-(plot_subnet+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", sign: ",type_sign,", #",as.character(idx_net),sep="")))
+                          list_plot<-c(list_plot,list(list("plot"=plot_subnet,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                           "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_sgn-",type_sign,"_idx-",as.character(idx_net),"_subnet.png",sep=""))))
+                          if(idx_term_detect %in% names(param$param_ancova_pred)){
+                            df_pred_ancova_subset<-df_pred_ancova[df_pred_ancova$model==idx_mod & df_pred_ancova$term==var_exp_detect & df_pred_ancova$p_threshold==p_cdt & df_pred_ancova$sex==idx_sex & df_pred_ancova$sign==type_sign & df_pred_ancova$id_net==idx_net,]
+                            #plot_pred<-plot_pred_ancova(df_edge=network$df_edge,df_gamm=df_gamm,data_fc=data_fc,param_ancova_pred=param$param_ancova_pred,idx_term_detect,var_exp_detect)
+                            plot_pred<-(plot_pred_ancova(df_pred_ancova_subset)+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,"\nexpvar: ",var_exp_detect,", sex: ",label_sex,", p value: p<",p_cdt,", sign: ",type_sign,", #",as.character(idx_net),sep=""))+ xlab(list_term[[idx_term_detect]][["title"]]))
+                            list_plot<-c(list_plot,list(list("plot"=plot_pred,"height"=5,"width"=5,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                             "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_pval-p_",p_cdt,"_sgn-",type_sign,"_idx-",as.character(idx_net),"_pred.png",sep=""))))
+                          }
+                        }  
+                      }
                     }
+                    df_fwep<-rbind(df_fwep,df_size_net_subset)
                   }
-                  df_fwep<-rbind(df_fwep,df_size_net_subset)
+                  thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
+                  df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,sign=type_sign,
+                                                                        thr_size=thr_size_nbs))
+                  
+                  title_plot<-list_term[[idx_term_detect]][["title"]]
+                  plot_permutation(paths,list_max=list_max_size,thr_size_nbs,
+                                   atlas,var=idx_var,wave=label_wave,idx_mod,idx_term_detect,label_sex,title_plot,title_sex,p_cdt,type_sign,color_plt)
                 }
-                thr_size_nbs<-list_max_size[ceiling(length(list_max_size)*(1-param$param_nbs$p_perm_threshold))]
-                df_threshold_size<-rbind(df_threshold_size,data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,p_threshold=p_cdt,
-                                                                      thr_size=thr_size_nbs))
-
-                title_plot<-list_term[[idx_term_detect]][["title"]]
-                plot_permutation(paths,list_max=list_max_size,thr_size_nbs,
-                                 atlas,var=idx_var,wave=label_wave,idx_mod,idx_term_detect,label_sex,title_plot,title_sex,p_cdt,color_plt)
               }
             }
           }
