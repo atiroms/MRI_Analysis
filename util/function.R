@@ -11,7 +11,7 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 
 
 #**************************************************
-# Combine results ~~~~~============================
+# Combine results =================================
 #**************************************************
 func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_type_measure="",list_filename){
   for (filename in list_filename){
@@ -1028,7 +1028,7 @@ func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
   
   list_col_factor<-NULL
   for (col in colnames(df_clin_change[["1"]])){
-    if (class(df_clin_change[["1"]][[col]])=="factor"){
+    if (class(df_clin_change[["1"]][[col]])[1]=="factor"){
       list_col_factor<-c(list_col_factor,col)
     }
   }

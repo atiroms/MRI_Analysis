@@ -208,7 +208,8 @@ gamm_fc_mix_core<-function(paths,data_fc,atlas,param,
     list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
     df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
   }
-  df_clin<-func_demean_clin(df_clin,separate_sex=F)$df_clin # separate_sex=F in analysis with mixed sex
+  #df_clin<-func_demean_clin(df_clin,separate_sex=F)$df_clin # separate_sex=F in analysis with mixed sex
+  df_clin<-func_std_clin(df_clin,separate_sex=F)$df_clin # separate_sex=F in analysis with mixed sex
   fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
   
   # Prepare FC data
@@ -750,7 +751,8 @@ gam_fc_cs_core<-function(paths,atlas,param,list_sex,
     subset_subj<-param$subset_subj[wave_mri]
     names(subset_subj)<-wave_clin
     data_clin<-func_clinical_data_long(paths,wave_clin,subset_subj,list_covar,rem_na_clin=T,prefix=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_src",sep=""),print_terminal=F)
-    df_clin<-func_demean_clin(data_clin$df_clin,separate_sex=T)$df_clin
+    #df_clin<-func_demean_clin(data_clin$df_clin,separate_sex=T)$df_clin
+    df_clin<-func_std_clin(data_clin$df_clin,separate_sex=T)$df_clin
     fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_src_clin.csv",sep="")),row.names=F)
     df_clin$wave<-wave_mri # Need to meet MRI wave for later joining
     
@@ -850,7 +852,8 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   }
   colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
   df_clin<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar)
-  df_clin<-data.frame(wave="2-1",func_demean_clin(df_clin,separate_sex=T)$df_clin)
+  #df_clin<-data.frame(wave="2-1",func_demean_clin(df_clin,separate_sex=T)$df_clin)
+  df_clin<-data.frame(wave="2-1",func_std_clin(df_clin,separate_sex=T)$df_clin)
   fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
   
   # Prepare FC data
