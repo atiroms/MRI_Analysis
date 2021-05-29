@@ -14,7 +14,7 @@ param_gamm_fc<-list(
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  "force_long"=F, # use longitudinal data only
+  "force_long"=T, # use longitudinal data only
   #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
   "omit_decreasing"=NULL,
   
