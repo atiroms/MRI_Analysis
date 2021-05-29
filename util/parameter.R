@@ -15,8 +15,8 @@ param_gamm_fc<-list(
   
   # Parameters for clinical data subsetting
   "force_long"=T, # use longitudinal data only
-  #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
-  "omit_decreasing"=NULL,
+  "omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
+  #"omit_decreasing"=NULL,
   
   "key_group"="group_3",
   "list_wave"=c(1,2),
