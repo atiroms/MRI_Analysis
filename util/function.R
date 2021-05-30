@@ -1039,6 +1039,9 @@ func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
   for (ses in c(1,2)){
     for (col in list_col_factor){
       df_clin_change[[ses]][[col]]<-as.numeric.factor(df_clin_change[[ses]][[col]])
+    }
+    for (col in list_col_ordered){
+      df_clin_change[[ses]][[col]]<-as.numeric.factor(df_clin_change[[ses]][[col]])
     } 
   }
   
