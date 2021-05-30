@@ -15,7 +15,7 @@ path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
 #dir_out<-"423.3_fc_gam_diff_aroma_test1" 
-dir_out<-"424_fc_gamm_aroma_test22" 
+dir_out<-"424_fc_gamm_aroma_test23" 
 #dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
@@ -1068,7 +1068,7 @@ func_detect_subnset<-function(paths,df_plot,df_gamm,data_fc,plot_result=F,
                 df_sign<-df_plot[df_plot$p_type=="p" & df_plot$p_threshold==p_cdt
                                       & df_plot$model==idx_mod & df_plot$term==var_exp_detect & df_plot$sex==idx_sex,]
                 if (nrow(df_sign)>0){
-                  if (!is.na(df_sign[1,"estimate"])){ # GAMM result
+                  if (is.na(df_sign[1,"F"])){ # GAMM result
                     list_df_sign<-list("both"=df_sign,
                                        "pos"=df_sign[df_sign$estimate>0,],
                                        "neg"=df_sign[df_sign$estimate<0,])
@@ -1189,7 +1189,7 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
                   for (p_cdt in param$param_nbs$p_cdt_threshold){
                     df_sign<-df_gamm_subset[df_gamm_subset$p<p_cdt,]
                     if (nrow(df_sign)>0){
-                      if (!is.na(df_sign[1,"estimate"])){ # GAMM result
+                      if (is.na(df_sign[1,"F"])){ # GAMM result
                         list_df_sign<-list("both"=df_sign,
                                            "pos"=df_sign[df_sign$estimate>0,],
                                            "neg"=df_sign[df_sign$estimate<0,])
@@ -1207,7 +1207,7 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
                     for (type_sign in names(list_df_sign)){
                       df_sign_temp<-list_df_sign[[type_sign]]
                       if (nrow(df_sign_temp)>0){
-                        max_size<-func_bfs(df_sign)$max_size
+                        max_size<-func_bfs(df_sign_temp)$max_size
                       }else{
                         max_size<-0
                       }
@@ -1250,7 +1250,7 @@ func_nbs_permutation<-function(paths,df_fc,df_clin,data_bfs,data_fc,calc_paralle
                 if (length(list_max_size)>0){
                   list_max_size<-sort(list_max_size)
                   df_size_net_subset<-df_size_net[df_size_net$model==idx_mod & df_size_net$term==var_exp_detect
-                                                  & df_size_net$p_threshold==p_cdt & df_size_net$sex==idx_sex & df_max_size$sign==type_sign,]
+                                                  & df_size_net$p_threshold==p_cdt & df_size_net$sex==idx_sex & df_size_net$sign==type_sign,]
                   if(nrow(df_size_net_subset)>0){
                     for (idx_row in seq(nrow(df_size_net_subset))){
                       p_fwe<-sum(list_max_size>df_size_net_subset[idx_row,"size"])/param$param_nbs$n_perm
