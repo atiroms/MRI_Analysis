@@ -458,8 +458,8 @@ param_gam_fc_diff<-list(
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
-  "omit_decreasing"=NULL,
+  "omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
+  #"omit_decreasing"=NULL,
   
   "key_group"="group_3",
   "list_wave"=c(1,2),
