@@ -22,6 +22,114 @@ shutil.copyfileobj = _copyfileobj_patched
 
 
 ##################################################
+# Pickup SPM-preprocessed nii files for CS analysis
+##################################################
+# Parameters
+path_src='F:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/preproc'
+#path_src='J:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/preproc'
+file_clin='D:/atiro/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv'
+#file_clin='D:/NICT_WS/Dropbox/MRI_img/pnTTC/puberty/common/CSUB.csv'
+file_vol='F:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv'
+#file_vol='J:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/tissue_volume/tissue_volumes.csv'
+prefix_file='smwc1'
+suffix_file='_T1w.nii'
+
+#path_dst='F:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/c1m1_adrenal_f_reg'
+#list_covar=[['W1_T1QC','==1'],['W1_Age_at_MRI','>0'],['Sex','==2'],['W1_Tanner_Female_Pubic_Hair','<5']]
+#list_groups=None
+##list_groups=['W1_Tanner_Female_Breast',[1,2,3,4,5]]
+#ses_mri=1
+
+#path_dst='F:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/c1m2_adrenal_f_reg'
+#list_covar=[['W2_T1QC','==1'],['W1_Age_at_MRI','>0'],['Sex','==2'],['W1_Tanner_Female_Pubic_Hair','<5']]
+#list_groups=None
+##list_groups=['W1_Tanner_Female_Breast',[1,2,3,4,5]]
+#ses_mri=2
+
+#path_dst='F:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/c2m1_adrenal_f_reg'
+#list_covar=[['W1_T1QC','==1'],['W2_Age_at_MRI','>0'],['Sex','==2'],['W2_Tanner_Female_Pubic_Hair','>1']]
+#list_groups=None
+##list_groups=['W2_Tanner_Female_Breast',[1,2,3,4,5]]
+#ses_mri=1
+
+path_dst='F:/MRI_img/pnTTC/c1c2_struc/spm/02_spm/output/pickup/c2m2_adrenal_f_reg'
+list_covar=[['W2_T1QC','==1'],['W2_Age_at_MRI','>0'],['Sex','==2'],['W2_Tanner_Female_Pubic_Hair','>1']]
+list_groups=None
+#list_groups=['W2_Tanner_Female_Breast',[1,2,3,4,5]]
+ses_mri=2
+
+
+print('Starting Prep_cs()')
+# Create cross-sectional clinical data
+df_clin=pd.read_csv(file_clin,encoding = 'unicode_escape')
+df_clin_subset=df_clin.copy()
+list_column=['ID_pnTTC']
+for crt_subset in list_covar:
+    df_clin_subset=df_clin_subset[eval('df_clin_subset["'+crt_subset[0]+'"]'+crt_subset[1])]
+    list_column=list_column+[crt_subset[0]]
+df_clin_subset=df_clin_subset.reset_index()
+df_clin_subset=df_clin_subset.loc[:,list_column]
+df_clin_subset.to_csv(os.path.join(path_dst,'df_clin_plan.csv'),index=False)
+
+# Pickup nii files
+df_clin_subset_exist=pd.DataFrame(columns=df_clin_subset.columns)
+list_absent=[]
+if list_groups is None:
+    for idx_row in tqdm(range(len(df_clin_subset))):
+        file_src=prefix_file+'sub-'+str(df_clin_subset.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(ses_mri).zfill(2)+suffix_file
+        path_file_src=glob.glob(path_src+'/'+file_src,recursive=True)
+        if len(path_file_src)>0:
+            path_file_src=path_file_src[0]
+            shutil.copy(path_file_src,path_dst)
+            df_clin_subset_exist=df_clin_subset_exist.append(df_clin_subset.loc[idx_row,:])
+        else:
+            list_absent.append(file_src)
+else:
+    for group in list_groups[1]:
+        os.makedirs(os.path.join(path_dst,str(group)))
+        df_clin_group=df_clin_subset.copy()
+        df_clin_group=df_clin_group.loc[df_clin_group[list_groups[0]]==group,:]
+        df_clin_group=df_clin_group.sort_values(by=['ID_pnTTC'])
+        df_clin_group=df_clin_group.reset_index(drop=True)
+        for idx_row in range(len(df_clin_group)):
+            file_src=prefix_file+'sub-'+str(df_clin_group.loc[idx_row,'ID_pnTTC']).zfill(5)+'_ses-'+str(ses_mri).zfill(2)+suffix_file
+            path_file_src=glob.glob(path_src+'/'+file_src,recursive=True)
+            if len(path_file_src)>0:
+                path_file_src=path_file_src[0]
+                shutil.copy(path_file_src,os.path.join(path_dst,str(group)))
+                df_clin_subset_exist=df_clin_subset_exist.append(df_clin_group.loc[idx_row,:])
+            else:
+                list_absent.append(file_src)
+
+if len(list_absent)>0:
+    print('Absent data:')
+    print(list_absent)
+df_clin_subset_exist.to_csv(os.path.join(path_dst,'df_clin_result.csv'),index=False)
+
+# load and calculate global brain measurement data
+df_vol=pd.read_csv(file_vol,encoding='unicode_escape')
+df_vol['TBV']=df_vol['Volume1']+df_vol['Volume2']
+df_vol['ICV']=df_vol['Volume1']+df_vol['Volume2']+df_vol['Volume3']
+df_vol['ses']=[int(path_file[-16:-14]) for path_file in df_vol.loc[:,'File']]
+df_vol['ID_pnTTC']=[int(path_file[-26:-21]) for path_file in df_vol.loc[:,'File']]
+df_vol=df_vol.loc[df_vol['ses']==ses_mri,:]
+
+# combine global calculation into covariates data
+df_covar=df_clin_subset_exist.copy()
+df_covar['TBV']=pd.Series()
+df_covar['ICV']=pd.Series()
+df_covar=df_covar.reset_index(drop=True)
+for idx_row in range(len(df_covar)):
+    df_covar.loc[idx_row,['TBV','ICV']]=df_vol.loc[df_vol['ID_pnTTC']==df_covar.loc[idx_row,'ID_pnTTC'],['TBV','ICV']].values.tolist()[0]
+#df_covar=df_covar.sort_values(by=['ID_pnTTC'])
+#df_covar=df_covar.reset_index(drop=True)
+
+df_covar.to_csv(os.path.join(path_dst,'df_covar.csv'),index=False)
+
+print('Finished Prep_cs()')
+
+
+##################################################
 # Clinical and brain volume data for SPM
 ##################################################
 class ClinVol():

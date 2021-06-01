@@ -2,7 +2,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 
 dir_in<-"421_fc_aroma"
-dir_out<-"427_fc_gamm_aroma"
+dir_out<-"427_fc_gamm_aroma_test17"
 
 library(data.table)
 library(mgcv)

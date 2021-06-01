@@ -11,25 +11,31 @@ libraries("tidyverse","dplyr","Hmisc","FactoMineR","missMDA","ica","parallel","p
 
 
 #**************************************************
-# Combine results ~~~~~============================
+# Combine results =================================
 #**************************************************
-func_combine_result<-function(paths,list_atlas,list_var,list_wave,list_filename){
+func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_type_measure="",list_filename){
   for (filename in list_filename){
     df_dst<-data.frame()
     for (atlas in list_atlas){
-      if (is.null(list_var)){
+      for (idx_var in names(list_var)){
         for (label_wave in list_wave){
-          df_head<-data.frame(atlas=atlas,wave=label_wave)
-          path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_wav-",label_wave, "_",filename,".csv",sep=""))
-          if(file.exists(path_src)){
-            df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
-          }
-        }
-      }else{
-        for (idx_var in names(list_var)){
-          for (label_wave in list_wave){
-            df_head<-data.frame(atlas=atlas,variable=idx_var,wave=label_wave)
-            path_src<-file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave, "_",filename,".csv",sep=""))
+          for (type_measure in list_type_measure){
+            df_head<-data.frame(atlas=atlas)
+            prefix_fname<-paste("atl-",atlas,sep="")
+            if (idx_var!=""){
+              df_head<-cbind(df_head,data.frame(variable=idx_var))
+              prefix_fname<-paste(prefix_fname,"_var-",idx_var,sep="")
+            }
+            if (label_wave!=""){
+              df_head<-cbind(df_head,data.frame(wave=label_wave))
+              prefix_fname<-paste(prefix_fname,"_wav-",label_wave,sep="")
+            }
+            if (type_measure$measure!=""){
+              measure=type_measure$measure
+              df_head<-cbind(df_head,data.frame(measure=measure))
+              prefix_fname<-paste(prefix_fname,"_msr-",measure,sep="")
+            }
+            path_src<-file.path(paths$output,"output","temp",paste(prefix_fname, "_",filename,".csv",sep=""))
             if(file.exists(path_src)){
               df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
             }
@@ -37,12 +43,44 @@ func_combine_result<-function(paths,list_atlas,list_var,list_wave,list_filename)
         }
       }
     }
+    
     if (nrow(df_dst)>0){
       fwrite(df_dst,file.path(paths$output,"output","result",paste(filename,".csv",sep="")),row.names = F)
     }
   }
 }
 
+
+#**************************************************
+# Standardize clinical data =======================
+#**************************************************
+func_std_clin<-function(df_clin,separate_sex=T){
+  df_mean<-data.frame(matrix(ncol=ncol(df_clin)))
+  df_sd<-data.frame(matrix(ncol=ncol(df_clin)))
+  colnames(df_mean)<-colnames(df_clin)
+  for (idx_col in colnames(df_clin)){
+    if (idx_col %nin% c("ID_pnTTC","wave","sex")){
+      if(class(df_clin[,idx_col])[1] %nin% c("factor","ordered")){
+        if (separate_sex){
+          for (sex in c(1,2)){
+            mean_var<-mean(df_clin[df_clin$sex==sex,idx_col])
+            sd_var<-sd(df_clin[df_clin$sex==sex,idx_col])
+            df_mean[sex,c("sex",idx_col)]<-c(sex,mean_var)
+            df_sd[sex,c("sex",idx_col)]<-c(sex,sd_var)
+            df_clin[df_clin$sex==sex,idx_col]<-(df_clin[df_clin$sex==sex,idx_col]-mean_var)/sd_var
+          }
+        }else{
+          mean_var<-mean(df_clin[,idx_col])
+          sd_var<-sd(df_clin[,idx_col])
+          df_mean[1,idx_col]<-mean_var
+          df_sd[1,idx_col]<-sd_var
+          df_clin[,idx_col]<-(df_clin[,idx_col]-mean_var)/sd_var
+        }
+      }
+    }
+  }
+  return(list("df_clin"=df_clin,"df_mean"=df_mean,"df_sd"=df_sd))
+}
 
 #**************************************************
 # Demean clinical data ============================
@@ -54,7 +92,7 @@ func_demean_clin<-function(df_clin,separate_sex=T){
   for (idx_col in colnames(df_clin)){
     if (idx_col %nin% c("ID_pnTTC","wave","sex")){
       #if(length(unique(df_clin[,idx_col]))>thr_cont){
-      if(class(df_clin[,idx_col])!="factor"){
+      if(class(df_clin[,idx_col])[1] %nin% c("factor","ordered")){
         if (separate_sex){
           for (sex in c(1,2)){
             mean<-mean(df_clin[df_clin$sex==sex,idx_col])
@@ -232,7 +270,7 @@ join_fc_clin_cs<-function(df_fc,df_clin,wave_clin,wave_mri){
 #**************************************************
 # Prepare longitudinal FC data ====================
 #**************************************************
-prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F,std_fc=F){
+prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include_grp=T,abs_nfc=F,std_fc=F,div_mean_fc=F){
   dict_roi <- func_dict_roi(paths)
   
   df_fc<-as.data.frame(fread(file.path(paths$input,"output",
@@ -240,9 +278,42 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
   
   df_fc<-df_fc[df_fc$ses!="2-1",] # exclude pre-calculated longitudinal difference (not usable for absolute NFC)
   
-  if (abs_nfc){ # Absolute value for negative functional connectivity
+  # Absolute value for negative functional connectivity
+  if (abs_nfc){
     df_fc$r<-abs(df_fc$r)
     df_fc$z_r<-abs(df_fc$z_r)
+  }
+  
+  # Standardization into z values within each recording
+  if (std_fc){
+    df_fc_std<-data.frame()
+    list_wave_exist<-sort(unique(df_fc$ses))
+    for (wave in list_wave_exist){
+      list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
+      for (id_subj in list_id_subj){
+        df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
+        mean_fc<-mean(df_fc_subset$z_r)
+        sd_fc<-sd(df_fc_subset$z_r)
+        df_fc_subset$z_r<-(df_fc_subset$z_r-mean_fc)/sd_fc
+        df_fc_std<-rbind(df_fc_std,df_fc_subset)
+      }
+    }
+    df_fc<-df_fc_std
+  
+  # Simple division with mean
+  }else if (div_mean_fc){
+    df_fc_std<-data.frame()
+    list_wave_exist<-sort(unique(df_fc$ses))
+    for (wave in list_wave_exist){
+      list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
+      for (id_subj in list_id_subj){
+        df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
+        mean_fc<-mean(df_fc_subset$z_r)
+        df_fc_subset$z_r<-df_fc_subset$z_r/mean_fc
+        df_fc_std<-rbind(df_fc_std,df_fc_subset)
+      }
+    }
+    df_fc<-df_fc_std
   }
   
   if ("2-1" %in% list_wave){
@@ -582,6 +653,12 @@ gamm_core4<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
     df_aic_compare<-cbind(df_id,df_aic_compare)
     df_anova<-cbind(df_id,df_anova)
   }
+  if ("roi" %in% colnames(df_src)){
+    id<-df_src[1,"roi"]
+    df_gamm<-cbind(id,df_gamm)
+    df_aic_compare<-cbind(id,df_aic_compare)
+    df_anova<-cbind(id,df_anova)
+  }
   
   return(list("df_gamm"=df_gamm,"df_aic"=df_aic_compare,"df_anova"=df_anova,"mod"=list_gamm_output))
 }
@@ -590,6 +667,32 @@ gamm_core4<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,
 iterate_gamm4<-function(clust,df_join,df_edge,progressbar=T,test_mod=F){
   df_join<-inner_join(df_join,df_edge,by=c("from","to"))
   list_src_gamm<-split(df_join,df_join$id_edge)
+  
+  if(test_mod){
+    list_src_gamm<-list_src_gamm[1]
+  }
+  
+  if (progressbar){
+    list_dst_gamm<-pblapply(list_src_gamm,gamm_core4,cl=clust)
+  }else{
+    list_dst_gamm<-parLapply(clust,list_src_gamm,gamm_core4)
+  }
+  df_gamm<-rbindlist(ListExtract(list_dst_gamm,"df_gamm"))
+  df_aic<-rbindlist(ListExtract(list_dst_gamm,"df_aic"))
+  df_anova<-rbindlist(ListExtract(list_dst_gamm,"df_anova"))
+  df_anova$p<-as.numeric(as.numeric.factor(df_anova$p))
+  rownames(df_gamm)<-rownames(df_aic)<-rownames(df_anova)<-NULL
+  
+  if(test_mod){
+    return(list_dst_gamm[[1]])
+  }else{
+    return(list("df_gamm"=df_gamm,"df_aic"=df_aic,"df_anova"=df_anova))
+  }
+}
+
+# structure version
+iterate_gamm4_str<-function(clust,df_join,progressbar=T,test_mod=F){
+  list_src_gamm<-split(df_join,df_join$roi)
   
   if(test_mod){
     list_src_gamm<-list_src_gamm[1]
@@ -632,7 +735,7 @@ add_mltcmp<-function(df_gamm,df_roi,list_mod,list_term,calc_seed_level=T){
   for (idx_mod in names(list_mod)){
     for (idx_term in names(list_term)){
       var_exp<-list_term[[idx_term]][["var_exp"]]
-      for (idx_sex in c(1,2)){
+      for (idx_sex in c(1,2,"1_2")){
         # Subset GAMM result dataframe for plotting
         df_gamm_subset<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp & df_gamm$sex==idx_sex,c("from","to","sex","model","term","p")]
         if (nrow(df_gamm_subset)>0){
@@ -673,7 +776,7 @@ add_mltcmp<-function(df_gamm,df_roi,list_mod,list_term,calc_seed_level=T){
 # Factor to numeric function ======================
 #**************************************************
 as.numeric.factor <- function(x) {
-  if (class(x)=="factor"){
+  if (class(x)[1] %in% c("factor","ordered")){
     return(as.numeric(levels(x))[x])
   }else{
     return(x)
@@ -880,6 +983,8 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
     if (!is.null(list_covar[[covar]][["dtype"]])){
       if (list_covar[[covar]][["dtype"]]=="factor"){
         df_clin_exist[,covar]<-as.factor(df_clin_exist[,covar])
+      }else if (list_covar[[covar]][["dtype"]]=="ordered"){
+        df_clin_exist[,covar]<-ordered(df_clin_exist[,covar])
       }
     }
   }
@@ -896,7 +1001,7 @@ func_clinical_data_long<-function(paths,list_wave,subset_subj,list_covar,rem_na_
 #**************************************************
 func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
   
-  # Classify covaiates to fixed values and unfixed values
+  # Classify covariates to fixed values and unfixed values
   list_covar_fix<-list_covar_change<-NULL
   for (id_covar in names(list_covar)){
     if (list_covar[[id_covar]][["1"]][1]==list_covar[[id_covar]][["2"]][1]){
@@ -921,9 +1026,40 @@ func_clinical_data_diffmean<-function(df_src,list_id_subj,list_covar){
     df_clin_change<-c(df_clin_change,df_clin_change_ses)
   }
   
+  list_col_factor<-NULL
+  list_col_ordered<-NULL
+  for (col in colnames(df_clin_change[["1"]])){
+    if (class(df_clin_change[["1"]][[col]])[1]=="factor"){
+      list_col_factor<-c(list_col_factor,col)
+    }else if (class(df_clin_change[["1"]][[col]])[1]=="ordered"){
+      list_col_ordered<-c(list_col_ordered,col)
+    }
+  }
+
+  for (ses in c(1,2)){
+    for (col in list_col_factor){
+      df_clin_change[[ses]][[col]]<-as.numeric.factor(df_clin_change[[ses]][[col]])
+    }
+    for (col in list_col_ordered){
+      df_clin_change[[ses]][[col]]<-as.numeric.factor(df_clin_change[[ses]][[col]])
+    } 
+  }
+  
   # Calculate difference and mean
   df_clin_diff<-df_clin_change[["2"]]-df_clin_change[["1"]]
   df_clin_mean<-(df_clin_change[["1"]]+df_clin_change[["2"]])/2
+  for (col in list_col_factor){
+    df_clin_change[["1"]][[col]]<-as.factor(df_clin_change[["1"]][[col]])
+    df_clin_change[["2"]][[col]]<-as.factor(df_clin_change[["2"]][[col]])
+    df_clin_diff[[col]]<-as.factor(df_clin_diff[[col]])
+    df_clin_mean[[col]]<-as.factor(df_clin_mean[[col]])
+  }
+  for (col in list_col_ordered){
+    df_clin_change[["1"]][[col]]<-ordered(df_clin_change[["1"]][[col]])
+    df_clin_change[["2"]][[col]]<-ordered(df_clin_change[["2"]][[col]])
+    df_clin_diff[[col]]<-ordered(df_clin_diff[[col]])
+    df_clin_mean[[col]]<-ordered(df_clin_mean[[col]])
+  }
   
   # Change column names
   colnames(df_clin_change[["1"]])<-c(paste("ses1_",colnames(df_clin_change[["1"]]),sep=''))
