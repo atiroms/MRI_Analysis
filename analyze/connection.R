@@ -10,12 +10,12 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"#
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.3_fc_gam_diff_aroma_test3" 
-#dir_out<-"424_fc_gamm_aroma_test23" 
+dir_out<-"423.3_fc_gam_diff_aroma_test5" 
+#dir_out<-"424_fc_gamm_aroma_test24" 
 #dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
@@ -24,8 +24,8 @@ dir_out<-"423.3_fc_gam_diff_aroma_test3"
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
 #list_atlas<-"aal116"
-#list_atlas<-"ho112"
-list_atlas<-c("ho112","power264")
+list_atlas<-"ho112"
+#list_atlas<-c("ho112","power264")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
