@@ -42,7 +42,7 @@ for atlas in list_atlas:
 
 # Iterate over significant networks
 df_fwep_plot=df_fwep.copy()
-#df_fwep_plot=df_fwep_plot.loc[df_fwep_plot['p_fwe']<=0.05,:]
+df_fwep_plot=df_fwep_plot.loc[df_fwep_plot['p_fwe']<=0.05,:]
 for idx_fwep in df_fwep_plot.index:
     [atlas,variable,wave,model,term,sex,sign,p_threshold,id_net]=\
         df_fwep_plot.loc[idx_fwep,["atlas","variable","wave","model","term","sex","sign","p_threshold","id_net"]]
@@ -76,7 +76,7 @@ for idx_fwep in df_fwep_plot.index:
 
     # Plot
     #arr_color=cm.nipy_spectral(np.linspace(0, 1, len(list_node)))
-    np.random.seed(1)
+    np.random.seed(2)
     arr_color=np.random.rand(len(list_node),4)
     arr_color[:,3]=1
     if sex==1:
