@@ -10,13 +10,15 @@
 param_gamm_fc<-list(
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "std_fc"=F, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  "force_long"=T, # use longitudinal data only
+  "force_long"=F, # use longitudinal data only
   #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
   "omit_decreasing"=NULL,
+  "group_tanner"=list("pre"=1,"early"=c(2,3),"late"=c(4,5)),
+  #"group_tanner"=NULL,
   
   "key_group"="group_3",
   "list_wave"=c(1,2),
@@ -40,12 +42,12 @@ param_gamm_fc<-list(
   #                                  "label"="Tanner stage (gonadal)"),
   #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
   #                                  "label"="Tanner stage (adrenal)")),
-  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="factor"),
-  #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="factor"),
-  #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="factor"),
-  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-  #                                  "label"="Tanner stage (adrenal)","dtype"="factor")),
+  "list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="factor"),
+                     "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="factor"),
+                     "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                    "label"="Tanner stage (gonadal)","dtype"="factor"),
+                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+                                    "label"="Tanner stage (adrenal)","dtype"="factor")),
   #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="ordered"),
   #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="ordered"),
   #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
@@ -56,10 +58,10 @@ param_gamm_fc<-list(
   #                                  "label"="Tanner stage (gonadal)"),
   #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
   #                                  "label"="Tanner stage (adrenal)")),
-  "list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-                                    "label"="Tanner stage (gonadal)","dtype"="ordered"),
-                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-                                    "label"="Tanner stage (adrenal)","dtype"="ordered")),
+  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="ordered"),
+  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+  #                                  "label"="Tanner stage (adrenal)","dtype"="ordered")),
   #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
   #                                  "label"="Tanner stage (gonadal)","dtype"="factor")),
   #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="factor"),
@@ -75,7 +77,9 @@ param_gamm_fc<-list(
                           "t"=list("title"="Tanner effect","var_exp"="tanner"),
                           "at"=list("title"="Age by Tanner interaction","var_exp"="age:tanner"),
                           "s(t)"=list("title"="Tanner effect","var_exp"="s(tanner)"),
-                          "tl"=list("title"="Tanner effect","var_exp"="tanner.L")),
+                          "tl"=list("title"="Tanner effect","var_exp"="tanner.L"),
+                          "tp-e"=list("title"="Tanner pre-early difference","var_exp"="tannerearly"),
+                          "tp-l"=list("title"="Tanner pre-late difference","var_exp"="tannerlate")),
   "list_covar_hormone"=list("hormone"=list("1"="W1_Hormone"   ,"2"="W2_Hormone",   "label"="Hormone"),
                             "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
                             "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
@@ -97,13 +101,14 @@ param_gamm_fc<-list(
                            "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)")),
   "param_nbs"=list(#"list_mod"=c("l","li"),
                    "list_mod"="l",
-                   "list_term"=list(list("term_perm"="t","term_detect"=c("t","at","tl")),
-                                    list("term_perm"="h","term_detect"=c("h","ah"))),
+                   #"list_term"=list(list("term_perm"="t","term_detect"=c("t","at","tl","tp-l")),
+                   #                 list("term_perm"="h","term_detect"=c("h","ah"))),
+                   "list_term"=list(list("term_perm"="t","term_detect"=c("t","tp-e","tp-l"))),
                    #"p_cdt_threshold"=0.001,
                    "p_cdt_threshold"=c(0.001,0.005,0.01),
                    "p_perm_threshold"=0.05,
-                   "n_perm"=1000),
-                   #"n_perm"=100),
+                   #"n_perm"=1000),
+                   "n_perm"=100),
                    #"n_perm"=20),
                    #"n_perm"=10),
                    #"n_perm"=3),

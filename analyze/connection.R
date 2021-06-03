@@ -14,7 +14,8 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.3_fc_gam_diff_aroma_test5" 
+dir_out<-"424.2_fc_gamm_aroma_test2" 
+#dir_out<-"423.3_fc_gam_diff_aroma_test5" 
 #dir_out<-"424_fc_gamm_aroma_test24" 
 #dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
@@ -90,6 +91,16 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
     list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
     df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
   }
+  # Group Tanner stage data
+  if (!is.null(param$group_tanner)){
+    df_clin$tanner<-as.numeric.factor(df_clin$tanner)
+    for (name_group in names(param$group_tanner)){
+      list_tanner<-param$group_tanner[[name_group]]
+      df_clin[df_clin$tanner %in% list_tanner,"tanner"]<-name_group
+    }
+    df_clin$tanner<-factor(df_clin$tanner,levels=names(param$group_tanner))
+  }
+  
   df_clin<-func_std_clin(df_clin,separate_sex=T)$df_clin
   fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
   
