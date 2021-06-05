@@ -10,8 +10,8 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"#
-path_exp_full<-NULL
-#path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
+#path_exp_full<-NULL
+path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 #dir_in<-"431_fc_aroma_gsr"
 #dir_out<-"434_fc_gamm_aroma_gsr_test1" 
