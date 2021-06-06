@@ -9,12 +9,12 @@
 # Parameters ======================================
 #**************************************************
 
-path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"#
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"434_fc_gamm_aroma_gsr_test1" 
+dir_in<-"401_fc_acompcor"
+dir_out<-"404_fc_gamm_acompcor_test1" 
 
 #dir_in<-"421_fc_aroma"
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
