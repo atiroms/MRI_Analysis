@@ -8,6 +8,9 @@
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
+  "tfnbs"=T,
+  "param_tfnbs"=list("e"=0.4,"h"=3.0,"n_thresh_h"=100),
+  
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
   "std_fc"=T, # standardize z values with demeaning and division with sd
@@ -63,7 +66,7 @@ param_gamm_fc<-list(
   #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
   #                                  "label"="Tanner stage (adrenal)","dtype"="ordered")),
   #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="factor")),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="ordered")),
   #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="ordered"),
   #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="ordered")),
   #"list_mod_tanner"=list("l" = "value ~ age + tanner + (1|ID_pnTTC)",
@@ -101,17 +104,18 @@ param_gamm_fc<-list(
                            "s(h)"=list("title"="Hormone effect","var_exp"="s(hormone)")),
   "param_nbs"=list(#"list_mod"=c("l","li"),
                    "list_mod"="l",
-                   "list_term"=list(list("term_perm"="t","term_detect"=c("t","at","tl")),
-                                    list("term_perm"="h","term_detect"=c("h","ah"))),
+                   #"list_term"=list(list("term_perm"="t","term_detect"=c("t","at","tl")),
+                   #                 list("term_perm"="h","term_detect"=c("h","ah"))),
+                   "list_term"=list(list("term_perm"="t","term_detect"="tl")),
                    #"list_term"=list(list("term_perm"="t","term_detect"=c("t","tp-e","tp-l"))),
                    #"p_cdt_threshold"=0.001,
                    "p_cdt_threshold"=c(0.001,0.005,0.01),
                    "p_perm_threshold"=0.05,
                    #"n_perm"=1000),
-                   "n_perm"=100),
+                   #"n_perm"=100),
                    #"n_perm"=20),
                    #"n_perm"=10),
-                   #"n_perm"=3),
+                   "n_perm"=3),
   "param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),
                                           level=c(1,2,3,4,5)),
                            "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),

@@ -114,6 +114,34 @@ func_demean_clin<-function(df_clin,separate_sex=T){
 #**************************************************
 # Network-based statistics ========================
 #**************************************************
+func_tfnbs<-function(df_stat,param){
+  if (is.na(df_stat[1,"F"])){ # GAMM result
+    df_stat<-df_stat[,c("from","to","t")]
+    df_stat<-dplyr::rename(df_stat,"stat"="t")
+  }else{ # ANCOVA result
+    df_stat<-df_stat[,c("from","to","F")]
+    df_stat<-dplyr::rename(df_stat,"stat"="F")
+  }
+  df_out<-data.frame(df_stat[,c("from","to")],"nbs"=0)
+  max_thresh_h<-max(abs(df_stat$stat))
+  for (thresh_h in seq(0,max_thresh_h,max_thresh_h/param$param_tfnbs$n_thresh_h)){
+    df_stat_sign<-df_stat[abs(df_stat$stat)>=thresh_h,]
+    data_bfs<-func_bfs(df_stat_sign)
+    for (subnet in data_bfs$list_network){
+      nbs_increment<-((subnet$size_net)**(param$param_tfnbs$e))*(thresh_h**(param$param_tfnbs$h))
+      df_edge<-subnet$df_edge
+      df_edge[df_edge$stat>=0,"stat"]<-nbs_increment
+      df_edge[df_edge$stat<0,"stat"]<-(-1)*nbs_increment
+      df_out<-left_join(df_out,df_edge,by=c("from","to"))
+      df_out[is.na(df_out$stat),"stat"]<-0
+      df_out$nbs<-df_out$nbs+df_out$stat
+      df_out$stat<-NULL
+    }
+  }
+  return(list("df_tfnbs"=df_out,"max_nbs"=max(abs(df_out$nbs))))
+}
+
+
 func_nbs_core<-function(clust,df_fc,df_clin,df_roi,df_edge,list_mod,list_plot,thr_p_cdt,progressbar,
                         output_gamm=F,calc_slope=F,test_mod=F){
   df_join<-join_fc_clin(df_fc,df_clin)
