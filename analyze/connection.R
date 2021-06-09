@@ -10,13 +10,14 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"411_fc_acompcor_gsr"
-dir_out<-"413.3_fc_gam_diff_acompcor_gsr_test1" 
+#dir_in<-"411_fc_acompcor_gsr"
+#dir_out<-"413.3_fc_gam_diff_acompcor_gsr_test1" 
 
-#dir_in<-"421_fc_aroma"
+dir_in<-"421_fc_aroma"
+dir_out<-"423.4_fc_gam_diff_aroma_test1" 
 #dir_out<-"424.3_fc_gamm_aroma_test2" 
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
 #dir_out<-"423.3_fc_gam_diff_aroma_test7" 
@@ -890,17 +891,28 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                             atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
-  # Threshold and plot graph edges
-  data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+  
+  if (param$tfnbs){
+    # Calculate threshold-free network based statistics
+    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=T,return_nbs=T,
+                                   atlas,param,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs$df_tfnbs,calc_parallel,plot_result=T,
+                           atlas,param,list_mod,list_term,idx_var,label_wave)
+  }else{
+    # Threshold and plot graph edges
+    data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
+    # Detect sub-network by breadth-first approach
+    data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
                                  atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
-  # Detect sub-network by breadth-first approach
-  data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
-                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  # Permutation test
-  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
+                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  }
 }
+
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
   print("Starting gam_fc_diff().")
@@ -939,7 +951,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
   
   print("Combining results.")
   list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
   
   print("Finished gam_fc_diff().")
 }

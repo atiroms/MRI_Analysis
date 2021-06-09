@@ -10,7 +10,8 @@ from matplotlib.lines import Line2D
 
 
 ####
-dir_in='424_fc_gamm_aroma_test24'
+#dir_in='424_fc_gamm_aroma_test24'
+dir_in='423.3_fc_gam_diff_aroma_test5'
 path_parent='D:/NICT_WS/'
 #path_parent='D:/atiro/'
 
@@ -23,6 +24,7 @@ df_roi=pd.read_csv(file_roi)
 
 df_fwep=pd.read_csv(os.path.join(path_exp,dir_in,'output','result','perm_fwep.csv'))
 df_edge=pd.read_csv(os.path.join(path_exp,dir_in,'output','result','bfs_edge.csv'))
+df_node=pd.read_csv(os.path.join(path_exp,dir_in,'output','result','bfs_node.csv'))
 
 if not os.path.exists(os.path.join(path_exp,dir_in,'output','plot','plot_subnet')):
     os.mkdir(os.path.join(path_exp,dir_in,'output','plot','plot_subnet'))
@@ -62,9 +64,22 @@ for idx_fwep in df_fwep_plot.index:
         df_edge_subnet=df_edge_subnet.drop('estimate',axis=1)
         type_plot='F'
     list_node=sorted(list(set(df_edge_subnet['from'].tolist()+df_edge_subnet['to'].tolist())))
+    
+    # Node dataframe from ROI dictionary (for gravity center data)
     df_roi_atlas=dct_df_roi_atlas[atlas].copy()
-    df_node=df_roi_atlas.loc[df_roi_atlas['id'].isin(list_node)]
-    arr_coord=df_node.loc[:,['gc_x','gc_y','gc_z']].to_numpy()
+    df_node_subnet=df_roi_atlas.loc[df_roi_atlas['id'].isin(list_node),['id','label','gc_x','gc_y','gc_z']]
+    # Node dataframe from GAMM result data (for node degree data)
+    df_node_gamm_subnet=df_node.loc[(df_node['atlas']==atlas) & (df_node['variable']==variable)\
+        & (df_node['wave']==wave) & (df_node['model']==model) & (df_node['term']==term)\
+        & (df_node['sex']==sex) & (df_node['sign']==sign) & (df_node['p_threshold']==p_threshold)\
+        & (df_node['id_net']==id_net),['node','degree']]
+    df_node_gamm_subnet=df_node_gamm_subnet.rename(columns={'node':'id'})
+    # Merge & sort by node degree
+    df_node_subnet=pd.merge(df_node_subnet,df_node_gamm_subnet,on='id')
+    df_node_subnet=df_node_subnet.sort_values(by='degree',axis=0,ascending=False)
+    list_node=df_node_subnet['id'].tolist()
+    # Coordinate array
+    arr_coord=df_node_subnet.loc[:,['gc_x','gc_y','gc_z']].to_numpy()
 
     # Prepare correlation matrix
     arr_corr=np.eye(len(list_node))
@@ -94,7 +109,8 @@ for idx_fwep in df_fwep_plot.index:
     # dummy lines for legend
     list_legend=[]
     for idx_node in range(len(list_node)):
-        list_legend=list_legend+[Line2D([0], [0], marker='o', color='w', label=df_node.iloc[idx_node]['label'],markerfacecolor=arr_color[idx_node], markersize=10)]
+        label_node=df_node_subnet.iloc[idx_node]['label']+' ('+str(df_node_subnet.iloc[idx_node]['degree'])+')'
+        list_legend=list_legend+[Line2D([0], [0], marker='o', color='w', label=label_node,markerfacecolor=arr_color[idx_node], markersize=10)]
     axes[1].legend(handles=list_legend, loc='upper left',bbox_to_anchor=(0, 1),ncol=4,
                fontsize='small',frameon=False)
     txt_title='atlas: '+atlas+', var: '+variable+', wave: '+str(wave)+', mod: '+model+', term: '+term+', sex: '+label_sex+', cdt: '+str(p_threshold)+', sign: '+sign+', #'+str(id_net)
