@@ -37,7 +37,10 @@ func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_
             }
             path_src<-file.path(paths$output,"output","temp",paste(prefix_fname, "_",filename,".csv",sep=""))
             if(file.exists(path_src)){
-              df_dst<-bind_rows(df_dst,cbind(df_head,as.data.frame(fread(path_src,showProgress=F))))
+              df_add<-as.data.frame(fread(path_src,showProgress=F))
+              if (nrow(df_add)>0){
+                df_dst<-bind_rows(df_dst,cbind(df_head,df_add))
+              }
             }
           }
         }
