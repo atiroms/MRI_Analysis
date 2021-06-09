@@ -13,10 +13,12 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"401_fc_acompcor"
-dir_out<-"404_fc_gamm_acompcor_test1" 
+#dir_in<-"411_fc_acompcor_gsr"
+#dir_out<-"413.3_fc_gam_diff_acompcor_gsr_test1" 
 
-#dir_in<-"421_fc_aroma"
+dir_in<-"421_fc_aroma"
+dir_out<-"423.4_fc_gam_diff_aroma_test1" 
+#dir_out<-"424.3_fc_gamm_aroma_test2" 
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
 #dir_out<-"423.3_fc_gam_diff_aroma_test7" 
 #dir_out<-"424_fc_gamm_aroma_test28" 
@@ -115,16 +117,27 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                             atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
-  # Threshold and plot graph edges
-  data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
-                                 atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
-  # Detect sub-network by breadth-first approach
-  data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,plot_result=F,
-                                atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  # Permutation test
-  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
-                                 atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  
+  if (param$tfnbs){
+    # Calculate threshold-free network based statistics
+    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=T,return_nbs=T,
+                                 atlas,param,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs$df_tfnbs,calc_parallel,plot_result=T,
+                           atlas,param,list_mod,list_term,idx_var,label_wave)
+  }else{
+    # Threshold and plot graph edges
+    data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                                   atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
+    
+    # Detect sub-network by breadth-first approach
+    data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
+                                  atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
+                                   atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  }
 }
 
 
@@ -169,7 +182,7 @@ gamm_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_gamm_fc){
   
   print("Combining results.")
   list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,"long",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  func_combine_result(paths_,list_atlas_,list_var,"long",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
   print("Finished gamm_fc().")
 }
 
@@ -241,7 +254,7 @@ gamm_fc_mix_core<-function(paths,data_fc,atlas,param,
                                  atlas,param,"1_2",list_covar,list_mod,list_term,idx_var,label_wave)
   df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
   # Detect sub-network by breadth-first approach
-  data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,plot_result=F,
+  data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
                                 atlas,param,"1_2",list_covar,list_mod,list_term,idx_var,label_wave)
   # Permutation test
   df_clin$sex<-"1_2"
@@ -787,7 +800,7 @@ gam_fc_cs_core<-function(paths,atlas,param,list_sex,
                                    atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
     df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
     # Detect sub-network by breadth-first approach
-    data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,plot_result=F,
+    data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
     # Permutation test
     data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
@@ -878,17 +891,28 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
                             atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
-  # Threshold and plot graph edges
-  data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+  
+  if (param$tfnbs){
+    # Calculate threshold-free network based statistics
+    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=T,return_nbs=T,
+                                   atlas,param,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs$df_tfnbs,calc_parallel,plot_result=T,
+                           atlas,param,list_mod,list_term,idx_var,label_wave)
+  }else{
+    # Threshold and plot graph edges
+    data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
+    # Detect sub-network by breadth-first approach
+    data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
                                  atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
-  # Detect sub-network by breadth-first approach
-  data_bfs<-func_detect_subnset(paths,df_plot,df_gamm,data_fc,plot_result=F,
-                                atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  # Permutation test
-  data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
+                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  }
 }
+
 
 gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
   print("Starting gam_fc_diff().")
@@ -927,7 +951,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
   
   print("Combining results.")
   list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
+  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
   
   print("Finished gam_fc_diff().")
 }
@@ -1064,7 +1088,179 @@ func_threshold_gamm<-function(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,da
   return(list("df_plot"=df_plot,"df_plot_grp"=df_plot_grp))
 }
 
-func_detect_subnset<-function(paths,df_plot,df_gamm,data_fc,plot_result=F,
+func_iterate_tfnbs<-function(paths,df_gamm,df_anova,data_fc,plot_result=F,return_nbs=T,
+                             atlas,param,list_mod,list_term,idx_var,label_wave){
+  list_plot<-list()
+  df_tfnbs<-data.frame(); df_max<-data.frame()
+  for (idx_mod in param$param_nbs$list_mod){
+    for (set_term in param$param_nbs$list_term){
+      for (idx_term_detect in set_term$term_detect){
+        var_exp_detect<-list_term[[idx_term_detect]]$var_exp
+        if (!is.null(var_exp_detect)){
+          for (idx_sex in param$list_sex){
+            if (idx_sex==1){label_sex<-"m"}else if (idx_sex==2){label_sex<-"f"}else{label_sex<-"mf"}
+            df_stat<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp_detect & df_gamm$sex==idx_sex,]
+            if (nrow(df_stat)==0){
+              df_anova_subset<-df_anova[df_anova$model==idx_mod & df_anova$term==var_exp_detect & df_anova$sex==idx_sex,]
+              if (nrow(df_anova_subset)>0){
+                # In case the term does not exist in df_gamm, plot using df_anova instead
+                df_stat<-df_anova_subset
+              }
+            }
+            if (nrow(df_stat)>0){
+              if (is.na(df_stat[1,"F"])){ # GAMM result
+                list_df_stat<-list("both"=df_stat,"pos"=df_stat[df_stat$estimate>0,],"neg"=df_stat[df_stat$estimate<0,])
+              }else{ # ANCOVA result
+                list_df_stat<-list("both"=df_stat,"pos"=data.frame(),"neg"=data.frame())
+              }
+            }else{
+              list_df_stat<-list("both"=data.frame(),"pos"=data.frame(),"neg"=data.frame())
+            }
+            for (type_sign in names(list_df_stat)){
+              #print(paste(idx_mod,var_exp_detect,label_sex,type_sign))
+              df_stat_temp<-list_df_stat[[type_sign]]
+              if (nrow(df_stat_temp)>0){
+                data_tfnbs<-func_tfnbs(df_stat_temp,param)
+                df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,sign=type_sign)
+                if (return_nbs){
+                  df_tfnbs<-rbind(df_tfnbs,cbind(df_head,data_tfnbs$df_tfnbs))
+                }
+                df_max<-rbind(df_max,data.frame(df_head,max_nbs=data_tfnbs$max_nbs))
+                if (plot_result){
+                  plot_nbs<-plot_tfnbs(data_tfnbs$df_tfnbs,data_fc)
+                  plot_nbs<-(plot_nbs+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", sign: ",type_sign,sep="")))
+                  list_plot<-c(list_plot,list(list("plot"=plot_nbs,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                   "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_sgn-",type_sign,"_tfnbs.png",sep=""))))
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (length(list_plot)>0){
+    clust<-makeCluster(floor(detectCores()*3/4))
+    plot_parallel(clust,list_plot)
+    stopCluster(clust)
+  }
+  if (return_nbs){
+    fwrite(df_tfnbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_tfnbs.csv",sep="")),row.names = F)
+  }
+  return(list("df_tfnbs"=df_tfnbs,"df_max"=df_max))
+}
+
+func_tfnbs_permutation<-function(paths,data_fc,df_clin,df_tfnbs,calc_parallel,plot_result=T,
+                                 atlas,param,list_mod,list_term,idx_var,label_wave){
+  
+  if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_fwep.csv",sep="")))){
+    print("Calculated permutation exists")
+  }else{
+    print("Calculating permutation")
+    
+    # Prepare parallelization cluster
+    test_mod<-F
+    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+    list_sex<-param$list_sex
+    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
+                  envir=environment())
+    set.seed(0)
+    pb<-txtProgressBar(min=0,max=param$param_nbs$n_perm,style=3,width=50)
+    df_max_nbs<-data.frame()
+    for (idx_perm in seq(param$param_nbs$n_perm)){
+      for (set_term in param$param_nbs$list_term){
+        var_exp_perm<-list_term[[set_term$term_perm]]$var_exp
+        if (!is.null(var_exp_perm)){
+          # Sex-wise permutation of term (expvar) of interst
+          df_clin_perm<-NULL
+          for (idx_sex in list_sex){
+            df_clin_perm_add<-df_clin[df_clin$sex==idx_sex,]
+            df_clin_perm_add[,var_exp_perm]<-sample(df_clin_perm_add[,var_exp_perm])
+            df_clin_perm<-rbind(df_clin_perm,df_clin_perm_add)
+          }
+          # Join FC and permuted clinical data
+          df_join<-join_fc_clin(data_fc$df_fc,df_clin_perm)
+          
+          # Calculate model
+          data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+          df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova
+          # Calculate threshold-free network-based statistics
+          data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=F,return_nbs=F,
+                                         atlas,param,list_mod,list_term,idx_var,label_wave)
+          df_max_nbs<-rbind(df_max_nbs,data.frame(id_perm=idx_perm,data_tfnbs$df_max))
+        }
+      }
+      setTxtProgressBar(pb,idx_perm)
+    }
+    stopCluster(clust)
+    close(pb)
+    fwrite(df_max_nbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_max.csv",sep="")),row.names = F)
+    
+    # Summarize permutation result
+    list_plot<-list()
+    df_thresh_nbs<-df_fwep<-df_sign<-data.frame()
+    for (idx_mod in param$param_nbs$list_mod){
+      for (set_term in param$param_nbs$list_term){
+        for (idx_term_detect in set_term$term_detect){
+          var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
+          for (idx_sex in list_sex){
+            if (idx_sex==1){
+              label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
+            }else if (idx_sex==2){
+              label_sex<-"f";title_sex<-"female";color_plt<-"lightcoral"
+            }else{
+              label_sex<-"mf";title_sex<-"both";color_plt<-"grey60"
+            }
+            
+            for (type_sign in c("both","pos","neg")){
+              list_max_nbs<-df_max_nbs[df_max_nbs$model==idx_mod & df_max_nbs$term==var_exp_detect & df_max_nbs$sex==idx_sex & df_max_nbs$sign==type_sign, "max_nbs"]
+              list_max_nbs<-sort(list_max_nbs)
+              if (length(list_max_nbs)>0){
+                df_tfnbs_fwep<-df_tfnbs[df_tfnbs$model==idx_mod & df_tfnbs$term==var_exp_detect & df_tfnbs$sex==idx_sex
+                                        & df_tfnbs$sign==type_sign,]
+                for (idx_row in seq(nrow(df_tfnbs_fwep))){
+                  df_tfnbs_fwep[idx_row,"fwep"]<-sum(df_tfnbs_fwep[idx_row,"nbs"]<list_max_nbs)/param$param_nbs$n_perm
+                }
+                df_tfnbs_sign<-df_tfnbs_fwep[df_tfnbs_fwep$fwep<=param$param_nbs$p_perm_threshold,]
+                df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,sign=type_sign)
+                df_fwep<-rbind(df_fwep,df_tfnbs_fwep)
+                if (nrow(df_tfnbs_sign)>0){
+                  df_sign<-rbind(df_sign,df_tfnbs_sign)
+                }
+                thr_nbs<-list_max_nbs[ceiling(length(list_max_nbs)*(1-param$param_nbs$p_perm_threshold))]
+                df_thresh_nbs<-rbind(df_thresh_nbs,data.frame(df_head,thresh_nbs=thr_nbs))
+                if (plot_result){
+                  plot_nbs<-plot_tfnbs(df_tfnbs_sign,data_fc)
+                  plot_nbs<-plot_nbs+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", sign: ",type_sign,sep=""))
+                  list_plot<-c(list_plot,list(list("plot"=plot_nbs,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                                   "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_sgn-",type_sign,"_tfnbs_sign.png",sep=""))))
+                  #plot_perm<-plot_permutation2(list_max=list_max_nbs,thr_nbs=thr_nbs,color_plt)
+                  plot_perm<-plot_permutation2(list_max=list_max_nbs,color_plt)
+                  plot_perm<-plot_perm+ ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,
+                                                      "\nexpvar: ",var_exp_detect,", sex: ",label_sex,", sign: ",type_sign,sep=""))
+                  list_plot<-c(list_plot,list(list("plot"=plot_perm,"height"=5,"width"=7,"dpi"=300,"path"=file.path(paths$output,"output","plot"),
+                                                   "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",idx_mod,"_trm-",idx_term_detect,"_sex-",label_sex,"_sgn-",type_sign,"_perm.png",sep=""))))
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (length(list_plot)>0){
+      clust<-makeCluster(floor(detectCores()*3/4))
+      plot_parallel(clust,list_plot)
+      stopCluster(clust)
+    }
+    fwrite(df_thresh_nbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_thr.csv",sep="")),row.names = F)
+    fwrite(df_sign,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_sign.csv",sep="")),row.names = F)
+    fwrite(df_fwep,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_fwep.csv",sep="")),row.names = F)
+  }
+}
+
+
+func_detect_subnet<-function(paths,df_plot,df_gamm,data_fc,plot_result=F,
                               atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave){
   if (nrow(df_plot)>0){
     print("Detecting subnetworks")
