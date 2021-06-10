@@ -13,7 +13,7 @@ param_gamm_fc<-list(
   
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=F, # standardize z values with demeaning and division with sd
+  "std_fc"=T, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
@@ -112,10 +112,10 @@ param_gamm_fc<-list(
                    "p_cdt_threshold"=c(0.001,0.005,0.01),
                    "p_perm_threshold"=0.05,
                    #"n_perm"=1000),
-                   "n_perm"=100),
+                   #"n_perm"=100),
                    #"n_perm"=20),
                    #"n_perm"=10),
-                   #"n_perm"=3),
+                   "n_perm"=3),
   "param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),
                                           level=c(1,2,3,4,5)),
                            "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),

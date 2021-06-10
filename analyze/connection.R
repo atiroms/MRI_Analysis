@@ -17,8 +17,8 @@ path_exp_full<-NULL
 #dir_out<-"414_fc_gamm_acompcor_gsr_test2" 
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.4_fc_gam_diff_aroma_test2" 
-#dir_out<-"424.3_fc_gamm_aroma_test2" 
+#dir_out<-"423.4_fc_gam_diff_aroma_test2" 
+dir_out<-"424.3_fc_gamm_aroma_test1" 
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
 #dir_out<-"423.3_fc_gam_diff_aroma_test7" 
 #dir_out<-"424_fc_gamm_aroma_test28" 
@@ -119,12 +119,21 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
   df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
   
   if (param$tfnbs){
+    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+    #if (calc_parallel){clust<-makeCluster(floor(detectCores()*1/2))}else{clust<-makeCluster(1)}
+    list_sex<-param$list_sex
+    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC",
+                                  "param","func_bfs","%nin%","left_join","ggsave"),
+                  envir=environment())
+    
     # Calculate threshold-free network based statistics
-    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,df_deltah_in=NULL,data_fc,plot_result=T,return_nbs=T,
-                                 atlas,param,list_mod,list_term,idx_var,label_wave)
+    data_tfnbs<-func_iterate_tfnbs2(paths,clust,df_gamm,df_anova,df_deltah_in=NULL,var_exp_perm_in=NULL,data_fc,plot_result=T,return_nbs=T,
+                                    atlas,param,list_mod,list_term,idx_var,label_wave)
     # Permutation test
-    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs_in=data_tfnbs,calc_parallel,plot_result=T,
+    func_tfnbs_permutation(paths,clust,data_fc,df_clin,data_tfnbs_in=data_tfnbs,calc_parallel,plot_result=T,
                            atlas,param,list_mod,list_term,idx_var,label_wave)
+    stopCluster(clust)
   }else{
     # Threshold and plot graph edges
     data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
@@ -1271,7 +1280,7 @@ func_tfnbs_permutation<-function(paths,clust,data_fc,df_clin,data_tfnbs_in,calc_
         if (!is.null(var_exp_perm)){
           # Sex-wise permutation of term (expvar) of interst
           df_clin_perm<-NULL
-          for (idx_sex in list_sex){
+          for (idx_sex in param$list_sex){
             df_clin_perm_add<-df_clin[df_clin$sex==idx_sex,]
             df_clin_perm_add[,var_exp_perm]<-sample(df_clin_perm_add[,var_exp_perm])
             df_clin_perm<-rbind(df_clin_perm,df_clin_perm_add)
@@ -1280,7 +1289,7 @@ func_tfnbs_permutation<-function(paths,clust,data_fc,df_clin,data_tfnbs_in,calc_
           df_join<-join_fc_clin(data_fc$df_fc,df_clin_perm)
           
           # Calculate model
-          data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
+          data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=F)
           df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova
           # Calculate threshold-free network-based statistics
           data_tfnbs<-func_iterate_tfnbs2(paths,clust,df_gamm,df_anova,df_deltah_in=data_tfnbs_in$df_deltah,var_exp_perm_in=var_exp_perm,data_fc,plot_result=F,return_nbs=F,
@@ -1304,7 +1313,7 @@ func_tfnbs_permutation<-function(paths,clust,data_fc,df_clin,data_tfnbs_in,calc_
         var_exp_perm<-list_term[[idx_term_perm]]$var_exp
         for (idx_term_detect in set_term$term_detect){
           var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
-          for (idx_sex in list_sex){
+          for (idx_sex in param$list_sex){
             if (idx_sex==1){
               label_sex<-"m";title_sex<-"male";color_plt<-"steelblue2"
             }else if (idx_sex==2){
