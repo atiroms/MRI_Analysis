@@ -13,11 +13,11 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"431_fc_aroma_gsr"
-dir_out<-"433.3_fc_gam_diff_aroma_gsr_test1" 
+#dir_in<-"431_fc_aroma_gsr"
+#dir_out<-"433.3_fc_gam_diff_aroma_gsr_test1" 
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"423.4_fc_gam_diff_aroma_test1" 
+dir_in<-"421_fc_aroma"
+dir_out<-"423.4_fc_gam_diff_aroma_test2" 
 #dir_out<-"424.3_fc_gamm_aroma_test2" 
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
 #dir_out<-"423.3_fc_gam_diff_aroma_test7" 
