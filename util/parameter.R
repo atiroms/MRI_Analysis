@@ -8,7 +8,7 @@
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
-  "tfnbs"=F,
+  "tfnbs"=T,
   "param_tfnbs"=list("e"=0.4,"h"=3.0,"n_thresh_h"=100),
   
   # Parameters for FC normalization

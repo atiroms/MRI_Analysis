@@ -10,14 +10,14 @@
 #**************************************************
 
 path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
-#path_exp_full<-NULL
-path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
+path_exp_full<-NULL
+#path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
-dir_in<-"411_fc_acompcor_gsr"
-dir_out<-"414_fc_gamm_acompcor_gsr_test2" 
+#dir_in<-"411_fc_acompcor_gsr"
+#dir_out<-"414_fc_gamm_acompcor_gsr_test2" 
 
-#dir_in<-"421_fc_aroma"
-#dir_out<-"423.4_fc_gam_diff_aroma_test2" 
+dir_in<-"421_fc_aroma"
+dir_out<-"423.4_fc_gam_diff_aroma_test2" 
 #dir_out<-"424.3_fc_gamm_aroma_test2" 
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
 #dir_out<-"423.3_fc_gam_diff_aroma_test7" 
@@ -120,10 +120,10 @@ gamm_fc_core<-function(paths,data_fc,atlas,param,
   
   if (param$tfnbs){
     # Calculate threshold-free network based statistics
-    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=T,return_nbs=T,
+    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,df_deltah_in=NULL,data_fc,plot_result=T,return_nbs=T,
                                  atlas,param,list_mod,list_term,idx_var,label_wave)
     # Permutation test
-    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs$df_tfnbs,calc_parallel,plot_result=T,
+    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs_in=data_tfnbs,calc_parallel,plot_result=T,
                            atlas,param,list_mod,list_term,idx_var,label_wave)
   }else{
     # Threshold and plot graph edges
@@ -846,7 +846,7 @@ gam_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_cs){
 # GLM/GAM of FC longitudinal difference ===========
 #**************************************************
 
-gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
+gam_fc_diff_core<-function(paths,data_fc,atlas,param,
                            list_covar,list_mod,list_term,idx_var,
                            calc_parallel,test_mod
                            ){
@@ -889,16 +889,26 @@ gam_fc_diff_core<-function(paths,data_fc,atlas,param,list_sex,
   label_wave<-"2-1"
   # Calculate model
   data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
-                            atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+                            atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
   df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
   
   if (param$tfnbs){
+    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+    #if (calc_parallel){clust<-makeCluster(floor(detectCores()*1/2))}else{clust<-makeCluster(1)}
+    list_sex<-param$list_sex
+    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC",
+                                  "param","func_bfs","%nin%","left_join","ggsave"),
+                  envir=environment())
+    
     # Calculate threshold-free network based statistics
-    data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=T,return_nbs=T,
-                                   atlas,param,list_mod,list_term,idx_var,label_wave)
+    data_tfnbs<-func_iterate_tfnbs2(paths,clust,df_gamm,df_anova,df_deltah_in=NULL,var_exp_perm_in=NULL,data_fc,plot_result=T,return_nbs=T,
+                                    atlas,param,list_mod,list_term,idx_var,label_wave)
     # Permutation test
-    func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs$df_tfnbs,calc_parallel,plot_result=T,
+    func_tfnbs_permutation(paths,clust,data_fc,df_clin,data_tfnbs_in=data_tfnbs,calc_parallel,plot_result=T,
                            atlas,param,list_mod,list_term,idx_var,label_wave)
+    stopCluster(clust)
+    
   }else{
     # Threshold and plot graph edges
     data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
@@ -933,7 +943,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
       list_covar<-param$list_covar_tanner
       list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
-      gam_fc_diff_core(paths_,data_fc,atlas,param,list_sex=list(1,2),list_covar,
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list_covar,
                        list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
                        calc_parallel=T,test_mod=F)
     } # Finished looping over Tanner stages
@@ -943,7 +953,7 @@ gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_dif
       print(paste("Atlas: ",atlas,", Hormone type: ",param$list_hormone[[idx_hormone]][["label"]],sep=""))
       list_covar<-param$list_covar_hormone
       list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
-      gam_fc_diff_core(paths_,data_fc,atlas,param,list_sex=list(1,2),list_covar,
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list_covar,
                        list_mod=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
                        calc_parallel=T,test_mod=F)
     } # Finished looping over Hormones
@@ -1088,10 +1098,98 @@ func_threshold_gamm<-function(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,da
   return(list("df_plot"=df_plot,"df_plot_grp"=df_plot_grp))
 }
 
-func_iterate_tfnbs<-function(paths,df_gamm,df_anova,data_fc,plot_result=F,return_nbs=T,
+# parallelization
+func_iterate_tfnbs2<-function(paths,clust,df_gamm,df_anova,df_deltah_in,var_exp_perm_in,data_fc,plot_result=F,return_nbs=T,
+                              atlas,param,list_mod,list_term,idx_var,label_wave){
+  list_src_tfnbs<-list()
+  for (idx_mod in param$param_nbs$list_mod){
+    for (set_term in param$param_nbs$list_term){
+      idx_term_perm<-set_term$term_perm
+      var_exp_perm<-list_term[[idx_term_perm]]$var_exp
+      for (idx_term_detect in set_term$term_detect){
+        var_exp_detect<-list_term[[idx_term_detect]]$var_exp
+        if (!is.null(var_exp_detect)){
+          for (idx_sex in param$list_sex){
+            if (idx_sex==1){label_sex<-"m"}else if (idx_sex==2){label_sex<-"f"}else{label_sex<-"mf"}
+            df_stat<-df_gamm[df_gamm$model==idx_mod & df_gamm$term==var_exp_detect & df_gamm$sex==idx_sex,]
+            if (nrow(df_stat)==0){
+              df_anova_subset<-df_anova[df_anova$model==idx_mod & df_anova$term==var_exp_detect & df_anova$sex==idx_sex,]
+              if (nrow(df_anova_subset)>0){
+                # In case the term does not exist in df_gamm, plot using df_anova instead
+                df_stat<-df_anova_subset
+              }
+            }
+            if (nrow(df_stat)>0){
+              if (is.na(df_stat[1,"F"])){ # GAMM result
+                list_df_stat<-list("both"=df_stat,"pos"=df_stat[df_stat$estimate>0,],"neg"=df_stat[df_stat$estimate<0,])
+              }else{ # ANCOVA result
+                list_df_stat<-list("both"=df_stat,"pos"=data.frame(),"neg"=data.frame())
+              }
+            }else{
+              list_df_stat<-list("both"=data.frame(),"pos"=data.frame(),"neg"=data.frame())
+            }
+            for (type_sign in names(list_df_stat)){
+              #print(paste(idx_mod,var_exp_detect,label_sex,type_sign))
+              df_stat_temp<-list_df_stat[[type_sign]]
+              if (nrow(df_stat_temp)>0){
+                df_head<-data.frame(model=idx_mod,term_perm=idx_term_perm,term_detect=idx_term_detect,sex=idx_sex,sign=type_sign)
+                df_head_label<-data.frame(term_perm=var_exp_perm,term_detect=var_exp_detect,sex=label_sex)
+                if (is.null(df_deltah_in)){
+                  delta_h_in<-NULL
+                  list_src_tfnbs<-c(list_src_tfnbs,
+                                    list(list("df_stat"=df_stat_temp,"delta_h_in"=delta_h_in,"df_head"=df_head,"df_head_label"=df_head_label)))
+                }else{
+                  # if delta_h_in is not NULL (= calculating permutation),
+                  # calculate tfNBS only for the set of parameters on delta_h_in
+                  if (var_exp_perm==var_exp_perm_in){
+                    delta_h_in<-df_deltah_in[df_deltah_in$model==idx_mod & df_deltah_in$term_perm==idx_term_perm & df_deltah_in$term_detect==idx_term_detect
+                                             & df_deltah_in$sex==idx_sex & df_deltah_in$sign==type_sign,"delta_h"]
+                    list_src_tfnbs<-c(list_src_tfnbs,
+                                      list(list("df_stat"=df_stat_temp,"delta_h_in"=delta_h_in,"df_head"=df_head,"df_head_label"=df_head_label)))
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  # parallel computing
+  list_dst_tfnbs<-parLapply(clust,list_src_tfnbs,func_tfnbs3)
+  
+  # combine results
+  df_tfnbs<-data.frame(); df_max<-data.frame(); df_deltah<-data.frame(); list_plot<-list()
+  for (dst_tfnbs in list_dst_tfnbs){
+    df_head<-dst_tfnbs$df_head
+    df_head_label<-dst_tfnbs$df_head_label
+    if (return_nbs){
+      df_tfnbs<-rbind(df_tfnbs,cbind(df_head,dst_tfnbs$df_tfnbs))
+    }
+    df_max<-rbind(df_max,data.frame(df_head,max_nbs=dst_tfnbs$max_nbs))
+    df_deltah<-rbind(df_deltah,data.frame(df_head,delta_h=dst_tfnbs$delta_h))
+    if (plot_result){
+      plot_nbs<-plot_tfnbs(dst_tfnbs$df_tfnbs,data_fc)
+      plot_nbs<-(plot_nbs+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",df_head_label$term_detect,", sex: ",df_head_label$sex,", sign: ",df_head$sign,sep="")))
+      list_plot<-c(list_plot,list(list("plot"=plot_nbs,"height"=15,"width"=15,"dpi"=600,"path"=file.path(paths$output,"output","plot"),
+                                       "filename"=paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_mod-",df_head$model,"_trm-",df_head$term_detect,"_sex-",df_head_label$sex,"_sgn-",df_head$sign,"_tfnbs.png",sep=""))))
+    }
+  }
+  
+  if (length(list_plot)>0){
+    nullobj<-parLapply(clust,list_plot,plot_parallel_core)
+  }
+  if (return_nbs){
+    fwrite(df_tfnbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_tfnbs.csv",sep="")),row.names = F)
+  }
+  return(list("df_tfnbs"=df_tfnbs,"df_max"=df_max,"df_deltah"=df_deltah))
+}
+
+
+func_iterate_tfnbs<-function(paths,clust,df_gamm,df_anova,df_deltah_in,data_fc,plot_result=F,return_nbs=T,
                              atlas,param,list_mod,list_term,idx_var,label_wave){
   list_plot<-list()
-  df_tfnbs<-data.frame(); df_max<-data.frame()
+  df_tfnbs<-data.frame(); df_max<-data.frame(); df_deltah<-data.frame()
   for (idx_mod in param$param_nbs$list_mod){
     for (set_term in param$param_nbs$list_term){
       for (idx_term_detect in set_term$term_detect){
@@ -1120,12 +1218,19 @@ func_iterate_tfnbs<-function(paths,df_gamm,df_anova,data_fc,plot_result=F,return
               #print(paste(idx_mod,var_exp_detect,label_sex,type_sign))
               df_stat_temp<-list_df_stat[[type_sign]]
               if (nrow(df_stat_temp)>0){
-                data_tfnbs<-func_tfnbs(df_stat_temp,param)
+                if (is.null(df_deltah_in)){
+                  delta_h_in<-NULL
+                }else{
+                  delta_h_in<-df_deltah_in[df_deltah_in$model==idx_mod & df_deltah_in$term==var_exp_detect
+                                           & df_deltah_in$sex==idx_sex & df_deltah_in$sign==type_sign,"delta_h"]
+                }
+                data_tfnbs<-func_tfnbs2(df_stat_temp,delta_h_in,param,clust)
                 df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,sign=type_sign)
                 if (return_nbs){
                   df_tfnbs<-rbind(df_tfnbs,cbind(df_head,data_tfnbs$df_tfnbs))
                 }
                 df_max<-rbind(df_max,data.frame(df_head,max_nbs=data_tfnbs$max_nbs))
+                df_deltah<-rbind(df_deltah,data.frame(df_head,delta_h=data_tfnbs$delta_h))
                 if (plot_result){
                   plot_nbs<-plot_tfnbs(data_tfnbs$df_tfnbs,data_fc)
                   plot_nbs<-(plot_nbs+ggtitle(paste("atlas: ",atlas,", measure: ",idx_var,", wave: ",label_wave,", model: ",idx_mod,", expvar: ",var_exp_detect,", sex: ",label_sex,", sign: ",type_sign,sep="")))
@@ -1147,27 +1252,19 @@ func_iterate_tfnbs<-function(paths,df_gamm,df_anova,data_fc,plot_result=F,return
   if (return_nbs){
     fwrite(df_tfnbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_tfnbs.csv",sep="")),row.names = F)
   }
-  return(list("df_tfnbs"=df_tfnbs,"df_max"=df_max))
+  return(list("df_tfnbs"=df_tfnbs,"df_max"=df_max,"df_deltah"=df_deltah))
 }
 
-func_tfnbs_permutation<-function(paths,data_fc,df_clin,df_tfnbs,calc_parallel,plot_result=T,
+func_tfnbs_permutation<-function(paths,clust,data_fc,df_clin,data_tfnbs_in,calc_parallel,plot_result=T,
                                  atlas,param,list_mod,list_term,idx_var,label_wave){
   
   if (file.exists(file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_fwep.csv",sep="")))){
     print("Calculated permutation exists")
   }else{
     print("Calculating permutation")
-    
-    # Prepare parallelization cluster
-    test_mod<-F
-    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
-    list_sex<-param$list_sex
-    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
-                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
-                  envir=environment())
     set.seed(0)
     pb<-txtProgressBar(min=0,max=param$param_nbs$n_perm,style=3,width=50)
-    df_max_nbs<-data.frame()
+    df_max_nbs<-data.frame();df_deltah<-data.frame()
     for (idx_perm in seq(param$param_nbs$n_perm)){
       for (set_term in param$param_nbs$list_term){
         var_exp_perm<-list_term[[set_term$term_perm]]$var_exp
@@ -1186,22 +1283,25 @@ func_tfnbs_permutation<-function(paths,data_fc,df_clin,df_tfnbs,calc_parallel,pl
           data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
           df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova
           # Calculate threshold-free network-based statistics
-          data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=F,return_nbs=F,
+          data_tfnbs<-func_iterate_tfnbs2(paths,clust,df_gamm,df_anova,df_deltah_in=data_tfnbs_in$df_deltah,var_exp_perm_in=var_exp_perm,data_fc,plot_result=F,return_nbs=F,
                                          atlas,param,list_mod,list_term,idx_var,label_wave)
           df_max_nbs<-rbind(df_max_nbs,data.frame(id_perm=idx_perm,data_tfnbs$df_max))
+          df_deltah<-rbind(df_deltah,data.frame(id_perm=idx_perm,data_tfnbs$df_deltah))
         }
       }
       setTxtProgressBar(pb,idx_perm)
     }
-    stopCluster(clust)
     close(pb)
     fwrite(df_max_nbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_max.csv",sep="")),row.names = F)
+    fwrite(df_deltah,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_deltah.csv",sep="")),row.names = F)
     
     # Summarize permutation result
     list_plot<-list()
     df_thresh_nbs<-df_fwep<-df_sign<-data.frame()
     for (idx_mod in param$param_nbs$list_mod){
       for (set_term in param$param_nbs$list_term){
+        idx_term_perm<-set_term$term_perm
+        var_exp_perm<-list_term[[idx_term_perm]]$var_exp
         for (idx_term_detect in set_term$term_detect){
           var_exp_detect<-list_term[[idx_term_detect]][["var_exp"]]
           for (idx_sex in list_sex){
@@ -1214,16 +1314,17 @@ func_tfnbs_permutation<-function(paths,data_fc,df_clin,df_tfnbs,calc_parallel,pl
             }
             
             for (type_sign in c("both","pos","neg")){
-              list_max_nbs<-df_max_nbs[df_max_nbs$model==idx_mod & df_max_nbs$term==var_exp_detect & df_max_nbs$sex==idx_sex & df_max_nbs$sign==type_sign, "max_nbs"]
+              list_max_nbs<-df_max_nbs[df_max_nbs$model==idx_mod & df_max_nbs$term_perm==idx_term_perm & df_max_nbs$term_detect==idx_term_detect & df_max_nbs$sex==idx_sex & df_max_nbs$sign==type_sign, "max_nbs"]
               list_max_nbs<-sort(list_max_nbs)
               if (length(list_max_nbs)>0){
-                df_tfnbs_fwep<-df_tfnbs[df_tfnbs$model==idx_mod & df_tfnbs$term==var_exp_detect & df_tfnbs$sex==idx_sex
+                df_tfnbs<-data_tfnbs_in$df_tfnbs
+                df_tfnbs_fwep<-df_tfnbs[df_tfnbs$model==idx_mod & df_tfnbs$term_perm==idx_term_perm & df_tfnbs$term_detect==idx_term_detect & df_tfnbs$sex==idx_sex
                                         & df_tfnbs$sign==type_sign,]
                 for (idx_row in seq(nrow(df_tfnbs_fwep))){
                   df_tfnbs_fwep[idx_row,"fwep"]<-sum(df_tfnbs_fwep[idx_row,"nbs"]<list_max_nbs)/param$param_nbs$n_perm
                 }
                 df_tfnbs_sign<-df_tfnbs_fwep[df_tfnbs_fwep$fwep<=param$param_nbs$p_perm_threshold,]
-                df_head<-data.frame(model=idx_mod,term=var_exp_detect,sex=idx_sex,sign=type_sign)
+                df_head<-data.frame(model=idx_mod,term_perm=idx_term_perm,term_detect=idx_term_detect,sex=idx_sex,sign=type_sign)
                 df_fwep<-rbind(df_fwep,df_tfnbs_fwep)
                 if (nrow(df_tfnbs_sign)>0){
                   df_sign<-rbind(df_sign,df_tfnbs_sign)
@@ -1249,9 +1350,7 @@ func_tfnbs_permutation<-function(paths,data_fc,df_clin,df_tfnbs,calc_parallel,pl
       }
     }
     if (length(list_plot)>0){
-      clust<-makeCluster(floor(detectCores()*3/4))
-      plot_parallel(clust,list_plot)
-      stopCluster(clust)
+      nullobj<-parLapply(clust,list_plot,plot_parallel_core)
     }
     fwrite(df_thresh_nbs,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_thr.csv",sep="")),row.names = F)
     fwrite(df_sign,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_wav-",label_wave,"_perm_sign.csv",sep="")),row.names = F)

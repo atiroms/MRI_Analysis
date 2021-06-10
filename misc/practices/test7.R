@@ -42,6 +42,9 @@ source(file.path(getwd(),"util/gta_function.R"))
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
+  "tfnbs"=T,
+  "param_tfnbs"=list("e"=0.4,"h"=3.0,"n_thresh_h"=100),
+  
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
   "std_fc"=T, # standardize z values with demeaning and division with sd
@@ -114,10 +117,10 @@ param_gamm_fc<-list(
     "p_cdt_threshold"=c(0.001,0.005,0.01),
     "p_perm_threshold"=0.05,
     #"n_perm"=1000),
-    "n_perm"=100),
+    #"n_perm"=100),
   #"n_perm"=20),
   #"n_perm"=10),
-  #"n_perm"=3),
+    "n_perm"=3),
   "param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),
                                           level=c(1,2,3,4,5)),
                            "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),
@@ -164,8 +167,8 @@ list_mod=param$list_mod_tanner
 list_term=param$list_term_tanner
 idx_var=idx_tanner
 calc_parallel=T
-#test_mod=F
-test_mod=T
+test_mod=F
+#test_mod=T
 
 ####
 
@@ -193,35 +196,23 @@ fwrite(df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var
 
 label_wave<-"long"
 # Calculate model
-
-####
-
-list_sex<-param$list_sex
-
-####
-
-print("Calculating GAMM/ANOVA")
-# Join FC and clinical data
-df_join<-join_fc_clin(df_fc,df_clin)
-df_join_grp<-join_fc_clin(df_fc_grp,df_clin)
-
-# Prepare parallelization cluster
-if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
-clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
-                              "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC"),
-              envir=environment())
-
 # Calculate model
-data_gamm<-iterate_gamm4(clust,df_join,data_fc$df_edge,progressbar=F,test_mod=test_mod)
-data_gamm_grp<-iterate_gamm4(clust,df_join_grp,data_fc$df_edge_grp,progressbar=F,test_mod=test_mod)
-stopCluster(clust)
+data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
+                          atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
+
+####
+
+# Calculate threshold-free network based statistics
+data_tfnbs<-func_iterate_tfnbs(paths,df_gamm,df_anova,data_fc,plot_result=T,return_nbs=T,
+                               atlas,param,list_mod,list_term,idx_var,label_wave)
+# Permutation test
+func_tfnbs_permutation(paths,data_fc,df_clin,data_tfnbs$df_tfnbs,calc_parallel,plot_result=T,
+                       atlas,param,list_mod,list_term,idx_var,label_wave)
 
 
-# Add multiple comparison-corrected p values
-df_gamm<-as.data.frame(add_mltcmp(data_gamm$df_gamm,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
-df_anova<-as.data.frame(add_mltcmp(data_gamm$df_anova,data_fc$df_roi,list_mod,list_term,calc_seed_level=F))
-df_gamm_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_gamm,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
-df_anova_grp<-as.data.frame(add_mltcmp(data_gamm_grp$df_anova,data_fc$df_grp,list_mod,list_term,calc_seed_level=F))
+
+
 
 ####
 ####
