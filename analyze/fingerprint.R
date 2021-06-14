@@ -14,13 +14,15 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 #path_exp_full <-"/media/atiroms/HDD_05/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full <-NULL
 
-dir_in<-"422_fp_aroma"
+#dir_in<-"422_fp_aroma"
+dir_in<-"422.1_fp_aroma_test1"
 #dir_out<-"426_fp_gam_aroma"
-dir_out<-"428_fp_var_aroma_test1"
-list_atlas<-c("aal116","glasser360","gordon333","power264",
-              "schaefer100x7","schaefer200x7","schaefer400x7",
-              "schaefer100x17","schaefer200x17","schaefer400x17",
-              "shen268")
+dir_out<-"428.1_fp_var_aroma_test1"
+#list_atlas<-c("aal116","glasser360","gordon333","power264",
+#              "schaefer100x7","schaefer200x7","schaefer400x7",
+#              "schaefer100x17","schaefer200x17","schaefer400x17",
+#              "shen268")
+list_atlas<-"ho112"
 #list_atlas<-"aal116"
 
 
@@ -39,6 +41,66 @@ source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
 
+
+#**************************************************
+# GLM of Fingerprint change =======================
+#**************************************************
+gam_fp_core<-function(paths,df_fp,atlas,param,list_covar,list_mod,list_term,idx_var,
+                      calc_parallel,test_mod){
+  # Prepare clinical data, calculate diff and mean, and standardize
+  data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+  list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+  df_clin<-data_clin$df_clin
+  df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  df_clin<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar)
+  #df_clin<-data.frame(wave="2-1",func_demean_clin(df_clin,separate_sex=T)$df_clin)
+  df_clin<-data.frame(wave="2-1",func_std_clin(df_clin,separate_sex=T)$df_clin)
+  
+  # Prepare fingerprint data
+  df_fp<-df_fp[df_fp$group_1=="whole" & df_fp$group_2=="whole",]
+  df_fp$measure<-df_fp$group_1<-df_fp$gorup_2<-NULL
+  df_fp_long<-data.frame()
+  for (id_subj in list_id_subj){
+    df_fp_subset<-df_fp[df_fp$from_ses==1 & df_fp$from_ID_pnTTC==id_subj
+                        & df_fp$to_ses==2 & df_fp$to_ID_pnTTC==id_subj,]
+    df_fp_subset<-data.frame("ID_pnTTC"=id_subj,df_fp_subset[,"z_r"])
+    colnames(df_fp_subset)<-c("ID_pnTTC","value")
+    df_fp_long<-rbind(df_fp_long,df_fp_subnet)
+  }
+  
+  df_join<-dplyr::inner_join(df_fp_long,df_clin,by="ID_pnTTC")
+  data_gamm<-gamm_core4(df_join,list_mod_in=param$list_mod_tanner,list_sex_in=param$list_sex,calc_parallel_in=F,test_mod_in=F)
+  df_gamm_add<-data_gamm$df_gamm; df_anova_add<-data_gamm$df_anova; df_aic_add<-data_gamm$df_aic
+  df_gamm_add$sex<-df_anova_add$sex<-df_aic_add$sex<-NULL
+  df_head<-data.frame(variable=idx_var)
+  df_gamm<-rbind(df_gamm,cbind(df_head,df_gamm_add)); df_anova<-rbind(df_anova,cbind(df_head,df_anova_add)); df_aic<-rbind(df_aic,cbind(df_head,df_aic_add))
+  
+  
+}
+
+
+gam_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fp){
+  print("Starting gam_fp().")
+  nullobj<-func_createdirs(paths_,str_proc="gam_fp()",copy_log=T,list_param=param)
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    print(paste("Loading FP, atlas:",atlas,sep=" "))
+    df_fp<-as.data.frame(fread(file.path(paths_$input,"output","result",paste("atl-",atlas,"_fp.csv",sep=""))))
+    
+    #1 Tanner stage
+    for (idx_tanner in names(param$list_tanner)){
+      print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
+      list_covar<-param$list_covar_tanner
+      list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
+      gam_fp_core(paths_,df_fp,atlas,param,list_covar,
+                  list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
+                  calc_parallel=T,test_mod=F)
+    } # Finished looping over Tanner stages
+  }
+  
+}
 
 #**************************************************
 # Variance attribution ============================
@@ -94,7 +156,7 @@ variance_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_variance_f
   df_zr<-df_stat_zr<-NULL
   for (atlas in list_atlas_){
     # Load fingerprint data
-    df_fp<-as.data.frame(fread(file.path(paths_$input,"output",paste("atl-",atlas,"_fp.csv",sep=""))))
+    df_fp<-as.data.frame(fread(file.path(paths_$input,"output","result",paste("atl-",atlas,"_fp.csv",sep=""))))
     
     # Create list of groups
     list_group<-unique(c(as.character(df_fp$group_1),as.character(df_fp$group_2)))

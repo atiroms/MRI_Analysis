@@ -17,12 +17,12 @@ func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_
   for (filename in list_filename){
     df_dst<-data.frame()
     for (atlas in list_atlas){
-      for (idx_var in names(list_var)){
+      for (variable in list_var){
         for (label_wave in list_wave){
           for (type_measure in list_type_measure){
             df_head<-data.frame(atlas=atlas)
             prefix_fname<-paste("atl-",atlas,sep="")
-            if (idx_var!=""){
+            if (!is.null(variable)){
               df_head<-cbind(df_head,data.frame(variable=idx_var))
               prefix_fname<-paste(prefix_fname,"_var-",idx_var,sep="")
             }
