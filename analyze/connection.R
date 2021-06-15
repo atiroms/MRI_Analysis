@@ -254,9 +254,6 @@ fp_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_fp_fc){
       df_mean_fp<-left_join(df_mean_fp,df_clin,by=c("ses","ID_pnTTC"))
       df_mean_fp[is.na(df_mean_fp$qc),"qc"]<-0
       
-      hist(df_mean_fp$mean_z_r)
-      hist(df_mean_fp[df_mean_fp$qc==1,"mean_z_r"])
-      
       # Save fingerprint correlation
       fwrite(df_fp,file.path(paths_$output,"output","result",paste("atl-",atlas,"_fp.csv",sep="")),row.names=F)
       fwrite(df_mean_fp,file.path(paths_$output,"output","result",paste("atl-",atlas,"_mean_fp.csv",sep="")),row.names=F)
