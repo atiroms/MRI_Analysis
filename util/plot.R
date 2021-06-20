@@ -228,10 +228,10 @@ plot_permutation2<-function(list_max,color_plt){
 }
 
 plot_permutation<-function(paths_,list_max,thr_size_perm,
-                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,type_sign,color_plt){
+                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,type_sign){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
         #+ geom_histogram(binwidth=2,fill=color_plt)
-        + geom_histogram(fill=color_plt)
+        + geom_histogram(fill="grey60")
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
         + ggtitle(paste("atlas: ",atlas,", measure: ",var,", wave: ",wave,", model: ",model,

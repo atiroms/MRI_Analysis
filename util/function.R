@@ -982,6 +982,32 @@ func_clinical_data<-function(paths,
 #**************************************************
 # Longitudinal clinical data loading ==============
 #**************************************************
+func_omit_decreasing<-function(df_clin,var_check){
+  if (!is.null(var_check)){
+    list_id_subj<-sort(unique(df_clin$ID_pnTTC))
+    list_id_subj_omit<-NULL
+    for (var in var_check){
+      if (var %in% colnames(df_clin)){
+        for (id_subj in list_id_subj){
+          value<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==param$list_wave[1],var])
+          for (wave in param$list_wave[-1]){
+            value_wave<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==wave,var])
+            if (value_wave<value){
+              list_id_subj_omit<-c(list_id_subj_omit,id_subj)
+            }
+            value<-value_wave
+          }
+        }
+      }
+    }
+    list_id_subj_omit<-sort(unique(list_id_subj_omit))
+    list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
+    df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+  }
+  return(df_clin)
+}
+
+
 print_log<-function(str_in,str_add,print_terminal=T){
   if(print_terminal){
     print(str_add)
