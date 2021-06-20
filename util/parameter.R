@@ -5,10 +5,140 @@
 
 
 #**************************************************
+# gam_fc_diff() ===================================
+#**************************************************
+param_gam_fc_diff<-list(
+  "tfnbs"=F,
+  "param_tfnbs"=list("e"=0.4,"h"=3.0,"n_thresh_h"=100),
+  
+  # Parameters for FC normalization
+  "abs_nfc"=F, # absolute value for negative functional connectivity
+  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "div_mean_fc"=F, # normalize z values with division with mean
+  
+  # Parameters for clinical data subsetting
+  #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
+  "omit_decreasing"=NULL,
+  
+  "key_group"="group_3",
+  "list_wave"=c(1,2),
+  "list_sex"=list(1,2),
+  "list_p"=list(list("type"="p","threshold"=0.001),
+                list("type"="p","threshold"=0.002),
+                list("type"="p","threshold"=0.003),
+                list("type"="p","threshold"=0.004),
+                list("type"="p","threshold"=0.005),
+                list("type"="p","threshold"=0.006),
+                list("type"="p","threshold"=0.008),
+                list("type"="p","threshold"=0.01),
+                list("type"="p_bh","threshold"=0.05)),
+  #"subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
+  #                   "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"))),
+  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2")),
+                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2"))),
+  "list_covar_tanner"=list("tanner"=NULL,
+                           "age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
+                           "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex")),
+  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max","label"="Tanner stage (max)","dtype"="factor"),
+  #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="factor"),
+  #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="factor"),
+  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+  #                                  "label"="Tanner stage (adrenal)","dtype"="factor")),
+  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="factor"),
+  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+  #                                  "label"="Tanner stage (adrenal)","dtype"="factor")),
+  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="factor")),
+  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="ordered"),
+  #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="ordered"),
+  #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="ordered"),
+  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+  #                                  "label"="Tanner stage (adrenal)","dtype"="ordered")),
+  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+  #                                  "label"="Tanner stage (gonadal)","dtype"="ordered"),
+  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
+  #                                  "label"="Tanner stage (adrenal)","dtype"="ordered")),
+  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="ordered"),
+  #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="ordered")),
+  "list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
+                                    "label"="Tanner stage (gonadal)","dtype"="ordered")),
+  "list_mod_tanner"=list("cs2" = "value ~ ses1_age + ses2_age + ses1_tanner + ses2_tanner"),
+  #"cs" = "value ~ diff_age + ses1_tanner + ses2_tanner",
+  #"d"  = "value ~ diff_age + diff_tanner",
+  #"dm" = "value ~ diff_age + diff_tanner + mean_tanner"),
+  #"l" = "value ~ ses1_age + ses1_tanner + ses2_age + ses2_tanner",
+  #"li"= "value ~ age * tanner"),
+  "list_term_tanner"=list("a1"=list("title"="1st wave Age","var_exp"="ses1_age"),
+                          "t1"=list("title"="1st wave Tanner","var_exp"="ses1_tanner"),
+                          "a2"=list("title"="2nd wave Age","var_exp"="ses2_age"),
+                          "t2"=list("title"="2nd wave Tanner","var_exp"="ses2_tanner"),
+                          "ad"=list("title"="Age difference","var_exp"="diff_age"),
+                          "td"=list("title"="Tanner difference","var_exp"="diff_tanner"),
+                          "am"=list("title"="Age mean","var_exp"="mean_age"),
+                          "tm"=list("title"="Tanner mean","var_exp"="mean_tanner"),
+                          "tl1"=list("title"="1st wave Tanner","var_exp"="ses1_tanner.L"),
+                          "tl2"=list("title"="2nd wave Tanner","var_exp"="ses2_tanner.L"),
+                          "tld"=list("title"="Tanner difference","var_exp"="diff_tanner.L"),
+                          "tlm"=list("title"="Tanner mean","var_exp"="mean_tanner.L")),
+  "list_covar_hormone"=list("hormone"=NULL,
+                            "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
+                            "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
+  #"list_hormone"=list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
+  #                    "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
+  #                    "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
+  #                    "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
+  "list_hormone"=NULL,
+  "list_mod_hormone"=list("cs" = "value ~ diff_age + ses1_hormone + ses2_hormone",
+                          "d"  = "value ~ diff_age + diff_hormone",
+                          "dm" = "value ~ diff_age + diff_hormone + mean_hormone"),
+  #"l" = "value ~ ses1_age + ses1_hormone + ses2_age + ses2_hormone",
+  #"li"= "value ~ age * hormone"),
+  "list_term_hormone"=list("a1"=list("title"="1st wave Age","var_exp"="ses1_age"),
+                           "h1"=list("title"="1st wave Hormone","var_exp"="ses1_hormone"),
+                           "a2"=list("title"="2nd wave Age","var_exp"="ses2_age"),
+                           "h2"=list("title"="2nd wave Hormone","var_exp"="ses2_hormone"),
+                           "ad"=list("title"="Age difference","var_exp"="diff_age"),
+                           "hd"=list("title"="Hormone difference","var_exp"="diff_hormone"),
+                           "am"=list("title"="Age mean","var_exp"="mean_age"),
+                           "hm"=list("title"="Hormone mean","var_exp"="mean_hormone")),
+  "param_nbs"=list(#"list_mod"=c("cs","d","dm"),
+    "list_mod"="cs2",
+    "list_term"=list(list("term_perm"="t1","term_detect"=c("t1","tl1")),
+                     list("term_perm"="t2","term_detect"=c("t2","tl2")),
+                     list("term_perm"="td","term_detect"=c("td","tld")),
+                     list("term_perm"="tm","term_detect"=c("tm","tlm")),
+                     list("term_perm"="h1","term_detect"="h1"),
+                     list("term_perm"="h2","term_detect"="h2"),
+                     list("term_perm"="hd","term_detect"="hd"),
+                     list("term_perm"="hm","term_detect"="hm")),
+    #"list_term"=list(list("term_perm"="t2","term_detect"="tl2")),
+    #"p_cdt_threshold"=0.001,
+    "p_cdt_threshold"=c(0.001,0.002,0.003,0.004,0.005,0.006,0.008,0.01),
+    "p_perm_threshold"=0.05,
+    "n_perm"=1000),
+  #"n_perm"=100),
+  #"n_perm"=20),
+  #"n_perm"=10),
+  #"n_perm"=3),
+  #"param_ancova_pred"=list("t1"=data.frame(term=c("(Intercept)","ses1_tanner2","ses1_tanner3","ses1_tanner4","ses1_tanner5"),
+  #                                         level=c(1,2,3,4,5)),
+  #                         "t2"=data.frame(term=c("(Intercept)","ses2_tanner2","ses2_tanner3","ses2_tanner4","ses2_tanner5"),
+  #                                         level=c(1,2,3,4,5)),
+  #                         "td"=data.frame(term=c("(Intercept)","diff_tanner1","diff_tanner2","diff_tanner3","diff_tanner4"),
+  #                                         level=c(0,1,2,3,4)))
+  "param_ancova_pred"=list()
+)
+
+
+
+#**************************************************
 # gam_fp() ========================================= 
 #**************************************************
 param_gam_fp<-list(
-  "list_sex"= list(c(1,2)),
+  "list_sex"= list(1,2),
   "subset_subj" = list("1"  =list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
                        "2"  =list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"))),
   "list_covar_tanner"=list("tanner"=NULL,
@@ -46,7 +176,7 @@ param_fp_fc<-list(
   "std_fc"=T, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
-  "calc_group"=T,
+  "calc_group"=F,
   
   "key_group"="group_3",
   "subset_subj" = list("1"  =list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
@@ -64,18 +194,22 @@ param_ca_fc<-list(
   "div_mean_fc"=F, # normalize z values with division with mean
   "dim_ca"=10,
   "key_group"="group_3",
-  "subset_subj" = list("1"  =list(list("key"="W1_T1QC","condition"="==1"),
-                                  list("key"="W1_rsfMRIexist","condition"="==1"),
-                                  list("key"="W1_Censor","condition"="<126")),
-                       "2"  =list(list("key"="W2_T1QC","condition"="==1"),
-                                  list("key"="W2_rsfMRIexist","condition"="==1"),
-                                  list("key"="W2_Censor","condition"="<126")),
-                       "2-1"=list(list("key"="W1_T1QC","condition"="==1"),
-                                  list("key"="W1_rsfMRIexist","condition"="==1"),
-                                  list("key"="W1_Censor","condition"="<126"),
-                                  list("key"="W2_T1QC","condition"="==1"),
-                                  list("key"="W2_rsfMRIexist","condition"="==1"),
-                                  list("key"="W2_Censor","condition"="<126"))),
+  #"subset_subj" = list("1"  =list(list("key"="W1_T1QC","condition"="==1"),
+  #                                list("key"="W1_rsfMRIexist","condition"="==1"),
+  #                                list("key"="W1_Censor","condition"="<126")),
+  #                     "2"  =list(list("key"="W2_T1QC","condition"="==1"),
+  #                                list("key"="W2_rsfMRIexist","condition"="==1"),
+  #                                list("key"="W2_Censor","condition"="<126")),
+  #                     "2-1"=list(list("key"="W1_T1QC","condition"="==1"),
+  #                                list("key"="W1_rsfMRIexist","condition"="==1"),
+  #                                list("key"="W1_Censor","condition"="<126"),
+  #                                list("key"="W2_T1QC","condition"="==1"),
+  #                                list("key"="W2_rsfMRIexist","condition"="==1"),
+  #                                list("key"="W2_Censor","condition"="<126"))),
+  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2")),
+                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2")),
+                     "2-1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2"),
+                                list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2"))),
   "list_sex" = list("male"="==1","female"="==2","all"=" %in% c(1,2)"),
   "list_wave_mri"=c("1","2","2-1"),
   "list_wave_clin"=c("1","2"),
@@ -158,16 +292,16 @@ param_ca_fc_cs<-list(
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
-  "tfnbs"=T,
+  "tfnbs"=F,
   "param_tfnbs"=list("e"=0.4,"h"=3.0,"n_thresh_h"=100),
   
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=F, # standardize z values with demeaning and division with sd
+  "std_fc"=T, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  "force_long"=F, # use longitudinal data only
+  "force_long"=T, # use longitudinal data only
   #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
   "omit_decreasing"=NULL,
   #"group_tanner"=list("pre"=1,"early"=c(2,3),"late"=c(4,5)),
@@ -177,15 +311,22 @@ param_gamm_fc<-list(
   "list_wave"=c(1,2),
   "list_sex"=list(1,2),
   "list_p"=list(list("type"="p","threshold"=0.001),
+                list("type"="p","threshold"=0.002),
+                list("type"="p","threshold"=0.003),
+                list("type"="p","threshold"=0.004),
                 list("type"="p","threshold"=0.005),
+                list("type"="p","threshold"=0.006),
+                list("type"="p","threshold"=0.008),
                 list("type"="p","threshold"=0.01),
                 list("type"="p_bh","threshold"=0.05)),
-  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),
-                              list("key"="W1_rsfMRIexist","condition"="==1"),
-                              list("key"="W1_Censor","condition"="<126")),
-                     "2"=list(list("key"="W2_T1QC","condition"="==1"),
-                              list("key"="W2_rsfMRIexist","condition"="==1"),
-                              list("key"="W2_Censor","condition"="<126"))),
+  #"subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),
+  #                            list("key"="W1_rsfMRIexist","condition"="==1"),
+  #                            list("key"="W1_Censor","condition"="<126")),
+  #                   "2"=list(list("key"="W2_T1QC","condition"="==1"),
+  #                            list("key"="W2_rsfMRIexist","condition"="==1"),
+  #                            list("key"="W2_Censor","condition"="<126"))),
+  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2")),
+                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2"))),
   "list_covar_tanner"=list("tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
                            "age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
                            "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex")),
@@ -259,17 +400,18 @@ param_gamm_fc<-list(
                    "list_term"=list(list("term_perm"="t","term_detect"="tl")),
                    #"list_term"=list(list("term_perm"="t","term_detect"=c("t","tp-e","tp-l"))),
                    #"p_cdt_threshold"=0.001,
-                   "p_cdt_threshold"=c(0.001,0.005,0.01),
+                   "p_cdt_threshold"=c(0.001,0.002,0.003,0.004,0.005,0.006,0.008,0.01),
                    "p_perm_threshold"=0.05,
                    #"n_perm"=1000),
                    "n_perm"=100),
                    #"n_perm"=20),
                    #"n_perm"=10),
                    #"n_perm"=3),
-  "param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),
-                                          level=c(1,2,3,4,5)),
-                           "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),
-                                           level=c(1,2,3,4,5)))
+  #"param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),
+  #                                        level=c(1,2,3,4,5)),
+  #                         "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),
+  #                                         level=c(1,2,3,4,5)))
+  "param_ancova_pred"=list()
 )
 
 
@@ -552,126 +694,6 @@ param_gam_fc_cs<-list(
                    #"n_perm"=3),
   "param_ancova_pred"=list("t"=data.frame(term=c("(Intercept)","tanner2","tanner3","tanner4","tanner5"),level=c(1,2,3,4,5)),
                            "at"=data.frame(term=c("age","age:tanner2","age:tanner3","age:tanner4","age:tanner5"),level=c(1,2,3,4,5)))
-)
-
-#**************************************************
-# gam_fc_diff() ===================================
-#**************************************************
-param_gam_fc_diff<-list(
-  "tfnbs"=T,
-  "param_tfnbs"=list("e"=0.4,"h"=3.0,"n_thresh_h"=100),
-  
-  # Parameters for FC normalization
-  "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=F, # standardize z values with demeaning and division with sd
-  "div_mean_fc"=F, # normalize z values with division with mean
-  
-  # Parameters for clinical data subsetting
-  #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
-  "omit_decreasing"=NULL,
-  
-  "key_group"="group_3",
-  "list_wave"=c(1,2),
-  "list_sex"=list(1,2),
-  "list_p"=list(list("type"="p","threshold"=0.001),
-                list("type"="p","threshold"=0.005),
-                list("type"="p","threshold"=0.01),
-                list("type"="p_bh","threshold"=0.05)),
-  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
-                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"))),
-  "list_covar_tanner"=list("tanner"=NULL,
-                           "age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
-                           "sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex")),
-  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max","label"="Tanner stage (max)","dtype"="factor"),
-  #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="factor"),
-  #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="factor"),
-  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-  #                                  "label"="Tanner stage (adrenal)","dtype"="factor")),
-  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="factor"),
-  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-  #                                  "label"="Tanner stage (adrenal)","dtype"="factor")),
-  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="factor")),
-  "list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="ordered"),
-                     "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="ordered"),
-                     "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-                                    "label"="Tanner stage (gonadal)","dtype"="ordered"),
-                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-                                    "label"="Tanner stage (adrenal)","dtype"="ordered")),
-  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="ordered"),
-  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),
-  #                                  "label"="Tanner stage (adrenal)","dtype"="ordered")),
-  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage (max)","dtype"="ordered"),
-  #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)","dtype"="ordered")),
-  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),
-  #                                  "label"="Tanner stage (gonadal)","dtype"="ordered")),
-  "list_mod_tanner"=list("cs" = "value ~ diff_age + ses1_tanner + ses2_tanner",
-                         "d"  = "value ~ diff_age + diff_tanner",
-                         "dm" = "value ~ diff_age + diff_tanner + mean_tanner"),
-                         #"l" = "value ~ ses1_age + ses1_tanner + ses2_age + ses2_tanner",
-                         #"li"= "value ~ age * tanner"),
-  "list_term_tanner"=list("a1"=list("title"="1st wave Age","var_exp"="ses1_age"),
-                          "t1"=list("title"="1st wave Tanner","var_exp"="ses1_tanner"),
-                          "a2"=list("title"="2nd wave Age","var_exp"="ses2_age"),
-                          "t2"=list("title"="2nd wave Tanner","var_exp"="ses2_tanner"),
-                          "ad"=list("title"="Age difference","var_exp"="diff_age"),
-                          "td"=list("title"="Tanner difference","var_exp"="diff_tanner"),
-                          "am"=list("title"="Age mean","var_exp"="mean_age"),
-                          "tm"=list("title"="Tanner mean","var_exp"="mean_tanner"),
-                          "tl1"=list("title"="1st wave Tanner","var_exp"="ses1_tanner.L"),
-                          "tl2"=list("title"="2nd wave Tanner","var_exp"="ses2_tanner.L"),
-                          "tld"=list("title"="Tanner difference","var_exp"="diff_tanner.L"),
-                          "tlm"=list("title"="Tanner mean","var_exp"="mean_tanner.L")),
-  "list_covar_hormone"=list("hormone"=NULL,
-                            "age"    =list("1"="W1_Age_at_MRI","2"="W2_Age_at_MRI","label"="Age"),
-                            "sex"    =list("1"="Sex",          "2"="Sex",          "label"="Sex")),
-  #"list_hormone"=list("testo"=list("1"="W1_Testosterone","2"="W2_Testosterone","label"="Testosterone"),
-  #                    "corti"=list("1"="W1_Cortisol",    "2"="W2_Cortisol",    "label"="Cortisol"),
-  #                    "dhea" =list("1"="W1_DHEA",        "2"="W2_DHEA",        "label"="DHEA"),
-  #                    "dheas"=list("1"="W1_DHEAS",       "2"="W2_DHEAS",       "label"="DHEA-S")),
-  "list_hormone"=NULL,
-  "list_mod_hormone"=list("cs" = "value ~ diff_age + ses1_hormone + ses2_hormone",
-                          "d"  = "value ~ diff_age + diff_hormone",
-                          "dm" = "value ~ diff_age + diff_hormone + mean_hormone"),
-                          #"l" = "value ~ ses1_age + ses1_hormone + ses2_age + ses2_hormone",
-                          #"li"= "value ~ age * hormone"),
-  "list_term_hormone"=list("a1"=list("title"="1st wave Age","var_exp"="ses1_age"),
-                           "h1"=list("title"="1st wave Hormone","var_exp"="ses1_hormone"),
-                           "a2"=list("title"="2nd wave Age","var_exp"="ses2_age"),
-                           "h2"=list("title"="2nd wave Hormone","var_exp"="ses2_hormone"),
-                           "ad"=list("title"="Age difference","var_exp"="diff_age"),
-                           "hd"=list("title"="Hormone difference","var_exp"="diff_hormone"),
-                           "am"=list("title"="Age mean","var_exp"="mean_age"),
-                           "hm"=list("title"="Hormone mean","var_exp"="mean_hormone")),
-  "param_nbs"=list("list_mod"=c("cs","d","dm"),
-                   #"list_mod"="cs",
-                   "list_term"=list(list("term_perm"="t1","term_detect"=c("t1","tl1")),
-                                    list("term_perm"="t2","term_detect"=c("t2","tl2")),
-                                    list("term_perm"="td","term_detect"=c("td","tld")),
-                                    list("term_perm"="tm","term_detect"=c("tm","tlm")),
-                                    list("term_perm"="h1","term_detect"="h1"),
-                                    list("term_perm"="h2","term_detect"="h2"),
-                                    list("term_perm"="hd","term_detect"="hd"),
-                                    list("term_perm"="hm","term_detect"="hm")),
-                   #"list_term"=list(list("term_perm"="t2","term_detect"="tl2")),
-                   #"p_cdt_threshold"=0.001,
-                   "p_cdt_threshold"=c(0.001,0.005,0.01),
-                   "p_perm_threshold"=0.05,
-                   #"n_perm"=1000),
-                   "n_perm"=100),
-                   #"n_perm"=20),
-                   #"n_perm"=10),
-                   #"n_perm"=3),
-  #"param_ancova_pred"=list("t1"=data.frame(term=c("(Intercept)","ses1_tanner2","ses1_tanner3","ses1_tanner4","ses1_tanner5"),
-  #                                         level=c(1,2,3,4,5)),
-  #                         "t2"=data.frame(term=c("(Intercept)","ses2_tanner2","ses2_tanner3","ses2_tanner4","ses2_tanner5"),
-  #                                         level=c(1,2,3,4,5)),
-  #                         "td"=data.frame(term=c("(Intercept)","diff_tanner1","diff_tanner2","diff_tanner3","diff_tanner4"),
-  #                                         level=c(0,1,2,3,4)))
-  "param_ancova_pred"=list()
 )
 
 

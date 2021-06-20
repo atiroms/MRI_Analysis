@@ -15,15 +15,20 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/func_XCP"
 path_exp_full <-NULL
 
 #dir_in<-"422_fp_aroma"
-dir_in<-"422.1_fp_aroma_test1"
-#dir_out<-"426_fp_gam_aroma"
-dir_out<-"428.1_fp_var_aroma_test1"
+dir_in<-"422.1_fp_aroma_test2"
+dir_out<-"429_qc_fp_aroma_test2"
+#dir_out<-"426.1_fp_gam_aroma_test1"
+#dir_out<-"428.1_fp_var_aroma_test2"
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
-list_atlas<-"ho112"
+list_atlas<-c("aal116","gordon333","ho112","power264",
+              "schaefer100x17","schaefer200x17","schaefer400x17",
+              "shen268")
+#list_atlas<-"ho112"
 #list_atlas<-"aal116"
+#list_atlas<-c("ho112","power264")
 
 
 #**************************************************
@@ -45,10 +50,44 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 #**************************************************
 # GLM of Fingerprint change =======================
 #**************************************************
+qc_fp<-function(paths_=paths,list_atlas_=list_atlas){
+  print("Starting qc_fp().")
+  nullobj<-func_createdirs(paths_,str_proc="qc_fp()",copy_log=T)
+  df_concat<-data.frame()
+  for (atlas in list_atlas_){
+    df_mean_fp<-as.data.frame(fread(file.path(paths_$input,"output","result",paste("atl-",atlas,"_mean_fp.csv",sep=""))))
+    df_mean_fp<-df_mean_fp[df_mean_fp$group_1=="whole" & df_mean_fp$group_2=="whole",c("ses","ID_pnTTC","mean_z_r","qc")]
+    mean_meanfp<-mean(df_mean_fp$mean_z_r)
+    sd_meanfp<-sd(df_mean_fp$mean_z_r)
+    df_mean_fp$z<-(df_mean_fp$mean_z_r-mean_meanfp)/sd_meanfp
+    df_concat<-rbind(df_concat,data.frame(atlas=atlas,df_mean_fp))
+    hist(df_mean_fp$z,breaks=30)
+    hist(df_mean_fp[df_mean_fp$qc==1,"z"],breaks=30)
+    
+    df_out<-data.frame("ID_pnTTC"=seq(max(df_mean_fp$ID_pnTTC)),"W1_ZFP"=NA,"W2_ZFP"=NA)
+    for (idx_row in seq(nrow(df_mean_fp))){
+      ses<-df_mean_fp[idx_row,"ses"]
+      id_subj<-df_mean_fp[idx_row,"ID_pnTTC"]
+      zfp<-df_mean_fp[idx_row,"z"]
+      if (ses==1){
+        df_out[df_out$ID_pnTTC==id_subj,"W1_ZFP"]<-zfp
+      }else{
+        df_out[df_out$ID_pnTTC==id_subj,"W2_ZFP"]<-zfp
+      }
+    }
+    df_out[is.na(df_out$W1_ZFP),"W1_ZFP"]<-df_out[is.na(df_out$W2_ZFP),"W2_ZFP"]<-"NA"
+    fwrite(df_out,file.path(paths$output,"output","result",paste("atl-",atlas,"_zfp.csv",sep="")),row.names = F)
+  }
+  fwrite(df_concat,file.path(paths$output,"output","result","zfp.csv"),row.names=F)
+}
+
+#**************************************************
+# GLM of Fingerprint change =======================
+#**************************************************
 gam_fp_core<-function(paths,df_fp,atlas,param,list_covar,list_mod,list_term,idx_var,
                       calc_parallel,test_mod){
   # Prepare clinical data, calculate diff and mean, and standardize
-  data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+  data_clin<-func_clinical_data_long(paths,c(1,2),param$subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,sep=""),print_terminal=F)
   list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
   df_clin<-data_clin$df_clin
   df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
@@ -59,24 +98,21 @@ gam_fp_core<-function(paths,df_fp,atlas,param,list_covar,list_mod,list_term,idx_
   
   # Prepare fingerprint data
   df_fp<-df_fp[df_fp$group_1=="whole" & df_fp$group_2=="whole",]
-  df_fp$measure<-df_fp$group_1<-df_fp$gorup_2<-NULL
+  df_fp$group_1<-df_fp$gorup_2<-NULL
   df_fp_long<-data.frame()
   for (id_subj in list_id_subj){
     df_fp_subset<-df_fp[df_fp$from_ses==1 & df_fp$from_ID_pnTTC==id_subj
                         & df_fp$to_ses==2 & df_fp$to_ID_pnTTC==id_subj,]
     df_fp_subset<-data.frame("ID_pnTTC"=id_subj,df_fp_subset[,"z_r"])
     colnames(df_fp_subset)<-c("ID_pnTTC","value")
-    df_fp_long<-rbind(df_fp_long,df_fp_subnet)
+    df_fp_long<-rbind(df_fp_long,df_fp_subset)
   }
   
   df_join<-dplyr::inner_join(df_fp_long,df_clin,by="ID_pnTTC")
   data_gamm<-gamm_core4(df_join,list_mod_in=param$list_mod_tanner,list_sex_in=param$list_sex,calc_parallel_in=F,test_mod_in=F)
-  df_gamm_add<-data_gamm$df_gamm; df_anova_add<-data_gamm$df_anova; df_aic_add<-data_gamm$df_aic
-  df_gamm_add$sex<-df_anova_add$sex<-df_aic_add$sex<-NULL
-  df_head<-data.frame(variable=idx_var)
-  df_gamm<-rbind(df_gamm,cbind(df_head,df_gamm_add)); df_anova<-rbind(df_anova,cbind(df_head,df_anova_add)); df_aic<-rbind(df_aic,cbind(df_head,df_aic_add))
-  
-  
+  fwrite(data_gamm$df_gamm,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm.csv",sep="")),row.names = F)
+  fwrite(data_gamm$df_anova,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_anova.csv",sep="")),row.names = F)
+  fwrite(data_gamm$df_aic,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_gamm_aic.csv",sep="")),row.names = F)
 }
 
 
@@ -84,12 +120,10 @@ gam_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fp){
   print("Starting gam_fp().")
   nullobj<-func_createdirs(paths_,str_proc="gam_fp()",copy_log=T,list_param=param)
   
-  # Loop over atlases
   for (atlas in list_atlas_){
     print(paste("Loading FP, atlas:",atlas,sep=" "))
     df_fp<-as.data.frame(fread(file.path(paths_$input,"output","result",paste("atl-",atlas,"_fp.csv",sep=""))))
     
-    #1 Tanner stage
     for (idx_tanner in names(param$list_tanner)){
       print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
       list_covar<-param$list_covar_tanner
@@ -97,9 +131,13 @@ gam_fp<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fp){
       gam_fp_core(paths_,df_fp,atlas,param,list_covar,
                   list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
                   calc_parallel=T,test_mod=F)
-    } # Finished looping over Tanner stages
+    }
   }
   
+  print("Combining results.")
+  list_var<-param$list_tanner
+  func_combine_result(paths_,list_atlas_,list_var,"",list(list("measure"="")),c("gamm","gamm_anova","gamm_aic"))
+  print("Finished gam_fc().")
 }
 
 #**************************************************

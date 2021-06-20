@@ -17,7 +17,8 @@ func_combine_result<-function(paths,list_atlas="",list_var="",list_wave="",list_
   for (filename in list_filename){
     df_dst<-data.frame()
     for (atlas in list_atlas){
-      for (variable in list_var){
+      for (idx_var in names(list_var)){
+        variable<-list_var[[idx_var]]
         for (label_wave in list_wave){
           for (type_measure in list_type_measure){
             df_head<-data.frame(atlas=atlas)
@@ -414,8 +415,8 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
       list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
       for (id_subj in list_id_subj){
         df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
-        mean_fc<-mean(df_fc_subset$z_r)
-        sd_fc<-sd(df_fc_subset$z_r)
+        mean_fc<-mean(df_fc_subset$z_r,na.rm=T)
+        sd_fc<-sd(df_fc_subset$z_r,na.rm=T)
         df_fc_subset$z_r<-(df_fc_subset$z_r-mean_fc)/sd_fc
         df_fc_std<-rbind(df_fc_std,df_fc_subset)
       }
@@ -430,7 +431,7 @@ prep_data_fc2<-function(paths,atlas,key_group,list_wave=c("1","2","2-1"),include
       list_id_subj<-sort(unique(df_fc[df_fc$ses==wave,"ID_pnTTC"]))
       for (id_subj in list_id_subj){
         df_fc_subset<-df_fc[df_fc$ses==wave & df_fc$ID_pnTTC==id_subj,]
-        mean_fc<-mean(df_fc_subset$z_r)
+        mean_fc<-mean(df_fc_subset$z_r,na.rm=T)
         df_fc_subset$z_r<-df_fc_subset$z_r/mean_fc
         df_fc_std<-rbind(df_fc_std,df_fc_subset)
       }

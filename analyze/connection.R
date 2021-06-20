@@ -17,13 +17,14 @@ path_exp_full<-NULL
 #dir_out<-"414_fc_gamm_acompcor_gsr_test2" 
 
 dir_in<-"421_fc_aroma"
-dir_out<-"422.1_fp_aroma_test1"
-#dir_out<-"425.1_fc_ca_aroma_test1"
+dir_out<-"423.3_fc_gam_diff_aroma_test11" 
+#dir_out<-"422.1_fp_aroma_test2"
+#dir_out<-"425.1_fc_ca_aroma_test2"
 #dir_out<-"450_fc_mean_sd" 
 #dir_out<-"424.3_fc_gamm_aroma_test4" 
 #dir_out<-"424.2_fc_gamm_aroma_test2" 
-#dir_out<-"423.3_fc_gam_diff_aroma_test7" 
-#dir_out<-"424_fc_gamm_aroma_test28" 
+#dir_out<-"423.3_fc_gam_diff_aroma_test11" 
+#dir_out<-"424_fc_gamm_aroma_test31" 
 #dir_out<-"424.1_fc_gamm_mix_aroma_test5" 
 #dir_out<-"423.2_fc_gam_cs_aroma_test4" 
 #dir_out<-"424_fc_gamm_aroma_test2"
@@ -32,8 +33,8 @@ dir_out<-"422.1_fp_aroma_test1"
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
 #              "shen268")
 #list_atlas<-"aal116"
-#list_atlas<-"ho112"
-list_atlas<-c("ho112","power264")
+list_atlas<-"ho112"
+#list_atlas<-c("ho112","power264")
 #list_atlas<-c("aal116","glasser360","gordon333","power264",
 #              "schaefer100x7","schaefer200x7","schaefer400x7",
 #              "schaefer100x17","schaefer200x17","schaefer400x17",
@@ -56,6 +57,131 @@ source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/gta_function.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
+
+
+#**************************************************
+# GLM/GAM of FC longitudinal difference ===========
+#**************************************************
+
+gam_fc_diff_core<-function(paths,data_fc,atlas,param,
+                           list_covar,list_mod,list_term,idx_var,
+                           calc_parallel,test_mod
+){
+  # Prepare clinical data and demean
+  data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,sep=""),print_terminal=F)
+  list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+  df_clin<-data_clin$df_clin
+  df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+  # Select subjects with non-decreasing data
+  if (!is.null(param$omit_decreasing)){
+    list_id_subj<-sort(unique(df_clin$ID_pnTTC))
+    list_id_subj_omit<-NULL
+    for (var in param$omit_decreasing){
+      if (var %in% colnames(df_clin)){
+        for (id_subj in list_id_subj){
+          value<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==param$list_wave[1],var])
+          for (wave in param$list_wave[-1]){
+            value_wave<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==wave,var])
+            if (value_wave<value){
+              list_id_subj_omit<-c(list_id_subj_omit,id_subj)
+            }
+            value<-value_wave
+          }
+        }
+      }
+    }
+    list_id_subj_omit<-sort(unique(list_id_subj_omit))
+    list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
+    df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+  }
+  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
+  df_clin<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar)
+  #df_clin<-data.frame(wave="2-1",func_demean_clin(df_clin,separate_sex=T)$df_clin)
+  df_clin<-data.frame(wave="2-1",func_std_clin(df_clin,separate_sex=T)$df_clin)
+  fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
+  
+  # Prepare FC data
+  df_fc<-data_fc$df_fc; df_fc_grp<-data_fc$df_fc_grp
+  
+  label_wave<-"2-1"
+  # Calculate model
+  data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
+                            atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
+  
+  if (param$tfnbs){
+    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
+    #if (calc_parallel){clust<-makeCluster(floor(detectCores()*1/2))}else{clust<-makeCluster(1)}
+    list_sex<-param$list_sex
+    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
+                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC",
+                                  "param","func_bfs","%nin%","left_join","ggsave"),
+                  envir=environment())
+    
+    # Calculate threshold-free network based statistics
+    data_tfnbs<-func_iterate_tfnbs2(paths,clust,df_gamm,df_anova,df_deltah_in=NULL,var_exp_perm_in=NULL,data_fc,plot_result=T,return_nbs=T,
+                                    atlas,param,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    func_tfnbs_permutation(paths,clust,data_fc,df_clin,data_tfnbs_in=data_tfnbs,calc_parallel,plot_result=T,
+                           atlas,param,list_mod,list_term,idx_var,label_wave)
+    stopCluster(clust)
+    
+  }else{
+    # Threshold and plot graph edges
+    data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
+                                   atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
+    # Detect sub-network by breadth-first approach
+    data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
+                                 atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+    # Permutation test
+    data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
+                                   atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
+  }
+}
+
+
+gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
+  print("Starting gam_fc_diff().")
+  nullobj<-func_createdirs(paths_,str_proc="gam_fc_diff()",copy_log=T,list_param=param)
+  memory.limit(1000000)
+  
+  # Loop over atlases
+  for (atlas in list_atlas_){
+    print(paste("Preparing FC data: ",atlas,sep=""))
+    data_fc<-prep_data_fc2(paths_,atlas,param$key_group,list_wave="2-1",include_grp=T,
+                           abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
+    fwrite(data_fc$df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc.csv",sep="")),row.names=F)
+    fwrite(data_fc$df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc_grp.csv",sep="")),row.names=F)
+    
+    # Loop over clinical variables
+    #1 Tanner stage
+    for (idx_tanner in names(param$list_tanner)){
+      print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
+      list_covar<-param$list_covar_tanner
+      list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list_covar,
+                       list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
+                       calc_parallel=T,test_mod=F)
+    } # Finished looping over Tanner stages
+    
+    #2 Hormones
+    for (idx_hormone in names(param$list_hormone)){
+      print(paste("Atlas: ",atlas,", Hormone type: ",param$list_hormone[[idx_hormone]][["label"]],sep=""))
+      list_covar<-param$list_covar_hormone
+      list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
+      gam_fc_diff_core(paths_,data_fc,atlas,param,list_covar,
+                       list_mod=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
+                       calc_parallel=T,test_mod=F)
+    } # Finished looping over Hormones
+  } # Finished looping over atlas
+  
+  print("Combining results.")
+  list_var<-c(param$list_tanner,param$list_hormone)
+  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
+  
+  print("Finished gam_fc_diff().")
+}
 
 
 #**************************************************
@@ -91,7 +217,7 @@ fp_fc_core<-function(data_zr){
     id_subj<-df_ses_subj[id_row,"ID_pnTTC"]
     df_fp_subset<-rbind(df_fp[df_fp$from_ses==ses & df_fp$from_ID_pnTTC==id_subj,],
                         df_fp[df_fp$to_ses==ses & df_fp$to_ID_pnTTC==id_subj,])
-    mean_zr<-mean(df_fp_subset$z_r)
+    mean_zr<-mean(df_fp_subset$z_r,na.rm=T)
     df_ses_subj[id_row,"mean_z_r"]<-mean_zr
   }
   
@@ -139,6 +265,7 @@ fp_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_fp_fc){
       data_fc<-prep_data_fc2(paths_,atlas,param$key_group,list_wave=param$list_wave,include_grp=param$calc_group,
                              abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
       df_conn<-data_fc$df_fc; df_edge<-data_fc$df_edge
+      #df_conn[is.na(df_conn$z_r),"z_r"]<-0
       
       # Examine existing subject IDs and sessions in connection data
       df_ses_subj<-data.frame(matrix(nrow=0,ncol=2))
@@ -453,7 +580,7 @@ ca_fc<-function(paths_=paths,list_atlas_=list_atlas,param=param_ca_fc){
   
   # Reload and bind all results
   print("Binding results.")
-  func_combine_result(paths_,list_atlas_,list_var=list(NULL),list_wave=paste("m",param$list_wave_mri,sep=""),list(list("measure"="")),
+  func_combine_result(paths_,list_atlas_,list_var=list("null"=NULL),list_wave=paste("m",param$list_wave_mri,sep=""),list_type_measure=list(list("measure"="")),
                       list_filename=c("fc_pca_subj","fc_ica_subj","fc_pca_var","fc_ica_var","fc_pca_vaf","fc_ica_vaf",
                                       "fc_pca_var_grp","fc_ica_var_grp","fc_ca_cor","fc_ca_str",
                                       "fc_ca_gamm","fc_ca_anova","fc_ca_aic"))
@@ -1311,130 +1438,6 @@ gam_fc_cs<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_cs){
   func_combine_result(paths_,list_atlas_,list_var,names(param$list_wave),list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep"))
   
   print("Finished gam_fc_cs().")
-}
-
-#**************************************************
-# GLM/GAM of FC longitudinal difference ===========
-#**************************************************
-
-gam_fc_diff_core<-function(paths,data_fc,atlas,param,
-                           list_covar,list_mod,list_term,idx_var,
-                           calc_parallel,test_mod
-                           ){
-  # Prepare clinical data and demean
-  data_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,rem_na_clin=T,prefix=paste("var-",idx_var,sep=""),print_terminal=F)
-  list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
-  df_clin<-data_clin$df_clin
-  df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
-  # Select subjects with non-decreasing data
-  if (!is.null(param$omit_decreasing)){
-    list_id_subj<-sort(unique(df_clin$ID_pnTTC))
-    list_id_subj_omit<-NULL
-    for (var in param$omit_decreasing){
-      if (var %in% colnames(df_clin)){
-        for (id_subj in list_id_subj){
-          value<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==param$list_wave[1],var])
-          for (wave in param$list_wave[-1]){
-            value_wave<-as.numeric.factor(df_clin[df_clin$ID_pnTTC==id_subj & df_clin$wave==wave,var])
-            if (value_wave<value){
-              list_id_subj_omit<-c(list_id_subj_omit,id_subj)
-            }
-            value<-value_wave
-          }
-        }
-      }
-    }
-    list_id_subj_omit<-sort(unique(list_id_subj_omit))
-    list_id_subj<-list_id_subj[list_id_subj %nin% list_id_subj_omit]
-    df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
-  }
-  colnames(df_clin)[colnames(df_clin)=="wave"]<-"ses"
-  df_clin<-func_clinical_data_diffmean(df_clin,list_id_subj,list_covar)
-  #df_clin<-data.frame(wave="2-1",func_demean_clin(df_clin,separate_sex=T)$df_clin)
-  df_clin<-data.frame(wave="2-1",func_std_clin(df_clin,separate_sex=T)$df_clin)
-  fwrite(df_clin,file.path(paths$output,"output","temp",paste("atl-",atlas,"_var-",idx_var,"_src_clin.csv",sep="")),row.names=F)
-  
-  # Prepare FC data
-  df_fc<-data_fc$df_fc; df_fc_grp<-data_fc$df_fc_grp
-  
-  label_wave<-"2-1"
-  # Calculate model
-  data_gamm<-func_calc_gamm(paths,df_clin,df_fc,df_fc_grp,data_fc,calc_parallel,test_mod,
-                            atlas,param,param$list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  df_gamm<-data_gamm$df_gamm; df_anova<-data_gamm$df_anova; df_gamm_grp<-data_gamm$df_gamm_grp; df_anova_grp<-data_gamm$df_anova_grp
-  
-  if (param$tfnbs){
-    if (calc_parallel){clust<-makeCluster(floor(detectCores()*3/4))}else{clust<-makeCluster(1)}
-    #if (calc_parallel){clust<-makeCluster(floor(detectCores()*1/2))}else{clust<-makeCluster(1)}
-    list_sex<-param$list_sex
-    clusterExport(clust,varlist=c("list_mod","list_sex","calc_parallel","test_mod","as.formula","as.numeric.factor",
-                                  "lm","lmer","gam","summary","anova","summary.gam","anova.gam","AIC",
-                                  "param","func_bfs","%nin%","left_join","ggsave"),
-                  envir=environment())
-    
-    # Calculate threshold-free network based statistics
-    data_tfnbs<-func_iterate_tfnbs2(paths,clust,df_gamm,df_anova,df_deltah_in=NULL,var_exp_perm_in=NULL,data_fc,plot_result=T,return_nbs=T,
-                                    atlas,param,list_mod,list_term,idx_var,label_wave)
-    # Permutation test
-    func_tfnbs_permutation(paths,clust,data_fc,df_clin,data_tfnbs_in=data_tfnbs,calc_parallel,plot_result=T,
-                           atlas,param,list_mod,list_term,idx_var,label_wave)
-    stopCluster(clust)
-    
-  }else{
-    # Threshold and plot graph edges
-    data_plot<-func_threshold_gamm(paths,df_gamm,df_gamm_grp,df_anova,df_anova_grp,data_fc,
-                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-    df_plot<-data_plot$df_plot; df_plot_grp<-data_plot$df_plot_grp
-    # Detect sub-network by breadth-first approach
-    data_bfs<-func_detect_subnet(paths,df_plot,df_gamm,data_fc,plot_result=F,
-                                 atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-    # Permutation test
-    data_nbs<-func_nbs_permutation(paths,df_fc,df_clin,data_bfs,data_fc,calc_parallel,plot_result=T,
-                                   atlas,param,list_sex,list_covar,list_mod,list_term,idx_var,label_wave)
-  }
-}
-
-
-gam_fc_diff<-function(paths_=paths,list_atlas_=list_atlas,param=param_gam_fc_diff){
-  print("Starting gam_fc_diff().")
-  nullobj<-func_createdirs(paths_,str_proc="gam_fc_diff()",copy_log=T,list_param=param)
-  memory.limit(1000000)
-  
-  # Loop over atlases
-  for (atlas in list_atlas_){
-    print(paste("Preparing FC data: ",atlas,sep=""))
-    data_fc<-prep_data_fc2(paths_,atlas,param$key_group,list_wave="2-1",include_grp=T,
-                           abs_nfc=param$abs_nfc,std_fc=param$std_fc,div_mean_fc=param$div_mean_fc)
-    fwrite(data_fc$df_fc,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc.csv",sep="")),row.names=F)
-    fwrite(data_fc$df_fc_grp,file.path(paths$output,"output","temp",paste("atl-",atlas,"_src_fc_grp.csv",sep="")),row.names=F)
-    
-    # Loop over clinical variables
-    #1 Tanner stage
-    for (idx_tanner in names(param$list_tanner)){
-      print(paste("Atlas: ",atlas,", Tanner type: ",param$list_tanner[[idx_tanner]][["label"]],sep=""))
-      list_covar<-param$list_covar_tanner
-      list_covar[["tanner"]]<-param$list_tanner[[idx_tanner]]
-      gam_fc_diff_core(paths_,data_fc,atlas,param,list_covar,
-                       list_mod=param$list_mod_tanner,list_term=param$list_term_tanner,idx_var=idx_tanner,
-                       calc_parallel=T,test_mod=F)
-    } # Finished looping over Tanner stages
-    
-    #2 Hormones
-    for (idx_hormone in names(param$list_hormone)){
-      print(paste("Atlas: ",atlas,", Hormone type: ",param$list_hormone[[idx_hormone]][["label"]],sep=""))
-      list_covar<-param$list_covar_hormone
-      list_covar[["hormone"]]<-param$list_hormone[[idx_hormone]]
-      gam_fc_diff_core(paths_,data_fc,atlas,param,list_covar,
-                       list_mod=param$list_mod_hormone,list_term=param$list_term_hormone,idx_var=idx_hormone,
-                       calc_parallel=T,test_mod=F)
-    } # Finished looping over Hormones
-  } # Finished looping over atlas
-  
-  print("Combining results.")
-  list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,"2-1",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
-  
-  print("Finished gam_fc_diff().")
 }
 
 
