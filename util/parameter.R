@@ -89,11 +89,12 @@ param_gam_fc_diff<-list(
                    "list_term"=list(list("term_perm"="t1","term_detect"=c("t1","tl1")),
                                     list("term_perm"="t2","term_detect"=c("t2","tl2"))),
                    "p_perm_threshold"=0.05,
-                   "n_perm"=1000),
+                   #"n_perm"=1000),
                    #"n_perm"=100),
                    #"n_perm"=20),
                    #"n_perm"=10),
-                   #"n_perm"=3),
+                   "n_perm"=3),
+  "list_term_pred"=c("ses1_tanner","ses2_tanner"),
   "param_ancova_pred"=list()
 )
 
