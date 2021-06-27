@@ -797,14 +797,18 @@ gamm_core5<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,list_term_pred_in=
     df_gamm<-cbind(df_id,df_gamm)
     df_aic_compare<-cbind(df_id,df_aic_compare)
     df_anova<-cbind(df_id,df_anova)
-    df_pred<-cbind(df_id,df_pred)
+    if (nrow(df_pred)>0){
+      df_pred<-cbind(df_id,df_pred)
+    }
   }
   if ("roi" %in% colnames(df_src)){
     id<-df_src[1,"roi"]
     df_gamm<-cbind(id,df_gamm)
     df_aic_compare<-cbind(id,df_aic_compare)
     df_anova<-cbind(id,df_anova)
-    df_pred<-cbind(id,df_pred)
+    if (nrow(df_pred)>0){
+      df_pred<-cbind(id,df_pred)
+    }
   }
   
   return(list("df_gamm"=df_gamm,"df_aic"=df_aic_compare,"df_anova"=df_anova,"df_pred"=df_pred,"mod"=list_gamm_output))
