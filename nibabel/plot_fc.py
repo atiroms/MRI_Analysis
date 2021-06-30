@@ -11,7 +11,8 @@ from matplotlib.lines import Line2D
 
 ####
 #dir_in='424_fc_gamm_aroma_test24'
-dir_in='423.3_fc_gam_diff_aroma_test5'
+#dir_in='423.3_fc_gam_diff_aroma_test5'
+dir_in='424.1_fc_gamm_mix_aroma_test4'
 path_parent='D:/NICT_WS/'
 #path_parent='D:/atiro/'
 

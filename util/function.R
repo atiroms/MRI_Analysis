@@ -706,8 +706,7 @@ gamm_core5<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,list_term_pred_in=
           if (!is.null(p_table_anova)){
             colnames(p_table_anova)<-c("df","F","p")
             df_anova<-rbind(df_anova,
-                            cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
-                                  p_table_anova))
+                            cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),p_table_anova))
           }
         }
       }else if(grepl("\\|",list_mod[[idx_mod]])){ # Use lme4:lemr()
@@ -730,8 +729,8 @@ gamm_core5<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,list_term_pred_in=
           p_table_anova<-p_table_anova[,c("NumDF","F value","Pr(>F)")]
           colnames(p_table_anova)<-c("df","F","p")
           df_anova<-rbind(df_anova,
-                          cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
-                                p_table_anova))
+                          cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),p_table_anova))
+          df_pred_src<-mod@frame
         }
       }else{ # Use base::lm()
         mod<-try(lm(as.formula(list_mod[[idx_mod]]),data=df_src_sex), silent=F)
@@ -753,25 +752,29 @@ gamm_core5<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,list_term_pred_in=
           p_table_anova<-p_table_anova[rownames(p_table_anova)!="Residuals",c("Df","F value","Pr(>F)")]
           colnames(p_table_anova)<-c("df","F","p")
           df_anova<-rbind(df_anova,
-                          cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),
-                                p_table_anova))
+                          cbind(sex=label_sex,model=idx_mod,term=rownames(p_table_anova),p_table_anova))
+          df_pred_src<-mod$model
         }
       }
       
-      # Prediction
-      list_term<-colnames(mod$model)
+      list_term<-colnames(df_pred_src)
       list_term<-list_term[list_term!="value"]
+      # Prediction
       list_combin<-list()
       for (term_pred in list_term_pred){
         if (term_pred %in% list_term){
-          list_level<-sort(unique(mod$model[[term_pred]]))
+          list_level<-sort(unique(df_pred_src[[term_pred]]))
           list_combin[[term_pred]]<-list_level
         }
       }
       if (length(list_combin)>0){
         df_pred_in<-expand.grid(list_combin)
         for (term in list_term[list_term %nin% colnames(df_pred_in)]){
-          df_pred_in[[term]]<-0
+          if (term=="ID_pnTTC"){
+            df_pred_in$ID_pnTTC<-min(as.numeric.factor(df_pred_src$ID_pnTTC))
+          }else{
+            df_pred_in[[term]]<-0
+          }
         }
         df_pred_in<-df_pred_in[list_term]
         df_pred_add<-cbind(df_pred_in,prediction=predict(mod,df_pred_in))
