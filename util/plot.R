@@ -11,6 +11,26 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 
 
 #**************************************************
+# Plot NBS ========================================
+#**************************************************
+plot_tfnbs<-function(df_tfnbs,data_fc){
+  
+  title_group<-paste("Groups:",paste(data_fc$df_grp$label,collapse=", "),sep=" ")
+  list_roi_spaced<-NULL
+  for (group in data_fc$df_grp$id){
+    list_roi_spaced<-c(list_roi_spaced,as.character(data_fc$df_roi[data_fc$df_roi$group==group,"label"]),"")
+  }
+  list_roi_spaced<-list_roi_spaced[1:length(list_roi_spaced)-1]
+  list_label_grp<-data_fc$df_grp$label
+  
+  df_tfnbs<-dplyr::rename(df_tfnbs,"weight"="nbs")
+  plot<-plot_gam_fc_core3(df_tfnbs,data_fc$df_edge,
+                          label_axis=list_roi_spaced,label_legend="NBS",1.5)
+  return(plot)
+}
+
+
+#**************************************************
 # Plot factor-clinical corr, in ca_fc_cs() ========
 #**************************************************
 plot_ca_clin<-function(df_plot,list_var,idx_var){
@@ -191,10 +211,27 @@ plot_parallel<-function(clust,list_data_plot,progressbar=F){
 #**************************************************
 # Histogram of Permutaion =========================
 #**************************************************
-plot_permutation<-function(paths_,list_max,thr_size_perm,
-                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,type_sign,color_plt){
+plot_permutation2<-function(list_max,color_plt){
   plt<-(ggplot(data.frame(max=list_max), aes(x=max))
-        + geom_histogram(binwidth=2,fill=color_plt)
+        + geom_histogram(fill=color_plt)
+        #+ geom_vline(aes(xintercept=thr_nbs),
+        #             color="grey", linetype="dashed", size=1)
+        #+ ggtitle(paste("atlas: ",atlas,", measure: ",var,", wave: ",wave,", model: ",model,
+        #                "\nexpvar: ",title_plot,", sex: ",title_sex,", CDT: p<",as.character(p_cdt),", sign: ",type_sign,sep=""))
+        + xlab("Size")
+        + ylab("Count")
+        + theme_light()
+        + theme(plot.title = element_text(hjust = 0.5))
+  )
+
+  return(plt)
+}
+
+plot_permutation<-function(paths_,list_max,thr_size_perm,
+                           atlas,var,wave,model,term,sex,title_plot,title_sex,p_cdt,type_sign){
+  plt<-(ggplot(data.frame(max=list_max), aes(x=max))
+        #+ geom_histogram(binwidth=2,fill=color_plt)
+        + geom_histogram(fill="grey60")
         + geom_vline(aes(xintercept=thr_size_perm),
                      color="grey", linetype="dashed", size=1)
         + ggtitle(paste("atlas: ",atlas,", measure: ",var,", wave: ",wave,", model: ",model,
