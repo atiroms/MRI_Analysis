@@ -14,7 +14,7 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"423.3_fc_gam_diff_aroma_test14" 
+dir_out<-"423.3_fc_gam_diff_aroma_test17" 
 #dir_out<-"425.1_fc_pca_aroma_test3"
 #dir_out<-"424.1_fc_gamm_mix_aroma_test4"
 #dir_out<-"427.1_fc_sex_diff_aroma_test1"

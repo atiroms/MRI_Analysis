@@ -127,12 +127,12 @@ param_sex_diff_fc<-list(
 #**************************************************
 param_gam_fc_diff<-list(
   #"list_atlas"=c("aal116","gordon333","ho112","power264","schaefer100x17","schaefer200x17","schaefer400x17","shen268"),
-  #"list_atlas"="ho112",
-  "list_atlas"="power264",
+  "list_atlas"="ho112",
+  #"list_atlas"="power264",
   
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "std_fc"=F, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
@@ -156,9 +156,17 @@ param_gam_fc_diff<-list(
   #                   "full"   =list("1"="W1_Tanner_Full","2"="W2_Tanner_Full","label"="Tanner stage (full)"),
   #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),"label"="Tanner stage (gonadal)"),
   #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"),"label"="Tanner stage (adrenal)")),
+  #"list_tanner"=list("max"    =list("1"="W1_Tanner_Max_max", "2"="W2_Tanner_Max_max", "label"="Tanner stage (max)"),
+  #                   "full"   =list("1"="W1_Tanner_Full_max","2"="W2_Tanner_Full_max","label"="Tanner stage (full)"),
+  #                   "gonadal"=list("1"=c("W1_Tanner_Male_Genitals_max","W1_Tanner_Female_Breast_max"),"2"=c("W2_Tanner_Male_Genitals_max","W2_Tanner_Female_Breast_max"),"label"="Tanner stage (gonadal)"),
+  #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair_max","W1_Tanner_Female_Pubic_Hair_max"),"2"=c("W2_Tanner_Male_Pubic_Hair_max","W2_Tanner_Female_Pubic_Hair_max"),"label"="Tanner stage (adrenal)")),
+  "list_tanner"=list("max"    =list("1"="W1_Tanner_Max_wavemax", "2"="W2_Tanner_Max_wavemax", "label"="Tanner stage (max)"),
+                     "full"   =list("1"="W1_Tanner_Full_wavemax","2"="W2_Tanner_Full_wavemax","label"="Tanner stage (full)"),
+                     "gonadal"=list("1"=c("W1_Tanner_Male_Genitals_wavemax","W1_Tanner_Female_Breast_wavemax"),"2"=c("W2_Tanner_Male_Genitals_wavemax","W2_Tanner_Female_Breast_wavemax"),"label"="Tanner stage (gonadal)"),
+                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair_wavemax","W1_Tanner_Female_Pubic_Hair_wavemax"),"2"=c("W2_Tanner_Male_Pubic_Hair_wavemax","W2_Tanner_Female_Pubic_Hair_wavemax"),"label"="Tanner stage (adrenal)")),
   #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),"label"="Tanner stage (gonadal)"),
   #                   "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair","W1_Tanner_Female_Pubic_Hair"),"2"=c("W2_Tanner_Male_Pubic_Hair","W2_Tanner_Female_Pubic_Hair"), "label"="Tanner stage (adrenal)")),
-  "list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),"label"="Tanner stage (gonadal)")),
+  #"list_tanner"=list("gonadal"=list("1"=c("W1_Tanner_Male_Genitals","W1_Tanner_Female_Breast"),"2"=c("W2_Tanner_Male_Genitals","W2_Tanner_Female_Breast"),"label"="Tanner stage (gonadal)")),
   "dtype_tanner"="ordered",   # options are "ordered", "factor" or "numeric"
   "list_mod_tanner"=list("cs2" = "value ~ ses1_age + ses2_age + ses1_tanner + ses2_tanner"),
                          #"cs" = "value ~ diff_age + ses1_tanner + ses2_tanner",
@@ -218,7 +226,6 @@ param_gam_fc_diff<-list(
   "list_term_pred"=c("ses1_tanner","ses2_tanner"),
   "param_ancova_pred"=list()
 )
-
 
 
 #**************************************************
