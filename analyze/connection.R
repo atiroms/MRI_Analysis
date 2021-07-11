@@ -14,7 +14,7 @@ path_exp_full<-NULL
 #path_exp_full<-"/media/atiroms/SSD_03/MRI_img/pnTTC/puberty/stats/func_XCP"
 
 dir_in<-"421_fc_aroma"
-dir_out<-"424_fc_gamm_aroma_test32"
+dir_out<-"424_fc_gamm_aroma_test34"
 #dir_out<-"423.3_fc_gam_diff_aroma_test17" 
 #dir_out<-"425.1_fc_pca_aroma_test3"
 #dir_out<-"424.1_fc_gamm_mix_aroma_test4"
@@ -163,7 +163,7 @@ gamm_fc<-function(param=param_gamm_fc){
   
   print("Combining results.")
   list_var<-c(param$list_tanner,param$list_hormone)
-  func_combine_result(paths_,list_atlas_,list_var,"long",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
+  func_combine_result(paths,param$list_atlas,list_var,"long",list(list("measure"="")),c("gamm","plot","gamm_anova","gamm_aic","gamm_grp","plot_grp","gamm_anova_grp","gamm_aic_grp","bfs_edge","bfs_node","bfs_size","bfs_pred","perm_max","perm_thr","perm_fwep","perm_sign","tfnbs"))
   print("Finished gamm_fc().")
 }
 

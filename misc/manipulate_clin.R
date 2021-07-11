@@ -19,7 +19,8 @@ as.numeric.factor <- function(x) {
 #**************************************************
 # Pick up required clinical data ==================
 #**************************************************
-df_clin<-data.frame(fread(file.path(path_src,'01_item','spss_data03.csv'),encoding='UTF-8'))
+#df_clin<-data.frame(fread(file.path(path_src,'01_item','spss_data03.csv'),encoding='UTF-8'))
+df_clin<-data.frame(fread(file.path(path_src,'01_item','spss_data04.csv'),encoding='UTF-8'))
 df_tanner<-data.frame(fread(file.path(path_src,'04_max_tanner','wavemax_tanner02.csv'),encoding='UTF-8'))
 df_id<-data.frame(ID_pnTTC=seq(max(df_clin$ID_pnTTC,na.rm=T)))
 df_clin<-dplyr::left_join(df_id,df_clin,by='ID_pnTTC')
@@ -65,10 +66,13 @@ list_colname<-c('ID_pnTTC','Sex','W1_Handedness','W2_Handedness','Handedness',
                 'W2_CBCL_G6_Score','W2_CBCL_G7_Score','W2_CBCL_G8_Score','W2_CBCL_Int_Score','W2_CBCL_Ext_Score',
                 'W1_SDQ_ES','W1_SDQ_CP','W1_SDQ_HI','W1_SDQ_PP','W1_SDQ_PB','W1_SDQ_TD',
                 'W2_SDQ_ES','W2_SDQ_CP','W2_SDQ_HI','W2_SDQ_PP','W2_SDQ_PB','W2_SDQ_TD',
+                'W1_SDQ_ES_Score','W1_SDQ_CP_Score','W1_SDQ_HI_Score','W1_SDQ_PP_Score','W1_SDQ_PB_Score','W1_SDQ_TD_Score',
+                'W2_SDQ_ES_Score','W2_SDQ_CP_Score','W2_SDQ_HI_Score','W2_SDQ_PP_Score','W2_SDQ_PB_Score','W2_SDQ_TD_Score',
                 'W1_Height','W1_Weight','W2_Height','W2_Weight')
 df_clin<-df_clin[,list_colname]
 
-fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine01.csv'))
+#fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine01.csv'))
+fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine02.csv'))
 
 
 #**************************************************
@@ -363,8 +367,9 @@ df_item<-dplyr::left_join(df_item,df_ib,by=c("item_id"=colnames(df_ib)[2]))
 fwrite(df_item,file.path(path_src,'items01.csv'))
 
 # Open 'items01.csv' with Excel, manually delete duplicate rows, change column names, Save as 'items03.csv'
-df_item<-data.frame(fread(file.path(path_parent,'items03.csv'),encoding='UTF-8'))
-df_spss<-data.frame(fread(file.path(path_parent,'spss_data02.csv')))
+#df_item<-data.frame(fread(file.path(path_parent,'items03.csv'),encoding='UTF-8'))
+df_item<-data.frame(fread(file.path(path_src,'01_item','items04.csv'),encoding='UTF-8'))
+df_spss<-data.frame(fread(file.path(path_src,'01_item','spss_data02.csv')))
 
 # Subset df_spss and rename columns
 df_item<-df_item[!is.na(df_item$id_label_new),]
@@ -377,7 +382,8 @@ df_csub<-df_csub[,c("ID_TTC","ID_pnTTC")]
 list_colname<-c("ID_TTC","ID_pnTTC",colnames(df_spss)[2:ncol(df_spss)])
 df_spss<-dplyr::left_join(df_spss,df_csub,by="ID_TTC")
 df_spss<-df_spss[,list_colname]
-fwrite(df_spss,file.path(path_parent,'spss_data03.csv'))
+#fwrite(df_spss,file.path(path_parent,'spss_data03.csv'))
+fwrite(df_spss,file.path(path_src,'01_item','spss_data04.csv'))
 
 
 #**************************************************

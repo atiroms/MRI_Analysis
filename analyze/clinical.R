@@ -37,7 +37,8 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 #**************************************************
 # Clinical-clinical correlation ===================
 #**************************************************
-corr_clin<-function(){
+corr_clin<-function(param=param_corr_clin){
+  
   
 }
 

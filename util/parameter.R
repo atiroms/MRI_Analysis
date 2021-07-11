@@ -5,6 +5,61 @@
 
 
 #**************************************************
+# corr_clin() =====================================
+#**************************************************
+param_corr_clin<-list(
+
+  # Parameters for clinical data subsetting
+  "force_long"=F, # use longitudinal data only
+  #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
+  "omit_decreasing"=NULL,
+
+  "list_wave"=c(1,2),
+  "list_sex"=list(1,2),
+  
+  #"tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
+  #"age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
+  #"sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex")),
+  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
+                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"))),
+  #"subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2")),
+  #                   "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2"))),
+  "list_tanner"=list("max"    =list("1"="W1_Tanner_Max_wavemax", "2"="W2_Tanner_Max_wavemax", "label"="Tanner stage (max)"),
+                     "full"   =list("1"="W1_Tanner_Full_wavemax","2"="W2_Tanner_Full_wavemax","label"="Tanner stage (full)"),
+                     "gonadal"=list("1"=c("W1_Tanner_Male_Genitals_wavemax","W1_Tanner_Female_Breast_wavemax"),"2"=c("W2_Tanner_Male_Genitals_wavemax","W2_Tanner_Female_Breast_wavemax"),"label"="Tanner stage (gonadal)"),
+                     "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair_wavemax","W1_Tanner_Female_Pubic_Hair_wavemax"),"2"=c("W2_Tanner_Male_Pubic_Hair_wavemax","W2_Tanner_Female_Pubic_Hair_wavemax"),"label"="Tanner stage (adrenal)")),
+  "dtype_tanner"="ordered",   # options are "ordered", "factor" or "numeric"
+  
+  "list_covar_clin"=list("wisc_pc"   =list("1"="W1_WISC_PC_Score", "2"= "W2_WISC_PC_Score", "label"="WISC Picture Completion"),
+                         "wisc_if"   =list("1"="W1_WISC_IF_Score", "2"= "W2_WISC_IF_Score", "label"="WISC Information"),
+                         "wisc_ds"   =list("1"=NULL,               "2"= "W2_WISC_DS_Score", "label"="WISC Digit Span"),
+                         "wisc_cd"   =list("1"=NULL,               "2"= "W2_WISC_CD_Score", "label"="WISC Coding"),
+                         "cbcl_g1"   =list("1"="W1_CBCL_G1_Score", "2"= "W2_CBCL_G1_Score", "label"="CBCL Withdrawn/Depressed"),
+                         "cbcl_g2"   =list("1"="W1_CBCL_G2_Score", "2"= "W2_CBCL_G2_Score", "label"="CBCL Somatic Complaints"),
+                         "cbcl_g3"   =list("1"="W1_CBCL_G3_Score", "2"= "W2_CBCL_G3_Score", "label"="CBCL Anxious/Depressed"),
+                         "cbcl_g4"   =list("1"="W1_CBCL_G4_Score", "2"= "W2_CBCL_G4_Score", "label"="CBCL Attention Problems"),
+                         "cbcl_g5"   =list("1"="W1_CBCL_G5_Score", "2"= "W2_CBCL_G5_Score", "label"="CBCL Social Problems"),
+                         "cbcl_g6"   =list("1"="W1_CBCL_G6_Score", "2"= "W2_CBCL_G6_Score", "label"="CBCL Thought Problems"),
+                         "cbcl_g7"   =list("1"="W1_CBCL_G7_Score", "2"= "W2_CBCL_G7_Score", "label"="CBCL Rule-breaking Behavior"),
+                         "cbcl_g8"   =list("1"="W1_CBCL_G8_Score", "2"= "W2_CBCL_G8_Score", "label"="CBCL Aggressive Behavior"),
+                         "cbcl_int"  =list("1"="W1_CBCL_Int_Score","2"= "W2_CBCL_Int_Score","label"="CBCL Internalizing Score"),
+                         "cbcl_ext"  =list("1"="W1_CBCL_Ext_Score","2"= "W2_CBCL_Ext_Score","label"="CBCL Externalizing Score"),
+                         "sdq_es"    =list("1"="W1_SDQ_ES",        "2"= "W2_SDQ_ES",        "label"="SDQ Emotional Symptoms"),
+                         "sdq_cp"    =list("1"="W1_SDQ_CP",        "2"= "W2_SDQ_CP",        "label"="SDQ Conduct Problems"),
+                         "sdq_hi"    =list("1"="W1_SDQ_HI",        "2"= "W2_SDQ_HI",        "label"="SDQ Hyperactivity/Inattention"),
+                         "sdq_pp"    =list("1"="W1_SDQ_PP",        "2"= "W2_SDQ_PP",        "label"="SDQ Peer Problems"),
+                         "sdq_pb"    =list("1"="W1_SDQ_PB",        "2"= "W2_SDQ_PB",        "label"="SDQ Prosocial Behavior"),
+                         "sdq_td"    =list("1"="W1_SDQ_TD",        "2"= "W2_SDQ_TD",        "label"="SDQ Total Difficulty"),
+                         "sdq_es_std"=list("1"="W1_SDQ_ES_std",    "2"= "W2_SDQ_ES_std",    "label"="SDQ Emotional Symptoms (std)"),
+                         "sdq_cp_std"=list("1"="W1_SDQ_CP_std",    "2"= "W2_SDQ_CP_std",    "label"="SDQ Conduct Problems (std)"),
+                         "sdq_hi_std"=list("1"="W1_SDQ_HI_std",    "2"= "W2_SDQ_HI_std",    "label"="SDQ Hyperactivity/Inattention (std)"),
+                         "sdq_pp_std"=list("1"="W1_SDQ_PP_std",    "2"= "W2_SDQ_PP_std",    "label"="SDQ Peer Problems (std)"),
+                         "sdq_pb_std"=list("1"="W1_SDQ_PB_std",    "2"= "W2_SDQ_PB_std",    "label"="SDQ Prosocial Behavior (std)"),
+                         "sdq_td_std"=list("1"="W1_SDQ_TD_std",    "2"= "W2_SDQ_TD_std",    "label"="SDQ Total Difficulty (std)"))
+  
+)
+
+#**************************************************
 # gamm_fc() =======================================
 #**************************************************
 param_gamm_fc<-list(
@@ -13,11 +68,11 @@ param_gamm_fc<-list(
   
   # Parameters for FC normalization
   "abs_nfc"=F, # absolute value for negative functional connectivity
-  "std_fc"=T, # standardize z values with demeaning and division with sd
+  "std_fc"=F, # standardize z values with demeaning and division with sd
   "div_mean_fc"=F, # normalize z values with division with mean
   
   # Parameters for clinical data subsetting
-  "force_long"=T, # use longitudinal data only
+  "force_long"=F, # use longitudinal data only
   #"omit_decreasing"="tanner", # omit subjects with longitudinally decreasing data of the variable
   "omit_decreasing"=NULL,
   #"group_tanner"=list("pre"=1,"early"=c(2,3),"late"=c(4,5)),
