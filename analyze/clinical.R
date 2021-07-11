@@ -38,8 +38,11 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 # Clinical-clinical correlation ===================
 #**************************************************
 corr_clin<-function(param=param_corr_clin){
+  nullobj<-func_createdirs(paths,str_proc="corr_clin()",copy_log=T,list_param=param)
+  list_covar<-c(param$list_tanner,param$list_covar_clin)
   
-  
+  df_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,
+                                   rem_na_clin=F,prefix="all",print_terminal=F)$df_clin
 }
 
 

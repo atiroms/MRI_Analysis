@@ -17,18 +17,19 @@ param_corr_clin<-list(
   "list_wave"=c(1,2),
   "list_sex"=list(1,2),
   
+  "subset_subj"=list("1"=list(),"2"=list()),
+  #"subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
+  #                   "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"))),
+  #"subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2")),
+  #                   "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2"))),
   #"tanner"=list("1"="W1_Tanner_Max", "2"="W2_Tanner_Max", "label"="Tanner stage"),
   #"age"   =list("1"="W1_Age_at_MRI", "2"="W2_Age_at_MRI", "label"="Age"),
   #"sex"   =list("1"="Sex",           "2"="Sex",           "label"="Sex")),
-  "subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126")),
-                     "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"))),
-  #"subset_subj"=list("1"=list(list("key"="W1_T1QC","condition"="==1"),list("key"="W1_rsfMRIexist","condition"="==1"),list("key"="W1_Censor","condition"="<126"),list("key"="W1_ZFP","condition"=">-2")),
-  #                   "2"=list(list("key"="W2_T1QC","condition"="==1"),list("key"="W2_rsfMRIexist","condition"="==1"),list("key"="W2_Censor","condition"="<126"),list("key"="W2_ZFP","condition"=">-2"))),
   "list_tanner"=list("max"    =list("1"="W1_Tanner_Max_wavemax", "2"="W2_Tanner_Max_wavemax", "label"="Tanner stage (max)"),
                      "full"   =list("1"="W1_Tanner_Full_wavemax","2"="W2_Tanner_Full_wavemax","label"="Tanner stage (full)"),
                      "gonadal"=list("1"=c("W1_Tanner_Male_Genitals_wavemax","W1_Tanner_Female_Breast_wavemax"),"2"=c("W2_Tanner_Male_Genitals_wavemax","W2_Tanner_Female_Breast_wavemax"),"label"="Tanner stage (gonadal)"),
                      "adrenal"=list("1"=c("W1_Tanner_Male_Pubic_Hair_wavemax","W1_Tanner_Female_Pubic_Hair_wavemax"),"2"=c("W2_Tanner_Male_Pubic_Hair_wavemax","W2_Tanner_Female_Pubic_Hair_wavemax"),"label"="Tanner stage (adrenal)")),
-  "dtype_tanner"="ordered",   # options are "ordered", "factor" or "numeric"
+  "list_dtype_tanner"=c("numeric","ordered"),   # options are "ordered", "factor" or "numeric"
   
   "list_covar_clin"=list("wisc_pc"   =list("1"="W1_WISC_PC_Score", "2"= "W2_WISC_PC_Score", "label"="WISC Picture Completion"),
                          "wisc_if"   =list("1"="W1_WISC_IF_Score", "2"= "W2_WISC_IF_Score", "label"="WISC Information"),
@@ -50,12 +51,12 @@ param_corr_clin<-list(
                          "sdq_pp"    =list("1"="W1_SDQ_PP",        "2"= "W2_SDQ_PP",        "label"="SDQ Peer Problems"),
                          "sdq_pb"    =list("1"="W1_SDQ_PB",        "2"= "W2_SDQ_PB",        "label"="SDQ Prosocial Behavior"),
                          "sdq_td"    =list("1"="W1_SDQ_TD",        "2"= "W2_SDQ_TD",        "label"="SDQ Total Difficulty"),
-                         "sdq_es_std"=list("1"="W1_SDQ_ES_std",    "2"= "W2_SDQ_ES_std",    "label"="SDQ Emotional Symptoms (std)"),
-                         "sdq_cp_std"=list("1"="W1_SDQ_CP_std",    "2"= "W2_SDQ_CP_std",    "label"="SDQ Conduct Problems (std)"),
-                         "sdq_hi_std"=list("1"="W1_SDQ_HI_std",    "2"= "W2_SDQ_HI_std",    "label"="SDQ Hyperactivity/Inattention (std)"),
-                         "sdq_pp_std"=list("1"="W1_SDQ_PP_std",    "2"= "W2_SDQ_PP_std",    "label"="SDQ Peer Problems (std)"),
-                         "sdq_pb_std"=list("1"="W1_SDQ_PB_std",    "2"= "W2_SDQ_PB_std",    "label"="SDQ Prosocial Behavior (std)"),
-                         "sdq_td_std"=list("1"="W1_SDQ_TD_std",    "2"= "W2_SDQ_TD_std",    "label"="SDQ Total Difficulty (std)"))
+                         "sdq_es_std"=list("1"="W1_SDQ_ES_Score",  "2"= "W2_SDQ_ES_Score",  "label"="SDQ Emotional Symptoms (std)",       "dtype"="ordered"),
+                         "sdq_cp_std"=list("1"="W1_SDQ_CP_Score",  "2"= "W2_SDQ_CP_Score",  "label"="SDQ Conduct Problems (std)",         "dtype"="ordered"),
+                         "sdq_hi_std"=list("1"="W1_SDQ_HI_Score",  "2"= "W2_SDQ_HI_Score",  "label"="SDQ Hyperactivity/Inattention (std)","dtype"="ordered"),
+                         "sdq_pp_std"=list("1"="W1_SDQ_PP_Score",  "2"= "W2_SDQ_PP_Score",  "label"="SDQ Peer Problems (std)",            "dtype"="ordered"),
+                         "sdq_pb_std"=list("1"="W1_SDQ_PB_Score",  "2"= "W2_SDQ_PB_Score",  "label"="SDQ Prosocial Behavior (std)",       "dtype"="ordered"),
+                         "sdq_td_std"=list("1"="W1_SDQ_TD_Score",  "2"= "W2_SDQ_TD_Score",  "label"="SDQ Total Difficulty (std)",         "dtype"="ordered"))
   
 )
 
