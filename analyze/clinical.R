@@ -12,7 +12,8 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/clin"
 path_exp_full<-NULL
 
 dir_in<-""
-dir_out<-"01_clin_test"
+dir_out<-"05_clin_corr"
+#dir_out<-"01_clin_test"
 #dir_out<-"02_clin_pair"
 #dir_out<-"03_clin_long_test"
 
@@ -20,13 +21,8 @@ dir_out<-"01_clin_test"
 #**************************************************
 # Libraries =======================================
 #**************************************************
-library(mgcv)
-library(dplyr)
-library(ggplot2)
-#library(itsadug)
-library(ggrepel)
-library(ggpubr)
-library(plyr)
+library(easypackages)
+libraries("mgcv","dplyr","ggplot2","ggrepel","ggpubr","plyr")
 
 
 #**************************************************
@@ -36,6 +32,14 @@ source(file.path(getwd(),"util/function.R"))
 source(file.path(getwd(),"util/plot.R"))
 source(file.path(getwd(),"util/parameter.R"))
 paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_full_=path_exp_full)
+
+
+#**************************************************
+# Clinical-clinical correlation ===================
+#**************************************************
+corr_clin<-function(){
+  
+}
 
 
 #**************************************************
