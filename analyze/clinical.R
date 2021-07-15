@@ -12,7 +12,7 @@ path_exp <- "Dropbox/MRI_img/pnTTC/puberty/stats/clin"
 path_exp_full<-NULL
 
 dir_in<-""
-dir_out<-"05_clin_corr"
+dir_out<-"05_clin_corr_test1"
 #dir_out<-"01_clin_test"
 #dir_out<-"02_clin_pair"
 #dir_out<-"03_clin_long_test"
@@ -22,7 +22,7 @@ dir_out<-"05_clin_corr"
 # Libraries =======================================
 #**************************************************
 library(easypackages)
-libraries("mgcv","dplyr","ggplot2","ggrepel","ggpubr","plyr")
+libraries("mgcv","dplyr","ggplot2","ggrepel","ggpubr","plyr","data.table")
 
 
 #**************************************************
@@ -39,10 +39,50 @@ paths<-func_path(path_exp_=path_exp,dir_in_=dir_in,dir_out_=dir_out,path_exp_ful
 #**************************************************
 corr_clin<-function(param=param_corr_clin){
   nullobj<-func_createdirs(paths,str_proc="corr_clin()",copy_log=T,list_param=param)
-  list_covar<-c(param$list_tanner,param$list_covar_clin)
   
-  df_clin<-func_clinical_data_long(paths,param$list_wave,param$subset_subj,list_covar,
-                                   rem_na_clin=F,prefix="all",print_terminal=F)$df_clin
+  df_gamm<-df_anova<-df_pred<-data.frame()
+  for (label_tanner in names(param$list_var_tanner)){
+    var_tanner<-param$list_var_tanner[label_tanner]
+    names(var_tanner)<-"tanner"
+    var_tanner[[1]]$dtype<-"ordered"
+    for (label_test in names(param$list_var_test)){
+      var_test<-param$list_var_test[label_test]
+      names(var_test)<-"test"
+      list_var<-c(param$list_var_basic,var_tanner,var_test)
+      print(paste(var_tanner[[1]]$label," and ", var_test[[1]]$label,sep=''))
+      
+      for (idx_model in names(param$list_model)){
+        model<-param$list_model[[idx_model]]
+        data_clin<-func_clinical_data_long(paths,model$wave,param$subset_subj,list_covar=list_var,
+                                           rem_na_clin=T,prefix="all",print_terminal=F)
+        df_clin<-data_clin$df_clin
+        if (model$force_long){
+          if (length(data_clin$list_id_exist[[1]]$intersect)>0 & length(data_clin$list_id_exist[[2]]$intersect)>0){
+            list_id_subj<-sort(intersect(data_clin$list_id_exist[[1]]$intersect,data_clin$list_id_exist[[2]]$intersect))
+            df_clin<-df_clin[df_clin$ID_pnTTC %in% list_id_subj,]
+            df_clin<-dplyr::rename(df_clin,"ses"="wave")
+            df_clin<-func_clinical_data_diffmean(df_clin,list_id_subj,list_var)
+          }else{
+            df_clin<-data.frame()
+          }
+        }
+        if (nrow(df_clin)>0){
+          df_clin<-func_std_clin(df_clin,separate_sex=T)$df_clin
+          list_mod_in<-list(model$mod)
+          names(list_mod_in)<-idx_model
+          data_gamm<-gamm_core5(df_src=df_clin,list_mod_in=list_mod_in,list_sex_in=list(c(1,2),1,2),
+                                list_term_pred_in=model$term_pred,calc_parallel_in=F,test_mod_in=F)
+          df_head<-data.frame(tanner=label_tanner,test=label_test,model=idx_model)
+          df_gamm<-rbind.fill(df_gamm,cbind(df_head,data_gamm$df_gamm))
+          df_anova<-rbind.fill(df_anova,cbind(df_head,data_gamm$df_anova))
+          df_pred<-rbind.fill(df_pred,cbind(df_head,data_gamm$df_pred))
+        }
+      }
+    }
+  }
+  fwrite(df_gamm,file.path(paths$output,"output","result","gamm.csv"))
+  fwrite(df_anova,file.path(paths$output,"output","result","anova.csv"))
+  fwrite(df_pred,file.path(paths$output,"output","result","pred.csv"))
 }
 
 

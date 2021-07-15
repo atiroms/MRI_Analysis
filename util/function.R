@@ -679,7 +679,9 @@ gamm_core5<-function(df_src,list_mod_in=NULL,list_sex_in=NULL,list_term_pred_in=
     for (idx_sex in list_sex){
       label_sex<-paste(idx_sex,collapse="_")
       df_src_sex<-df_src[df_src$sex %in% idx_sex,]
-      df_src_sex$value<-as.numeric(df_src_sex$value)
+      if ("value" %in% colnames(df_src_sex)){
+        df_src_sex$value<-as.numeric(df_src_sex$value)
+      }
       if(grepl("s\\(",list_mod[[idx_mod]])){ # Use mgcv::gam()
         mod<-try(gam(as.formula(list_mod[[idx_mod]]),data=df_src_sex,method="REML",control=list(nthreads=1)), silent=F)
         if (class(mod)[1]!="try-error"){

@@ -16,6 +16,33 @@ as.numeric.factor <- function(x) {
   }
 }
 
+
+#**************************************************
+# Check raw and standardized score ================
+#**************************************************
+#df_clin<-data.frame(fread(file.path(path_src,'01_item','spss_data04.csv'),encoding='UTF-8'))
+df_clin<-data.frame(fread(file.path(path_src,'05_clin_combine','clin_combine03.csv'),encoding='UTF-8'))
+list_rawscore<-c('W1_WISC_PC','W1_WISC_IF','W2_WISC_PC','W2_WISC_IF','W2_WISC_DS','W2_WISC_CD',
+                 'W1_CBCL_G1','W1_CBCL_G2','W1_CBCL_G3','W1_CBCL_G4','W1_CBCL_G5',
+                 'W1_CBCL_G6','W1_CBCL_G7','W1_CBCL_G8','W1_CBCL_Int','W1_CBCL_Ext',
+                 'W2_CBCL_G1','W2_CBCL_G2','W2_CBCL_G3','W2_CBCL_G4','W2_CBCL_G5',
+                 'W2_CBCL_G6','W2_CBCL_G7','W2_CBCL_G8','W2_CBCL_Int','W2_CBCL_Ext',
+                 'W1_SDQ_ES','W1_SDQ_CP','W1_SDQ_HI','W1_SDQ_PP','W1_SDQ_PB','W1_SDQ_TD',
+                 'W2_SDQ_ES','W2_SDQ_CP','W2_SDQ_HI','W2_SDQ_PP','W2_SDQ_PB','W2_SDQ_TD')
+list_plt<-list()
+for (rawscore in list_rawscore){
+  stdscore<-paste(rawscore,'_Score',sep='')
+  df_plot<-df_clin[,c(rawscore,stdscore)]
+  colnames(df_plot)<-c('raw','std')
+  plt<-(ggplot(df_plot,aes(x=raw,y=std))
+        +geom_jitter(width=0.3,height=0.3)
+        +labs(x=rawscore,y=stdscore)
+        +theme_light())
+  list_plt<-c(list_plt,list(plt))
+}
+list_plt
+
+
 #**************************************************
 # Pick up required clinical data ==================
 #**************************************************
@@ -57,22 +84,23 @@ df_clin$W2_Tanner_Female_Breast<-df_clin$W2_Tanner_Female_Pubic_Hair<-df_clin$W2
 df_clin<-dplyr::left_join(df_clin,df_tanner,by='ID_pnTTC')
 df_clin<-dplyr::left_join(df_clin,df_temp,by='ID_pnTTC')
 
+list_rawscore<-c('W1_WISC_PC','W1_WISC_IF','W2_WISC_PC','W2_WISC_IF','W2_WISC_DS','W2_WISC_CD',
+                 'W1_CBCL_G1','W1_CBCL_G2','W1_CBCL_G3','W1_CBCL_G4','W1_CBCL_G5',
+                 'W1_CBCL_G6','W1_CBCL_G7','W1_CBCL_G8','W1_CBCL_Int','W1_CBCL_Ext',
+                 'W2_CBCL_G1','W2_CBCL_G2','W2_CBCL_G3','W2_CBCL_G4','W2_CBCL_G5',
+                 'W2_CBCL_G6','W2_CBCL_G7','W2_CBCL_G8','W2_CBCL_Int','W2_CBCL_Ext',
+                 'W1_SDQ_ES','W1_SDQ_CP','W1_SDQ_HI','W1_SDQ_PP','W1_SDQ_PB','W1_SDQ_TD',
+                 'W2_SDQ_ES','W2_SDQ_CP','W2_SDQ_HI','W2_SDQ_PP','W2_SDQ_PB','W2_SDQ_TD')
+
 list_colname<-c('ID_pnTTC','Sex','W1_Handedness','W2_Handedness','Handedness',
                 colnames(df_tanner)[2:length(colnames(df_tanner))],
-                'W1_WISC_PC_Score','W1_WISC_IF_Score','W2_WISC_PC_Score','W2_WISC_IF_Score','W2_WISC_DS_Score','W2_WISC_CD_Score',
-                'W1_CBCL_G1_Score','W1_CBCL_G2_Score','W1_CBCL_G3_Score','W1_CBCL_G4_Score','W1_CBCL_G5_Score',
-                'W1_CBCL_G6_Score','W1_CBCL_G7_Score','W1_CBCL_G8_Score','W1_CBCL_Int_Score','W1_CBCL_Ext_Score',
-                'W2_CBCL_G1_Score','W2_CBCL_G2_Score','W2_CBCL_G3_Score','W2_CBCL_G4_Score','W2_CBCL_G5_Score',
-                'W2_CBCL_G6_Score','W2_CBCL_G7_Score','W2_CBCL_G8_Score','W2_CBCL_Int_Score','W2_CBCL_Ext_Score',
-                'W1_SDQ_ES','W1_SDQ_CP','W1_SDQ_HI','W1_SDQ_PP','W1_SDQ_PB','W1_SDQ_TD',
-                'W2_SDQ_ES','W2_SDQ_CP','W2_SDQ_HI','W2_SDQ_PP','W2_SDQ_PB','W2_SDQ_TD',
-                'W1_SDQ_ES_Score','W1_SDQ_CP_Score','W1_SDQ_HI_Score','W1_SDQ_PP_Score','W1_SDQ_PB_Score','W1_SDQ_TD_Score',
-                'W2_SDQ_ES_Score','W2_SDQ_CP_Score','W2_SDQ_HI_Score','W2_SDQ_PP_Score','W2_SDQ_PB_Score','W2_SDQ_TD_Score',
+                list_rawscore,paste(list_rawscore,'_Score',sep=''),
                 'W1_Height','W1_Weight','W2_Height','W2_Weight')
 df_clin<-df_clin[,list_colname]
 
 #fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine01.csv'))
-fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine02.csv'))
+#fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine02.csv'))
+fwrite(df_clin,file.path(path_src,'05_clin_combine','clin_combine03.csv'))
 
 
 #**************************************************

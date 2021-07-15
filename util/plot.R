@@ -11,6 +11,48 @@ libraries("ggplot2","ggraph","igraph","colorRamps","purrr","viridis")
 
 
 #**************************************************
+# Plot clin-clin correlation ======================
+#**************************************************
+plot_corr_clin<-function(paths,df_clin,var_tanner,var_test,wave){
+  idx_tanner<-names(var_tanner)
+  idx_test<-names(var_test)
+  label_tanner<-var_tanner[[1]]$label
+  label_test<-var_test[[1]]$label
+  
+  list_sex<-list("both"=c(1,2),"male"=1,"female"=2)
+  list_plt<-list()
+  for (label_sex in names(list_sex)){
+    sex<-list_sex[[label_sex]]
+    df_plot<-df_clin
+    df_plot<-df_plot[df_plot$sex %in% sex,]
+    df_plot<-dplyr::rename(df_plot,'xval'=idx_tanner)
+    df_plot<-dplyr::rename(df_plot,'yval'=idx_test)
+    
+    plt<-(ggplot(df_plot)
+          +geom_violin(aes(x=xval, y=yval,fill=xval,color=xval),alpha=0.1)
+          +geom_boxplot(aes(x=xval, y=yval,fill=xval,color=xval),outlier.shape=NA,alpha=0.4,width=0.1)
+          +geom_jitter(aes(x=xval, y=yval),width=0.2,height=0.1,size=1,alpha=0.5)
+          +scale_color_viridis(limits=factor(seq(5)),discrete=T)
+          +scale_fill_viridis(limits=factor(seq(5)),discrete=T)
+          +xlim(c("1","2","3","4","5"))
+          +guides(color=F)
+          +ggtitle(paste(label_test,' vs ',label_tanner,', wave ',wave,', ',label_sex,sep=''))
+          +labs(x=label_tanner,y=label_test,fill=label_tanner)
+          +theme_light())
+    plt
+    fname<-paste(idx_tanner,'_',idx_test,'_wav-',wave,'_sex-',label_sex,'_boxplot.png',sep='')
+    ggsave(filename=fname,plot=plt,path=file.path(paths$output,"output","plot"),height=5,width=7,limitsize=F)
+    
+    
+    list_plt<-c(list_plt,list(plt))
+  }
+
+  return(list_plt)
+}
+
+
+
+#**************************************************
 # Plot NBS ========================================
 #**************************************************
 plot_tfnbs<-function(df_tfnbs,data_fc){
